@@ -38,9 +38,12 @@ except ImportError:
         RESET_ALL = ''
 
 class AlphaCoachBridge:
-    def __init__(self, api_url: str = "http://localhost:4000/api/v1", device_token: str = ""):
-        self.api_url = api_url.rstrip('/')
-        self.device_token = device_token
+    def __init__(self, api_url: Optional[str] = None, device_token: Optional[str] = None):
+        env_api = os.environ.get("ALPHA_COACH_API_URL") or os.environ.get("MT5_BRIDGE_API_URL")
+        env_token = os.environ.get("ALPHA_COACH_BRIDGE_TOKEN") or os.environ.get("BRIDGE_TOKEN") or os.environ.get("MT5_BRIDGE_DEVICE_TOKEN")
+        
+        self.api_url = (api_url or env_api or "http://localhost:4000/api/v1").rstrip('/')
+        self.device_token = device_token or env_token or ""
         self.config_file = os.path.join(os.path.dirname(__file__), "bridge_config.json")
         self.load_config()
 
@@ -238,9 +241,12 @@ class AlphaCoachBridge:
                 time.sleep(10)
 
 def main():
+    default_api = os.environ.get("ALPHA_COACH_API_URL") or os.environ.get("MT5_BRIDGE_API_URL") or "http://localhost:4000/api/v1"
+    default_token = os.environ.get("ALPHA_COACH_BRIDGE_TOKEN") or os.environ.get("BRIDGE_TOKEN") or os.environ.get("MT5_BRIDGE_DEVICE_TOKEN") or ""
+
     parser = argparse.ArgumentParser(description="Alpha Coach MT5 Local Bridge")
-    parser.add_argument("--api", default="http://localhost:4000/api/v1", help="Alpha Coach Backend API URL")
-    parser.add_argument("--token", default="", help="Bridge Device Token (generate from Alpha Coach Dashboard)")
+    parser.add_argument("--api", default=default_api, help="Alpha Coach Backend API URL")
+    parser.add_argument("--token", default=default_token, help="Bridge Device Token (generate from Alpha Coach Dashboard)")
     parser.add_argument("--daemon", action="store_true", help="Run continuously in background daemon mode")
     parser.add_argument("--interval", type=int, default=30, help="Sync interval in seconds for daemon mode")
     parser.add_argument("--days", type=int, default=90, help="Days of history to sync (default: 90 for 3 months)")
@@ -251,10 +257,13 @@ def main():
     if not bridge.device_token:
         print(f"{Fore.YELLOW}[Setup Required] No device token configured.{Style.RESET_ALL}")
         print(f"Please copy your Bridge Pairing Token from Alpha Coach (Settings -> MT5 Bridge) and paste it below:")
-        token_input = input("Device Token: ").strip()
-        if token_input:
-            bridge.device_token = token_input
-            bridge.save_config()
+        try:
+            token_input = input("Device Token: ").strip()
+            if token_input:
+                bridge.device_token = token_input
+                bridge.save_config()
+        except EOFError:
+            pass
 
     if args.daemon:
         bridge.run_daemon(interval_seconds=args.interval)

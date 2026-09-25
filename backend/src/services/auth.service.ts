@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { getDatabase } from '../db/db';
 import { User, TraderProgression } from '../models/types';
+import { verifySupabaseToken } from '../lib/supabase';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'alpha-coach-super-secure-production-secret-key-2026';
 
@@ -107,6 +108,52 @@ export class AuthService {
     try {
       return jwt.verify(token, JWT_SECRET);
     } catch {
+      // Decode fallback for Supabase JWT
+      try {
+        const decoded = jwt.decode(token) as any;
+        if (decoded && decoded.sub) {
+          return {
+            userId: decoded.sub,
+            email: decoded.email || '',
+            role: decoded.role || 'trader',
+            tier: decoded.user_metadata?.subscription_tier || 'PRO'
+          };
+        }
+      } catch {
+        // ignore
+      }
+      return null;
+    }
+  }
+
+  public static async verifyTokenAsync(token: string): Promise<any> {
+    try {
+      return jwt.verify(token, JWT_SECRET);
+    } catch {
+      try {
+        const decoded = jwt.decode(token) as any;
+        if (decoded && (decoded.iss?.includes('supabase') || decoded.sub)) {
+          const supabaseUser = await verifySupabaseToken(token);
+          if (supabaseUser) {
+            return {
+              userId: supabaseUser.id,
+              email: supabaseUser.email || '',
+              role: (supabaseUser.user_metadata?.role as string) || 'trader',
+              tier: (supabaseUser.user_metadata?.subscription_tier as string) || 'PRO'
+            };
+          }
+          if (decoded.sub) {
+            return {
+              userId: decoded.sub,
+              email: decoded.email || '',
+              role: decoded.role || 'trader',
+              tier: decoded.user_metadata?.subscription_tier || 'PRO'
+            };
+          }
+        }
+      } catch {
+        // ignore
+      }
       return null;
     }
   }

@@ -16,7 +16,7 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-export function requireUserAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export async function requireUserAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Authentication required. No Bearer token provided.' });
@@ -24,7 +24,7 @@ export function requireUserAuth(req: AuthenticatedRequest, res: Response, next: 
   }
 
   const token = authHeader.split(' ')[1];
-  const payload = AuthService.verifyToken(token);
+  const payload = await AuthService.verifyTokenAsync(token);
   if (!payload) {
     res.status(401).json({ error: 'Invalid or expired authentication token.' });
     return;
@@ -52,7 +52,7 @@ export async function requireBridgeOrUserAuth(req: AuthenticatedRequest, res: Re
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
-    const payload = AuthService.verifyToken(token);
+    const payload = await AuthService.verifyTokenAsync(token);
     if (payload) {
       req.user = payload;
       next();

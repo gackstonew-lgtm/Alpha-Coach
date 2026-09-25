@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "Alpha Coach - Professional Automated MT5 Trading Journal & Trading Performance OS",
   "scripts": {
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "cd backend && npm run build && cd ../frontend && npm run build",
-    "test": "cd backend && npm test && cd .. && \"C:\\Users\\Gackstone_Baraka\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" bridge/test_bridge.py",
-    "start:bridge": "\"C:\\Users\\Gackstone_Baraka\\AppData\\Local\\Programs\\Python\\Python312\\python.exe\" bridge/bridge_cli.py"
+    "test:backend": "cd backend && npm test",
+    "test:bridge": "python bridge/test_bridge.py",
+    "test": "cd backend && npm test && cd .. && python bridge/test_bridge.py",
+    "start:bridge": "python bridge/bridge_cli.py"
   }
 }

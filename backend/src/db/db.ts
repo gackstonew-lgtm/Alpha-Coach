@@ -1,6 +1,7 @@
 import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
 import fs from 'fs';
 import path from 'path';
+import { Pool } from 'pg';
 
 export interface IDatabase {
   query<T = any>(sql: string, params?: any[]): Promise<T[]>;
@@ -46,7 +47,6 @@ class SqlJsDatabaseWrapper implements IDatabase {
   }
 
   async query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
-    const cleanSql = sql.replace(/\?/g, () => '$param');
     const stmt = this.db.prepare(sql);
     const rows: T[] = [];
     if (params.length > 0) {
@@ -87,14 +87,76 @@ class SqlJsDatabaseWrapper implements IDatabase {
   }
 }
 
+class PgDatabaseWrapper implements IDatabase {
+  private pool: Pool;
+
+  constructor(pool: Pool) {
+    this.pool = pool;
+  }
+
+  private transformSql(sql: string): string {
+    let index = 1;
+    let transformed = sql.replace(/\?/g, () => `$${index++}`);
+    if (/INSERT\s+OR\s+IGNORE\s+INTO/i.test(transformed)) {
+      transformed = transformed.replace(/INSERT\s+OR\s+IGNORE\s+INTO/gi, 'INSERT INTO');
+      if (!/ON\s+CONFLICT/i.test(transformed)) {
+        transformed += ' ON CONFLICT DO NOTHING';
+      }
+    }
+    return transformed;
+  }
+
+  async query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
+    const transformedSql = this.transformSql(sql);
+    const res = await this.pool.query(transformedSql, params);
+    return res.rows as T[];
+  }
+
+  async get<T = any>(sql: string, params: any[] = []): Promise<T | undefined> {
+    const rows = await this.query<T>(sql, params);
+    return rows.length > 0 ? rows[0] : undefined;
+  }
+
+  async run(sql: string, params: any[] = []): Promise<{ changes: number; lastInsertRowid?: number | bigint }> {
+    const transformedSql = this.transformSql(sql);
+    const res = await this.pool.query(transformedSql, params);
+    return { changes: res.rowCount || 0 };
+  }
+
+  async exec(sql: string): Promise<void> {
+    await this.pool.query(sql);
+  }
+
+  async close(): Promise<void> {
+    await this.pool.end();
+  }
+}
+
 let dbInstance: IDatabase | null = null;
-let sqlJsInstancePromise: Promise<IDatabase> | null = null;
+let dbInstancePromise: Promise<IDatabase> | null = null;
 
 export async function getDatabaseAsync(): Promise<IDatabase> {
   if (dbInstance) return dbInstance;
-  if (sqlJsInstancePromise) return sqlJsInstancePromise;
+  if (dbInstancePromise) return dbInstancePromise;
 
-  sqlJsInstancePromise = (async () => {
+  dbInstancePromise = (async () => {
+    // If DATABASE_URL is provided and valid, connect to PostgreSQL / Supabase Postgres
+    if (process.env.DATABASE_URL && process.env.NODE_ENV !== 'test') {
+      try {
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+          ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false }
+        });
+        // Test connection
+        await pool.query('SELECT 1');
+        dbInstance = new PgDatabaseWrapper(pool);
+        return dbInstance;
+      } catch (err) {
+        console.warn('[DB] PostgreSQL connection failed, falling back to local SQLite engine:', err);
+      }
+    }
+
+    // Default fallback: Local SQLite engine via SQL.js
     const SQL = await initSqlJs();
     const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../../data');
     if (!fs.existsSync(dataDir)) {
@@ -114,7 +176,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     return dbInstance;
   })();
 
-  return sqlJsInstancePromise;
+  return dbInstancePromise;
 }
 
 export function getDatabase(): IDatabase {
@@ -129,7 +191,6 @@ export async function initDatabase(): Promise<IDatabase> {
   const schemaPath = path.join(__dirname, 'schema.sql');
   if (fs.existsSync(schemaPath)) {
     const schemaSql = fs.readFileSync(schemaPath, 'utf8');
-    // sql.js handles multiple statements via exec
     await db.exec(schemaSql);
   }
   await seedInitialData(db);
@@ -138,7 +199,7 @@ export async function initDatabase(): Promise<IDatabase> {
 
 async function seedInitialData(db: IDatabase) {
   const achievementCount = await db.get<{ count: number }>('SELECT COUNT(*) as count FROM achievements');
-  if (!achievementCount || achievementCount.count === 0) {
+  if (!achievementCount || Number(achievementCount.count) === 0) {
     const initialAchievements = [
       { id: 'ach-1', code: 'FIRST_SYNC', title: 'Connected & Synced', description: 'Successfully synchronized your first MT5 trading account.', category: 'CONSISTENCY', xp: 50, icon: 'Zap' },
       { id: 'ach-2', code: 'JOURNAL_STREAK_7', title: '7-Day Discipline', description: 'Maintained a 7-day continuous trade journaling streak.', category: 'DISCIPLINE', xp: 150, icon: 'Flame' },
@@ -157,7 +218,7 @@ async function seedInitialData(db: IDatabase) {
   }
 
   const mistakeCount = await db.get<{ count: number }>('SELECT COUNT(*) as count FROM mistake_tags');
-  if (!mistakeCount || mistakeCount.count === 0) {
+  if (!mistakeCount || Number(mistakeCount.count) === 0) {
     const initialMistakes = [
       { id: 'mst-1', name: 'FOMO Entry', category: 'PSYCHOLOGY', severity: 'HIGH', description: 'Entered out of fear of missing a sudden impulse candle without valid setup.' },
       { id: 'mst-2', name: 'Revenge Trading', category: 'PSYCHOLOGY', severity: 'HIGH', description: 'Took immediate subsequent trade to recover a prior loss.' },
