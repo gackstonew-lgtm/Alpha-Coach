@@ -33,7 +33,7 @@ export const RegisterPage: React.FC = () => {
       if (res.requiresEmailConfirmation) {
         setSuccessMsg('Account created successfully! Please check your email for a confirmation link before logging in.');
       } else {
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
@@ -44,13 +44,13 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col justify-center items-center p-4 relative overflow-hidden ambient-glow-bg">
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-
       <div className="max-w-md w-full framer-card p-8 rounded-3xl shadow-xl space-y-6 z-10 animate-in fade-in zoom-in-95 duration-300 border border-border-subtle">
         {/* Brand Header */}
         <div className="text-center space-y-3">
           <div className="flex justify-center">
-            <AlphaCoachLogo size="lg" showWordmark={true} />
+            <Link to="/">
+              <AlphaCoachLogo size="lg" showWordmark={true} />
+            </Link>
           </div>
           <h1 className="text-xl font-extrabold text-content-primary tracking-tight">Create Alpha Coach Account</h1>
           <p className="text-xs text-content-muted">Automate your MT5 trade journaling and trading psychology</p>
@@ -87,6 +87,7 @@ export const RegisterPage: React.FC = () => {
                 <input
                   type="text"
                   required
+                  autoComplete="given-name"
                   value={firstName}
                   onChange={e => setFirstName(e.target.value)}
                   placeholder="Alex"
@@ -98,6 +99,7 @@ export const RegisterPage: React.FC = () => {
                 <input
                   type="text"
                   required
+                  autoComplete="family-name"
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
                   placeholder="Vance"
@@ -113,6 +115,7 @@ export const RegisterPage: React.FC = () => {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="name@example.com"
@@ -128,6 +131,7 @@ export const RegisterPage: React.FC = () => {
                 <input
                   type="password"
                   required
+                  autoComplete="new-password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -147,11 +151,18 @@ export const RegisterPage: React.FC = () => {
           </form>
         )}
 
-        <div className="text-center text-xs text-content-muted">
-          Already have an account?{' '}
-          <Link to="/login" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
-            Sign In
-          </Link>
+        <div className="space-y-2 text-center text-xs text-content-muted">
+          <div>
+            Already have an account?{' '}
+            <Link to="/login" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
+              Sign In
+            </Link>
+          </div>
+          <div>
+            <Link to="/" className="text-content-subtle hover:text-content-secondary transition">
+              ← Return to Alpha Coach Overview
+            </Link>
+          </div>
         </div>
       </div>
     </div>

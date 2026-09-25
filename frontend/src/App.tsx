@@ -3,7 +3,17 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { AppLayout } from './components/layout/AppLayout';
 
-// Pages
+// Public Pages
+import { LandingPage } from './pages/LandingPage';
+import { MethodologyPage } from './pages/MethodologyPage';
+import { SecurityPage } from './pages/SecurityPage';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { CookiePolicyPage } from './pages/CookiePolicyPage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+
+// Protected Application Pages
 import { DashboardPage } from './pages/DashboardPage';
 import { JournalPage } from './pages/JournalPage';
 import { CalendarPage } from './pages/CalendarPage';
@@ -20,8 +30,9 @@ import { ReportsPage } from './pages/ReportsPage';
 import { BridgeAccountsPage } from './pages/BridgeAccountsPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
+
+// PWA Components
+import { PwaInstallPrompt } from './components/pwa/PwaInstallPrompt';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -43,37 +54,51 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 export const App: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/methodology" element={<MethodologyPage />} />
+        <Route path="/security" element={<SecurityPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/terms-of-service" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/cookies" element={<CookiePolicyPage />} />
 
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="journal" element={<JournalPage />} />
-        <Route path="calendar" element={<CalendarPage />} />
-        <Route path="analytics" element={<AnalyticsPage />} />
-        <Route path="strategy-lab" element={<StrategyLabPage />} />
-        <Route path="sessions" element={<SessionIntelligencePage />} />
-        <Route path="symbols" element={<SymbolIntelligencePage />} />
-        <Route path="trader-dna" element={<TraderDNAPage />} />
-        <Route path="risk-guardian" element={<RiskGuardianPage />} />
-        <Route path="replay" element={<ReplayStudioPage />} />
-        <Route path="gamification" element={<GamificationPage />} />
-        <Route path="ai-coach" element={<AICoachPage />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="bridge" element={<BridgeAccountsPage />} />
-        <Route path="admin" element={<AdminPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-      </Route>
+        {/* Protected Dashboard Routes */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/journal" element={<JournalPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/strategy-lab" element={<StrategyLabPage />} />
+          <Route path="/sessions" element={<SessionIntelligencePage />} />
+          <Route path="/symbols" element={<SymbolIntelligencePage />} />
+          <Route path="/trader-dna" element={<TraderDNAPage />} />
+          <Route path="/risk-guardian" element={<RiskGuardianPage />} />
+          <Route path="/replay" element={<ReplayStudioPage />} />
+          <Route path="/gamification" element={<GamificationPage />} />
+          <Route path="/ai-coach" element={<AICoachPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/bridge" element={<BridgeAccountsPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {/* Cross-Platform PWA Installation Experience */}
+      <PwaInstallPrompt />
+    </>
   );
 };

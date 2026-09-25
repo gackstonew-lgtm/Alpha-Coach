@@ -14,5 +14,9 @@
     "test:bridge": "python bridge/test_bridge.py",
     "test": "cd backend && npm test && cd .. && python bridge/test_bridge.py",
     "start:bridge": "python bridge/bridge_cli.py"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2"
   }
 }

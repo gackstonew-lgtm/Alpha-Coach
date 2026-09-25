@@ -31,7 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
 
   const primaryNavigation = [
-    { name: 'Dashboard', to: '/', icon: LayoutDashboard },
+    { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
     { name: 'Trading Journal', to: '/journal', icon: BookOpen },
     { name: 'Trading Calendar', to: '/calendar', icon: Calendar },
     { name: 'Analytics Engine', to: '/analytics', icon: LineChart },
@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       >
         {/* Brand Header with Official Logo */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
-          <NavLink to="/" onClick={onClose} className="flex items-center gap-2 group">
+          <NavLink to="/dashboard" onClick={onClose} className="flex items-center gap-2 group">
             <AlphaCoachLogo size="sm" showWordmark={true} />
           </NavLink>
           <button

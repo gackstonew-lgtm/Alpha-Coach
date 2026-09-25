@@ -18,7 +18,7 @@ export const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       await login(email, password);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your email and password.');
     } finally {
@@ -28,13 +28,13 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col justify-center items-center p-4 relative overflow-hidden ambient-glow-bg">
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-
       <div className="max-w-md w-full framer-card p-8 rounded-3xl shadow-xl space-y-6 z-10 animate-in fade-in zoom-in-95 duration-300 border border-border-subtle">
         {/* Official Brand Identity */}
         <div className="text-center space-y-3">
           <div className="flex justify-center">
-            <AlphaCoachLogo size="lg" showWordmark={true} />
+            <Link to="/">
+              <AlphaCoachLogo size="lg" showWordmark={true} />
+            </Link>
           </div>
           <p className="text-xs text-content-muted">Automated MT5 Trading Journal & Performance OS</p>
         </div>
@@ -54,6 +54,7 @@ export const LoginPage: React.FC = () => {
               <input
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="name@example.com"
@@ -69,6 +70,7 @@ export const LoginPage: React.FC = () => {
               <input
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -88,11 +90,18 @@ export const LoginPage: React.FC = () => {
         </form>
 
         {/* Register link */}
-        <div className="text-center text-xs text-content-muted">
-          New to Alpha Coach?{' '}
-          <Link to="/register" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
-            Create an Account
-          </Link>
+        <div className="space-y-2 text-center text-xs text-content-muted">
+          <div>
+            New to Alpha Coach?{' '}
+            <Link to="/register" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
+              Create an Account
+            </Link>
+          </div>
+          <div>
+            <Link to="/" className="text-content-subtle hover:text-content-secondary transition">
+              ← Return to Alpha Coach Overview
+            </Link>
+          </div>
         </div>
       </div>
     </div>

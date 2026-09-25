@@ -90,14 +90,14 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Account Selector Pill */}
-          <div className="flex items-center gap-2 bg-surface border border-border-subtle rounded-xl px-3 py-1.5 shadow-sm">
+          {/* Account Selector Pill (Desktop Only) */}
+          <div className="hidden lg:flex items-center gap-2 bg-surface border border-border-subtle rounded-xl px-3 py-1.5 shadow-sm">
             <Layers className="w-4 h-4 text-brand-500 flex-shrink-0" />
-            <span className="text-xs font-medium text-content-muted hidden sm:inline">Account:</span>
+            <span className="text-xs font-medium text-content-muted">Account:</span>
             <select
               value={selectedAccountId}
               onChange={e => setSelectedAccountId(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-content-primary focus:outline-none cursor-pointer pr-2 max-w-[150px] sm:max-w-none truncate"
+              className="bg-transparent text-xs font-semibold text-content-primary focus:outline-none cursor-pointer pr-2 max-w-[200px] truncate"
             >
               <option value="ALL" className="bg-surface text-content-primary">All Accounts (Consolidated)</option>
               {accounts.map(acc => (
@@ -108,8 +108,8 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
             </select>
           </div>
 
-          {/* MT5 Bridge Status Indicator */}
-          <div className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+          {/* MT5 Bridge Status Indicator (Desktop Only) */}
+          <div className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
             <Radio className="w-3.5 h-3.5 animate-pulse text-emerald-500" />
             <span>Bridge Live</span>
           </div>
@@ -117,9 +117,9 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
 
         {/* Right Controls */}
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          {/* Gamification Streak & Level Badge */}
+          {/* Gamification Streak & Level Badge (Desktop Only) */}
           {progression && (
-            <div className="hidden sm:inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold text-amber-600 dark:text-amber-400 shadow-sm">
+            <div className="hidden lg:inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold text-amber-600 dark:text-amber-400 shadow-sm">
               <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
               <span>{progression.currentStreakDays || progression.current_streak_days || 8}d Streak</span>
               <span className="text-content-subtle">•</span>
@@ -138,10 +138,10 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
             <span className="hidden sm:inline">Sync</span>
           </button>
 
-          {/* Theme Toggle Button with Accessible Label */}
+          {/* Theme Toggle Button (Desktop Only) */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl text-content-muted hover:text-content-primary hover:bg-surface-secondary border border-border-subtle transition-all duration-200"
+            className="hidden lg:flex p-2 rounded-xl text-content-muted hover:text-content-primary hover:bg-surface-secondary border border-border-subtle transition-all duration-200"
             aria-label={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
             title={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
           >
@@ -210,21 +210,94 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
             </button>
 
             {showUserDropdown && (
-              <div className="absolute right-0 mt-2 w-56 bg-surface border border-border-strong rounded-2xl shadow-xl z-50 p-2 text-xs animate-in fade-in slide-in-from-top-2">
-                <div className="px-3 py-2 border-b border-border-subtle">
-                  <div className="font-bold text-content-primary">{user?.first_name} {user?.last_name}</div>
+              <div className="absolute right-0 mt-2 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-surface border border-border-strong rounded-2xl shadow-xl z-50 p-2 text-xs animate-in fade-in slide-in-from-top-2 max-h-[85vh] overflow-y-auto">
+                {/* User Profile Header */}
+                <div className="px-3 py-2.5 border-b border-border-subtle">
+                  <div className="font-bold text-content-primary text-sm">{user?.first_name} {user?.last_name}</div>
                   <div className="text-[11px] text-content-muted truncate">{user?.email}</div>
-                  <div className="mt-1 inline-block px-2 py-0.5 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded text-[10px] font-bold border border-brand-500/20">
+                  <div className="mt-1.5 inline-block px-2 py-0.5 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded text-[10px] font-bold border border-brand-500/20">
                     {user?.subscription_tier || 'PRO'} PLAN
                   </div>
                 </div>
-                <button
-                  onClick={logout}
-                  className="w-full mt-2 flex items-center gap-2 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-xl transition font-medium text-left"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Log out</span>
-                </button>
+
+                {/* Mobile & Tablet Relocated Controls */}
+                <div className="lg:hidden divide-y divide-border-subtle">
+                  {/* 1. Account Selector */}
+                  <div className="py-2.5 px-3 space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-content-muted">
+                      <Layers className="w-3.5 h-3.5 text-brand-500" />
+                      <span>Trading Account</span>
+                    </div>
+                    <select
+                      value={selectedAccountId}
+                      onChange={e => setSelectedAccountId(e.target.value)}
+                      className="w-full bg-surface-secondary border border-border-subtle rounded-xl px-2.5 py-2 text-xs font-semibold text-content-primary focus:outline-none focus:border-brand-500 cursor-pointer truncate"
+                    >
+                      <option value="ALL" className="bg-surface text-content-primary">All Accounts (Consolidated)</option>
+                      {accounts.map(acc => (
+                        <option key={acc.id} value={acc.id} className="bg-surface text-content-primary">
+                          {acc.broker_name} ••••{acc.account_number.slice(-4)} (${acc.balance.toLocaleString()})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 2 & 3. Bridge Status & Streak Progress */}
+                  <div className="py-2.5 px-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-content-muted">MT5 Bridge</span>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
+                        <Radio className="w-3 h-3 animate-pulse text-emerald-500" />
+                        <span>Bridge Live</span>
+                      </div>
+                    </div>
+
+                    {progression && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-content-muted">Trading Progress</span>
+                        <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                          <Flame className="w-3 h-3 text-amber-500 fill-amber-500 animate-pulse" />
+                          <span>{progression.currentStreakDays || progression.current_streak_days || 8}d Streak</span>
+                          <span className="text-content-subtle">•</span>
+                          <span className="text-brand-600 dark:text-brand-400 font-mono">Lv.{progression.currentLevel || progression.current_level || 4}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 4. Light/Dark Theme Toggle */}
+                  <div className="py-2.5 px-3 flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-content-muted">Theme</span>
+                    <button
+                      onClick={toggleTheme}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-secondary hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-content-primary transition"
+                      aria-label={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
+                    >
+                      {theme === 'dark' ? (
+                        <>
+                          <Sun className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Dark (OLED)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="w-3.5 h-3.5 text-brand-600" />
+                          <span>Light Mode</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Logout Button */}
+                <div className="pt-1">
+                  <button
+                    onClick={logout}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-xl transition font-medium text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Log out</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
