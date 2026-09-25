@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
 
 export const LoginPage: React.FC = () => {
-  const { login, register } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState<string>('trader@alphacoach.io');
-  const [password, setPassword] = useState<string>('Password123!');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,31 +20,7 @@ export const LoginPage: React.FC = () => {
       await login(email, password);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check credentials.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      try {
-        await login('trader@alphacoach.io', 'Password123!');
-      } catch {
-        await register({
-          email: 'trader@alphacoach.io',
-          password: 'Password123!',
-          firstName: 'Alex',
-          lastName: 'Vance',
-          timezone: 'UTC',
-          currency: 'USD'
-        });
-      }
-      navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Demo login failed');
+      setError(err.message || 'Login failed. Please check your email and password.');
     } finally {
       setIsLoading(false);
     }
@@ -110,18 +86,6 @@ export const LoginPage: React.FC = () => {
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
-
-        {/* Demo Fast Login */}
-        <div className="pt-2 border-t border-border-subtle">
-          <button
-            onClick={handleDemoLogin}
-            type="button"
-            className="w-full py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 rounded-xl text-xs transition flex items-center justify-center gap-2 active:scale-95 shadow-sm"
-          >
-            <Zap className="w-4 h-4" />
-            <span>Instant Demo Access (With MT5 Sample Data)</span>
-          </button>
-        </div>
 
         {/* Register link */}
         <div className="text-center text-xs text-content-muted">

@@ -6,9 +6,9 @@ import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://rmnudqejyrrklltodiaf.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtbnVkcWVqeXJya2xsdG9kaWFmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDM1NDI5NiwiZXhwIjoyMTA1OTMwMjk2fQ.mrJWj1hVYNdSjCGR92WTuAUFLPE1E7wrqAALUkufcso';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtbnVkcWVqeXJya2xsdG9kaWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTQyOTYsImV4cCI6MjEwNTkzMDI5Nn0.2Tg6KzAFA7gnQ09tQPhz_lES4X5by09-n3G1PePXId8';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
 let supabaseAdminInstance: SupabaseClient | null = null;
 let supabaseAnonInstance: SupabaseClient | null = null;
@@ -21,7 +21,7 @@ let supabaseAnonInstance: SupabaseClient | null = null;
 export function getSupabaseAdmin(): SupabaseClient {
   if (!supabaseAdminInstance) {
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error('Supabase credentials not configured in environment variables');
+      throw new Error('Supabase credentials (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY) not configured in environment variables');
     }
     supabaseAdminInstance = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: {
@@ -38,6 +38,9 @@ export function getSupabaseAdmin(): SupabaseClient {
  */
 export function getSupabaseAnon(): SupabaseClient {
   if (!supabaseAnonInstance) {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      throw new Error('Supabase public credentials (SUPABASE_URL or SUPABASE_ANON_KEY) not configured in environment variables');
+    }
     supabaseAnonInstance = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
         autoRefreshToken: true,
@@ -53,6 +56,9 @@ export function getSupabaseAnon(): SupabaseClient {
  * Respects all Supabase Row Level Security (RLS) policies for that user.
  */
 export function getSupabaseUserClient(accessToken: string): SupabaseClient {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Supabase public credentials (SUPABASE_URL or SUPABASE_ANON_KEY) not configured in environment variables');
+  }
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: {
       headers: {
@@ -67,15 +73,22 @@ export function getSupabaseUserClient(accessToken: string): SupabaseClient {
 }
 
 /**
- * Validates a Supabase JWT and retrieves user details from Supabase Auth.
+ * Verifies a Supabase JWT access token using Supabase Auth.
  */
-export async function verifySupabaseToken(accessToken: string) {
-  const admin = getSupabaseAdmin();
-  const { data, error } = await admin.auth.getUser(accessToken);
-  if (error || !data.user) {
+export async function verifySupabaseToken(token: string) {
+  try {
+    const supabase = getSupabaseAnon();
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) return null;
+    return user;
+  } catch {
     return null;
   }
-  return data.user;
 }
 
-export { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY };
+export default {
+  getSupabaseAdmin,
+  getSupabaseAnon,
+  getSupabaseUserClient,
+  verifySupabaseToken
+};

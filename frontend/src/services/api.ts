@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase';
 import { User, TradingAccount, ReconstructedTrade, RiskRule, PerformanceOverview } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
-const USE_CUSTOM_BACKEND = Boolean(API_BASE_URL && API_BASE_URL.startsWith('http') && !API_BASE_URL.includes('localhost'));
+const USE_CUSTOM_BACKEND = Boolean(API_BASE_URL && API_BASE_URL.trim() !== '' && !API_BASE_URL.includes('localhost'));
 
 class ApiClient {
   private getToken(): string | null {
@@ -11,7 +11,11 @@ class ApiClient {
 
   private async request<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = this.getToken();
-    const baseUrl = API_BASE_URL || 'http://localhost:4000/api/v1';
+    const baseUrl = API_BASE_URL || '';
+    if (!baseUrl) {
+      throw new Error('Custom backend API_BASE_URL is not configured.');
+    }
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
@@ -59,20 +63,31 @@ class ApiClient {
 
     if (error) throw new Error(error.message);
 
+    if (!data.user) {
+      throw new Error('Registration failed: no user record returned from authentication service.');
+    }
+
+    const meta = data.user.user_metadata || {};
     const user: User = {
-      id: data.user?.id || 'trader-1',
-      email: body.email,
-      first_name: body.firstName,
-      last_name: body.lastName,
-      role: 'trader',
-      timezone: body.timezone || 'UTC',
-      currency: body.currency || 'USD',
-      subscription_tier: 'PRO',
+      id: data.user.id,
+      email: data.user.email || body.email,
+      first_name: meta.first_name || body.firstName,
+      last_name: meta.last_name || body.lastName,
+      role: meta.role || 'trader',
+      timezone: meta.timezone || body.timezone || 'UTC',
+      currency: meta.currency || body.currency || 'USD',
+      subscription_tier: meta.subscription_tier || 'PRO',
       is_active: 1
     };
 
-    const token = data.session?.access_token || 'supabase-session-token';
-    return { user, token };
+    const session = data.session;
+    const token = session?.access_token || null;
+    return {
+      user,
+      token,
+      session,
+      requiresEmailConfirmation: !session
+    };
   }
 
   async login(body: { email: string; password: string }) {
@@ -86,6 +101,9 @@ class ApiClient {
     });
 
     if (error) throw new Error(error.message);
+    if (!data.user || !data.session) {
+      throw new Error('Authentication failed: no active session established.');
+    }
 
     const meta = data.user.user_metadata || {};
     const user: User = {
@@ -100,7 +118,7 @@ class ApiClient {
       is_active: 1
     };
 
-    const token = data.session?.access_token || '';
+    const token = data.session.access_token;
     return { user, token };
   }
 
@@ -111,19 +129,7 @@ class ApiClient {
 
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
-      return {
-        user: {
-          id: 'usr-default-trader',
-          email: 'trader@alphacoach.io',
-          first_name: 'Alex',
-          last_name: 'Vance',
-          role: 'trader',
-          timezone: 'America/New_York',
-          currency: 'USD',
-          subscription_tier: 'PRO',
-          is_active: 1
-        } as User
-      };
+      throw new Error(error?.message || 'No authenticated session found.');
     }
 
     const meta = user.user_metadata || {};
@@ -155,34 +161,8 @@ class ApiClient {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error || !data || data.length === 0) {
-      return {
-        accounts: [
-          {
-            id: 'acc-ftmo-100k',
-            user_id: 'usr-default-trader',
-            account_number: '210084920',
-            broker_name: 'FTMO Global Markets',
-            server_name: 'FTMO-Server-Demo',
-            currency: 'USD',
-            leverage: 100,
-            balance: 108420.50,
-            equity: 109860.20,
-            margin: 1450.00,
-            free_margin: 108410.20,
-            margin_level: 7576.56,
-            account_type: 'hedging',
-            is_active: 1,
-            last_synced_at: new Date().toISOString(),
-            total_positions: 184,
-            total_closed_trades: 178,
-            total_net_profit: 8420.50
-          }
-        ]
-      };
-    }
-
-    return { accounts: data };
+    if (error) throw new Error(error.message);
+    return { accounts: (data as TradingAccount[]) || [] };
   }
 
   async updateAccount(id: string, body: any) {
@@ -215,19 +195,35 @@ class ApiClient {
       return this.request<{ trades: ReconstructedTrade[]; pagination: any }>(`/trades?${searchParams.toString()}`);
     }
 
-    let query = supabase.from('reconstructed_positions').select('*, position_executions(*), trade_journals(*, trade_screenshots(*))');
-    if (params.accountId) query = query.eq('account_id', params.accountId);
+    let query = supabase.from('reconstructed_positions').select('*, position_executions(*), trade_journals(*, trade_screenshots(*))', { count: 'exact' });
+    if (params.accountId && params.accountId !== 'ALL') query = query.eq('account_id', params.accountId);
     if (params.symbol) query = query.ilike('symbol', `%${params.symbol}%`);
+    if (params.direction) query = query.eq('position_type', params.direction);
     if (params.status) query = query.eq('status', params.status);
     if (params.session) query = query.eq('session_name', params.session);
-    query = query.order('open_time', { ascending: false }).limit(params.limit || 50);
+    if (params.isReviewed !== undefined && params.isReviewed !== '') {
+      query = query.eq('is_reviewed', Number(params.isReviewed));
+    }
+    if (params.search) {
+      query = query.or(`symbol.ilike.%${params.search}%,setup_name.ilike.%${params.search}%,trader_notes.ilike.%${params.search}%`);
+    }
 
-    const { data, error } = await query;
-    if (error || !data) return { trades: [], pagination: { total: 0, page: 1, limit: 50, totalPages: 0 } };
+    const page = Number(params.page) || 1;
+    const limit = Number(params.limit) || 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    query = query.order('open_time', { ascending: false }).range(from, to);
+
+    const { data, count, error } = await query;
+    if (error) throw new Error(error.message);
+
+    const total = count || 0;
+    const totalPages = Math.ceil(total / limit) || 1;
 
     return {
-      trades: data,
-      pagination: { total: data.length, page: 1, limit: 50, totalPages: 1 }
+      trades: (data as ReconstructedTrade[]) || [],
+      pagination: { total, page, limit, totalPages }
     };
   }
 
@@ -239,11 +235,19 @@ class ApiClient {
     const { data, error } = await supabase
       .from('reconstructed_positions')
       .select('*, position_executions(*), trade_journals(*, trade_screenshots(*))')
-      .eq('position_id', positionId)
-      .single();
+      .or(`id.eq.${positionId},position_id.eq.${positionId}`)
+      .maybeSingle();
 
     if (error) throw new Error(error.message);
-    return { trade: data };
+    if (!data) throw new Error('Trade not found');
+
+    const journal = Array.isArray(data.trade_journals) && data.trade_journals.length > 0 ? data.trade_journals[0] : null;
+    return {
+      position: data,
+      executions: data.position_executions || [],
+      journal,
+      screenshots: journal?.trade_screenshots || []
+    };
   }
 
   async updateTradeReview(positionId: string, body: any) {
@@ -251,18 +255,49 @@ class ApiClient {
       return this.request(`/reviews/trade/${positionId}`, { method: 'PUT', body: JSON.stringify(body) });
     }
 
-    const { data: pos } = await supabase.from('reconstructed_positions').select('id, user_id').eq('position_id', positionId).single();
-    const posDbId = pos?.id || positionId;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
 
-    const { data, error } = await supabase.from('trade_journals').upsert({
-      position_id: posDbId,
-      user_id: pos?.user_id || 'usr-default-trader',
-      ...body,
+    const { data: pos, error: posError } = await supabase
+      .from('reconstructed_positions')
+      .select('id, user_id, account_id')
+      .or(`id.eq.${positionId},position_id.eq.${positionId}`)
+      .single();
+
+    if (posError || !pos) throw new Error(posError?.message || 'Trade position not found');
+
+    const journalPayload = {
+      position_id: pos.id,
+      user_id: user.id,
+      setup_name: body.setupName || body.setup_name || null,
+      strategy_id: body.strategyId || body.strategy_id || null,
+      bias: body.bias || 'NEUTRAL',
+      confluences: body.confluences || null,
+      entry_trigger: body.entryTrigger || body.entry_trigger || null,
+      exit_trigger: body.exitTrigger || body.exit_trigger || null,
+      confidence_score: Number(body.confidenceScore || body.confidence_score) || 5,
+      emotion_state: body.emotionState || body.emotion_state || 'DISCIPLINED',
+      mistake_id: body.mistakeId || body.mistake_id || null,
+      lesson_learned: body.lessonLearned || body.lesson_learned || null,
+      trader_notes: body.traderNotes || body.trader_notes || null,
       is_reviewed: 1,
       reviewed_at: new Date().toISOString()
-    }).select().single();
+    };
+
+    const { data, error } = await supabase
+      .from('trade_journals')
+      .upsert(journalPayload, { onConflict: 'position_id' })
+      .select()
+      .single();
 
     if (error) throw new Error(error.message);
+
+    await supabase.from('reconstructed_positions').update({
+      is_reviewed: 1,
+      setup_name: journalPayload.setup_name,
+      trader_notes: journalPayload.trader_notes
+    }).eq('id', pos.id);
+
     return { journal: data };
   }
 
@@ -288,17 +323,8 @@ class ApiClient {
     }
 
     const { data, error } = await supabase.from('mistake_tags').select('*').order('name');
-    if (error || !data || data.length === 0) {
-      return {
-        mistakeTags: [
-          { id: 'mst-1', user_id: 'SYSTEM', name: 'FOMO Entry', category: 'PSYCHOLOGY', severity: 'HIGH', description: 'Entered impulsively without confirmed setup', created_at: new Date().toISOString() },
-          { id: 'mst-2', user_id: 'SYSTEM', name: 'Moved Stop Loss', category: 'RISK', severity: 'HIGH', description: 'Widened risk against trade plan', created_at: new Date().toISOString() },
-          { id: 'mst-3', user_id: 'SYSTEM', name: 'Revenge Trading', category: 'PSYCHOLOGY', severity: 'HIGH', description: 'Took immediate trade to recover loss', created_at: new Date().toISOString() },
-          { id: 'mst-4', user_id: 'SYSTEM', name: 'Early Exit', category: 'EXECUTION', severity: 'MEDIUM', description: 'Closed winner prematurely due to fear', created_at: new Date().toISOString() }
-        ]
-      };
-    }
-    return { mistakeTags: data };
+    if (error) throw new Error(error.message);
+    return { mistakeTags: data || [] };
   }
 
   // ==========================================
@@ -313,67 +339,166 @@ class ApiClient {
       return this.request<{ overview: PerformanceOverview }>(`/analytics/overview?${searchParams.toString()}`);
     }
 
-    const { data: positions } = await supabase
+    let query = supabase
       .from('reconstructed_positions')
       .select('*')
-      .eq('status', 'CLOSED')
-      .order('close_time', { ascending: true });
+      .order('open_time', { ascending: true });
+
+    if (params.accountId && params.accountId !== 'ALL') {
+      query = query.eq('account_id', params.accountId);
+    }
+
+    const { data: positions, error } = await query;
+    if (error) throw new Error(error.message);
 
     const posList = positions || [];
-    const totalTrades = posList.length || 84;
-    const wins = posList.filter(p => Number(p.net_profit) > 0);
-    const losses = posList.filter(p => Number(p.net_profit) < 0);
-    const grossProfit = wins.length > 0 ? wins.reduce((sum, p) => sum + Number(p.net_profit), 0) : 14250.00;
-    const grossLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, p) => sum + Number(p.net_profit), 0)) : 5830.00;
+    const closedList = posList.filter(p => p.status === 'CLOSED');
+    const openList = posList.filter(p => p.status === 'OPEN');
+
+    const totalTrades = closedList.length;
+    const wins = closedList.filter(p => Number(p.net_profit) > 0);
+    const losses = closedList.filter(p => Number(p.net_profit) < 0);
+    const breakevens = closedList.filter(p => Number(p.net_profit) === 0);
+
+    const grossProfit = wins.reduce((sum, p) => sum + Number(p.net_profit || 0), 0);
+    const grossLoss = Math.abs(losses.reduce((sum, p) => sum + Number(p.net_profit || 0), 0));
     const netProfit = grossProfit - grossLoss;
-    const winRate = totalTrades > 0 ? (wins.length ? (wins.length / totalTrades) * 100 : 66.7) : 66.7;
-    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : 2.44;
+    const totalCommissions = posList.reduce((sum, p) => sum + Number(p.commission_total || 0), 0);
+    const totalSwaps = posList.reduce((sum, p) => sum + Number(p.swap_total || 0), 0);
+
+    const winRate = totalTrades > 0 ? Number(((wins.length / totalTrades) * 100).toFixed(2)) : 0;
+    const lossRate = totalTrades > 0 ? Number(((losses.length / totalTrades) * 100).toFixed(2)) : 0;
+    const profitFactor = grossLoss > 0 ? Number((grossProfit / grossLoss).toFixed(2)) : (grossProfit > 0 ? 99.99 : 0);
+
+    const avgWin = wins.length > 0 ? Number((grossProfit / wins.length).toFixed(2)) : 0;
+    const avgLoss = losses.length > 0 ? Number((grossLoss / losses.length).toFixed(2)) : 0;
+    const riskRewardRatio = avgLoss > 0 ? Number((avgWin / avgLoss).toFixed(2)) : 0;
+    const expectancy = totalTrades > 0 ? Number((( (winRate / 100) * avgWin ) - ( (lossRate / 100) * avgLoss )).toFixed(2)) : 0;
+
+    const validRs = closedList.filter(p => p.r_multiple !== null && p.r_multiple !== undefined).map(p => Number(p.r_multiple));
+    const averageR = validRs.length > 0 ? Number((validRs.reduce((a, b) => a + b, 0) / validRs.length).toFixed(2)) : 0;
+
+    let maxWins = 0, maxLosses = 0, curWins = 0, curLosses = 0;
+    let largestWin = 0, largestLoss = 0;
+    let totalHolding = 0;
+
+    closedList.forEach(p => {
+      const np = Number(p.net_profit || 0);
+      if (np > largestWin) largestWin = np;
+      if (np < largestLoss) largestLoss = np;
+
+      if (p.holding_seconds) totalHolding += Number(p.holding_seconds);
+
+      if (np > 0) {
+        curWins++;
+        curLosses = 0;
+        if (curWins > maxWins) maxWins = curWins;
+      } else if (np < 0) {
+        curLosses++;
+        curWins = 0;
+        if (curLosses > maxLosses) maxLosses = curLosses;
+      }
+    });
+
+    const avgHoldingSeconds = totalTrades > 0 ? Math.round(totalHolding / totalTrades) : 0;
+
+    const longs = closedList.filter(p => p.position_type === 'BUY');
+    const shorts = closedList.filter(p => p.position_type === 'SELL');
+    const longWins = longs.filter(p => Number(p.net_profit) > 0);
+    const shortWins = shorts.filter(p => Number(p.net_profit) > 0);
+    const longProfit = longs.reduce((s, p) => s + Number(p.net_profit || 0), 0);
+    const shortProfit = shorts.reduce((s, p) => s + Number(p.net_profit || 0), 0);
+    const longGrossLoss = Math.abs(longs.filter(p => Number(p.net_profit) < 0).reduce((s, p) => s + Number(p.net_profit || 0), 0));
+    const longGrossProfit = longs.filter(p => Number(p.net_profit) > 0).reduce((s, p) => s + Number(p.net_profit || 0), 0);
+    const shortGrossLoss = Math.abs(shorts.filter(p => Number(p.net_profit) < 0).reduce((s, p) => s + Number(p.net_profit || 0), 0));
+    const shortGrossProfit = shorts.filter(p => Number(p.net_profit) > 0).reduce((s, p) => s + Number(p.net_profit || 0), 0);
+
+    let runningCumulative = 0;
+    let peakEquity = 100000;
+    let maxDrawdownAmt = 0;
+    let maxDrawdownPct = 0;
+
+    const equityCurve = closedList.map((p, idx) => {
+      const np = Number(p.net_profit || 0);
+      runningCumulative += np;
+      const currentEq = 100000 + runningCumulative;
+      if (currentEq > peakEquity) peakEquity = currentEq;
+      const dd = peakEquity - currentEq;
+      const ddPct = peakEquity > 0 ? (dd / peakEquity) * 100 : 0;
+      if (dd > maxDrawdownAmt) maxDrawdownAmt = dd;
+      if (ddPct > maxDrawdownPct) maxDrawdownPct = ddPct;
+
+      return {
+        date: p.close_time ? p.close_time.slice(0, 10) : (p.open_time ? p.open_time.slice(0, 10) : ''),
+        tradeIndex: idx + 1,
+        symbol: p.symbol,
+        netProfit: Number(np.toFixed(2)),
+        cumulativeProfit: Number(runningCumulative.toFixed(2)),
+        equity: Number(currentEq.toFixed(2)),
+        drawdown: Number(dd.toFixed(2)),
+        drawdownPct: Number(ddPct.toFixed(2))
+      };
+    });
+
+    const recoveryFactor = maxDrawdownAmt > 0 ? Number((netProfit / maxDrawdownAmt).toFixed(2)) : 0;
+
+    const dailyMap = new Map<string, { date: string; netProfit: number; tradesCount: number; winCount: number; lossCount: number }>();
+    closedList.forEach(p => {
+      const d = p.close_time ? p.close_time.slice(0, 10) : (p.open_time ? p.open_time.slice(0, 10) : 'Unknown');
+      const np = Number(p.net_profit || 0);
+      const existing = dailyMap.get(d) || { date: d, netProfit: 0, tradesCount: 0, winCount: 0, lossCount: 0 };
+      existing.netProfit = Number((existing.netProfit + np).toFixed(2));
+      existing.tradesCount += 1;
+      if (np > 0) existing.winCount += 1;
+      if (np < 0) existing.lossCount += 1;
+      dailyMap.set(d, existing);
+    });
+
+    const dailyPerformance = Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
     return {
       overview: {
         totalTrades,
-        openTrades: 2,
-        winningTrades: wins.length || 56,
-        losingTrades: losses.length || 28,
-        breakevenTrades: 0,
-        winRate: Number(winRate.toFixed(2)),
-        lossRate: Number((100 - winRate).toFixed(2)),
+        openTrades: openList.length,
+        winningTrades: wins.length,
+        losingTrades: losses.length,
+        breakevenTrades: breakevens.length,
+        winRate,
+        lossRate,
         grossProfit: Number(grossProfit.toFixed(2)),
         grossLoss: Number(grossLoss.toFixed(2)),
         netProfit: Number(netProfit.toFixed(2)),
-        totalCommissions: 124.50,
-        totalSwaps: 42.10,
-        profitFactor: Number(profitFactor.toFixed(2)),
-        averageWin: Number((grossProfit / (wins.length || 56)).toFixed(2)),
-        averageLoss: Number((grossLoss / (losses.length || 28)).toFixed(2)),
-        riskRewardRatio: 2.15,
-        expectancy: 100.24,
-        averageR: 2.1,
-        maxDrawdownAmount: 1850.00,
-        maxDrawdownPct: 3.45,
-        recoveryFactor: 4.55,
-        maxConsecutiveWins: 7,
-        maxConsecutiveLosses: 3,
-        largestWin: 1250.00,
-        largestLoss: -450.00,
-        avgHoldingSeconds: 3420,
-        medianHoldingSeconds: 2800,
-        longTrades: { count: 52, winRate: 67.3, netProfit: 5120.00, profitFactor: 2.5 },
-        shortTrades: { count: 32, winRate: 65.6, netProfit: 3300.00, profitFactor: 2.3 },
-        equityCurve: [
-          { date: '2026-07-01', tradeIndex: 1, symbol: 'EURUSD', netProfit: 320, cumulativeProfit: 320, equity: 100320, drawdown: 0, drawdownPct: 0 },
-          { date: '2026-07-15', tradeIndex: 20, symbol: 'XAUUSD', netProfit: 540, cumulativeProfit: 2840, equity: 102840, drawdown: 120, drawdownPct: 0.1 },
-          { date: '2026-08-01', tradeIndex: 45, symbol: 'US30', netProfit: 890, cumulativeProfit: 5410, equity: 105410, drawdown: 340, drawdownPct: 0.3 },
-          { date: '2026-09-01', tradeIndex: 70, symbol: 'XAUUSD', netProfit: 620, cumulativeProfit: 7320, equity: 107320, drawdown: 210, drawdownPct: 0.2 },
-          { date: '2026-09-25', tradeIndex: 84, symbol: 'EURUSD', netProfit: 450, cumulativeProfit: 8420, equity: 108420, drawdown: 0, drawdownPct: 0 }
-        ],
-        dailyPerformance: [
-          { date: '2026-09-21', netProfit: 420.00, tradesCount: 3, winCount: 2, lossCount: 1 },
-          { date: '2026-09-22', netProfit: 680.50, tradesCount: 4, winCount: 3, lossCount: 1 },
-          { date: '2026-09-23', netProfit: -210.00, tradesCount: 2, winCount: 0, lossCount: 2 },
-          { date: '2026-09-24', netProfit: 890.00, tradesCount: 3, winCount: 3, lossCount: 0 },
-          { date: '2026-09-25', netProfit: 540.00, tradesCount: 2, winCount: 2, lossCount: 0 }
-        ]
+        totalCommissions: Number(totalCommissions.toFixed(2)),
+        totalSwaps: Number(totalSwaps.toFixed(2)),
+        profitFactor,
+        averageWin: avgWin,
+        averageLoss: avgLoss,
+        riskRewardRatio,
+        expectancy,
+        averageR,
+        maxDrawdownAmount: Number(maxDrawdownAmt.toFixed(2)),
+        maxDrawdownPct: Number(maxDrawdownPct.toFixed(2)),
+        recoveryFactor,
+        maxConsecutiveWins: maxWins,
+        maxConsecutiveLosses: maxLosses,
+        largestWin: Number(largestWin.toFixed(2)),
+        largestLoss: Number(largestLoss.toFixed(2)),
+        avgHoldingSeconds,
+        medianHoldingSeconds: avgHoldingSeconds,
+        longTrades: {
+          count: longs.length,
+          winRate: longs.length > 0 ? Number(((longWins.length / longs.length) * 100).toFixed(1)) : 0,
+          netProfit: Number(longProfit.toFixed(2)),
+          profitFactor: longGrossLoss > 0 ? Number((longGrossProfit / longGrossLoss).toFixed(2)) : (longGrossProfit > 0 ? 99.99 : 0)
+        },
+        shortTrades: {
+          count: shorts.length,
+          winRate: shorts.length > 0 ? Number(((shortWins.length / shorts.length) * 100).toFixed(1)) : 0,
+          netProfit: Number(shortProfit.toFixed(2)),
+          profitFactor: shortGrossLoss > 0 ? Number((shortGrossProfit / shortGrossLoss).toFixed(2)) : (shortGrossProfit > 0 ? 99.99 : 0)
+        },
+        equityCurve,
+        dailyPerformance
       }
     };
   }
@@ -387,16 +512,8 @@ class ApiClient {
     }
 
     const { data, error } = await supabase.from('strategies').select('*').order('created_at');
-    if (error || !data || data.length === 0) {
-      return {
-        strategies: [
-          { id: 'st-1', user_id: 'usr-default-trader', name: 'Liquidity Sweep + MSS', description: 'ICT Confluence setup on London/NY open', rules: '1. Asian High/Low Sweep\n2. 5M Market Structure Shift\n3. FVG Entry', color_tag: '#3b82f6', is_active: 1, created_at: new Date().toISOString() },
-          { id: 'st-2', user_id: 'usr-default-trader', name: 'Order Block Retest', description: 'HTF Order block mitigation with 1:3 RR target', rules: '1. HTF 1H/4H Order Block\n2. Rejection Wick Confirmation\n3. SL below OB invalidation', color_tag: '#10b981', is_active: 1, created_at: new Date().toISOString() },
-          { id: 'st-3', user_id: 'usr-default-trader', name: 'Break & Retest', description: 'Clean key level breakout and retest confirmation', rules: '1. Key Daily/4H Support/Resistance Break\n2. 15M Retest with rejection', color_tag: '#f59e0b', is_active: 1, created_at: new Date().toISOString() }
-        ]
-      };
-    }
-    return { strategies: data };
+    if (error) throw new Error(error.message);
+    return { strategies: data || [] };
   }
 
   async getStrategyAnalytics(accountId?: string) {
@@ -405,20 +522,80 @@ class ApiClient {
       return this.request<any>(`/strategies/analytics${query}`);
     }
 
-    return {
-      strategyPerformance: [
-        { strategyId: 'st-1', name: 'Liquidity Sweep + MSS', color: '#3b82f6', tradesCount: 42, winRate: 69.0, netProfit: 5420.50, profitFactor: 2.45, averageR: 2.3 },
-        { strategyId: 'st-2', name: 'Order Block Retest', color: '#10b981', tradesCount: 28, winRate: 64.3, netProfit: 3180.00, profitFactor: 1.95, averageR: 1.9 },
-        { strategyId: 'st-3', name: 'Break & Retest', color: '#f59e0b', tradesCount: 19, winRate: 52.6, netProfit: 1240.20, profitFactor: 1.42, averageR: 1.4 }
-      ]
-    };
+    let query = supabase.from('reconstructed_positions').select('*, trade_journals(*)');
+    if (accountId && accountId !== 'ALL') query = query.eq('account_id', accountId);
+
+    const [stratsRes, tradesRes] = await Promise.all([
+      supabase.from('strategies').select('*'),
+      query
+    ]);
+
+    if (stratsRes.error) throw new Error(stratsRes.error.message);
+    if (tradesRes.error) throw new Error(tradesRes.error.message);
+
+    const strategies = stratsRes.data || [];
+    const trades = tradesRes.data || [];
+
+    const strategyPerformance = strategies.map(s => {
+      const matchingTrades = trades.filter(t => t.setup_name === s.name || t.trade_journals?.[0]?.strategy_id === s.id);
+      const wins = matchingTrades.filter(t => Number(t.net_profit) > 0);
+      const losses = matchingTrades.filter(t => Number(t.net_profit) < 0);
+      const netProfit = matchingTrades.reduce((acc, t) => acc + Number(t.net_profit || 0), 0);
+      const grossProfit = wins.reduce((acc, t) => acc + Number(t.net_profit || 0), 0);
+      const grossLoss = Math.abs(losses.reduce((acc, t) => acc + Number(t.net_profit || 0), 0));
+      const winRate = matchingTrades.length > 0 ? Number(((wins.length / matchingTrades.length) * 100).toFixed(1)) : 0;
+      const profitFactor = grossLoss > 0 ? Number((grossProfit / grossLoss).toFixed(2)) : (grossProfit > 0 ? 99.99 : 0);
+
+      return {
+        strategyId: s.id,
+        name: s.name,
+        description: s.description,
+        colorTag: s.color_tag || '#3b82f6',
+        totalTrades: matchingTrades.length,
+        winRate,
+        netProfit: Number(netProfit.toFixed(2)),
+        profitFactor
+      };
+    });
+
+    const confluenceMap = new Map<string, { count: number; wins: number; profit: number }>();
+    trades.forEach(t => {
+      const conf = t.trade_journals?.[0]?.confluences;
+      if (conf) {
+        const key = conf.trim();
+        const existing = confluenceMap.get(key) || { count: 0, wins: 0, profit: 0 };
+        existing.count += 1;
+        const np = Number(t.net_profit || 0);
+        existing.profit += np;
+        if (np > 0) existing.wins += 1;
+        confluenceMap.set(key, existing);
+      }
+    });
+
+    const confluences = Array.from(confluenceMap.entries()).map(([confluence, stats]) => ({
+      confluence,
+      count: stats.count,
+      winRate: stats.count > 0 ? Number(((stats.wins / stats.count) * 100).toFixed(1)) : 0,
+      netProfit: Number(stats.profit.toFixed(2))
+    })).sort((a, b) => b.count - a.count);
+
+    return { strategies: strategyPerformance, confluences };
   }
 
   async createStrategy(body: any) {
     if (USE_CUSTOM_BACKEND) {
       return this.request('/strategies', { method: 'POST', body: JSON.stringify(body) });
     }
-    const { data, error } = await supabase.from('strategies').insert(body).select().single();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
+
+    const payload = {
+      ...body,
+      user_id: user.id
+    };
+
+    const { data, error } = await supabase.from('strategies').insert(payload).select().single();
     if (error) throw new Error(error.message);
     return { strategy: data };
   }
@@ -441,14 +618,49 @@ class ApiClient {
       return this.request<any>(`/sessions/analytics${query}`);
     }
 
-    return {
-      sessionPerformance: [
-        { session: 'London', tradesCount: 38, winRate: 68.4, netProfit: 4890.00, profitFactor: 2.35, icon: 'Clock' },
-        { session: 'New York', tradesCount: 45, winRate: 62.2, netProfit: 4120.50, profitFactor: 1.92, icon: 'Zap' },
-        { session: 'London/NY Overlap', tradesCount: 22, winRate: 72.7, netProfit: 2950.20, profitFactor: 2.80, icon: 'Flame' },
-        { session: 'Asian', tradesCount: 14, winRate: 42.8, netProfit: -480.00, profitFactor: 0.78, icon: 'Moon' }
-      ]
-    };
+    let query = supabase.from('reconstructed_positions').select('*');
+    if (accountId && accountId !== 'ALL') query = query.eq('account_id', accountId);
+
+    const { data: positions, error } = await query;
+    if (error) throw new Error(error.message);
+
+    const trades = positions || [];
+    const sessionNames = ['London', 'New York', 'London/NY Overlap', 'Asia', 'Off-Hours'];
+
+    const sessions = sessionNames.map(sessionName => {
+      const sTrades = trades.filter(t => (t.session_name || 'Off-Hours') === sessionName);
+      const wins = sTrades.filter(t => Number(t.net_profit) > 0);
+      const losses = sTrades.filter(t => Number(t.net_profit) < 0);
+      const netProfit = sTrades.reduce((acc, t) => acc + Number(t.net_profit || 0), 0);
+      const grossProfit = wins.reduce((acc, t) => acc + Number(t.net_profit || 0), 0);
+      const grossLoss = Math.abs(losses.reduce((acc, t) => acc + Number(t.net_profit || 0), 0));
+      const winRate = sTrades.length > 0 ? Number(((wins.length / sTrades.length) * 100).toFixed(1)) : 0;
+      const profitFactor = grossLoss > 0 ? Number((grossProfit / grossLoss).toFixed(2)) : (grossProfit > 0 ? 99.99 : 0);
+
+      return {
+        sessionName,
+        tradeCount: sTrades.length,
+        winRate,
+        netProfit: Number(netProfit.toFixed(2)),
+        profitFactor
+      };
+    });
+
+    const hourlyMap = new Map<string, { dayOfWeek: number; hour: number; count: number; netProfit: number }>();
+    trades.forEach(t => {
+      if (t.open_time) {
+        const dt = new Date(t.open_time);
+        const day = dt.getUTCDay();
+        const hour = dt.getUTCHours();
+        const key = `${day}-${hour}`;
+        const existing = hourlyMap.get(key) || { dayOfWeek: day, hour, count: 0, netProfit: 0 };
+        existing.count += 1;
+        existing.netProfit += Number(t.net_profit || 0);
+        hourlyMap.set(key, existing);
+      }
+    });
+
+    return { sessions, hourlyHeatmap: Array.from(hourlyMap.values()) };
   }
 
   async getSymbolAnalytics(accountId?: string) {
@@ -457,14 +669,55 @@ class ApiClient {
       return this.request<{ symbols: any[] }>(`/symbols/analytics${query}`);
     }
 
-    return {
-      symbols: [
-        { symbol: 'XAUUSD', tradesCount: 44, winRate: 68.2, netProfit: 5410.00, profitFactor: 2.40, avgDuration: '42m' },
-        { symbol: 'EURUSD', tradesCount: 35, winRate: 65.7, netProfit: 3240.50, profitFactor: 2.10, avgDuration: '1h 15m' },
-        { symbol: 'US30', tradesCount: 26, winRate: 61.5, netProfit: 2180.20, profitFactor: 1.85, avgDuration: '28m' },
-        { symbol: 'NAS100', tradesCount: 18, winRate: 55.5, netProfit: 890.00, profitFactor: 1.35, avgDuration: '34m' }
-      ]
-    };
+    let query = supabase.from('reconstructed_positions').select('*');
+    if (accountId && accountId !== 'ALL') query = query.eq('account_id', accountId);
+
+    const { data: positions, error } = await query;
+    if (error) throw new Error(error.message);
+
+    const trades = positions || [];
+    const symbolMap = new Map<string, any[]>();
+    trades.forEach(t => {
+      const sym = t.symbol || 'UNKNOWN';
+      const list = symbolMap.get(sym) || [];
+      list.push(t);
+      symbolMap.set(sym, list);
+    });
+
+    const symbols = Array.from(symbolMap.entries()).map(([symbol, sTrades]) => {
+      const wins = sTrades.filter(t => Number(t.net_profit) > 0);
+      const losses = sTrades.filter(t => Number(t.net_profit) < 0);
+      const netProfit = sTrades.reduce((acc, t) => acc + Number(t.net_profit || 0), 0);
+      const grossProfit = wins.reduce((acc, t) => acc + Number(t.net_profit || 0), 0);
+      const grossLoss = Math.abs(losses.reduce((acc, t) => acc + Number(t.net_profit || 0), 0));
+      const totalVolume = sTrades.reduce((acc, t) => acc + Number(t.total_volume || 0), 0);
+      const winRate = sTrades.length > 0 ? Number(((wins.length / sTrades.length) * 100).toFixed(1)) : 0;
+      const profitFactor = grossLoss > 0 ? Number((grossProfit / grossLoss).toFixed(2)) : (grossProfit > 0 ? 99.99 : 0);
+
+      const validRs = sTrades.filter(t => t.r_multiple !== null && t.r_multiple !== undefined).map(t => Number(t.r_multiple));
+      const averageR = validRs.length > 0 ? Number((validRs.reduce((a, b) => a + b, 0) / validRs.length).toFixed(2)) : 0;
+
+      let largestWin = 0, largestLoss = 0;
+      sTrades.forEach(t => {
+        const np = Number(t.net_profit || 0);
+        if (np > largestWin) largestWin = np;
+        if (np < largestLoss) largestLoss = Math.abs(np);
+      });
+
+      return {
+        symbol,
+        tradeCount: sTrades.length,
+        winRate,
+        netProfit: Number(netProfit.toFixed(2)),
+        profitFactor,
+        averageR,
+        totalVolume: Number(totalVolume.toFixed(2)),
+        largestWin: Number(largestWin.toFixed(2)),
+        largestLoss: Number(largestLoss.toFixed(2))
+      };
+    }).sort((a, b) => b.tradeCount - a.tradeCount);
+
+    return { symbols };
   }
 
   // ==========================================
@@ -476,20 +729,27 @@ class ApiClient {
       return this.request<{ rules: RiskRule }>(`/risk/rules${query}`);
     }
 
-    const { data } = await supabase.from('risk_rules').select('*').limit(1).maybeSingle();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
+
+    let query = supabase.from('risk_rules').select('*').eq('user_id', user.id);
+    if (accountId && accountId !== 'ALL') query = query.eq('account_id', accountId);
+
+    const { data, error } = await query.limit(1).maybeSingle();
+    if (error) throw new Error(error.message);
+
     return {
       rules: data || {
-        id: 'rr-1',
-        max_daily_loss_amount: 1000,
+        user_id: user.id,
+        account_id: accountId && accountId !== 'ALL' ? accountId : null,
+        max_daily_loss_amount: 500,
         max_daily_loss_pct: 2.0,
-        max_weekly_loss_amount: 3000,
+        max_weekly_loss_amount: 1500,
         max_trades_per_day: 5,
         max_risk_per_trade_pct: 1.0,
         max_consecutive_losses: 3,
         max_drawdown_pct: 5.0,
         max_position_size: 5.0,
-        allowed_start_time: '07:00',
-        allowed_end_time: '20:00',
         is_active: 1
       }
     };
@@ -501,7 +761,16 @@ class ApiClient {
       return this.request<{ rules: any }>(`/risk/rules${query}`, { method: 'PUT', body: JSON.stringify(body) });
     }
 
-    const { data, error } = await supabase.from('risk_rules').upsert(body).select().single();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
+
+    const payload = {
+      ...body,
+      user_id: user.id,
+      account_id: accountId && accountId !== 'ALL' ? accountId : null
+    };
+
+    const { data, error } = await supabase.from('risk_rules').upsert(payload).select().single();
     if (error) throw new Error(error.message);
     return { rules: data };
   }
@@ -512,7 +781,11 @@ class ApiClient {
       return this.request<{ alerts: any[] }>(`/risk/alerts${query}`);
     }
 
-    const { data } = await supabase.from('risk_alerts').select('*').order('triggered_at', { ascending: false });
+    let query = supabase.from('risk_alerts').select('*').order('triggered_at', { ascending: false });
+    if (accountId && accountId !== 'ALL') query = query.eq('account_id', accountId);
+
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
     return { alerts: data || [] };
   }
 
@@ -520,7 +793,8 @@ class ApiClient {
     if (USE_CUSTOM_BACKEND) {
       return this.request(`/risk/alerts/${alertId}/acknowledge`, { method: 'POST' });
     }
-    await supabase.from('risk_alerts').update({ is_acknowledged: 1 }).eq('id', alertId);
+    const { error } = await supabase.from('risk_alerts').update({ is_acknowledged: 1 }).eq('id', alertId);
+    if (error) throw new Error(error.message);
     return { success: true };
   }
 
@@ -529,12 +803,36 @@ class ApiClient {
       return this.request<{ monitor: any }>(`/risk/monitor?accountId=${accountId}`);
     }
 
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const { data: trades, error } = await supabase
+      .from('reconstructed_positions')
+      .select('*')
+      .eq('account_id', accountId)
+      .gte('open_time', `${todayStr}T00:00:00.000Z`)
+      .order('open_time', { ascending: true });
+
+    if (error) throw new Error(error.message);
+
+    const todayTrades = trades || [];
+    const todayLoss = Math.abs(todayTrades.filter(t => Number(t.net_profit) < 0).reduce((acc, t) => acc + Number(t.net_profit), 0));
+
+    let consecutiveLosses = 0;
+    for (let i = todayTrades.length - 1; i >= 0; i--) {
+      if (Number(todayTrades[i].net_profit) < 0) consecutiveLosses++;
+      else break;
+    }
+
+    const rulesRes = await this.getRiskRules(accountId);
+    const rules = rulesRes.rules;
+
     return {
       monitor: {
-        dailyLoss: { current: 320.00, limit: 1000.00, status: 'SAFE', pctUsed: 32 },
-        tradesToday: { current: 2, limit: 5, status: 'SAFE' },
-        currentDrawdown: { current: 1.8, limit: 5.0, status: 'SAFE' },
-        consecutiveLosses: { current: 0, limit: 3, status: 'SAFE' }
+        todayLoss,
+        dailyLossLimit: Number(rules?.max_daily_loss_amount || 500),
+        todayTrades: todayTrades.length,
+        dailyTradesLimit: Number(rules?.max_trades_per_day || 5),
+        consecutiveLosses,
+        maxConsecutiveLosses: Number(rules?.max_consecutive_losses || 3)
       }
     };
   }
@@ -562,13 +860,12 @@ class ApiClient {
     if (text.includes('confident') || text.includes('great')) emotion = 'CONFIDENT';
 
     return {
-      parsed: {
-        setupName: confluences.length > 0 ? confluences.join(' + ') : 'Discretionary Price Action',
+      suggestions: {
+        setupName: confluences.length > 0 ? confluences.join(' + ') : 'Discretionary Execution',
         bias: isBull ? 'BULLISH' : isBear ? 'BEARISH' : 'NEUTRAL',
         confluences,
         emotionState: emotion,
-        confidenceScore: emotion === 'CONFIDENT' ? 8 : emotion === 'FOMO' ? 4 : 7,
-        traderNotes: transcript
+        summaryNotes: transcript
       }
     };
   }
@@ -581,23 +878,43 @@ class ApiClient {
       return this.request<any>('/gamification/profile');
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
+
+    const [progRes, achRes, userAchRes] = await Promise.all([
+      supabase.from('trader_progression').select('*').eq('user_id', user.id).maybeSingle(),
+      supabase.from('achievements').select('*'),
+      supabase.from('user_achievements').select('*').eq('user_id', user.id)
+    ]);
+
+    if (progRes.error) throw new Error(progRes.error.message);
+
+    const progression = progRes.data || {
+      id: 'default',
+      user_id: user.id,
+      current_xp: 0,
+      current_level: 1,
+      current_streak_days: 0,
+      longest_streak_days: 0,
+      total_trades_reviewed: 0,
+      rule_compliance_rate: 100.0
+    };
+
+    const currentLvlXp = (progression.current_xp || 0) % 500;
+    const levelProgressPct = Math.min(100, Math.round((currentLvlXp / 500) * 100));
+    const xpToNextLevel = 500 - currentLvlXp;
+
+    const unlockedSet = new Set((userAchRes.data || []).map(ua => ua.achievement_id));
+    const achievements = (achRes.data || []).map(ach => ({
+      ...ach,
+      unlocked: unlockedSet.has(ach.id)
+    }));
+
     return {
-      profile: {
-        currentXp: 1450,
-        currentLevel: 4,
-        nextLevelXp: 2000,
-        currentStreakDays: 8,
-        longestStreakDays: 14,
-        totalTradesReviewed: 68,
-        ruleComplianceRate: 97.5,
-        rankTitle: 'Disciplined Executioner'
-      },
-      achievements: [
-        { id: 'ach-1', code: 'FIRST_SYNC', title: 'Connected & Synced', description: 'Synchronized your first MT5 trading account.', xp_reward: 50, icon: 'Zap', unlocked: true },
-        { id: 'ach-2', code: 'JOURNAL_STREAK_7', title: '7-Day Discipline', description: 'Maintained a 7-day continuous journaling streak.', xp_reward: 150, icon: 'Flame', unlocked: true },
-        { id: 'ach-3', code: 'RULE_COMPLIANT_50', title: 'Risk Guardian', description: 'Executed 50 trades strictly within risk limits.', xp_reward: 250, icon: 'ShieldCheck', unlocked: true },
-        { id: 'ach-4', code: 'TRADES_100', title: 'Century Club', description: 'Analyzed over 100 reconstructed trades.', xp_reward: 300, icon: 'Trophy', unlocked: false }
-      ]
+      progression,
+      achievements,
+      xpToNextLevel,
+      levelProgressPct
     };
   }
 
@@ -610,14 +927,63 @@ class ApiClient {
       return this.request<{ dna: any }>(`/ai/trader-dna${query}`);
     }
 
+    let query = supabase.from('reconstructed_positions').select('*, trade_journals(*)');
+    if (accountId && accountId !== 'ALL') query = query.eq('account_id', accountId);
+
+    const { data: positions, error } = await query;
+    if (error) throw new Error(error.message);
+
+    const trades = positions || [];
+    if (trades.length === 0) {
+      return {
+        dna: {
+          behavioralSummary: 'No trading records found. Synchronize your MT5 terminal to calculate empirical trader DNA tendencies.',
+          mostTradedSymbol: null,
+          mostActiveSession: null,
+          avgDurationMinutes: 0,
+          longShortRatio: { longPct: 50, shortPct: 50 },
+          mostCommonMistake: null,
+          riskDisciplineScore: 100
+        }
+      };
+    }
+
+    const symMap = new Map<string, { count: number; wins: number }>();
+    let totalLongs = 0;
+    let totalHolding = 0;
+    trades.forEach(t => {
+      const s = t.symbol;
+      const ex = symMap.get(s) || { count: 0, wins: 0 };
+      ex.count++;
+      if (Number(t.net_profit) > 0) ex.wins++;
+      symMap.set(s, ex);
+
+      if (t.position_type === 'BUY') totalLongs++;
+      if (t.holding_seconds) totalHolding += Number(t.holding_seconds);
+    });
+
+    let topSymbol: any = null;
+    let maxSymCount = 0;
+    symMap.forEach((v, k) => {
+      if (v.count > maxSymCount) {
+        maxSymCount = v.count;
+        topSymbol = { symbol: k, count: v.count, winRate: Number(((v.wins / v.count) * 100).toFixed(1)) };
+      }
+    });
+
+    const longPct = Math.round((totalLongs / trades.length) * 100);
+    const shortPct = 100 - longPct;
+    const avgDurationMinutes = Math.round((totalHolding / trades.length) / 60);
+
     return {
       dna: {
-        archetype: 'Tactical Confluence Hunter',
-        strengths: ['High Risk/Reward Discipline (2.3R Average)', 'Strong Performance during London Session', 'Consistent Stop Loss placement'],
-        weaknesses: ['Tendency to overtrade Asian session consolidation', 'Occasional FOMO during high impact news'],
-        psychologyScore: 88,
-        executionScore: 92,
-        riskScore: 95
+        behavioralSummary: `Based on ${trades.length} reconstructed trades, primary market focus is ${topSymbol?.symbol || 'multi-asset pairs'} with an average holding duration of ${avgDurationMinutes} minutes and a ${longPct}% long bias.`,
+        mostTradedSymbol: topSymbol,
+        mostActiveSession: { session: trades[0]?.session_name || 'London', count: trades.length, netProfit: Number(trades.reduce((acc, t) => acc + Number(t.net_profit || 0), 0).toFixed(2)) },
+        avgDurationMinutes,
+        longShortRatio: { longPct, shortPct },
+        mostCommonMistake: null,
+        riskDisciplineScore: 95
       }
     };
   }
@@ -627,17 +993,50 @@ class ApiClient {
       return this.request('/ai/chat', { method: 'POST', body: JSON.stringify({ question, accountId }) });
     }
 
-    const q = question.toLowerCase();
-    let reply = `Based on your recent 90-day MT5 journal analysis, your highest expectancy setups occur during the London / NY Overlap on XAUUSD and EURUSD when combining Liquidity Sweeps with Fair Value Gaps.`;
-    if (q.includes('risk') || q.includes('loss')) {
-      reply = `Your risk management score is currently at 95%. Your maximum historical drawdown is contained at 3.45%, well within your 5.0% guardrail. Keep sizing at 1% per trade.`;
-    } else if (q.includes('win rate') || q.includes('improve')) {
-      reply = `To optimize your win rate, consider eliminating Asian session trades where your historical win rate is 42.8%, and focusing capital on London Open breakout expansions.`;
+    const analyticsRes = await this.getAnalytics({ accountId });
+    const ov = analyticsRes.overview;
+
+    if (ov.totalTrades === 0) {
+      return {
+        answer: "I do not see any synchronized trade history yet for your account. Please connect your MT5 terminal bridge to import your trades.",
+        observedData: {},
+        patterns: [],
+        recommendations: ['Pair your local MT5 bridge terminal in the Bridge Hub to import historical trades.']
+      };
     }
 
+    const observedData: Record<string, any> = {
+      'Total Closed Trades': ov.totalTrades,
+      'Win Rate': `${ov.winRate}%`,
+      'Profit Factor': ov.profitFactor,
+      'Net Profit': `$${ov.netProfit.toFixed(2)}`,
+      'Expectancy': `+$${ov.expectancy.toFixed(2)}`,
+      'Avg Reward/Risk (R)': `${ov.averageR}R`
+    };
+
+    const patterns: string[] = [];
+    const recommendations: string[] = [];
+
+    if (ov.longTrades.winRate > ov.shortTrades.winRate) {
+      patterns.push(`Higher long-side edge: BUY positions achieved a ${ov.longTrades.winRate}% win rate vs ${ov.shortTrades.winRate}% on SELL positions.`);
+    } else if (ov.shortTrades.winRate > ov.longTrades.winRate) {
+      patterns.push(`Higher short-side edge: SELL positions achieved a ${ov.shortTrades.winRate}% win rate vs ${ov.longTrades.winRate}% on BUY positions.`);
+    }
+
+    if (ov.maxConsecutiveLosses >= 3) {
+      patterns.push(`Consecutive loss clusters identified: maximum streak of ${ov.maxConsecutiveLosses} losses occurred.`);
+      recommendations.push('Implement a mandatory 30-minute cooling break after 2 consecutive losses to prevent revenge execution.');
+    }
+
+    recommendations.push(`Maintain risk sizing at 1% per trade to keep maximum historical drawdown (${ov.maxDrawdownPct}%) strictly contained.`);
+
+    const answer = `Analysis of ${ov.totalTrades} closed trades reveals an overall Win Rate of ${ov.winRate}% with a Profit Factor of ${ov.profitFactor} and Net P/L of $${ov.netProfit.toFixed(2)}.`;
+
     return {
-      answer: reply,
-      timestamp: new Date().toISOString()
+      answer,
+      observedData,
+      patterns,
+      recommendations
     };
   }
 
@@ -650,23 +1049,40 @@ class ApiClient {
       return this.request<{ report: any }>(`/reports/generate?${query}`);
     }
 
+    const analyticsRes = await this.getAnalytics({ accountId });
+    const ov = analyticsRes.overview;
+
+    const start = startDate || new Date(Date.now() - (type === 'WEEKLY' ? 7 : 30) * 24 * 60 * 60 * 1000).toISOString();
+    const end = endDate || new Date().toISOString();
+
+    const insights = [
+      `Overall realized performance: ${ov.winRate}% win rate across ${ov.totalTrades} trades with profit factor of ${ov.profitFactor}.`,
+      ov.netProfit >= 0 ? `Positive net profit of +$${ov.netProfit.toFixed(2)} maintained.` : `Net drawdown of -$${Math.abs(ov.netProfit).toFixed(2)} recorded during this cycle.`,
+      `Risk containment: Max peak-to-trough drawdown remained at $${ov.maxDrawdownAmount.toFixed(0)} (${ov.maxDrawdownPct}%).`
+    ];
+
     return {
       report: {
-        type,
-        period: type === 'WEEKLY' ? 'Past 7 Days' : 'Current Month',
-        tradesCount: 24,
-        winRate: 66.7,
-        netProfit: 2840.50,
-        profitFactor: 2.25,
-        keyInsight: 'London Session delivered 72% of total week gains with 100% stop-loss compliance.'
+        title: `${type === 'WEEKLY' ? 'Weekly' : 'Monthly'} Performance Audit Digest`,
+        period: { startDate: start, endDate: end },
+        performance: {
+          totalTrades: ov.totalTrades,
+          winRate: ov.winRate,
+          profitFactor: ov.profitFactor,
+          netProfit: ov.netProfit,
+          maxDrawdownAmount: ov.maxDrawdownAmount
+        },
+        keyInsights: insights
       }
     };
   }
 
   getExportCSVUrl(accountId?: string) {
-    const baseUrl = API_BASE_URL || 'http://localhost:4000/api/v1';
-    const query = accountId ? `?accountId=${accountId}` : '';
-    return `${baseUrl}/reports/export/csv${query}`;
+    if (USE_CUSTOM_BACKEND && API_BASE_URL) {
+      const query = accountId ? `?accountId=${accountId}` : '';
+      return `${API_BASE_URL}/reports/export/csv${query}`;
+    }
+    return '#';
   }
 
   // ==========================================
@@ -677,16 +1093,20 @@ class ApiClient {
       return this.request<{ deviceId: string; deviceToken: string }>('/mt5/bridge/pair', { method: 'POST', body: JSON.stringify({ deviceName }) });
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
+
     const deviceToken = `ac_bridge_${Math.random().toString(36).substring(2)}${Date.now()}`;
     const deviceId = `dev-${Date.now()}`;
-    await supabase.from('bridge_devices').insert({
+    const { error } = await supabase.from('bridge_devices').insert({
       id: deviceId,
-      user_id: 'usr-default-trader',
+      user_id: user.id,
       device_name: deviceName,
       device_token: deviceToken,
       is_active: 1
     });
 
+    if (error) throw new Error(error.message);
     return { deviceId, deviceToken };
   }
 
@@ -695,7 +1115,8 @@ class ApiClient {
       return this.request<{ devices: any[] }>('/mt5/bridge/devices');
     }
 
-    const { data } = await supabase.from('bridge_devices').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('bridge_devices').select('*').order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
     return { devices: data || [] };
   }
 
@@ -703,7 +1124,8 @@ class ApiClient {
     if (USE_CUSTOM_BACKEND) {
       return this.request(`/mt5/bridge/devices/${id}`, { method: 'DELETE' });
     }
-    await supabase.from('bridge_devices').delete().eq('id', id);
+    const { error } = await supabase.from('bridge_devices').delete().eq('id', id);
+    if (error) throw new Error(error.message);
     return { success: true };
   }
 
@@ -729,12 +1151,9 @@ class ApiClient {
       return this.request<{ notifications: any[]; unreadCount: number }>('/notifications');
     }
 
-    const { data } = await supabase.from('notifications').select('*').order('created_at', { ascending: false });
-    const notifications = data || [
-      { id: 'notif-1', user_id: 'usr-1', title: 'MT5 Sync Complete', message: 'Successfully imported 90-day trading history from MetaTrader 5.', type: 'SYNC', is_read: 0, created_at: new Date().toISOString() },
-      { id: 'notif-2', user_id: 'usr-1', title: 'Risk Compliance 100%', message: 'All trades today strictly respected maximum daily loss limits.', type: 'RISK', is_read: 0, created_at: new Date().toISOString() }
-    ];
-
+    const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    const notifications = data || [];
     const unreadCount = notifications.filter((n: any) => !n.is_read).length;
     return { notifications, unreadCount };
   }
@@ -743,7 +1162,8 @@ class ApiClient {
     if (USE_CUSTOM_BACKEND) {
       return this.request('/notifications/mark-all-read', { method: 'POST' });
     }
-    await supabase.from('notifications').update({ is_read: 1 }).neq('id', '');
+    const { error } = await supabase.from('notifications').update({ is_read: 1 }).neq('id', '');
+    if (error) throw new Error(error.message);
     return { success: true };
   }
 
@@ -751,7 +1171,8 @@ class ApiClient {
     if (USE_CUSTOM_BACKEND) {
       return this.request(`/notifications/${id}/read`, { method: 'PATCH' });
     }
-    await supabase.from('notifications').update({ is_read: 1 }).eq('id', id);
+    const { error } = await supabase.from('notifications').update({ is_read: 1 }).eq('id', id);
+    if (error) throw new Error(error.message);
     return { success: true };
   }
 
@@ -762,12 +1183,32 @@ class ApiClient {
     if (USE_CUSTOM_BACKEND) {
       return this.request('/admin/overview');
     }
+
+    const [uRes, aRes, dRes, pRes, sRes] = await Promise.all([
+      supabase.from('users').select('*', { count: 'exact', head: true }),
+      supabase.from('trading_accounts').select('*', { count: 'exact', head: true }),
+      supabase.from('bridge_devices').select('*', { count: 'exact', head: true }),
+      supabase.from('reconstructed_positions').select('*', { count: 'exact', head: true }),
+      supabase.from('sync_checkpoints').select('*, trading_accounts(*)').order('started_at', { ascending: false }).limit(10)
+    ]);
+
     return {
-      totalUsers: 1,
-      activeAccounts: 1,
-      totalPositions: 184,
-      totalSyncs: 42,
-      serverStatus: 'HEALTHY'
+      metrics: {
+        usersCount: uRes.count || 0,
+        accountsCount: aRes.count || 0,
+        devicesCount: dRes.count || 0,
+        positionsCount: pRes.count || 0
+      },
+      recentSyncs: (sRes.data || []).map((s: any) => ({
+        id: s.id,
+        account_number: s.trading_accounts?.account_number || 'N/A',
+        broker_name: s.trading_accounts?.broker_name || 'MT5',
+        server_name: s.trading_accounts?.server_name || 'Terminal',
+        sync_status: s.sync_status || 'COMPLETED',
+        deals_count: s.deals_synced || 0,
+        trades_count: s.positions_reconstructed || 0,
+        started_at: s.started_at || s.created_at
+      }))
     };
   }
 }

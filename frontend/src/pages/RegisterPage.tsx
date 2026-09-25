@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
 
 export const RegisterPage: React.FC = () => {
@@ -13,13 +13,15 @@ export const RegisterPage: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessMsg(null);
     setIsLoading(true);
     try {
-      await register({
+      const res = await register({
         email,
         password,
         firstName,
@@ -27,7 +29,12 @@ export const RegisterPage: React.FC = () => {
         timezone: 'UTC',
         currency: 'USD'
       });
-      navigate('/');
+
+      if (res.requiresEmailConfirmation) {
+        setSuccessMsg('Account created successfully! Please check your email for a confirmation link before logging in.');
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
     } finally {
@@ -55,72 +62,90 @@ export const RegisterPage: React.FC = () => {
           </div>
         )}
 
+        {successMsg && (
+          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 text-center font-medium space-y-2">
+            <div className="flex items-center justify-center space-x-1.5 font-bold">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Registration Successful</span>
+            </div>
+            <p>{successMsg}</p>
+            <Link
+              to="/login"
+              className="inline-block mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition"
+            >
+              Go to Sign In
+            </Link>
+          </div>
+        )}
+
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-          <div className="grid grid-cols-2 gap-3">
+        {!successMsg && (
+          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="block text-content-secondary font-medium">First Name</label>
+                <input
+                  type="text"
+                  required
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  placeholder="Alex"
+                  className="w-full bg-surface-secondary border border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-content-primary placeholder-content-subtle focus:outline-none transition"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="block text-content-secondary font-medium">Last Name</label>
+                <input
+                  type="text"
+                  required
+                  value={lastName}
+                  onChange={e => setLastName(e.target.value)}
+                  placeholder="Vance"
+                  className="w-full bg-surface-secondary border border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-content-primary placeholder-content-subtle focus:outline-none transition"
+                />
+              </div>
+            </div>
+
             <div className="space-y-1">
-              <label className="block text-content-secondary font-medium">First Name</label>
-              <input
-                type="text"
-                required
-                value={firstName}
-                onChange={e => setFirstName(e.target.value)}
-                placeholder="Alex"
-                className="w-full bg-surface-secondary border border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-content-primary placeholder-content-subtle focus:outline-none transition"
-              />
+              <label className="block text-content-secondary font-medium">Email Address</label>
+              <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
+                <Mail className="w-4 h-4 text-content-muted" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="bg-transparent text-content-primary placeholder-content-subtle focus:outline-none w-full"
+                />
+              </div>
             </div>
+
             <div className="space-y-1">
-              <label className="block text-content-secondary font-medium">Last Name</label>
-              <input
-                type="text"
-                required
-                value={lastName}
-                onChange={e => setLastName(e.target.value)}
-                placeholder="Vance"
-                className="w-full bg-surface-secondary border border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-content-primary placeholder-content-subtle focus:outline-none transition"
-              />
+              <label className="block text-content-secondary font-medium">Password</label>
+              <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
+                <Lock className="w-4 h-4 text-content-muted" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="bg-transparent text-content-primary placeholder-content-subtle focus:outline-none w-full"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-1">
-            <label className="block text-content-secondary font-medium">Email Address</label>
-            <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
-              <Mail className="w-4 h-4 text-content-muted" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                className="bg-transparent text-content-primary placeholder-content-subtle focus:outline-none w-full"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-content-secondary font-medium">Password</label>
-            <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
-              <Lock className="w-4 h-4 text-content-muted" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="bg-transparent text-content-primary placeholder-content-subtle focus:outline-none w-full"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-brand-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
-          >
-            <span>{isLoading ? 'Creating Account...' : 'Get Started with Alpha Coach'}</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-brand-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
+            >
+              <span>{isLoading ? 'Creating Account...' : 'Get Started with Alpha Coach'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
+        )}
 
         <div className="text-center text-xs text-content-muted">
           Already have an account?{' '}
