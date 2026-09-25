@@ -1,0 +1,108 @@
+# =============================================================================
+# Alpha Coach - Git Ignore Configuration
+# =============================================================================
+
+# --- Dependencies ---
+node_modules/
+*/node_modules/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+
+# --- Build Outputs ---
+dist/
+*/dist/
+build/
+*/build/
+out/
+.next/
+*.tsbuildinfo
+.vite/
+
+# --- Python & Virtual Environments ---
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+*/.venv/
+venv/
+*/venv/
+env/
+*/env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# --- Environment & Secret Files ---
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+secrets/
+
+# --- Local Databases & Storage ---
+data/
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+storage/
+uploads/
+
+# --- Local MT5 Bridge Runtime Configuration (Tokens & Device Settings) ---
+bridge/bridge_config.json
+bridge_config.json
+*.session
+
+# --- Logs & Package Manager Debug ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Coverage & Testing Artifacts ---
+coverage/
+.nyc_output/
+
+# --- Operating System Files ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- IDE & Editor Configuration ---
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# --- Temporary Files ---
+*.tmp
+*.temp
+tmp/
+temp/

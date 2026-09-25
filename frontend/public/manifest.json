@@ -1,0 +1,16 @@
+{
+  "short_name": "Alpha Coach",
+  "name": "Alpha Coach - Automated MT5 Trading Journal",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0a0d14",
+  "theme_color": "#2563eb",
+  "display": "standalone",
+  "orientation": "portrait"
+}
