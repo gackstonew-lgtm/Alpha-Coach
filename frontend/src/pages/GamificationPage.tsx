@@ -59,7 +59,7 @@ export const GamificationPage: React.FC = () => {
         <div className="framer-card p-6 space-y-6 relative overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-2xl font-extrabold text-white shadow-xl shadow-amber-500/20">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center text-2xl font-extrabold text-slate-950 shadow-xl shadow-amber-500/10">
                 Lv.{profile.progression.current_level}
               </div>
               <div>
@@ -93,7 +93,7 @@ export const GamificationPage: React.FC = () => {
             </div>
             <div className="w-full bg-surface-secondary h-3 rounded-full overflow-hidden p-0.5 border border-border-subtle">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-brand-primary to-emerald-400 transition-all duration-500"
+                className="h-full rounded-full bg-brand-500 transition-all duration-500"
                 style={{ width: `${profile.levelProgressPct}%` }}
               />
             </div>

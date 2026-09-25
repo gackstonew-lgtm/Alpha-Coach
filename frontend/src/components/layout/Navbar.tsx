@@ -203,7 +203,7 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
               className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-xl hover:bg-surface-secondary border border-border-subtle transition-all duration-200"
               aria-label="User account menu"
             >
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center font-bold text-xs text-white shadow-sm">
+              <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center font-bold text-xs text-white shadow-sm">
                 {user?.first_name ? user.first_name[0] : 'T'}
               </div>
               <ChevronDown className="w-3.5 h-3.5 text-content-muted" />

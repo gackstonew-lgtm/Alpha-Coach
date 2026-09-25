@@ -27,7 +27,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   const { user, isLoading } = useAuth();
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0d14] flex items-center justify-center text-slate-400 text-xs font-mono">
+      <div className="min-h-screen bg-canvas flex items-center justify-center text-content-muted text-xs font-mono">
         <div className="flex flex-col items-center space-y-3">
           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
           <span>INITIALIZING ALPHA COACH OS...</span>

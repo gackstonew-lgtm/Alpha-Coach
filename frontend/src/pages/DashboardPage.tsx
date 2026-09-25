@@ -71,8 +71,7 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Top Banner / Welcome & Quick Stats */}
-      <div className="framer-card p-6 sm:p-8 rounded-3xl relative overflow-hidden bg-gradient-to-br from-surface via-surface to-brand-500/5">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-brand-500/10 dark:bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="framer-card p-6 sm:p-8 rounded-3xl relative overflow-hidden bg-surface">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider">
@@ -194,19 +193,13 @@ export const DashboardPage: React.FC = () => {
             {overview?.equityCurve && overview.equityCurve.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={overview.equityCurve} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#1e2942' : '#e2e8f0'} opacity={0.8} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#171d29' : '#e2e8f0'} opacity={0.8} />
                   <XAxis dataKey="tradeIndex" stroke={theme === 'dark' ? '#64748b' : '#94a3b8'} tick={{ fontSize: 11 }} />
                   <YAxis stroke={theme === 'dark' ? '#64748b' : '#94a3b8'} tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: theme === 'dark' ? '#0f1524' : '#ffffff',
-                      borderColor: theme === 'dark' ? '#2d3b59' : '#e2e8f0',
+                      backgroundColor: theme === 'dark' ? '#0a0d12' : '#ffffff',
+                      borderColor: theme === 'dark' ? '#232c3d' : '#e2e8f0',
                       borderRadius: '12px',
                       fontSize: '12px',
                       color: theme === 'dark' ? '#f8fafc' : '#0f172a',
@@ -215,7 +208,7 @@ export const DashboardPage: React.FC = () => {
                     formatter={(val: any) => [`$${Number(val).toLocaleString()}`, 'Equity']}
                     labelFormatter={(label) => `Trade #${label}`}
                   />
-                  <Area type="monotone" dataKey="equity" stroke="#3b82f6" strokeWidth={2.5} fill="url(#equityGrad)" />
+                  <Area type="monotone" dataKey="equity" stroke="#3b82f6" strokeWidth={2} fill="#3b82f6" fillOpacity={0.08} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (

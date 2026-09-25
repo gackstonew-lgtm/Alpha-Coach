@@ -33,17 +33,6 @@ export const AlphaCoachLogo: React.FC<LogoProps> = ({
           xmlns="http://www.w3.org/2000/svg"
           className="w-full h-full drop-shadow-sm"
         >
-          <defs>
-            <linearGradient id="ac-gradient-primary" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="50%" stopColor="#4f46e5" />
-              <stop offset="100%" stopColor="#2563eb" />
-            </linearGradient>
-            <linearGradient id="ac-gradient-ribbon" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#2563eb" />
-              <stop offset="100%" stopColor="#1e1b4b" />
-            </linearGradient>
-          </defs>
 
           {/* Curved Book Top / Journal Flap */}
           <path
