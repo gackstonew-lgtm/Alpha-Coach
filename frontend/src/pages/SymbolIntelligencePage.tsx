@@ -35,20 +35,24 @@ export const SymbolIntelligencePage: React.FC = () => {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center space-x-2">
-          <Coins className="w-6 h-6 text-amber-400" />
-          <span>Symbol Intelligence</span>
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
+        <div className="flex items-center space-x-2">
+          <span className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+            <Coins className="w-5 h-5" />
+          </span>
+          <h1 className="text-2xl font-bold tracking-tight text-content-primary">
+            Symbol Intelligence
+          </h1>
+        </div>
+        <p className="text-xs text-content-secondary mt-1">
           Descriptive statistical ranking across symbols (XAUUSD, EURUSD, BTCUSD, NAS100)
         </p>
       </div>
 
       {/* Symbol Table */}
-      <div className="glass-panel rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl">
+      <div className="framer-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[10px]">
+            <thead className="bg-surface-secondary/70 text-content-muted font-semibold border-b border-border-subtle uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="p-4">Symbol</th>
                 <th className="p-4">Total Trades</th>
@@ -61,33 +65,36 @@ export const SymbolIntelligencePage: React.FC = () => {
                 <th className="p-4">Worst Loss</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50 font-mono">
+            <tbody className="divide-y divide-border-subtle font-mono">
               {isLoading ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-500">Loading symbol analytics...</td>
+                  <td colSpan={9} className="py-12 text-center text-content-muted font-sans">
+                    <div className="inline-block w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin mb-2" />
+                    <div>Loading symbol analytics...</div>
+                  </td>
                 </tr>
               ) : symbols.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-500">No symbol trading history available</td>
+                  <td colSpan={9} className="py-12 text-center text-content-muted font-sans">No symbol trading history available</td>
                 </tr>
               ) : (
                 symbols.map(s => {
                   const isWin = s.netProfit >= 0;
                   return (
-                    <tr key={s.symbol} className="hover:bg-slate-800/40">
-                      <td className="p-4 font-bold text-white font-sans flex items-center space-x-2">
+                    <tr key={s.symbol} className="hover:bg-surface-secondary/50 transition">
+                      <td className="p-4 font-bold text-content-primary font-sans flex items-center space-x-2">
                         <span>{s.symbol}</span>
                       </td>
-                      <td className="p-4 text-slate-300">{s.tradeCount} trades</td>
-                      <td className="p-4 text-emerald-400 font-bold">{s.winRate}%</td>
-                      <td className={`p-4 font-bold text-sm ${isWin ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <td className="p-4 text-content-secondary">{s.tradeCount} trades</td>
+                      <td className="p-4 text-trade-profit font-bold">{s.winRate}%</td>
+                      <td className={`p-4 font-bold text-sm ${isWin ? 'text-trade-profit' : 'text-trade-loss'}`}>
                         {isWin ? '+' : ''}${s.netProfit?.toFixed(2)}
                       </td>
-                      <td className="p-4 text-blue-400 font-bold">{s.profitFactor}</td>
+                      <td className="p-4 text-brand-primary font-bold">{s.profitFactor}</td>
                       <td className="p-4 text-purple-400">{s.averageR ? `${s.averageR}R` : '-'}</td>
-                      <td className="p-4 text-slate-300">{s.totalVolume}</td>
-                      <td className="p-4 text-emerald-400">+${s.largestWin?.toFixed(2)}</td>
-                      <td className="p-4 text-red-400">-${s.largestLoss?.toFixed(2)}</td>
+                      <td className="p-4 text-content-secondary">{s.totalVolume}</td>
+                      <td className="p-4 text-trade-profit font-bold">+${s.largestWin?.toFixed(2)}</td>
+                      <td className="p-4 text-trade-loss font-bold">-${s.largestLoss?.toFixed(2)}</td>
                     </tr>
                   );
                 })

@@ -19,7 +19,9 @@ import {
   Clock,
   Sparkles,
   Award,
-  Layers
+  Layers,
+  SlidersHorizontal,
+  ChevronLeft
 } from 'lucide-react';
 
 export const JournalPage: React.FC = () => {
@@ -165,28 +167,42 @@ export const JournalPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center space-x-2">
-            <BookOpen className="w-6 h-6 text-blue-400" />
-            <span>Automatic Trading Journal</span>
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Reconstructed MT5 trade lifecycles, objective execution metrics & subjective review logs
+          <div className="flex items-center space-x-2">
+            <span className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+              <BookOpen className="w-5 h-5" />
+            </span>
+            <h1 className="text-2xl font-bold tracking-tight text-content-primary">
+              Automated Trading Journal
+            </h1>
+          </div>
+          <p className="text-xs text-content-secondary mt-1">
+            Reconstructed MT5 trade lifecycles, objective execution metrics & qualitative review logs
           </p>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setIsVoiceModalOpen(true)}
+            className="framer-btn-primary flex items-center space-x-2"
+          >
+            <Mic className="w-4 h-4" />
+            <span>Voice Journal</span>
+          </button>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="glass-panel p-4 rounded-2xl border border-slate-800/80 flex flex-wrap items-center gap-3">
+      <div className="framer-card p-4 flex flex-wrap items-center gap-3">
         {/* Search */}
-        <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 flex-1 min-w-[200px]">
-          <Search className="w-4 h-4 text-slate-500" />
+        <div className="flex items-center space-x-2 bg-surface-secondary border border-border-subtle rounded-xl px-3 py-2 flex-1 min-w-[220px]">
+          <Search className="w-4 h-4 text-content-muted" />
           <input
             type="text"
             placeholder="Search symbol, notes, setup..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && loadTrades(1)}
-            className="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none w-full"
+            className="bg-transparent text-xs text-content-primary placeholder-content-muted focus:outline-none w-full"
           />
         </div>
 
@@ -194,7 +210,7 @@ export const JournalPage: React.FC = () => {
         <select
           value={directionFilter}
           onChange={e => setDirectionFilter(e.target.value)}
-          className="bg-slate-900 border border-slate-800 text-xs text-white rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+          className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
         >
           <option value="">All Directions</option>
           <option value="BUY">BUY Only</option>
@@ -205,7 +221,7 @@ export const JournalPage: React.FC = () => {
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          className="bg-slate-900 border border-slate-800 text-xs text-white rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+          className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
         >
           <option value="">All Statuses</option>
           <option value="CLOSED">Closed Trades</option>
@@ -216,7 +232,7 @@ export const JournalPage: React.FC = () => {
         <select
           value={sessionFilter}
           onChange={e => setSessionFilter(e.target.value)}
-          className="bg-slate-900 border border-slate-800 text-xs text-white rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+          className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
         >
           <option value="">All Sessions</option>
           <option value="London">London</option>
@@ -230,7 +246,7 @@ export const JournalPage: React.FC = () => {
         <select
           value={reviewedFilter}
           onChange={e => setReviewedFilter(e.target.value)}
-          className="bg-slate-900 border border-slate-800 text-xs text-white rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+          className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
         >
           <option value="">Review Status: All</option>
           <option value="1">Reviewed</option>
@@ -239,10 +255,10 @@ export const JournalPage: React.FC = () => {
       </div>
 
       {/* Trades Table */}
-      <div className="glass-panel rounded-3xl border border-slate-800/80 overflow-hidden shadow-2xl">
+      <div className="framer-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900/80 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[11px]">
+            <thead className="bg-surface-secondary/70 text-content-muted font-semibold border-b border-border-subtle uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="px-5 py-3.5">Symbol</th>
                 <th className="px-4 py-3.5">Type</th>
@@ -257,17 +273,17 @@ export const JournalPage: React.FC = () => {
                 <th className="px-4 py-3.5 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/40 font-mono">
+            <tbody className="divide-y divide-border-subtle font-mono">
               {isLoading ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-slate-500">
-                    <div className="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2" />
+                  <td colSpan={11} className="py-12 text-center text-content-muted">
+                    <div className="inline-block w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin mb-2" />
                     <div>Loading journal entries...</div>
                   </td>
                 </tr>
               ) : trades.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-slate-500">
+                  <td colSpan={11} className="py-12 text-center text-content-muted">
                     No reconstructed trades match your criteria.
                   </td>
                 </tr>
@@ -278,56 +294,58 @@ export const JournalPage: React.FC = () => {
                     <tr
                       key={t.id}
                       onClick={() => openTradeDetail(t.id)}
-                      className="hover:bg-slate-800/50 transition cursor-pointer group"
+                      className="hover:bg-surface-secondary/60 transition cursor-pointer group"
                     >
-                      <td className="px-5 py-4 font-bold text-white flex items-center space-x-2">
+                      <td className="px-5 py-4 font-bold text-content-primary flex items-center space-x-2">
                         <span>{t.symbol}</span>
                       </td>
                       <td className="px-4 py-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          t.position_type === 'BUY' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                          t.position_type === 'BUY'
+                            ? 'bg-trade-profit/10 text-trade-profit border border-trade-profit/20'
+                            : 'bg-trade-loss/10 text-trade-loss border border-trade-loss/20'
                         }`}>
                           {t.position_type}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-slate-300">{t.total_volume}</td>
-                      <td className="px-4 py-4 text-slate-400">
+                      <td className="px-4 py-4 text-content-secondary">{t.total_volume}</td>
+                      <td className="px-4 py-4 text-content-muted">
                         {t.entry_price_avg} → {t.exit_price_avg || 'Open'}
                       </td>
-                      <td className={`px-4 py-4 font-bold text-sm ${isWin ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <td className={`px-4 py-4 font-bold text-sm ${isWin ? 'text-trade-profit' : 'text-trade-loss'}`}>
                         {isWin ? '+' : ''}${t.net_profit?.toFixed(2)}
                       </td>
-                      <td className="px-4 py-4 text-slate-300 font-semibold">
+                      <td className="px-4 py-4 text-content-primary font-semibold">
                         {t.r_multiple !== null && t.r_multiple !== undefined ? `${t.r_multiple}R` : '-'}
                       </td>
-                      <td className="px-4 py-4 font-sans text-slate-400">{t.session_name || 'N/A'}</td>
+                      <td className="px-4 py-4 font-sans text-content-secondary">{t.session_name || 'N/A'}</td>
                       <td className="px-4 py-4">
-                        <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] bg-surface-secondary text-content-secondary border border-border-subtle">
                           {t.exit_reason}
                         </span>
                       </td>
-                      <td className="px-4 py-4 font-sans text-slate-300">
+                      <td className="px-4 py-4 font-sans text-content-secondary">
                         {t.setup_name ? (
-                          <span className="truncate max-w-[120px] inline-block">{t.setup_name}</span>
+                          <span className="truncate max-w-[120px] inline-block font-medium">{t.setup_name}</span>
                         ) : (
-                          <span className="text-slate-600">-</span>
+                          <span className="text-content-muted">-</span>
                         )}
                       </td>
                       <td className="px-4 py-4">
                         {t.is_reviewed ? (
-                          <span className="inline-flex items-center space-x-1 text-emerald-400 font-sans font-semibold text-[11px]">
+                          <span className="inline-flex items-center space-x-1 text-trade-profit font-sans font-semibold text-[11px]">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Done</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center space-x-1 text-amber-400 font-sans font-semibold text-[11px] animate-pulse">
+                          <span className="inline-flex items-center space-x-1 text-amber-500 font-sans font-semibold text-[11px] animate-pulse">
                             <AlertCircle className="w-3.5 h-3.5" />
                             <span>Review (+25XP)</span>
                           </span>
                         )}
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <button className="p-1.5 rounded-lg text-slate-400 group-hover:text-white group-hover:bg-slate-700 transition">
+                        <button className="p-1.5 rounded-lg text-content-muted group-hover:text-content-primary group-hover:bg-surface-secondary transition">
                           <ChevronRight className="w-4 h-4" />
                         </button>
                       </td>
@@ -341,22 +359,24 @@ export const JournalPage: React.FC = () => {
 
         {/* Pagination Bar */}
         {pagination.totalPages > 1 && (
-          <div className="px-6 py-4 bg-slate-900/60 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+          <div className="px-6 py-4 bg-surface-secondary/40 border-t border-border-subtle flex items-center justify-between text-xs text-content-secondary">
             <span>Showing page {pagination.page} of {pagination.totalPages} ({pagination.total} total trades)</span>
             <div className="flex space-x-2">
               <button
                 disabled={pagination.page <= 1}
                 onClick={() => loadTrades(pagination.page - 1)}
-                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 rounded-lg text-white font-semibold transition"
+                className="framer-btn-secondary py-1 px-3 disabled:opacity-40"
               >
+                <ChevronLeft className="w-3.5 h-3.5 inline mr-1" />
                 Previous
               </button>
               <button
                 disabled={pagination.page >= pagination.totalPages}
                 onClick={() => loadTrades(pagination.page + 1)}
-                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 rounded-lg text-white font-semibold transition"
+                className="framer-btn-secondary py-1 px-3 disabled:opacity-40"
               >
                 Next
+                <ChevronRight className="w-3.5 h-3.5 inline ml-1" />
               </button>
             </div>
           </div>
@@ -365,66 +385,71 @@ export const JournalPage: React.FC = () => {
 
       {/* Trade Review & Lifecycle Drawer Modal */}
       {isDetailOpen && selectedTrade && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-end">
-          <div className="w-full max-w-2xl bg-[#0d121f] border-l border-slate-800 h-full overflow-y-auto p-6 space-y-6 animate-in slide-in-from-right duration-300">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-surface border-l border-border-subtle h-full overflow-y-auto p-6 space-y-6 animate-in slide-in-from-right duration-300 shadow-2xl">
             {/* Drawer Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+            <div className="flex items-center justify-between pb-4 border-b border-border-subtle">
               <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-xl ${
-                  selectedTrade.position.net_profit >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                <div className={`p-2.5 rounded-xl ${
+                  selectedTrade.position.net_profit >= 0
+                    ? 'bg-trade-profit/10 text-trade-profit border border-trade-profit/20'
+                    : 'bg-trade-loss/10 text-trade-loss border border-trade-loss/20'
                 }`}>
                   {selectedTrade.position.net_profit >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
                 </div>
                 <div>
-                  <h2 className="text-lg font-extrabold text-white">
+                  <h2 className="text-lg font-bold text-content-primary">
                     Trade #{selectedTrade.position.position_id} • {selectedTrade.position.symbol}
                   </h2>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-content-secondary">
                     {selectedTrade.position.position_type} • {selectedTrade.position.total_volume} Lots • {selectedTrade.position.session_name}
                   </div>
                 </div>
               </div>
-              <button onClick={() => setIsDetailOpen(false)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+              <button
+                onClick={() => setIsDetailOpen(false)}
+                className="p-2 rounded-xl text-content-muted hover:text-content-primary hover:bg-surface-secondary transition"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Objective MT5 Facts Card */}
-            <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-                <Layers className="w-3.5 h-3.5 text-blue-400" />
+            <div className="framer-card p-5 space-y-3">
+              <div className="text-xs font-bold uppercase tracking-wider text-content-muted flex items-center space-x-1.5">
+                <Layers className="w-3.5 h-3.5 text-brand-primary" />
                 <span>Objective MT5 Execution Facts</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                  <div className="text-slate-500 text-[10px]">Net P/L</div>
-                  <div className={`text-sm font-bold ${selectedTrade.position.net_profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle">
+                  <div className="text-content-muted text-[10px]">Net P/L</div>
+                  <div className={`text-sm font-bold ${selectedTrade.position.net_profit >= 0 ? 'text-trade-profit' : 'text-trade-loss'}`}>
                     ${selectedTrade.position.net_profit?.toFixed(2)}
                   </div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                  <div className="text-slate-500 text-[10px]">Commission</div>
-                  <div className="text-slate-300 font-bold">${selectedTrade.position.commission_total?.toFixed(2)}</div>
+                <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle">
+                  <div className="text-content-muted text-[10px]">Commission</div>
+                  <div className="text-content-primary font-bold">${selectedTrade.position.commission_total?.toFixed(2)}</div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                  <div className="text-slate-500 text-[10px]">Swap</div>
-                  <div className="text-slate-300 font-bold">${selectedTrade.position.swap_total?.toFixed(2)}</div>
+                <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle">
+                  <div className="text-content-muted text-[10px]">Swap</div>
+                  <div className="text-content-primary font-bold">${selectedTrade.position.swap_total?.toFixed(2)}</div>
                 </div>
-                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-                  <div className="text-slate-500 text-[10px]">R-Multiple</div>
-                  <div className="text-blue-400 font-bold">{selectedTrade.position.r_multiple ? `${selectedTrade.position.r_multiple}R` : 'N/A'}</div>
+                <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle">
+                  <div className="text-content-muted text-[10px]">R-Multiple</div>
+                  <div className="text-brand-primary font-bold">{selectedTrade.position.r_multiple ? `${selectedTrade.position.r_multiple}R` : 'N/A'}</div>
                 </div>
               </div>
 
-              {/* Execution Lifecyle */}
-              <div className="pt-2 border-t border-slate-800/60">
-                <div className="text-[11px] font-bold text-slate-400 mb-2">Reconstructed Deal Flow:</div>
+              {/* Execution Lifecycle */}
+              <div className="pt-3 border-t border-border-subtle">
+                <div className="text-[11px] font-bold text-content-secondary mb-2">Reconstructed Deal Flow:</div>
                 <div className="space-y-1.5">
                   {selectedTrade.executions.map((exec: any, i: number) => (
-                    <div key={exec.id || i} className="flex justify-between items-center text-[11px] p-2 rounded-lg bg-slate-950 border border-slate-800/50">
-                      <span className="font-bold text-slate-300">{exec.execution_type}: {exec.volume} Lots @ {exec.price}</span>
-                      <span className="text-slate-500 font-mono">{exec.execution_time?.slice(11, 19)} UTC</span>
-                      <span className={exec.profit >= 0 ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                    <div key={exec.id || i} className="flex justify-between items-center text-[11px] p-2.5 rounded-xl bg-surface-secondary border border-border-subtle">
+                      <span className="font-bold text-content-primary">{exec.execution_type}: {exec.volume} Lots @ {exec.price}</span>
+                      <span className="text-content-muted font-mono">{exec.execution_time?.slice(11, 19)} UTC</span>
+                      <span className={exec.profit >= 0 ? 'text-trade-profit font-bold' : 'text-trade-loss font-bold'}>
                         {exec.profit ? `$${exec.profit.toFixed(2)}` : '$0.00'}
                       </span>
                     </div>
@@ -434,17 +459,17 @@ export const JournalPage: React.FC = () => {
             </div>
 
             {/* Subjective Trader Journal & Review Section */}
-            <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4">
+            <div className="framer-card p-5 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-                  <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="text-xs font-bold uppercase tracking-wider text-content-muted flex items-center space-x-1.5">
+                  <Edit3 className="w-3.5 h-3.5 text-trade-profit" />
                   <span>Subjective Review & Behavioral Analysis</span>
                 </div>
 
                 {/* Voice Note Trigger */}
                 <button
                   onClick={() => setIsVoiceModalOpen(true)}
-                  className="flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/20 transition"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-xs font-bold border border-brand-primary/20 transition"
                 >
                   <Mic className="w-3.5 h-3.5" />
                   <span>Voice Note</span>
@@ -453,23 +478,23 @@ export const JournalPage: React.FC = () => {
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Setup / Strategy Pattern</label>
+                  <label className="block text-content-secondary font-medium mb-1">Setup / Strategy Pattern</label>
                   <input
                     type="text"
                     value={reviewForm.setupName || ''}
                     onChange={e => setReviewForm({ ...reviewForm, setupName: e.target.value })}
                     placeholder="e.g. Liquidity Sweep + MSS + FVG"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-surface-secondary border border-border-subtle rounded-xl px-3 py-2 text-content-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-slate-400 font-medium mb-1">Market Bias</label>
+                    <label className="block text-content-secondary font-medium mb-1">Market Bias</label>
                     <select
                       value={reviewForm.bias}
                       onChange={e => setReviewForm({ ...reviewForm, bias: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none"
+                      className="w-full bg-surface-secondary border border-border-subtle rounded-xl px-3 py-2 text-content-primary focus:outline-none"
                     >
                       <option value="BULLISH">Bullish</option>
                       <option value="BEARISH">Bearish</option>
@@ -478,11 +503,11 @@ export const JournalPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 font-medium mb-1">Emotional State</label>
+                    <label className="block text-content-secondary font-medium mb-1">Emotional State</label>
                     <select
                       value={reviewForm.emotionState}
                       onChange={e => setReviewForm({ ...reviewForm, emotionState: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none"
+                      className="w-full bg-surface-secondary border border-border-subtle rounded-xl px-3 py-2 text-content-primary focus:outline-none"
                     >
                       <option value="DISCIPLINED">Disciplined 🟢</option>
                       <option value="FOMO">FOMO 🔴</option>
@@ -495,11 +520,11 @@ export const JournalPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Mistake Tag (If Applicable)</label>
+                  <label className="block text-content-secondary font-medium mb-1">Mistake Tag (If Applicable)</label>
                   <select
                     value={reviewForm.mistakeId || ''}
                     onChange={e => setReviewForm({ ...reviewForm, mistakeId: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none"
+                    className="w-full bg-surface-secondary border border-border-subtle rounded-xl px-3 py-2 text-content-primary focus:outline-none"
                   >
                     <option value="">No Mistake - System Adhered</option>
                     {mistakeTags.map(m => (
@@ -509,13 +534,13 @@ export const JournalPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Lessons Learned & Psychological Notes</label>
+                  <label className="block text-content-secondary font-medium mb-1">Lessons Learned & Psychological Notes</label>
                   <textarea
                     rows={3}
                     value={reviewForm.traderNotes || ''}
                     onChange={e => setReviewForm({ ...reviewForm, traderNotes: e.target.value })}
                     placeholder="Document execution thoughts, psychology, entry timing, and key takeaways..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-surface-secondary border border-border-subtle rounded-xl p-3 text-content-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
                   />
                 </div>
               </div>
@@ -524,7 +549,7 @@ export const JournalPage: React.FC = () => {
               <button
                 onClick={handleSaveReview}
                 disabled={isSavingReview}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 transition text-xs"
+                className="framer-btn-primary w-full py-3"
               >
                 {isSavingReview ? 'Saving...' : 'Save Trade Review (+25 XP)'}
               </button>
@@ -535,19 +560,22 @@ export const JournalPage: React.FC = () => {
 
       {/* Voice Journaling Assistant Modal */}
       {isVoiceModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0f172a] border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-surface border border-border-subtle rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Mic className="w-5 h-5 text-blue-400 animate-pulse" />
-                <h3 className="font-extrabold text-white text-base">Voice Journal Assistant</h3>
+                <Mic className="w-5 h-5 text-brand-primary animate-pulse" />
+                <h3 className="font-bold text-content-primary text-base">Voice Journal Assistant</h3>
               </div>
-              <button onClick={() => setIsVoiceModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setIsVoiceModalOpen(false)}
+                className="text-content-muted hover:text-content-primary p-1.5 rounded-xl hover:bg-surface-secondary transition"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-content-secondary">
               Speak or type your trade narrative (e.g. "I saw a liquidity sweep below Asia low, followed by MSS and entered on the 5m FVG...").
             </p>
 
@@ -556,28 +584,28 @@ export const JournalPage: React.FC = () => {
               value={voiceText}
               onChange={e => setVoiceText(e.target.value)}
               placeholder="e.g. Took a buy on XAUUSD after London swept Asia low. MSS formed and I tapped the 5m FVG. Closed at 2R target..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-xs text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-surface-secondary border border-border-subtle rounded-2xl p-3 text-xs text-content-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
             />
 
             <button
               onClick={handleVoiceParse}
               disabled={isParsingVoice || !voiceText.trim()}
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs flex items-center justify-center space-x-2 transition"
+              className="framer-btn-primary w-full py-2.5 flex items-center justify-center space-x-2"
             >
               <Sparkles className="w-4 h-4" />
               <span>{isParsingVoice ? 'Extracting...' : 'Extract Suggested Fields'}</span>
             </button>
 
             {voiceSuggestions && (
-              <div className="p-4 rounded-2xl bg-slate-900 border border-blue-500/30 space-y-2 text-xs animate-in fade-in">
-                <div className="font-bold text-blue-400 text-[11px] uppercase tracking-wider">Suggested Fields (Requires Confirmation):</div>
-                <div className="text-slate-300"><strong>Setup:</strong> {voiceSuggestions.setupName}</div>
-                <div className="text-slate-300"><strong>Bias:</strong> {voiceSuggestions.bias}</div>
-                <div className="text-slate-300"><strong>Confluences:</strong> {voiceSuggestions.confluences?.join(', ')}</div>
-                <div className="text-slate-300"><strong>Emotion:</strong> {voiceSuggestions.emotionState}</div>
+              <div className="p-4 rounded-2xl bg-surface-secondary border border-brand-primary/30 space-y-2 text-xs animate-in fade-in">
+                <div className="font-bold text-brand-primary text-[11px] uppercase tracking-wider">Suggested Fields (Requires Confirmation):</div>
+                <div className="text-content-secondary"><strong>Setup:</strong> {voiceSuggestions.setupName}</div>
+                <div className="text-content-secondary"><strong>Bias:</strong> {voiceSuggestions.bias}</div>
+                <div className="text-content-secondary"><strong>Confluences:</strong> {voiceSuggestions.confluences?.join(', ')}</div>
+                <div className="text-content-secondary"><strong>Emotion:</strong> {voiceSuggestions.emotionState}</div>
                 <button
                   onClick={applyVoiceSuggestions}
-                  className="w-full mt-2 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition"
+                  className="w-full mt-2 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow-md shadow-emerald-500/20"
                 >
                   Confirm & Apply Suggestions
                 </button>

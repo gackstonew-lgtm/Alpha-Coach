@@ -20,6 +20,7 @@ import {
   X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { AlphaCoachLogo } from '../common/AlphaCoachLogo';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
 
-  const navigation = [
+  const primaryNavigation = [
     { name: 'Dashboard', to: '/', icon: LayoutDashboard },
     { name: 'Trading Journal', to: '/journal', icon: BookOpen },
     { name: 'Trading Calendar', to: '/calendar', icon: Calendar },
@@ -42,15 +43,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: 'Replay Studio', to: '/replay', icon: PlayCircle },
     { name: 'Gamification & XP', to: '/gamification', icon: Trophy },
     { name: 'AI Trading Coach', to: '/ai-coach', icon: Bot },
-    { name: 'Weekly & Monthly Reports', to: '/reports', icon: FileSpreadsheet },
+    { name: 'Reports & Export', to: '/reports', icon: FileSpreadsheet },
     { name: 'MT5 Bridge & Accounts', to: '/bridge', icon: Cpu },
   ];
 
   if (user?.role === 'admin') {
-    navigation.push({ name: 'Admin Operations', to: '/admin', icon: ShieldCheck });
+    primaryNavigation.push({ name: 'Admin Operations', to: '/admin', icon: ShieldCheck });
   }
-
-  navigation.push({ name: 'Settings & Privacy', to: '/settings', icon: Settings });
 
   return (
     <>
@@ -58,40 +57,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-200"
         />
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#0a0d14] border-r border-slate-800/80 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-surface border-r border-border-subtle flex flex-col transition-transform duration-300 ease-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Brand Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/80">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-400 p-0.5 shadow-lg shadow-blue-500/20">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 text-lg">α</span>
-              </div>
-            </div>
-            <div>
-              <div className="font-extrabold text-base tracking-tight text-white flex items-center space-x-1.5">
-                <span>Alpha Coach</span>
-              </div>
-              <div className="text-[10px] font-bold tracking-widest text-emerald-400 uppercase">
-                Performance OS
-              </div>
-            </div>
-          </div>
-          <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-white">
+        {/* Brand Header with Official Logo */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
+          <NavLink to="/" onClick={onClose} className="flex items-center gap-2 group">
+            <AlphaCoachLogo size="sm" showWordmark={true} />
+          </NavLink>
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1.5 rounded-lg text-content-muted hover:text-content-primary hover:bg-surface-secondary transition"
+            aria-label="Close sidebar"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {navigation.map(item => {
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+          <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-content-subtle uppercase">
+            Performance OS
+          </div>
+
+          {primaryNavigation.map(item => {
             const Icon = item.icon;
             return (
               <NavLink
@@ -99,28 +94,56 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 to={item.to}
                 onClick={() => onClose()}
                 className={({ isActive }) =>
-                  `flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
+                  `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group relative ${
                     isActive
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20 font-bold'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/80'
+                      ? 'bg-brand-600 text-white font-semibold shadow-md shadow-brand-500/20'
+                      : 'text-content-secondary hover:text-content-primary hover:bg-surface-secondary'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    <Icon className={`w-4 h-4 transition ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-400'}`} />
-                    <span>{item.name}</span>
+                    <Icon className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isActive ? 'text-white scale-105' : 'text-content-muted group-hover:text-brand-500'}`} />
+                    <span className="truncate">{item.name}</span>
+                    {isActive && (
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    )}
                   </>
                 )}
               </NavLink>
             );
           })}
+
+          <div className="pt-3 px-3 py-1.5 text-[10px] font-bold tracking-wider text-content-subtle uppercase">
+            System
+          </div>
+          <NavLink
+            to="/settings"
+            onClick={() => onClose()}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group ${
+                isActive
+                  ? 'bg-brand-600 text-white font-semibold shadow-md shadow-brand-500/20'
+                  : 'text-content-secondary hover:text-content-primary hover:bg-surface-secondary'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Settings className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-content-muted group-hover:text-brand-500'}`} />
+                <span>Settings & Preferences</span>
+              </>
+            )}
+          </NavLink>
         </nav>
 
-        {/* Footer info */}
-        <div className="p-4 border-t border-slate-800/80 text-[11px] text-slate-500 flex items-center justify-between">
-          <span>Alpha Coach v1.0</span>
-          <span className="font-mono text-emerald-400 font-semibold">MT5 Ready</span>
+        {/* Footer Meta */}
+        <div className="p-3.5 border-t border-border-subtle bg-surface-secondary/40 text-[11px] text-content-muted flex items-center justify-between">
+          <span className="font-medium">Alpha Coach v1.0</span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-semibold border border-emerald-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+            MT5 Ready
+          </span>
         </div>
       </aside>
     </>

@@ -69,30 +69,34 @@ export const BridgeAccountsPage: React.FC = () => {
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center space-x-2">
-          <Cpu className="w-6 h-6 text-blue-400" />
-          <span>MT5 Journal Bridge & Account Hub</span>
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
+        <div className="flex items-center space-x-2">
+          <span className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+            <Cpu className="w-5 h-5" />
+          </span>
+          <h1 className="text-2xl font-bold tracking-tight text-content-primary">
+            MT5 Journal Bridge & Account Hub
+          </h1>
+        </div>
+        <p className="text-xs text-content-secondary mt-1">
           Zero password exposure: your MT5 desktop terminal synchronizes securely over local encrypted bridge
         </p>
       </div>
 
       {/* Security Architecture Principle Card */}
-      <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
+      <div className="p-5 rounded-3xl bg-surface-secondary border border-border-subtle space-y-2 text-xs">
         <div className="flex items-center space-x-2 text-emerald-400 font-bold uppercase tracking-wider">
           <ShieldCheck className="w-4 h-4" />
           <span>Zero-Password Security Architecture</span>
         </div>
-        <p className="text-slate-300">
+        <p className="text-content-secondary">
           Alpha Coach <strong>never asks for, receives, or stores your broker login password</strong>. The Local MT5 Bridge runs securely on your machine, queries your running MT5 desktop terminal via the official MetaTrader API, and transmits only read-only trading orders and deal histories.
         </p>
       </div>
 
       {/* Bridge Pairing Token Generator */}
-      <div className="glass-panel p-6 rounded-3xl border border-slate-800/80 space-y-4 shadow-xl">
+      <div className="framer-card p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-blue-400">
+          <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-brand-primary">
             <Key className="w-4 h-4" />
             <span>Generate Bridge Device Pairing Token</span>
           </div>
@@ -104,26 +108,26 @@ export const BridgeAccountsPage: React.FC = () => {
             value={newDeviceName}
             onChange={e => setNewDeviceName(e.target.value)}
             placeholder="Device Name (e.g. My Windows PC)"
-            className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white flex-1 focus:outline-none focus:border-blue-500"
+            className="bg-surface-secondary border border-border-subtle rounded-xl px-4 py-2.5 text-xs text-content-primary flex-1 focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
           />
           <button
             onClick={handlePairDevice}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-blue-500/25 shrink-0"
+            className="framer-btn-primary px-5 py-2.5 shrink-0"
           >
             Generate Pairing Token
           </button>
         </div>
 
         {generatedToken && (
-          <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-2 animate-in fade-in">
+          <div className="p-4 rounded-2xl bg-surface-secondary border border-emerald-500/30 space-y-2 animate-in fade-in">
             <div className="text-[11px] font-bold text-emerald-400">Copy this token into your MT5 Bridge Terminal:</div>
-            <div className="flex items-center space-x-2 bg-slate-900 p-2.5 rounded-xl font-mono text-xs text-slate-200">
+            <div className="flex items-center space-x-2 bg-surface p-2.5 rounded-xl font-mono text-xs text-content-primary border border-border-subtle">
               <span className="truncate flex-1 select-all">{generatedToken}</span>
               <button
                 onClick={copyToken}
-                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition"
+                className="p-1.5 bg-surface-secondary hover:bg-surface text-content-primary rounded-lg border border-border-subtle transition"
               >
-                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-content-muted" />}
               </button>
             </div>
           </div>
@@ -133,7 +137,7 @@ export const BridgeAccountsPage: React.FC = () => {
       {/* Connected Trading Accounts Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-sm text-white flex items-center space-x-2">
+          <h3 className="font-bold text-sm text-content-primary flex items-center space-x-2">
             <Layers className="w-4 h-4 text-emerald-400" />
             <span>Connected MT5 Trading Accounts ({accounts.length})</span>
           </h3>
@@ -141,20 +145,20 @@ export const BridgeAccountsPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {accounts.length === 0 ? (
-            <div className="col-span-2 py-12 text-center text-slate-500 text-xs glass-panel rounded-3xl border border-slate-800">
+            <div className="col-span-2 py-12 text-center text-content-muted text-xs framer-card">
               No MT5 accounts synchronized yet. Pair your device above to import your 3-month history.
             </div>
           ) : (
             accounts.map(acc => (
-              <div key={acc.id} className="glass-panel p-6 rounded-3xl border border-slate-800/80 space-y-4 relative">
+              <div key={acc.id} className="framer-card p-6 space-y-4 relative">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2.5 rounded-2xl bg-blue-500/10 text-blue-400 font-extrabold font-mono text-sm">
+                    <div className="p-2.5 rounded-2xl bg-brand-primary/10 text-brand-primary font-extrabold font-mono text-sm border border-brand-primary/20">
                       MT5
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-white text-sm">{acc.broker_name}</h4>
-                      <div className="text-xs text-slate-400 font-mono">
+                      <h4 className="font-bold text-content-primary text-sm">{acc.broker_name}</h4>
+                      <div className="text-xs text-content-muted font-mono">
                         Account ••••{acc.account_number.slice(-4)} ({acc.server_name})
                       </div>
                     </div>
@@ -162,29 +166,29 @@ export const BridgeAccountsPage: React.FC = () => {
 
                   <button
                     onClick={() => handleDeleteAccount(acc.id)}
-                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition"
+                    className="p-2 text-content-muted hover:text-trade-loss hover:bg-trade-loss/10 rounded-xl transition"
                     title="Disconnect Account"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-xs font-mono">
+                <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-surface-secondary border border-border-subtle text-xs font-mono">
                   <div>
-                    <div className="text-[10px] text-slate-500 font-sans">Balance</div>
-                    <div className="text-white font-bold">${acc.balance?.toLocaleString()}</div>
+                    <div className="text-[10px] text-content-muted font-sans">Balance</div>
+                    <div className="text-content-primary font-bold">${acc.balance?.toLocaleString()}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-slate-500 font-sans">Leverage</div>
-                    <div className="text-slate-300 font-bold">1:{acc.leverage}</div>
+                    <div className="text-[10px] text-content-muted font-sans">Leverage</div>
+                    <div className="text-content-secondary font-bold">1:{acc.leverage}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-slate-500 font-sans">Closed Trades</div>
-                    <div className="text-blue-400 font-bold">{acc.total_closed_trades || 0}</div>
+                    <div className="text-[10px] text-content-muted font-sans">Closed Trades</div>
+                    <div className="text-brand-primary font-bold">{acc.total_closed_trades || 0}</div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-800/60 font-mono">
+                <div className="flex items-center justify-between text-[11px] text-content-muted pt-2 border-t border-border-subtle font-mono">
                   <span>Last Sync: {acc.last_synced_at ? new Date(acc.last_synced_at).toLocaleTimeString() : 'Never'}</span>
                   <span className="text-emerald-400 font-bold font-sans">Encrypted TLS</span>
                 </div>

@@ -90,11 +90,15 @@ export const AICoachPage: React.FC = () => {
     <div className="space-y-6 animate-in fade-in duration-300 max-w-5xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center space-x-2">
-          <Bot className="w-6 h-6 text-blue-400" />
-          <span>AI Trading Performance Coach</span>
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
+        <div className="flex items-center space-x-2">
+          <span className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+            <Bot className="w-5 h-5" />
+          </span>
+          <h1 className="text-2xl font-bold tracking-tight text-content-primary">
+            AI Trading Performance Coach
+          </h1>
+        </div>
+        <p className="text-xs text-content-secondary mt-1">
           Grounded data-driven analysis of your trading journal — zero hallucinations, pure empirical statistics
         </p>
       </div>
@@ -105,16 +109,16 @@ export const AICoachPage: React.FC = () => {
           <button
             key={idx}
             onClick={() => handleSend(chip)}
-            className="px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 font-medium transition text-left flex items-center space-x-1.5"
+            className="px-3.5 py-1.5 rounded-full bg-surface-secondary hover:bg-surface border border-border-subtle text-xs text-content-secondary font-medium transition text-left flex items-center space-x-1.5 shadow-sm"
           >
-            <Sparkles className="w-3 h-3 text-blue-400" />
+            <Sparkles className="w-3.5 h-3.5 text-brand-primary" />
             <span>{chip}</span>
           </button>
         ))}
       </div>
 
       {/* Chat Conversation Box */}
-      <div className="glass-panel rounded-3xl border border-slate-800/80 p-6 space-y-6 min-h-[450px] max-h-[600px] overflow-y-auto shadow-2xl flex flex-col">
+      <div className="framer-card p-6 space-y-6 min-h-[450px] max-h-[600px] overflow-y-auto flex flex-col">
         {messages.map(msg => (
           <div
             key={msg.id}
@@ -122,19 +126,19 @@ export const AICoachPage: React.FC = () => {
           >
             <div className={`max-w-2xl p-5 rounded-3xl text-xs leading-relaxed ${
               msg.sender === 'user'
-                ? 'bg-blue-600 text-white font-medium rounded-tr-none'
-                : 'bg-slate-900/95 border border-slate-800 text-slate-200 rounded-tl-none space-y-3'
+                ? 'bg-brand-primary text-white font-medium rounded-tr-none shadow-md shadow-brand-primary/20'
+                : 'bg-surface-secondary border border-border-subtle text-content-primary rounded-tl-none space-y-3'
             }`}>
               <div className="whitespace-pre-wrap">{msg.text}</div>
 
               {/* Directly Observed Data Matrix */}
               {msg.observedData && (
-                <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 text-[11px] font-mono space-y-1">
-                  <div className="text-slate-400 font-bold font-sans text-[10px] uppercase">1. Directly Observed Historical Data:</div>
-                  <div className="grid grid-cols-2 gap-2 text-slate-300">
+                <div className="p-3 rounded-2xl bg-surface border border-border-subtle text-[11px] font-mono space-y-1">
+                  <div className="text-content-muted font-bold font-sans text-[10px] uppercase">1. Directly Observed Historical Data:</div>
+                  <div className="grid grid-cols-2 gap-2 text-content-secondary">
                     {Object.entries(msg.observedData).map(([k, v]) => (
                       <div key={k} className="truncate">
-                        <span className="text-slate-500">{k}:</span> <strong>{String(v)}</strong>
+                        <span className="text-content-muted">{k}:</span> <strong>{String(v)}</strong>
                       </div>
                     ))}
                   </div>
@@ -143,9 +147,9 @@ export const AICoachPage: React.FC = () => {
 
               {/* Patterns & Observations */}
               {msg.patterns && msg.patterns.length > 0 && (
-                <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80 text-[11px] space-y-1 font-sans">
-                  <div className="text-amber-400 font-bold text-[10px] uppercase">2. Observed Behavioral & Session Patterns:</div>
-                  <ul className="list-disc list-inside space-y-0.5 text-slate-300">
+                <div className="p-3 rounded-2xl bg-surface border border-border-subtle text-[11px] space-y-1 font-sans">
+                  <div className="text-amber-500 font-bold text-[10px] uppercase">2. Observed Behavioral & Session Patterns:</div>
+                  <ul className="list-disc list-inside space-y-0.5 text-content-secondary">
                     {msg.patterns.map((p, i) => (
                       <li key={i}>{p}</li>
                     ))}
@@ -153,32 +157,32 @@ export const AICoachPage: React.FC = () => {
                 </div>
               )}
             </div>
-            <span className="text-[10px] text-slate-500 font-mono px-2">{msg.timestamp}</span>
+            <span className="text-[10px] text-content-muted font-mono px-2">{msg.timestamp}</span>
           </div>
         ))}
 
         {isLoading && (
-          <div className="flex items-center space-x-2 text-xs text-slate-400 p-4 bg-slate-900/50 rounded-2xl w-fit">
-            <div className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
+          <div className="flex items-center space-x-2 text-xs text-content-muted p-4 bg-surface-secondary rounded-2xl w-fit border border-border-subtle">
+            <div className="w-2 h-2 rounded-full bg-brand-primary animate-ping" />
             <span>Alpha Coach is analyzing your trading records...</span>
           </div>
         )}
       </div>
 
       {/* Input Bar */}
-      <div className="flex items-center space-x-2 bg-slate-900 border border-slate-800 p-2 rounded-2xl shadow-xl">
+      <div className="flex items-center space-x-2 bg-surface border border-border-subtle p-2 rounded-2xl shadow-card">
         <input
           type="text"
           value={inputText}
           onChange={e => setInputText(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
           placeholder="Ask Alpha Coach anything about your trades, sessions, win rates, or risk habits..."
-          className="bg-transparent text-xs text-white placeholder-slate-500 px-3 py-2 focus:outline-none flex-1"
+          className="bg-transparent text-xs text-content-primary placeholder-content-muted px-3 py-2 focus:outline-none flex-1"
         />
         <button
           onClick={() => handleSend()}
           disabled={isLoading || !inputText.trim()}
-          className="p-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-xl transition shadow-lg shadow-blue-500/25"
+          className="framer-btn-primary p-3 disabled:opacity-40"
         >
           <Send className="w-4 h-4" />
         </button>

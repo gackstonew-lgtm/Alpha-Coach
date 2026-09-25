@@ -82,29 +82,33 @@ export const CalendarPage: React.FC = () => {
       {/* Header with Month Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center space-x-2">
-            <CalendarIcon className="w-6 h-6 text-emerald-400" />
-            <span>Interactive Trading Calendar</span>
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <div className="flex items-center space-x-2">
+            <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <CalendarIcon className="w-5 h-5" />
+            </span>
+            <h1 className="text-2xl font-bold tracking-tight text-content-primary">
+              Interactive Trading Calendar
+            </h1>
+          </div>
+          <p className="text-xs text-content-secondary mt-1">
             Visual day-by-day P/L distribution, trade volume & session consistency
           </p>
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center space-x-3 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl">
+        <div className="flex items-center space-x-3 bg-surface-secondary border border-border-subtle p-1.5 rounded-2xl shadow-sm">
           <button
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-2 rounded-xl text-content-muted hover:text-content-primary hover:bg-surface transition"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="text-sm font-bold text-white min-w-[140px] text-center font-mono">
+          <span className="text-sm font-bold text-content-primary min-w-[140px] text-center font-mono">
             {format(currentMonth, 'MMMM yyyy')}
           </span>
           <button
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-2 rounded-xl text-content-muted hover:text-content-primary hover:bg-surface transition"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -112,16 +116,16 @@ export const CalendarPage: React.FC = () => {
       </div>
 
       {/* Calendar Grid Card */}
-      <div className="glass-panel p-6 rounded-3xl border border-slate-800/80 shadow-2xl">
+      <div className="framer-card p-6">
         {/* Days of week header */}
-        <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+        <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-content-muted uppercase tracking-wider mb-3">
           <div>Mon</div>
           <div>Tue</div>
           <div>Wed</div>
           <div>Thu</div>
           <div>Fri</div>
-          <div className="text-slate-600">Sat</div>
-          <div className="text-slate-600">Sun</div>
+          <div className="opacity-40">Sat</div>
+          <div className="opacity-40">Sun</div>
         </div>
 
         {/* Days Grid */}
@@ -132,14 +136,14 @@ export const CalendarPage: React.FC = () => {
             const inMonth = isSameMonth(day, currentMonth);
             const isWeekend = day.getDay() === 0 || day.getDay() === 6;
 
-            let badgeClass = 'bg-slate-950/40 border-slate-850 text-slate-500';
+            let badgeClass = 'bg-surface-secondary/40 border-border-subtle text-content-muted';
             if (dayPerf) {
               if (dayPerf.netProfit > 0) {
-                badgeClass = 'bg-emerald-950/30 border-emerald-500/30 text-emerald-400 hover:border-emerald-400';
+                badgeClass = 'bg-trade-profit/10 border-trade-profit/30 text-trade-profit hover:border-trade-profit';
               } else if (dayPerf.netProfit < 0) {
-                badgeClass = 'bg-red-950/30 border-red-500/30 text-red-400 hover:border-red-400';
+                badgeClass = 'bg-trade-loss/10 border-trade-loss/30 text-trade-loss hover:border-trade-loss';
               } else {
-                badgeClass = 'bg-slate-900 border-slate-700 text-slate-300';
+                badgeClass = 'bg-surface-secondary border-border-strong text-content-primary';
               }
             }
 
@@ -149,14 +153,14 @@ export const CalendarPage: React.FC = () => {
                 onClick={() => handleDateClick(day)}
                 className={`min-h-[90px] p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                   !inMonth ? 'opacity-30' : ''
-                } ${isWeekend ? 'bg-slate-950/20' : ''} ${badgeClass}`}
+                } ${isWeekend ? 'opacity-50' : ''} ${badgeClass}`}
               >
                 <div className="flex justify-between items-center text-xs">
-                  <span className={`font-mono font-bold ${inMonth ? 'text-slate-200' : 'text-slate-600'}`}>
+                  <span className={`font-mono font-bold ${inMonth ? 'text-content-primary' : 'text-content-muted'}`}>
                     {format(day, 'd')}
                   </span>
                   {dayPerf && (
-                    <span className="text-[10px] text-slate-400 font-sans">
+                    <span className="text-[10px] text-content-muted font-sans font-medium">
                       {dayPerf.tradesCount}t
                     </span>
                   )}
@@ -167,12 +171,12 @@ export const CalendarPage: React.FC = () => {
                     <div className="text-xs sm:text-sm font-extrabold font-mono">
                       {dayPerf.netProfit >= 0 ? '+' : ''}${Math.round(dayPerf.netProfit)}
                     </div>
-                    <div className="text-[10px] text-slate-400">
+                    <div className="text-[10px] text-content-muted font-mono">
                       {dayPerf.winCount}W / {dayPerf.lossCount}L
                     </div>
                   </div>
                 ) : (
-                  <div className="text-[10px] text-slate-700 text-center py-2">-</div>
+                  <div className="text-[10px] text-content-muted text-center py-2">-</div>
                 )}
               </div>
             );
@@ -182,53 +186,43 @@ export const CalendarPage: React.FC = () => {
 
       {/* Day Trades Drawer Modal */}
       {isDayDrawerOpen && selectedDate && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-end">
-          <div className="w-full max-w-xl bg-[#0d121f] border-l border-slate-800 h-full overflow-y-auto p-6 space-y-6 animate-in slide-in-from-right duration-300">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end animate-in fade-in duration-200">
+          <div className="w-full max-w-xl bg-surface border-l border-border-subtle h-full overflow-y-auto p-6 space-y-6 animate-in slide-in-from-right duration-300 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-border-subtle">
               <div>
-                <h2 className="text-lg font-extrabold text-white">
+                <h2 className="text-lg font-bold text-content-primary">
                   Trades for {format(selectedDate, 'MMMM d, yyyy')}
                 </h2>
-                <p className="text-xs text-slate-400">{dayTrades.length} trades recorded on this date</p>
+                <p className="text-xs text-content-secondary">{dayTrades.length} trades recorded on this date</p>
               </div>
-              <button onClick={() => setIsDayDrawerOpen(false)} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+              <button
+                onClick={() => setIsDayDrawerOpen(false)}
+                className="p-2 rounded-xl text-content-muted hover:text-content-primary hover:bg-surface-secondary transition"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-3">
               {dayTrades.length === 0 ? (
-                <div className="py-12 text-center text-slate-500 text-xs">No trades on this date</div>
+                <div className="py-12 text-center text-content-muted text-xs font-sans">
+                  No reconstructed trades found for this day.
+                </div>
               ) : (
-                dayTrades.map(trade => {
-                  const isWin = trade.net_profit >= 0;
-                  return (
-                    <div key={trade.id} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2 font-bold text-white text-xs">
-                          <span>{trade.symbol}</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] ${
-                            trade.position_type === 'BUY' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                          }`}>
-                            {trade.position_type}
-                          </span>
-                        </div>
-                        <div className={`font-mono font-bold text-sm ${isWin ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {isWin ? '+' : ''}${trade.net_profit?.toFixed(2)}
-                        </div>
-                      </div>
-                      <div className="flex justify-between text-[11px] text-slate-400 font-mono">
-                        <span>{trade.total_volume} Lots @ {trade.entry_price_avg} → {trade.exit_price_avg}</span>
-                        <span>{trade.session_name || 'Session'}</span>
-                      </div>
-                      {trade.setup_name && (
-                        <div className="text-[11px] text-slate-300 font-sans pt-1 border-t border-slate-800/60">
-                          Setup: <span className="font-semibold text-blue-400">{trade.setup_name}</span>
-                        </div>
-                      )}
+                dayTrades.map(t => (
+                  <div key={t.id} className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-content-primary">{t.symbol} • {t.position_type}</span>
+                      <span className={`font-mono font-bold ${t.net_profit >= 0 ? 'text-trade-profit' : 'text-trade-loss'}`}>
+                        {t.net_profit >= 0 ? '+' : ''}${t.net_profit?.toFixed(2)}
+                      </span>
                     </div>
-                  );
-                })
+                    <div className="flex justify-between text-[11px] text-content-muted font-mono">
+                      <span>Volume: {t.total_volume} Lots</span>
+                      <span>{t.session_name || 'N/A'}</span>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           </div>

@@ -19,7 +19,7 @@ This directory contains the production-grade PostgreSQL migrations, Row Level Se
 ## How to Apply Migrations
 
 ### Option A: Using the Supabase Web Dashboard (Recommended)
-1. Navigate to your project dashboard: `https://supabase.com/dashboard/project/rmnudqeyjrrklltdiaf`
+1. Navigate to your project dashboard: `https://supabase.com/dashboard/project/rmnudqejyrrklltodiaf`
 2. Open the **SQL Editor** tab from the left sidebar.
 3. Open and run the migration files in order:
    - Run `20260925000001_initial_schema.sql`
@@ -32,7 +32,7 @@ This directory contains the production-grade PostgreSQL migrations, Row Level Se
 ### Option B: Using the Supabase CLI
 ```bash
 # Link local project to remote Supabase project
-npx supabase link --project-ref rmnudqeyjrrklltdiaf
+npx supabase link --project-ref rmnudqejyrrklltodiaf
 
 # Push all migrations
 npx supabase db push

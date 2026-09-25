@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Zap, Lock, Mail, ArrowRight } from 'lucide-react';
+import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
 
 export const LoginPage: React.FC = () => {
   const { login, register } = useAuth();
@@ -25,7 +26,6 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  // Quick Demo Auto-Login Button
   const handleDemoLogin = async () => {
     setError(null);
     setIsLoading(true);
@@ -33,7 +33,6 @@ export const LoginPage: React.FC = () => {
       try {
         await login('trader@alphacoach.io', 'Password123!');
       } catch {
-        // Register demo user if not created yet
         await register({
           email: 'trader@alphacoach.io',
           password: 'Password123!',
@@ -52,55 +51,52 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0d14] flex flex-col justify-center items-center p-4 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-canvas text-content-primary flex flex-col justify-center items-center p-4 relative overflow-hidden ambient-glow-bg">
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-md w-full glass-panel p-8 rounded-3xl border border-slate-800/80 shadow-2xl space-y-6 z-10 animate-in fade-in zoom-in-95">
-        {/* Brand */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-emerald-400 p-0.5 shadow-lg shadow-blue-500/25 items-center justify-center">
-            <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-extrabold text-blue-400 text-2xl">
-              α
-            </div>
+      <div className="max-w-md w-full framer-card p-8 rounded-3xl shadow-xl space-y-6 z-10 animate-in fade-in zoom-in-95 duration-300 border border-border-subtle">
+        {/* Official Brand Identity */}
+        <div className="text-center space-y-3">
+          <div className="flex justify-center">
+            <AlphaCoachLogo size="lg" showWordmark={true} />
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Alpha Coach</h1>
-          <p className="text-xs text-slate-400">Automated MT5 Trading Journal & Performance OS</p>
+          <p className="text-xs text-content-muted">Automated MT5 Trading Journal & Performance OS</p>
         </div>
 
         {error && (
-          <div className="p-3 rounded-2xl bg-red-950/40 border border-red-500/30 text-xs text-red-400 text-center">
+          <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 text-center font-medium">
             {error}
           </div>
         )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-          <div>
-            <label className="block text-slate-400 font-medium mb-1">Email Address</label>
-            <div className="flex items-center space-x-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5">
-              <Mail className="w-4 h-4 text-slate-500" />
+          <div className="space-y-1.5">
+            <label className="block text-content-secondary font-medium">Email Address</label>
+            <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
+              <Mail className="w-4 h-4 text-content-muted" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="bg-transparent text-white placeholder-slate-500 focus:outline-none w-full"
+                className="bg-transparent text-content-primary placeholder-content-subtle focus:outline-none w-full"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-slate-400 font-medium mb-1">Password</label>
-            <div className="flex items-center space-x-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5">
-              <Lock className="w-4 h-4 text-slate-500" />
+          <div className="space-y-1.5">
+            <label className="block text-content-secondary font-medium">Password</label>
+            <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
+              <Lock className="w-4 h-4 text-content-muted" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="bg-transparent text-white placeholder-slate-500 focus:outline-none w-full"
+                className="bg-transparent text-content-primary placeholder-content-subtle focus:outline-none w-full"
               />
             </div>
           </div>
@@ -108,7 +104,7 @@ export const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-500/25 flex items-center justify-center space-x-2 text-xs"
+            className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-brand-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
           >
             <span>{isLoading ? 'Signing In...' : 'Sign In to Performance OS'}</span>
             <ArrowRight className="w-4 h-4" />
@@ -116,21 +112,21 @@ export const LoginPage: React.FC = () => {
         </form>
 
         {/* Demo Fast Login */}
-        <div className="pt-2 border-t border-slate-800/80">
+        <div className="pt-2 border-t border-border-subtle">
           <button
             onClick={handleDemoLogin}
             type="button"
-            className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold border border-emerald-500/30 rounded-xl text-xs transition flex items-center justify-center space-x-2 shadow"
+            className="w-full py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 rounded-xl text-xs transition flex items-center justify-center gap-2 active:scale-95 shadow-sm"
           >
             <Zap className="w-4 h-4" />
-            <span>Instant Demo Access (With Mock MT5 Data)</span>
+            <span>Instant Demo Access (With MT5 Sample Data)</span>
           </button>
         </div>
 
         {/* Register link */}
-        <div className="text-center text-xs text-slate-400">
+        <div className="text-center text-xs text-content-muted">
           New to Alpha Coach?{' '}
-          <Link to="/register" className="text-blue-400 font-bold hover:underline">
+          <Link to="/register" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
             Create an Account
           </Link>
         </div>
