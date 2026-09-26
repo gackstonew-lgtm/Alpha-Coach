@@ -118,6 +118,35 @@ CREATE TABLE IF NOT EXISTS raw_deals (
   UNIQUE(account_id, deal_id)
 );
 
+CREATE TABLE IF NOT EXISTS raw_open_positions (
+  id TEXT PRIMARY KEY,
+  account_id TEXT NOT NULL REFERENCES trading_accounts(id) ON DELETE CASCADE,
+  position_id TEXT NOT NULL,
+  ticket TEXT NOT NULL,
+  symbol TEXT NOT NULL,
+  type INTEGER NOT NULL, -- 0: BUY, 1: SELL
+  magic INTEGER DEFAULT 0,
+  identifier TEXT,
+  reason INTEGER DEFAULT 0,
+  volume REAL NOT NULL,
+  price_open REAL NOT NULL,
+  price_sl REAL DEFAULT 0.0,
+  price_tp REAL DEFAULT 0.0,
+  price_current REAL NOT NULL,
+  swap REAL DEFAULT 0.0,
+  profit REAL DEFAULT 0.0, -- Live floating profit
+  comment TEXT,
+  external_id TEXT,
+  time TEXT NOT NULL,
+  time_msc INTEGER,
+  time_update TEXT,
+  time_update_msc INTEGER,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(account_id, position_id)
+);
+
 CREATE TABLE IF NOT EXISTS reconstructed_positions (
   id TEXT PRIMARY KEY,
   account_id TEXT NOT NULL REFERENCES trading_accounts(id) ON DELETE CASCADE,
@@ -127,6 +156,11 @@ CREATE TABLE IF NOT EXISTS reconstructed_positions (
   total_volume REAL NOT NULL,
   entry_price_avg REAL NOT NULL,
   exit_price_avg REAL,
+  current_price REAL,
+  floating_profit REAL DEFAULT 0.0,
+  magic INTEGER DEFAULT 0,
+  comment TEXT,
+  external_id TEXT,
   open_time TEXT NOT NULL,
   close_time TEXT,
   status TEXT NOT NULL DEFAULT 'OPEN', -- 'OPEN' | 'CLOSED'

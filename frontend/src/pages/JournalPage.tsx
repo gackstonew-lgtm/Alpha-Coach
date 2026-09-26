@@ -31,6 +31,9 @@ export const JournalPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Filters
+  const [datePreset, setDatePreset] = useState<string>('all');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
   const [symbolFilter, setSymbolFilter] = useState<string>('');
   const [directionFilter, setDirectionFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -57,7 +60,7 @@ export const JournalPage: React.FC = () => {
   useEffect(() => {
     loadTrades(1);
     loadMetadata();
-  }, [selectedAccountId, symbolFilter, directionFilter, statusFilter, sessionFilter, reviewedFilter]);
+  }, [selectedAccountId, datePreset, customStartDate, customEndDate, symbolFilter, directionFilter, statusFilter, sessionFilter, reviewedFilter]);
 
   const loadTrades = async (page: number = 1) => {
     try {
@@ -66,6 +69,10 @@ export const JournalPage: React.FC = () => {
         accountId: selectedAccountId,
         page,
         limit: 20,
+        datePreset: datePreset !== 'all' && datePreset !== 'custom' ? datePreset : undefined,
+        startDate: datePreset === 'custom' && customStartDate ? `${customStartDate}T00:00:00.000Z` : undefined,
+        endDate: datePreset === 'custom' && customEndDate ? `${customEndDate}T23:59:59.999Z` : undefined,
+        includeOpenPositions: statusFilter !== 'CLOSED',
         symbol: symbolFilter,
         direction: directionFilter,
         status: statusFilter,
@@ -192,82 +199,130 @@ export const JournalPage: React.FC = () => {
       </div>
 
       {/* Filter Bar */}
-      <div className="framer-card p-4 flex flex-wrap items-center gap-3">
-        {/* Search */}
-        <div className="flex items-center space-x-2 bg-surface-secondary border border-border-subtle rounded-xl px-3 py-2 flex-1 min-w-[220px]">
-          <Search className="w-4 h-4 text-content-muted" />
-          <input
-            type="text"
-            placeholder="Search symbol, notes, setup..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && loadTrades(1)}
-            className="bg-transparent text-xs text-content-primary placeholder-content-muted focus:outline-none w-full"
-          />
+      <div className="framer-card p-4 space-y-3">
+        {/* Date Filter Presets */}
+        <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-border-subtle">
+          <span className="text-[11px] font-bold text-content-muted uppercase tracking-wider mr-1">Period:</span>
+          {[
+            { id: 'all', label: 'All Time' },
+            { id: 'today', label: 'Today' },
+            { id: 'last_week', label: 'Last Week' },
+            { id: 'last_month', label: 'Last Month' },
+            { id: 'last_3_months', label: 'Last 3 Months' },
+            { id: 'custom', label: 'Custom Period' },
+          ].map(preset => (
+            <button
+              key={preset.id}
+              onClick={() => setDatePreset(preset.id)}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+                datePreset === preset.id
+                  ? 'bg-brand-primary text-white shadow-sm'
+                  : 'bg-surface-secondary text-content-secondary hover:text-content-primary hover:bg-surface-secondary/80'
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
+
+          {/* Custom Date Pickers */}
+          {datePreset === 'custom' && (
+            <div className="flex items-center space-x-2 ml-auto animate-in fade-in">
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={e => setCustomStartDate(e.target.value)}
+                className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-lg px-2.5 py-1 focus:outline-none"
+              />
+              <span className="text-content-muted text-xs">to</span>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={e => setCustomEndDate(e.target.value)}
+                className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-lg px-2.5 py-1 focus:outline-none"
+              />
+            </div>
+          )}
         </div>
 
-        {/* Direction Filter */}
-        <select
-          value={directionFilter}
-          onChange={e => setDirectionFilter(e.target.value)}
-          className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
-        >
-          <option value="">All Directions</option>
-          <option value="BUY">BUY Only</option>
-          <option value="SELL">SELL Only</option>
-        </select>
+        {/* Secondary Filters */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search */}
+          <div className="flex items-center space-x-2 bg-surface-secondary border border-border-subtle rounded-xl px-3 py-2 flex-1 min-w-[220px]">
+            <Search className="w-4 h-4 text-content-muted" />
+            <input
+              type="text"
+              placeholder="Search symbol, ticket, comment, notes, setup..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && loadTrades(1)}
+              className="bg-transparent text-xs text-content-primary placeholder-content-muted focus:outline-none w-full"
+            />
+          </div>
 
-        {/* Status Filter */}
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
-        >
-          <option value="">All Statuses</option>
-          <option value="CLOSED">Closed Trades</option>
-          <option value="OPEN">Open Positions</option>
-        </select>
+          {/* Direction Filter */}
+          <select
+            value={directionFilter}
+            onChange={e => setDirectionFilter(e.target.value)}
+            className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+          >
+            <option value="">All Directions</option>
+            <option value="BUY">BUY Only</option>
+            <option value="SELL">SELL Only</option>
+          </select>
 
-        {/* Session Filter */}
-        <select
-          value={sessionFilter}
-          onChange={e => setSessionFilter(e.target.value)}
-          className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
-        >
-          <option value="">All Sessions</option>
-          <option value="London">London</option>
-          <option value="New York">New York</option>
-          <option value="London/NY Overlap">London/NY Overlap</option>
-          <option value="Asia">Asia</option>
-          <option value="Off-Hours">Off-Hours</option>
-        </select>
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+          >
+            <option value="">All Statuses</option>
+            <option value="CLOSED">Closed Trades</option>
+            <option value="OPEN">Open Positions</option>
+          </select>
 
-        {/* Review Filter */}
-        <select
-          value={reviewedFilter}
-          onChange={e => setReviewedFilter(e.target.value)}
-          className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
-        >
-          <option value="">Review Status: All</option>
-          <option value="1">Reviewed</option>
-          <option value="0">Pending Review (+25 XP)</option>
-        </select>
+          {/* Session Filter */}
+          <select
+            value={sessionFilter}
+            onChange={e => setSessionFilter(e.target.value)}
+            className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+          >
+            <option value="">All Sessions</option>
+            <option value="London">London</option>
+            <option value="New York">New York</option>
+            <option value="London/NY Overlap">London/NY Overlap</option>
+            <option value="Asia">Asia</option>
+            <option value="Off-Hours">Off-Hours</option>
+          </select>
+
+          {/* Review Filter */}
+          <select
+            value={reviewedFilter}
+            onChange={e => setReviewedFilter(e.target.value)}
+            className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
+          >
+            <option value="">Review Status: All</option>
+            <option value="1">Reviewed</option>
+            <option value="0">Pending Review (+25 XP)</option>
+          </select>
+        </div>
       </div>
 
       {/* Trades Table */}
-      <div className="framer-card overflow-hidden">
+      <div className="framer-card overflow-hidden bg-surface border border-border-subtle shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-surface-secondary/70 text-content-muted font-semibold border-b border-border-subtle uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="px-5 py-3.5">Symbol</th>
+                <th className="px-5 py-3.5">Symbol & Ticket</th>
+                <th className="px-4 py-3.5">Open Time</th>
                 <th className="px-4 py-3.5">Type</th>
                 <th className="px-4 py-3.5">Volume</th>
                 <th className="px-4 py-3.5">Entry → Exit</th>
+                <th className="px-4 py-3.5">S/L & T/P</th>
                 <th className="px-4 py-3.5">Net P/L</th>
-                <th className="px-4 py-3.5">R-Multiple</th>
+                <th className="px-4 py-3.5">Status</th>
                 <th className="px-4 py-3.5">Session</th>
-                <th className="px-4 py-3.5">Exit Reason</th>
                 <th className="px-4 py-3.5">Setup / Tags</th>
                 <th className="px-4 py-3.5">Review</th>
                 <th className="px-4 py-3.5 text-right">Action</th>
@@ -276,54 +331,108 @@ export const JournalPage: React.FC = () => {
             <tbody className="divide-y divide-border-subtle font-mono">
               {isLoading ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-content-muted">
-                    <div className="inline-block w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin mb-2" />
-                    <div>Loading journal entries...</div>
+                  <td colSpan={12} className="py-12 text-center text-content-muted">
+                    <div className="inline-block w-6 h-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin mb-2" />
+                    <div>Synchronizing journal entries from MT5...</div>
                   </td>
                 </tr>
               ) : trades.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-content-muted">
+                  <td colSpan={12} className="py-12 text-center text-content-muted">
                     No reconstructed trades match your criteria.
                   </td>
                 </tr>
               ) : (
                 trades.map(t => {
-                  const isWin = t.net_profit >= 0;
+                  const isOpen = t.status === 'OPEN';
+                  const pnl = isOpen ? (t.floating_profit !== undefined && t.floating_profit !== null ? t.floating_profit : t.net_profit) : t.net_profit;
+                  const isWin = Number(pnl) >= 0;
+                  const formattedOpenTime = t.open_time
+                    ? new Date(t.open_time).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : '—';
+
                   return (
                     <tr
                       key={t.id}
                       onClick={() => openTradeDetail(t.id)}
                       className="hover:bg-surface-secondary/60 transition cursor-pointer group"
                     >
-                      <td className="px-5 py-4 font-bold text-content-primary flex items-center space-x-2">
-                        <span>{t.symbol}</span>
+                      {/* Symbol & MT5 Ticket */}
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-content-primary">{t.symbol}</span>
+                          <span className="px-1.5 py-0.5 rounded bg-surface-secondary text-[10px] text-content-muted border border-border-subtle">
+                            #{t.position_id || t.id.slice(0, 8)}
+                          </span>
+                        </div>
                       </td>
+
+                      {/* Open Time */}
+                      <td className="px-4 py-4 text-content-muted text-[11px] whitespace-nowrap">
+                        {formattedOpenTime}
+                      </td>
+
+                      {/* Type */}
                       <td className="px-4 py-4">
                         <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
                           t.position_type === 'BUY'
-                            ? 'bg-trade-profit/10 text-trade-profit border border-trade-profit/20'
-                            : 'bg-trade-loss/10 text-trade-loss border border-trade-loss/20'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                         }`}>
                           {t.position_type}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-content-secondary">{t.total_volume}</td>
-                      <td className="px-4 py-4 text-content-muted">
-                        {t.entry_price_avg} → {t.exit_price_avg || 'Open'}
+
+                      {/* Volume */}
+                      <td className="px-4 py-4 font-bold text-content-secondary">
+                        {Number(t.total_volume).toFixed(2)}
                       </td>
-                      <td className={`px-4 py-4 font-bold text-sm ${isWin ? 'text-trade-profit' : 'text-trade-loss'}`}>
-                        {isWin ? '+' : ''}${t.net_profit?.toFixed(2)}
+
+                      {/* Entry -> Exit */}
+                      <td className="px-4 py-4 text-content-muted whitespace-nowrap">
+                        {isOpen ? (
+                          <span>{t.entry_price_avg} → <span className="text-brand-500 font-bold">{t.current_price || 'Live'}</span></span>
+                        ) : (
+                          <span>{t.entry_price_avg} → {t.exit_price_avg || '—'}</span>
+                        )}
                       </td>
-                      <td className="px-4 py-4 text-content-primary font-semibold">
-                        {t.r_multiple !== null && t.r_multiple !== undefined ? `${t.r_multiple}R` : '-'}
+
+                      {/* S/L & T/P */}
+                      <td className="px-4 py-4 text-content-muted text-[11px] whitespace-nowrap">
+                        <span>{t.initial_sl ? t.initial_sl : '—'} / {t.initial_tp ? t.initial_tp : '—'}</span>
                       </td>
-                      <td className="px-4 py-4 font-sans text-content-secondary">{t.session_name || 'N/A'}</td>
+
+                      {/* Net P/L */}
+                      <td className={`px-4 py-4 font-bold text-sm whitespace-nowrap ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                        {isOpen && <span className="text-[10px] font-normal text-content-muted mr-1">Float:</span>}
+                        {isWin ? '+' : ''}${Number(pnl || 0).toFixed(2)}
+                      </td>
+
+                      {/* Status */}
                       <td className="px-4 py-4">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] bg-surface-secondary text-content-secondary border border-border-subtle">
-                          {t.exit_reason}
-                        </span>
+                        {isOpen ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse mr-1" />
+                            OPEN
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-surface-secondary text-content-muted border border-border-subtle">
+                            CLOSED
+                          </span>
+                        )}
                       </td>
+
+                      {/* Session */}
+                      <td className="px-4 py-4 font-sans text-content-secondary text-[11px] whitespace-nowrap">
+                        {t.session_name || 'N/A'}
+                      </td>
+
+                      {/* Setup / Tags */}
                       <td className="px-4 py-4 font-sans text-content-secondary">
                         {t.setup_name ? (
                           <span className="truncate max-w-[120px] inline-block font-medium">{t.setup_name}</span>
@@ -331,9 +440,11 @@ export const JournalPage: React.FC = () => {
                           <span className="text-content-muted">-</span>
                         )}
                       </td>
-                      <td className="px-4 py-4">
+
+                      {/* Review */}
+                      <td className="px-4 py-4 whitespace-nowrap">
                         {t.is_reviewed ? (
-                          <span className="inline-flex items-center space-x-1 text-trade-profit font-sans font-semibold text-[11px]">
+                          <span className="inline-flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 font-sans font-semibold text-[11px]">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Done</span>
                           </span>
@@ -344,6 +455,8 @@ export const JournalPage: React.FC = () => {
                           </span>
                         )}
                       </td>
+
+                      {/* Action */}
                       <td className="px-4 py-4 text-right">
                         <button className="p-1.5 rounded-lg text-content-muted group-hover:text-content-primary group-hover:bg-surface-secondary transition">
                           <ChevronRight className="w-4 h-4" />
@@ -391,18 +504,26 @@ export const JournalPage: React.FC = () => {
             <div className="flex items-center justify-between pb-4 border-b border-border-subtle">
               <div className="flex items-center space-x-3">
                 <div className={`p-2.5 rounded-xl ${
-                  selectedTrade.position.net_profit >= 0
-                    ? 'bg-trade-profit/10 text-trade-profit border border-trade-profit/20'
-                    : 'bg-trade-loss/10 text-trade-loss border border-trade-loss/20'
+                  (selectedTrade.position.status === 'OPEN' ? (selectedTrade.position.floating_profit >= 0) : (selectedTrade.position.net_profit >= 0))
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                 }`}>
-                  {selectedTrade.position.net_profit >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                  {(selectedTrade.position.status === 'OPEN' ? (selectedTrade.position.floating_profit >= 0) : (selectedTrade.position.net_profit >= 0)) ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-content-primary">
-                    Trade #{selectedTrade.position.position_id} • {selectedTrade.position.symbol}
-                  </h2>
+                  <div className="flex items-center space-x-2">
+                    <h2 className="text-lg font-bold text-content-primary">
+                      Trade #{selectedTrade.position.position_id} • {selectedTrade.position.symbol}
+                    </h2>
+                    {selectedTrade.position.status === 'OPEN' && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                        RUNNING POSITION
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-content-secondary">
                     {selectedTrade.position.position_type} • {selectedTrade.position.total_volume} Lots • {selectedTrade.position.session_name}
+                    {selectedTrade.position.comment && ` • "${selectedTrade.position.comment}"`}
                   </div>
                 </div>
               </div>
@@ -415,45 +536,75 @@ export const JournalPage: React.FC = () => {
             </div>
 
             {/* Objective MT5 Facts Card */}
-            <div className="framer-card p-5 space-y-3">
-              <div className="text-xs font-bold uppercase tracking-wider text-content-muted flex items-center space-x-1.5">
-                <Layers className="w-3.5 h-3.5 text-brand-primary" />
-                <span>Objective MT5 Execution Facts</span>
+            <div className="framer-card p-5 space-y-4 bg-surface border border-border-subtle">
+              <div className="text-xs font-bold uppercase tracking-wider text-content-muted flex items-center justify-between">
+                <div className="flex items-center space-x-1.5">
+                  <Layers className="w-3.5 h-3.5 text-brand-500" />
+                  <span>Authoritative MT5 Facts (Read-Only)</span>
+                </div>
+                <span className="font-mono text-[10px] text-content-subtle">
+                  Account ••••{selectedTrade.position.account_number?.slice(-4) || 'MT5'}
+                </span>
               </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
                 <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle">
-                  <div className="text-content-muted text-[10px]">Net P/L</div>
-                  <div className={`text-sm font-bold ${selectedTrade.position.net_profit >= 0 ? 'text-trade-profit' : 'text-trade-loss'}`}>
-                    ${selectedTrade.position.net_profit?.toFixed(2)}
+                  <div className="text-content-muted text-[10px]">
+                    {selectedTrade.position.status === 'OPEN' ? 'Floating P/L' : 'Net P/L'}
+                  </div>
+                  <div className={`text-sm font-bold ${
+                    (selectedTrade.position.status === 'OPEN' ? selectedTrade.position.floating_profit >= 0 : selectedTrade.position.net_profit >= 0)
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-rose-600 dark:text-rose-400'
+                  }`}>
+                    ${(selectedTrade.position.status === 'OPEN' ? selectedTrade.position.floating_profit : selectedTrade.position.net_profit)?.toFixed(2)}
                   </div>
                 </div>
+
                 <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle">
-                  <div className="text-content-muted text-[10px]">Commission</div>
-                  <div className="text-content-primary font-bold">${selectedTrade.position.commission_total?.toFixed(2)}</div>
+                  <div className="text-content-muted text-[10px]">Entry → Exit</div>
+                  <div className="text-content-primary font-bold truncate">
+                    {selectedTrade.position.entry_price_avg} → {selectedTrade.position.status === 'OPEN' ? (selectedTrade.position.current_price || 'Live') : (selectedTrade.position.exit_price_avg || '—')}
+                  </div>
                 </div>
+
                 <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle">
-                  <div className="text-content-muted text-[10px]">Swap</div>
-                  <div className="text-content-primary font-bold">${selectedTrade.position.swap_total?.toFixed(2)}</div>
+                  <div className="text-content-muted text-[10px]">Commission & Swap</div>
+                  <div className="text-content-primary font-bold">
+                    ${((selectedTrade.position.commission_total || 0) + (selectedTrade.position.swap_total || 0)).toFixed(2)}
+                  </div>
                 </div>
+
                 <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle">
-                  <div className="text-content-muted text-[10px]">R-Multiple</div>
-                  <div className="text-brand-primary font-bold">{selectedTrade.position.r_multiple ? `${selectedTrade.position.r_multiple}R` : 'N/A'}</div>
+                  <div className="text-content-muted text-[10px]">S/L & T/P</div>
+                  <div className="text-content-primary font-bold truncate">
+                    {selectedTrade.position.initial_sl || '—'} / {selectedTrade.position.initial_tp || '—'}
+                  </div>
                 </div>
               </div>
 
               {/* Execution Lifecycle */}
               <div className="pt-3 border-t border-border-subtle">
-                <div className="text-[11px] font-bold text-content-secondary mb-2">Reconstructed Deal Flow:</div>
+                <div className="text-[11px] font-bold text-content-secondary mb-2">Reconstructed MT5 Deal Tickets:</div>
                 <div className="space-y-1.5">
-                  {selectedTrade.executions.map((exec: any, i: number) => (
-                    <div key={exec.id || i} className="flex justify-between items-center text-[11px] p-2.5 rounded-xl bg-surface-secondary border border-border-subtle">
-                      <span className="font-bold text-content-primary">{exec.execution_type}: {exec.volume} Lots @ {exec.price}</span>
-                      <span className="text-content-muted font-mono">{exec.execution_time?.slice(11, 19)} UTC</span>
-                      <span className={exec.profit >= 0 ? 'text-trade-profit font-bold' : 'text-trade-loss font-bold'}>
-                        {exec.profit ? `$${exec.profit.toFixed(2)}` : '$0.00'}
-                      </span>
-                    </div>
-                  ))}
+                  {selectedTrade.executions.length === 0 ? (
+                    <div className="text-xs text-content-muted p-2 bg-surface-secondary rounded-xl">No individual deal records attached.</div>
+                  ) : (
+                    selectedTrade.executions.map((exec: any, i: number) => (
+                      <div key={exec.id || i} className="flex justify-between items-center text-[11px] p-2.5 rounded-xl bg-surface-secondary border border-border-subtle font-mono">
+                        <div>
+                          <span className="font-bold text-content-primary mr-2">Deal #{exec.deal_id}</span>
+                          <span className="text-content-muted">{exec.execution_type}: {exec.volume} Lots @ {exec.price}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-content-muted text-[10px]">{exec.execution_time?.slice(0, 19).replace('T', ' ')} UTC</span>
+                          <span className={Number(exec.profit || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-rose-600 dark:text-rose-400 font-bold'}>
+                            {exec.profit ? `$${Number(exec.profit).toFixed(2)}` : '$0.00'}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

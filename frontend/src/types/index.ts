@@ -28,6 +28,7 @@ export interface TradingAccount {
   last_synced_at?: string;
   total_positions?: number;
   total_closed_trades?: number;
+  total_open_trades?: number;
   total_net_profit?: number;
 }
 
@@ -42,6 +43,11 @@ export interface ReconstructedTrade {
   total_volume: number;
   entry_price_avg: number;
   exit_price_avg?: number;
+  current_price?: number;
+  floating_profit?: number;
+  magic?: number;
+  comment?: string;
+  external_id?: string;
   open_time: string;
   close_time?: string;
   status: 'OPEN' | 'CLOSED';
@@ -69,6 +75,7 @@ export interface ReconstructedTrade {
   mistake_id?: string;
   mistake_name?: string;
   confluences?: string;
+  ticket?: string;
 }
 
 export interface PositionExecution {
@@ -214,4 +221,25 @@ export interface RiskRule {
   allowed_start_time: string;
   allowed_end_time: string;
   is_active: number;
+}
+
+export interface SyncReconciliation {
+  accountId: string;
+  ordersProcessed: number;
+  dealsProcessed: number;
+  openPositionsProcessed: number;
+  positionsReconstructed: number;
+  closedTradesCount: number;
+  openTradesCount: number;
+  skippedDuplicates: number;
+  reconciliation: {
+    mt5DealsCount: number;
+    dbDealsCount: number;
+    mt5OrdersCount: number;
+    dbOrdersCount: number;
+    mt5OpenPositionsCount: number;
+    dbOpenPositionsCount: number;
+    status: 'SYNCHRONIZED' | 'SYNC ATTENTION REQUIRED';
+  };
+  lastSyncTime: string;
 }

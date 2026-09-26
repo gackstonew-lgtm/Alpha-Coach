@@ -3,7 +3,6 @@ import { api } from '../services/api';
 import { Achievement, TraderProgression } from '../types';
 import {
   Trophy,
-  Flame,
   Zap,
   Award,
   ShieldCheck,
@@ -75,12 +74,12 @@ export const GamificationPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Streak Counter */}
+            {/* Discipline Mastery Badge */}
             <div className="flex items-center space-x-3 bg-surface-secondary border border-border-subtle px-4 py-2.5 rounded-2xl">
-              <Flame className="w-6 h-6 text-orange-400 fill-orange-400 animate-bounce" />
+              <ShieldCheck className="w-6 h-6 text-brand-500" />
               <div>
-                <div className="text-sm font-extrabold text-content-primary">{profile.progression.current_streak_days} Day Streak</div>
-                <div className="text-[10px] text-content-muted">Longest: {profile.progression.longest_streak_days} days</div>
+                <div className="text-sm font-extrabold text-content-primary">Discipline Level {profile.progression.current_level}</div>
+                <div className="text-[10px] text-content-muted">Rule Compliance Active</div>
               </div>
             </div>
           </div>

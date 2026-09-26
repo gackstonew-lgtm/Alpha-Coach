@@ -118,16 +118,22 @@ export class AnalyticsService {
 
     const positions = await db.query<ReconstructedPosition & { strategy_id?: string; setup_name?: string }>(sql, params);
 
-    // Initial account balance
-    let startingBalance = 10000;
+    // Calculate real dynamic starting equity baseline from synchronized account facts
+    let currentBalance = 0;
     if (accountId && accountId !== 'ALL') {
       const acc = await db.get<{ balance: number }>(`SELECT balance FROM trading_accounts WHERE id = ?`, [accountId]);
-      if (acc) startingBalance = acc.balance;
+      if (acc) currentBalance = Number(acc.balance || 0);
+    } else {
+      const accs = await db.query<{ balance: number }>(`SELECT balance FROM trading_accounts WHERE user_id = ?`, [userId]);
+      currentBalance = accs.reduce((sum, a) => sum + Number(a.balance || 0), 0);
     }
 
     const closedPositions = positions.filter(p => p.status === 'CLOSED');
     const openTrades = positions.filter(p => p.status === 'OPEN').length;
     const totalTrades = closedPositions.length;
+
+    const totalRealizedProfit = closedPositions.reduce((sum, p) => sum + Number(p.net_profit || 0), 0);
+    const startingBalance = currentBalance > 0 ? Math.max(0, currentBalance - totalRealizedProfit) : 0;
 
     if (totalTrades === 0) {
       return {

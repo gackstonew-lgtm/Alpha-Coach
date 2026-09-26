@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useAccounts } from '../../context/AccountContext';
-import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../services/api';
 import {
   Bell,
-  Sun,
-  Moon,
-  Flame,
+  Trophy,
   ChevronDown,
   RefreshCw,
   LogOut,
@@ -20,7 +18,6 @@ import {
 export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
   const { accounts, selectedAccountId, setSelectedAccountId, refreshAccounts } = useAccounts();
-  const { theme, toggleTheme } = useTheme();
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -117,14 +114,18 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
 
         {/* Right Controls */}
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          {/* Gamification Streak & Level Badge (Desktop Only) */}
+          {/* Gamification Level & XP Badge (Desktop Only) */}
           {progression && (
-            <div className="hidden lg:inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold text-amber-600 dark:text-amber-400 shadow-sm">
-              <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
-              <span>{progression.currentStreakDays || progression.current_streak_days || 8}d Streak</span>
+            <NavLink
+              to="/gamification"
+              className="hidden lg:inline-flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold text-amber-600 dark:text-amber-400 shadow-sm transition"
+              title="View Trader Progression & XP Achievements"
+            >
+              <Trophy className="w-3.5 h-3.5 text-amber-500" />
+              <span>Lv.{progression.currentLevel || progression.current_level || 1} Trader</span>
               <span className="text-content-subtle">•</span>
-              <span className="text-brand-600 dark:text-brand-400 font-mono">Lv.{progression.currentLevel || progression.current_level || 4}</span>
-            </div>
+              <span className="text-brand-600 dark:text-brand-400 font-mono">{progression.currentXp || progression.current_xp || 0} XP</span>
+            </NavLink>
           )}
 
           {/* Quick Sync Button */}
@@ -136,20 +137,6 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Sync</span>
-          </button>
-
-          {/* Theme Toggle Button (Desktop Only) */}
-          <button
-            onClick={toggleTheme}
-            className="hidden lg:flex p-2 rounded-xl text-content-muted hover:text-content-primary hover:bg-surface-secondary border border-border-subtle transition-all duration-200"
-            aria-label={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
-            title={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <Moon className="w-4 h-4 text-brand-600" />
-            )}
           </button>
 
           {/* Notifications Dropdown */}
@@ -242,7 +229,7 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
                     </select>
                   </div>
 
-                  {/* 2 & 3. Bridge Status & Streak Progress */}
+                  {/* 2 & 3. Bridge Status & Progression */}
                   <div className="py-2.5 px-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-content-muted">MT5 Bridge</span>
@@ -253,38 +240,20 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
                     </div>
 
                     {progression && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-content-muted">Trading Progress</span>
+                      <NavLink
+                        to="/gamification"
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center justify-between hover:bg-surface-secondary/80 p-1.5 rounded-xl transition"
+                      >
+                        <span className="text-[11px] font-semibold text-content-muted">Discipline Tier</span>
                         <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-amber-600 dark:text-amber-400">
-                          <Flame className="w-3 h-3 text-amber-500 fill-amber-500 animate-pulse" />
-                          <span>{progression.currentStreakDays || progression.current_streak_days || 8}d Streak</span>
+                          <Trophy className="w-3 h-3 text-amber-500" />
+                          <span>Lv.{progression.currentLevel || progression.current_level || 1}</span>
                           <span className="text-content-subtle">•</span>
-                          <span className="text-brand-600 dark:text-brand-400 font-mono">Lv.{progression.currentLevel || progression.current_level || 4}</span>
+                          <span className="text-brand-600 dark:text-brand-400 font-mono">{progression.currentXp || progression.current_xp || 0} XP</span>
                         </div>
-                      </div>
+                      </NavLink>
                     )}
-                  </div>
-
-                  {/* 4. Light/Dark Theme Toggle */}
-                  <div className="py-2.5 px-3 flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-content-muted">Theme</span>
-                    <button
-                      onClick={toggleTheme}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-secondary hover:bg-surface-hover border border-border-subtle text-xs font-semibold text-content-primary transition"
-                      aria-label={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
-                    >
-                      {theme === 'dark' ? (
-                        <>
-                          <Sun className="w-3.5 h-3.5 text-amber-400" />
-                          <span>Dark (OLED)</span>
-                        </>
-                      ) : (
-                        <>
-                          <Moon className="w-3.5 h-3.5 text-brand-600" />
-                          <span>Light Mode</span>
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
 

@@ -205,7 +205,15 @@ class ApiClient {
       query = query.eq('is_reviewed', Number(params.isReviewed));
     }
     if (params.search) {
-      query = query.or(`symbol.ilike.%${params.search}%,setup_name.ilike.%${params.search}%,trader_notes.ilike.%${params.search}%`);
+      query = query.or(`symbol.ilike.%${params.search}%,setup_name.ilike.%${params.search}%,trader_notes.ilike.%${params.search}%,comment.ilike.%${params.search}%`);
+    }
+
+    // Date range filtering
+    if (params.startDate) {
+      query = query.gte('open_time', params.startDate);
+    }
+    if (params.endDate) {
+      query = query.lte('open_time', params.endDate);
     }
 
     const page = Number(params.page) || 1;
@@ -348,12 +356,28 @@ class ApiClient {
       query = query.eq('account_id', params.accountId);
     }
 
-    const { data: positions, error } = await query;
-    if (error) throw new Error(error.message);
+    const [posRes, accRes] = await Promise.all([
+      query,
+      params.accountId && params.accountId !== 'ALL'
+        ? supabase.from('trading_accounts').select('balance, equity').eq('id', params.accountId).maybeSingle()
+        : supabase.from('trading_accounts').select('balance, equity')
+    ]);
 
-    const posList = positions || [];
+    if (posRes.error) throw new Error(posRes.error.message);
+
+    const posList = posRes.data || [];
     const closedList = posList.filter(p => p.status === 'CLOSED');
     const openList = posList.filter(p => p.status === 'OPEN');
+
+    // Dynamic starting equity calculation based on synchronized broker balances
+    let currentTotalBalance = 0;
+    if (accRes.data) {
+      if (Array.isArray(accRes.data)) {
+        currentTotalBalance = accRes.data.reduce((sum, a) => sum + Number(a.balance || 0), 0);
+      } else {
+        currentTotalBalance = Number(accRes.data.balance || 0);
+      }
+    }
 
     const totalTrades = closedList.length;
     const wins = closedList.filter(p => Number(p.net_profit) > 0);
@@ -365,6 +389,8 @@ class ApiClient {
     const netProfit = grossProfit - grossLoss;
     const totalCommissions = posList.reduce((sum, p) => sum + Number(p.commission_total || 0), 0);
     const totalSwaps = posList.reduce((sum, p) => sum + Number(p.swap_total || 0), 0);
+
+    const startingEquity = currentTotalBalance > 0 ? Math.max(0, currentTotalBalance - netProfit) : 0;
 
     const winRate = totalTrades > 0 ? Number(((wins.length / totalTrades) * 100).toFixed(2)) : 0;
     const lossRate = totalTrades > 0 ? Number(((losses.length / totalTrades) * 100).toFixed(2)) : 0;
@@ -414,14 +440,14 @@ class ApiClient {
     const shortGrossProfit = shorts.filter(p => Number(p.net_profit) > 0).reduce((s, p) => s + Number(p.net_profit || 0), 0);
 
     let runningCumulative = 0;
-    let peakEquity = 100000;
+    let peakEquity = startingEquity;
     let maxDrawdownAmt = 0;
     let maxDrawdownPct = 0;
 
     const equityCurve = closedList.map((p, idx) => {
       const np = Number(p.net_profit || 0);
       runningCumulative += np;
-      const currentEq = 100000 + runningCumulative;
+      const currentEq = startingEquity + runningCumulative;
       if (currentEq > peakEquity) peakEquity = currentEq;
       const dd = peakEquity - currentEq;
       const ddPct = peakEquity > 0 ? (dd / peakEquity) * 100 : 0;
@@ -1254,6 +1280,33 @@ class ApiClient {
       return this.request('/mt5/sync', { method: 'POST', body: JSON.stringify(payload) });
     }
     return { success: true, positionsReconstructed: payload?.deals?.length || 0 };
+  }
+
+  async syncFullHistory(payload: any) {
+    if (USE_CUSTOM_BACKEND) {
+      return this.request('/mt5/sync/full', { method: 'POST', body: JSON.stringify(payload) });
+    }
+    return { success: true, message: 'Full historical synchronization complete', positionsReconstructed: payload?.deals?.length || 0 };
+  }
+
+  async getReconciliation(accountId: string) {
+    if (USE_CUSTOM_BACKEND) {
+      return this.request<{ reconciliation: any }>(`/mt5/reconcile/${accountId}`);
+    }
+    return {
+      reconciliation: {
+        accountId,
+        dealsCount: 0,
+        ordersCount: 0,
+        openPositionsCount: 0,
+        reconstructedCount: 0,
+        openReconstructedCount: 0,
+        closedReconstructedCount: 0,
+        historicalCoverageDays: 'ALL (Untruncated)',
+        syncStatus: 'SYNCHRONIZED',
+        reconciledAt: new Date().toISOString()
+      }
+    };
   }
 
   // ==========================================

@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDatabase } from '../db/db';
-import { TradingAccount, SyncCheckpoint } from '../models/types';
+import { TradingAccount, SyncCheckpoint, SyncReconciliation } from '../models/types';
 import { PositionReconstructionService } from './reconstruction.service';
 import { RiskGuardianService } from './risk.service';
 import { GamificationService } from './gamification.service';
@@ -34,6 +34,7 @@ export interface MT5SyncPayload {
     time_expiration?: string;
     magic?: number;
     comment?: string;
+    external_id?: string;
   }>;
   deals?: Array<{
     ticket: string | number;
@@ -51,8 +52,33 @@ export interface MT5SyncPayload {
     sl?: number;
     tp?: number;
     time: string;
+    time_msc?: number;
     magic?: number;
     comment?: string;
+    external_id?: string;
+    reason?: number;
+  }>;
+  openPositions?: Array<{
+    ticket: string | number;
+    position_id?: string | number;
+    symbol: string;
+    type: number;
+    magic?: number;
+    identifier?: string;
+    reason?: number;
+    volume: number;
+    price_open: number;
+    sl?: number;
+    tp?: number;
+    price_current: number;
+    swap?: number;
+    profit?: number;
+    comment?: string;
+    external_id?: string;
+    time: string;
+    time_msc?: number;
+    time_update?: string;
+    time_update_msc?: number;
   }>;
 }
 
@@ -121,19 +147,13 @@ export class SyncService {
   }
 
   /**
-   * Ingest raw orders and deals safely with upsert and trigger position reconstruction
+   * Ingest raw orders, deals, and open positions safely with upsert and trigger position reconstruction
    */
   public static async processSyncPayload(
     userId: string,
     payload: MT5SyncPayload,
     deviceId?: string
-  ): Promise<{
-    accountId: string;
-    ordersProcessed: number;
-    dealsProcessed: number;
-    positionsReconstructed: number;
-    closedTradesCount: number;
-  }> {
+  ): Promise<SyncReconciliation> {
     const db = getDatabase();
     const account = await this.getOrCreateAccount(userId, payload.accountInfo);
     const syncId = uuidv4();
@@ -147,13 +167,15 @@ export class SyncService {
 
     let ordersProcessed = 0;
     let dealsProcessed = 0;
+    let openPositionsProcessed = 0;
+    let skippedDuplicates = 0;
     let latestDealTime: string | null = null;
     let latestDealId: string | null = null;
     let latestOrderTime: string | null = null;
     let latestOrderId: string | null = null;
 
     try {
-      // 1. Process Orders
+      // 1. Process Orders (Layer 1 Raw Data)
       if (payload.orders && payload.orders.length > 0) {
         for (const ord of payload.orders) {
           const ordId = String(ord.ticket);
@@ -161,17 +183,19 @@ export class SyncService {
           const timeDone = ord.time_done ? new Date(ord.time_done).toISOString() : null;
           const timeExp = ord.time_expiration ? new Date(ord.time_expiration).toISOString() : null;
 
-          await db.run(
+          const res = await db.run(
             `INSERT INTO raw_orders (
               id, account_id, order_id, symbol, type, state, volume_initial, volume_current,
-              price_open, price_sl, price_tp, time_setup, time_done, time_expiration, magic, comment
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              price_open, price_sl, price_tp, time_setup, time_done, time_expiration, magic, comment, external_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(account_id, order_id) DO UPDATE SET
               state = excluded.state,
               volume_current = excluded.volume_current,
               price_sl = excluded.price_sl,
               price_tp = excluded.price_tp,
-              time_done = excluded.time_done`,
+              time_done = excluded.time_done,
+              comment = excluded.comment,
+              external_id = excluded.external_id`,
             [
               uuidv4(),
               account.id,
@@ -188,17 +212,21 @@ export class SyncService {
               timeDone,
               timeExp,
               ord.magic || 0,
-              ord.comment || null
+              ord.comment || null,
+              ord.external_id || null
             ]
           );
 
+          if (res.changes === 0) {
+            skippedDuplicates++;
+          }
           ordersProcessed++;
           latestOrderId = ordId;
           latestOrderTime = timeSetup;
         }
       }
 
-      // 2. Process Deals
+      // 2. Process Deals (Layer 1 Raw Data)
       if (payload.deals && payload.deals.length > 0) {
         for (const deal of payload.deals) {
           const dealId = String(deal.ticket);
@@ -206,7 +234,7 @@ export class SyncService {
           const posId = String(deal.position_id || deal.order);
           const timeIso = deal.time ? new Date(deal.time).toISOString() : new Date().toISOString();
 
-          await db.run(
+          const res = await db.run(
             `INSERT INTO raw_deals (
               id, account_id, deal_id, order_id, position_id, symbol, type, entry,
               volume, price, commission, swap, profit, fee, price_sl, price_tp, time, magic, comment
@@ -217,7 +245,8 @@ export class SyncService {
               profit = excluded.profit,
               fee = excluded.fee,
               price_sl = excluded.price_sl,
-              price_tp = excluded.price_tp`,
+              price_tp = excluded.price_tp,
+              comment = excluded.comment`,
             [
               uuidv4(),
               account.id,
@@ -241,19 +270,106 @@ export class SyncService {
             ]
           );
 
+          if (res.changes === 0) {
+            skippedDuplicates++;
+          }
           dealsProcessed++;
           latestDealId = dealId;
           latestDealTime = timeIso;
         }
       }
 
-      // 3. Reconstruct Positions & Lifecycle
-      const { positionsCount, closedTradesCount } = await PositionReconstructionService.reconstructAccountPositions(
+      // 3. Process Live Open Positions (Layer 1 Raw Data)
+      const currentActivePositionIds = new Set<string>();
+      if (payload.openPositions && payload.openPositions.length > 0) {
+        for (const op of payload.openPositions) {
+          const posId = String(op.position_id || op.ticket);
+          const ticket = String(op.ticket);
+          currentActivePositionIds.add(posId);
+
+          const timeIso = op.time ? new Date(op.time).toISOString() : new Date().toISOString();
+          const timeUpdateIso = op.time_update ? new Date(op.time_update).toISOString() : timeIso;
+
+          await db.run(
+            `INSERT INTO raw_open_positions (
+              id, account_id, position_id, ticket, symbol, type, magic, identifier, reason,
+              volume, price_open, price_sl, price_tp, price_current, swap, profit,
+              comment, external_id, time, time_msc, time_update, time_update_msc, is_active
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+            ON CONFLICT(account_id, position_id) DO UPDATE SET
+              ticket = excluded.ticket,
+              symbol = excluded.symbol,
+              type = excluded.type,
+              volume = excluded.volume,
+              price_open = excluded.price_open,
+              price_sl = excluded.price_sl,
+              price_tp = excluded.price_tp,
+              price_current = excluded.price_current,
+              swap = excluded.swap,
+              profit = excluded.profit,
+              comment = excluded.comment,
+              external_id = excluded.external_id,
+              time_update = excluded.time_update,
+              time_update_msc = excluded.time_update_msc,
+              is_active = 1,
+              updated_at = CURRENT_TIMESTAMP`,
+            [
+              uuidv4(),
+              account.id,
+              posId,
+              ticket,
+              op.symbol,
+              op.type,
+              op.magic || 0,
+              op.identifier || null,
+              op.reason || 0,
+              op.volume,
+              op.price_open,
+              op.sl || 0,
+              op.tp || 0,
+              op.price_current,
+              op.swap || 0,
+              op.profit || 0,
+              op.comment || null,
+              op.external_id || null,
+              timeIso,
+              op.time_msc || null,
+              timeUpdateIso,
+              op.time_update_msc || null
+            ]
+          );
+
+          openPositionsProcessed++;
+        }
+
+        // De-activate positions for this account that are no longer reported by MT5 positions_get()
+        const existingActive = await db.query<{ position_id: string }>(
+          `SELECT position_id FROM raw_open_positions WHERE account_id = ? AND is_active = 1`,
+          [account.id]
+        );
+        for (const ea of existingActive) {
+          if (!currentActivePositionIds.has(ea.position_id)) {
+            await db.run(
+              `UPDATE raw_open_positions SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE account_id = ? AND position_id = ?`,
+              [account.id, ea.position_id]
+            );
+          }
+        }
+      } else if (payload.openPositions !== undefined) {
+        // Explicitly empty array means zero open positions currently active
+        await db.run(
+          `UPDATE raw_open_positions SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE account_id = ? AND is_active = 1`,
+          [account.id]
+        );
+      }
+
+      // 4. Reconstruct Positions & Lifecycle (Layer 2)
+      const { positionsCount, closedTradesCount, openTradesCount } = await PositionReconstructionService.reconstructAccountPositions(
         account.id,
         userId
       );
 
-      // 4. Update Sync Checkpoint
+      // 5. Update Sync Checkpoint
       await db.run(
         `UPDATE sync_checkpoints SET
           sync_status = 'COMPLETED',
@@ -269,13 +385,61 @@ export class SyncService {
         [dealsProcessed, positionsCount, closedTradesCount, latestDealId, latestDealTime, latestOrderId, latestOrderTime, syncId]
       );
 
-      // 5. Evaluate Risk Guardian rules
+      // 6. Evaluate Risk Guardian rules
       await RiskGuardianService.evaluateRules(userId, account.id);
 
-      // 6. Award Gamification XP for synchronization
+      // 7. Award Gamification XP for synchronization
       await GamificationService.recordSyncActivity(userId, closedTradesCount);
 
-      // 7. Audit Log
+      // 8. Calculate Reconciliation Metrics
+      const dealsCountRow = await db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM raw_deals WHERE account_id = ?`,
+        [account.id]
+      );
+      const ordersCountRow = await db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM raw_orders WHERE account_id = ?`,
+        [account.id]
+      );
+      const openPosCountRow = await db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM raw_open_positions WHERE account_id = ? AND is_active = 1`,
+        [account.id]
+      );
+
+      const dbDealsCount = dealsCountRow?.count || 0;
+      const dbOrdersCount = ordersCountRow?.count || 0;
+      const dbOpenPositionsCount = openPosCountRow?.count || 0;
+      const mt5DealsCount = payload.deals?.length ?? dbDealsCount;
+      const mt5OrdersCount = payload.orders?.length ?? dbOrdersCount;
+      const mt5OpenPositionsCount = payload.openPositions?.length ?? dbOpenPositionsCount;
+
+      const isSynchronized = (
+        (payload.deals === undefined || payload.deals.length <= dbDealsCount) &&
+        (payload.orders === undefined || payload.orders.length <= dbOrdersCount) &&
+        (payload.openPositions === undefined || payload.openPositions.length === dbOpenPositionsCount)
+      );
+
+      const reconciliationResult: SyncReconciliation = {
+        accountId: account.id,
+        ordersProcessed,
+        dealsProcessed,
+        openPositionsProcessed,
+        positionsReconstructed: positionsCount,
+        closedTradesCount,
+        openTradesCount,
+        skippedDuplicates,
+        reconciliation: {
+          mt5DealsCount,
+          dbDealsCount,
+          mt5OrdersCount,
+          dbOrdersCount,
+          mt5OpenPositionsCount,
+          dbOpenPositionsCount,
+          status: isSynchronized ? 'SYNCHRONIZED' : 'SYNC ATTENTION REQUIRED'
+        },
+        lastSyncTime: new Date().toISOString()
+      };
+
+      // 9. Audit Log
       await db.run(
         `INSERT INTO audit_logs (id, user_id, account_id, action, entity_type, entity_id, details_json)
          VALUES (?, ?, ?, 'SYNC_SUCCESS', 'sync_checkpoint', ?, ?)`,
@@ -284,22 +448,22 @@ export class SyncService {
           userId,
           account.id,
           syncId,
-          JSON.stringify({ dealsProcessed, ordersProcessed, positionsCount, closedTradesCount, deviceId })
+          JSON.stringify(reconciliationResult)
         ]
       );
 
-      // 8. Create notification
+      // 10. Create notification
       await db.run(
         `INSERT INTO notifications (id, user_id, title, message, type, link)
          VALUES (?, ?, 'MT5 Sync Complete', ?, 'SYNC', '/journal')`,
         [
           uuidv4(),
           userId,
-          `Synchronized ${dealsProcessed} deals across ${positionsCount} positions (${closedTradesCount} completed trades).`
+          `Synchronized ${dealsProcessed} deals & ${openPositionsProcessed} open positions (${positionsCount} total trades).`
         ]
       );
 
-      // 9. Sync to Supabase Postgres cloud store if available
+      // 11. Optional Supabase Cloud Sync
       try {
         const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
         const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
@@ -310,8 +474,8 @@ export class SyncService {
             id: account.id,
             user_id: userId,
             account_number: String(payload.accountInfo.accountNumber),
-            broker_name: payload.accountInfo.brokerName || 'Exness (KE) Limited',
-            server_name: payload.accountInfo.serverName || 'ExnessKE-MT5Real21',
+            broker_name: payload.accountInfo.brokerName || 'MetaQuotes',
+            server_name: payload.accountInfo.serverName || 'DefaultServer',
             currency: payload.accountInfo.currency || 'USD',
             leverage: payload.accountInfo.leverage || 100,
             balance: payload.accountInfo.balance,
@@ -333,16 +497,10 @@ export class SyncService {
           }
         }
       } catch (supaSyncErr) {
-        console.warn('[SyncService] Supabase cloud sync skipped:', supaSyncErr);
+        // Cloud sync optional
       }
 
-      return {
-        accountId: account.id,
-        ordersProcessed,
-        dealsProcessed,
-        positionsReconstructed: positionsCount,
-        closedTradesCount
-      };
+      return reconciliationResult;
     } catch (err: any) {
       await db.run(
         `UPDATE sync_checkpoints SET
@@ -365,5 +523,31 @@ export class SyncService {
       `SELECT * FROM sync_checkpoints WHERE account_id = ? AND sync_status = 'COMPLETED' ORDER BY completed_at DESC LIMIT 1`,
       [accountId]
     );
+  }
+
+  /**
+   * Get reconciliation status for an account
+   */
+  public static async getAccountReconciliation(accountId: string): Promise<any> {
+    const db = getDatabase();
+    const dealsCountRow = await db.get<{ count: number }>(`SELECT COUNT(*) as count FROM raw_deals WHERE account_id = ?`, [accountId]);
+    const ordersCountRow = await db.get<{ count: number }>(`SELECT COUNT(*) as count FROM raw_orders WHERE account_id = ?`, [accountId]);
+    const openPosCountRow = await db.get<{ count: number }>(`SELECT COUNT(*) as count FROM raw_open_positions WHERE account_id = ? AND is_active = 1`, [accountId]);
+    const reconstructedRow = await db.get<{ count: number }>(`SELECT COUNT(*) as count FROM reconstructed_positions WHERE account_id = ?`, [accountId]);
+    const closedRow = await db.get<{ count: number }>(`SELECT COUNT(*) as count FROM reconstructed_positions WHERE account_id = ? AND status = 'CLOSED'`, [accountId]);
+    const openRow = await db.get<{ count: number }>(`SELECT COUNT(*) as count FROM reconstructed_positions WHERE account_id = ? AND status = 'OPEN'`, [accountId]);
+    const lastCheckpoint = await this.getLatestCheckpoint(accountId);
+
+    return {
+      accountId,
+      rawDealsCount: dealsCountRow?.count || 0,
+      rawOrdersCount: ordersCountRow?.count || 0,
+      rawOpenPositionsCount: openPosCountRow?.count || 0,
+      reconstructedPositionsCount: reconstructedRow?.count || 0,
+      closedTradesCount: closedRow?.count || 0,
+      openTradesCount: openRow?.count || 0,
+      status: 'SYNCHRONIZED',
+      lastSyncedAt: lastCheckpoint?.completed_at || null
+    };
   }
 }

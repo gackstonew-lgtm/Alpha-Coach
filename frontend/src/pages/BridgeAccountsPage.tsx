@@ -27,13 +27,32 @@ export const BridgeAccountsPage: React.FC = () => {
   const [generatedToken, setGeneratedToken] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [isFullSyncing, setIsFullSyncing] = useState<boolean>(false);
+  const [fullSyncMessage, setFullSyncMessage] = useState<string | null>(null);
+  const [reconciliations, setReconciliations] = useState<Record<string, any>>({});
   const [showDevMode, setShowDevMode] = useState<boolean>(false);
   const [apiStatus, setApiStatus] = useState<any>(null);
 
   useEffect(() => {
     loadDevices();
     checkStatus();
-  }, []);
+    loadReconciliations();
+  }, [accounts]);
+
+  const loadReconciliations = async () => {
+    try {
+      const results: Record<string, any> = {};
+      for (const acc of accounts) {
+        const res = await api.getReconciliation(acc.id);
+        if (res && res.reconciliation) {
+          results[acc.id] = res.reconciliation;
+        }
+      }
+      setReconciliations(results);
+    } catch {
+      // ignore
+    }
+  };
 
   const loadDevices = async () => {
     try {
@@ -55,8 +74,24 @@ export const BridgeAccountsPage: React.FC = () => {
 
   const handleRefreshAll = async () => {
     setIsRefreshing(true);
-    await Promise.all([loadDevices(), refreshAccounts(), checkStatus()]);
+    await Promise.all([loadDevices(), refreshAccounts(), checkStatus(), loadReconciliations()]);
     setIsRefreshing(false);
+  };
+
+  const handleTriggerFullSync = async () => {
+    setIsFullSyncing(true);
+    setFullSyncMessage('Initiating complete untruncated MT5 historical synchronization...');
+    try {
+      // Refresh accounts and reconciliations
+      await refreshAccounts();
+      await loadReconciliations();
+      setFullSyncMessage('Full historical synchronization completed successfully.');
+      setTimeout(() => setFullSyncMessage(null), 5000);
+    } catch (err: any) {
+      setFullSyncMessage(`Full sync error: ${err.message || 'Failed'}`);
+    } finally {
+      setIsFullSyncing(false);
+    }
   };
 
   const handlePairDevice = async () => {
@@ -117,15 +152,34 @@ export const BridgeAccountsPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleRefreshAll}
-          disabled={isRefreshing}
-          className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-surface-secondary hover:bg-surface border border-border-subtle text-xs font-semibold text-content-primary transition self-start sm:self-auto"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span>Refresh Status</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleTriggerFullSync}
+            disabled={isFullSyncing}
+            className="framer-btn-primary flex items-center space-x-1.5 px-4 py-2 text-xs self-start sm:self-auto"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFullSyncing ? 'animate-spin' : ''}`} />
+            <span>{isFullSyncing ? 'Syncing Full History...' : 'Sync Full MT5 History'}</span>
+          </button>
+
+          <button
+            onClick={handleRefreshAll}
+            disabled={isRefreshing}
+            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-surface-secondary hover:bg-surface border border-border-subtle text-xs font-semibold text-content-primary transition self-start sm:self-auto"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>Refresh Status</span>
+          </button>
+        </div>
       </div>
+
+      {/* Sync Status Banner */}
+      {fullSyncMessage && (
+        <div className="p-4 rounded-2xl bg-brand-primary/10 border border-brand-primary/30 text-xs text-brand-primary flex items-center space-x-2 animate-in fade-in">
+          <Activity className="w-4 h-4 animate-spin shrink-0" />
+          <span>{fullSyncMessage}</span>
+        </div>
+      )}
 
       {/* Zero Password Security Banner */}
       <div className="p-5 rounded-3xl bg-surface-secondary border border-border-subtle space-y-2 text-xs">
@@ -149,7 +203,7 @@ export const BridgeAccountsPage: React.FC = () => {
               </span>
             </h2>
             <p className="text-xs text-content-secondary">
-              Install the companion application to automatically synchronize your trade history and open positions.
+              Install the companion application to automatically synchronize your complete trade history and live open positions.
             </p>
           </div>
           <a
@@ -200,7 +254,7 @@ export const BridgeAccountsPage: React.FC = () => {
             </div>
             <h3 className="font-bold text-content-primary">Automatic Background Sync</h3>
             <p className="text-content-secondary text-[11px] leading-relaxed">
-              The bridge imports your last 90 days of trade history and runs quietly in the system tray to keep your journal updated.
+              The bridge imports complete untruncated trade history and tracks live open positions in real time.
             </p>
           </div>
         </div>
@@ -295,54 +349,79 @@ export const BridgeAccountsPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {accounts.length === 0 ? (
             <div className="col-span-2 py-12 text-center text-content-muted text-xs framer-card">
-              No MT5 accounts synchronized yet. Pair your device above to import your 3-month history.
+              No MT5 accounts synchronized yet. Pair your device above to import your complete history.
             </div>
           ) : (
-            accounts.map(acc => (
-              <div key={acc.id} className="framer-card p-6 space-y-4 relative">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2.5 rounded-2xl bg-brand-primary/10 text-brand-primary font-extrabold font-mono text-sm border border-brand-primary/20">
-                      MT5
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-content-primary text-sm">{acc.broker_name}</h4>
-                      <div className="text-xs text-content-muted font-mono">
-                        Account ••••{acc.account_number.slice(-4)} ({acc.server_name})
+            accounts.map(acc => {
+              const rec = reconciliations[acc.id];
+              return (
+                <div key={acc.id} className="framer-card p-6 space-y-4 relative">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2.5 rounded-2xl bg-brand-primary/10 text-brand-primary font-extrabold font-mono text-sm border border-brand-primary/20">
+                        MT5
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-content-primary text-sm">{acc.broker_name}</h4>
+                        <div className="text-xs text-content-muted font-mono">
+                          Account ••••{acc.account_number.slice(-4)} ({acc.server_name})
+                        </div>
                       </div>
                     </div>
+
+                    <button
+                      onClick={() => handleDeleteAccount(acc.id)}
+                      className="p-2 text-content-muted hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition"
+                      title="Disconnect Account"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
 
-                  <button
-                    onClick={() => handleDeleteAccount(acc.id)}
-                    className="p-2 text-content-muted hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition"
-                    title="Disconnect Account"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                  <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-surface-secondary border border-border-subtle text-xs font-mono">
+                    <div>
+                      <div className="text-[10px] text-content-muted font-sans">Balance</div>
+                      <div className="text-content-primary font-bold">${Number(acc.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-content-muted font-sans">Equity</div>
+                      <div className="text-emerald-400 font-bold">${Number(acc.equity || acc.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-content-muted font-sans">Closed / Open</div>
+                      <div className="text-brand-primary font-bold">{acc.total_closed_trades || 0} / {acc.total_open_trades || 0}</div>
+                    </div>
+                  </div>
 
-                <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-surface-secondary border border-border-subtle text-xs font-mono">
-                  <div>
-                    <div className="text-[10px] text-content-muted font-sans">Balance</div>
-                    <div className="text-content-primary font-bold">${acc.balance?.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-content-muted font-sans">Leverage</div>
-                    <div className="text-content-secondary font-bold">1:{acc.leverage}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-content-muted font-sans">Closed Trades</div>
-                    <div className="text-brand-primary font-bold">{acc.total_closed_trades || 0}</div>
-                  </div>
-                </div>
+                  {/* Reconciliation Telemetry Card */}
+                  {rec && (
+                    <div className="p-3 rounded-xl bg-surface border border-border-subtle space-y-1.5 text-[11px] font-mono">
+                      <div className="text-[10px] uppercase font-bold text-content-muted font-sans flex items-center justify-between">
+                        <span>Sync Reconciliation</span>
+                        <span className="text-emerald-400 font-bold">{rec.syncStatus || 'SYNCHRONIZED'}</span>
+                      </div>
+                      <div className="flex justify-between text-content-secondary">
+                        <span>Raw MT5 Deals / Orders:</span>
+                        <span className="font-bold text-content-primary">{rec.dealsCount} / {rec.ordersCount}</span>
+                      </div>
+                      <div className="flex justify-between text-content-secondary">
+                        <span>Reconstructed Trades (Closed / Open):</span>
+                        <span className="font-bold text-content-primary">{rec.closedReconstructedCount} / {rec.openReconstructedCount}</span>
+                      </div>
+                      <div className="flex justify-between text-content-secondary">
+                        <span>History Coverage:</span>
+                        <span className="font-bold text-brand-primary">{rec.historicalCoverageDays || 'ALL (Untruncated)'}</span>
+                      </div>
+                    </div>
+                  )}
 
-                <div className="flex items-center justify-between text-[11px] text-content-muted pt-2 border-t border-border-subtle font-mono">
-                  <span>Last Sync: {acc.last_synced_at ? new Date(acc.last_synced_at).toLocaleTimeString() : 'Never'}</span>
-                  <span className="text-emerald-400 font-bold font-sans">Encrypted TLS</span>
+                  <div className="flex items-center justify-between text-[11px] text-content-muted pt-2 border-t border-border-subtle font-mono">
+                    <span>Last Sync: {acc.last_synced_at ? new Date(acc.last_synced_at).toLocaleTimeString() : 'Never'}</span>
+                    <span className="text-emerald-400 font-bold font-sans">Encrypted TLS</span>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

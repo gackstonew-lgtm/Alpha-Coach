@@ -17,11 +17,7 @@ import {
   Zap,
   LineChart,
   BookOpen,
-  Calendar,
   FlaskConical,
-  Clock,
-  Coins,
-  Dna,
   ShieldAlert,
   Bot,
   Trophy,
@@ -47,7 +43,7 @@ export const LandingPage: React.FC = () => {
   const coreFeatures = [
     {
       icon: LineChart,
-      title: 'Performance Dashboard',
+      title: 'Performance & Edge Analytics',
       description: 'Live high-water mark equity curves, net profit, win rate, profit factor, max drawdown, and mathematical expectancy.',
       badge: 'Core Analytics'
     },
@@ -70,10 +66,10 @@ export const LandingPage: React.FC = () => {
       badge: 'Voice AI'
     },
     {
-      icon: Calendar,
-      title: 'Interactive Trading Calendar',
-      description: 'Monthly grid with color-coded daily net P/L badges, trade volume density, and click-to-view drawer breakdowns.',
-      badge: 'Visualization'
+      icon: ShieldAlert,
+      title: 'Smart Risk & Position Calculator',
+      description: 'Dynamic lot sizing, multi-asset pip valuation (Forex, Gold, JPY, Indices), and pre-execution compliance checks against daily limits.',
+      badge: 'Risk Control'
     },
     {
       icon: FlaskConical,
@@ -82,27 +78,9 @@ export const LandingPage: React.FC = () => {
       badge: 'Edge Analysis'
     },
     {
-      icon: Clock,
-      title: 'Session & Symbol Intelligence',
-      description: '24x7 hourly density heatmaps and performance classification across London, NY Overlap, and Asian sessions.',
-      badge: 'Timing Matrix'
-    },
-    {
-      icon: Dna,
-      title: 'Trader DNA Profile',
-      description: 'Descriptive behavioral profile highlighting primary markets, average holding times, long/short bias, and friction points.',
-      badge: 'Profile'
-    },
-    {
-      icon: ShieldAlert,
-      title: 'Risk Guardian Monitor',
-      description: 'Real-time decision-support alerting for daily loss limits, max trades per day, and consecutive loss thresholds.',
-      badge: 'Risk Control'
-    },
-    {
       icon: Trophy,
       title: 'Discipline Master / Gamification',
-      description: 'XP and streak rewards for journaling consistency, risk limit adherence, and reviewing losing trades (+50 XP).',
+      description: 'XP and progression rewards for journaling consistency, risk limit adherence, and reviewing losing trades (+50 XP).',
       badge: 'Discipline'
     },
     {
@@ -378,7 +356,7 @@ export const LandingPage: React.FC = () => {
                 { step: '03', name: 'Reconstruct', desc: 'Position Lifecycle' },
                 { step: '04', name: 'Analyze', desc: 'Expectancy & R-Math' },
                 { step: '05', name: 'Journal', desc: 'Facts + Psychology' },
-                { step: '06', name: 'Identify', desc: 'Session Heatmaps' },
+                { step: '06', name: 'Protect', desc: 'Smart Risk Guardian' },
                 { step: '07', name: 'Review', desc: 'Grounded AI Coach' }
               ].map((s, idx) => (
                 <div

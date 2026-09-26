@@ -1,8 +1,8 @@
 """
 Alpha Coach - Companion Controller Layer
-Authoritative Version: 1.0.4
+Authoritative Version: 1.0.5
 Orchestrates Tray Actions, Real GUI Diagnostics Dialog, MT5 Terminal File Browser,
-Desktop Toast Notifications, Background Sync, and End-to-End Pairing Lifecycles.
+Desktop Toast Notifications, Background Sync, Full History Sync, and End-to-End Pairing Lifecycles.
 """
 
 import os
@@ -80,7 +80,7 @@ class CompanionController:
             self.is_syncing = True
             try:
                 companion_logger.info("Manual sync initiated (90-day window)...")
-                self.notify("Sync Started", "Retrieving 90-day MT5 trade history & open positions...")
+                self.notify("Sync Started", "Retrieving 90-day MT5 trade history & live positions...")
                 success = self.bridge.run_sync_cycle(days_back=90)
                 if success:
                     last_time = self.bridge.last_sync_time.strftime('%H:%M:%S') if self.bridge.last_sync_time else 'Just now'
@@ -95,6 +95,32 @@ class CompanionController:
                 self.is_syncing = False
 
         threading.Thread(target=_do_sync, daemon=True, name="ManualSyncWorker").start()
+
+    def sync_full_history(self, *args):
+        """Triggers complete MT5 history synchronization without 90-day truncation."""
+        if self.is_syncing:
+            self.notify("Sync In Progress", "A synchronization cycle is already running.")
+            return
+
+        def _do_full_sync():
+            self.is_syncing = True
+            try:
+                companion_logger.info("Full history synchronization initiated...")
+                self.notify("Full Sync Started", "Retrieving complete historical MT5 deals, orders, and open positions...")
+                success = self.bridge.run_full_sync()
+                if success:
+                    last_time = self.bridge.last_sync_time.strftime('%H:%M:%S') if self.bridge.last_sync_time else 'Just now'
+                    self.notify("Full Sync Complete", f"Complete MT5 history successfully synchronized at {last_time}.")
+                else:
+                    err = self.bridge.last_error_message or "Unknown error"
+                    self.notify("Full Sync Failed", f"Full sync could not complete: {err}")
+            except Exception as e:
+                companion_logger.exception(f"Unhandled error in sync_full_history: {e}")
+                self.notify("Full Sync Error", f"An error occurred: {str(e)[:80]}")
+            finally:
+                self.is_syncing = False
+
+        threading.Thread(target=_do_full_sync, daemon=True, name="FullSyncWorker").start()
 
     def toggle_pause(self, *args):
         """Toggles background synchronization pause state."""
@@ -182,6 +208,7 @@ class CompanionController:
                 # Check MT5 and bridge state
                 ready, msg = self.bridge.check_mt5_readiness()
                 acc = self.bridge.get_account_data()
+                open_positions = self.bridge.fetch_open_positions()
                 
                 term_name = "N/A"
                 term_build = "N/A"
@@ -201,8 +228,8 @@ class CompanionController:
                 
                 root = tk.Tk()
                 root.title(f"{APP_NAME} — Diagnostics & Health")
-                root.geometry("680x560")
-                root.minsize(620, 500)
+                root.geometry("720x600")
+                root.minsize(650, 520)
                 root.configure(bg="#0f172a")  # Slate 900
                 
                 # Header
@@ -220,7 +247,7 @@ class CompanionController:
                 
                 sub_lbl = tk.Label(
                     header_frame,
-                    text="Live Diagnostic Telemetry, Adapter Verification & Connection Inspector",
+                    text="Live Diagnostic Telemetry, Adapter Verification & Synchronization Reconciliation",
                     font=("Segoe UI", 9),
                     fg="#94a3b8",
                     bg="#1e293b"
@@ -259,6 +286,9 @@ class CompanionController:
                 
                 log_file_path = os.path.join(get_log_dir(), "companion.log")
                 
+                reconcil = self.bridge.last_reconciliation or {}
+                reconcil_status = reconcil.get("reconciliation", {}).get("status", "READY")
+                
                 diag_lines = [
                     f"==================================================",
                     f"  ALPHA COACH MT5 COMPANION — DIAGNOSTICS REPORT",
@@ -287,6 +317,7 @@ class CompanionController:
                     f"  Server Name:       {server}",
                     f"  Current Balance:   {balance}",
                     f"  Current Equity:    {equity}",
+                    f"  Live Open Trades:  {len(open_positions)} active position(s)",
                     f"",
                     f"--- [ AUTHORIZATION & CLOUD PAIRING ] ---",
                     f"  Device Name:       {self.bridge.device_name}",
@@ -296,9 +327,10 @@ class CompanionController:
                     f"  Token Fingerprint: {token_fingerprint}",
                     f"  Auth Status:       {'ACTIVE' if auth_ok else 'UNAUTHORIZED'} ({auth_msg})",
                     f"",
-                    f"--- [ SYNCHRONIZATION ENGINE ] ---",
+                    f"--- [ SYNCHRONIZATION RECONCILIATION ] ---",
                     f"  Background Sync:   {'PAUSED' if self.bridge.is_sync_paused else 'ACTIVE (30s Interval)'}",
                     f"  Last Sync Time:    {self.bridge.last_sync_time or 'Never'}",
+                    f"  Reconciliation:    {reconcil_status}",
                     f"  Last Error:        {self.bridge.last_error_message or 'None (Healthy)'}",
                     f"  Failures Count:    {self.bridge.consecutive_failures}",
                     f"=================================================="
@@ -321,6 +353,10 @@ class CompanionController:
                     root.destroy()
                     self.sync_now()
 
+                def trigger_full_sync_from_dialog():
+                    root.destroy()
+                    self.sync_full_history()
+
                 def trigger_pair_from_dialog():
                     root.destroy()
                     self.repair_pairing()
@@ -333,19 +369,19 @@ class CompanionController:
 
                 copy_btn = tk.Button(
                     btn_frame,
-                    text="📋 Copy Report",
+                    text="📋 Copy",
                     bg="#0284c7",
                     fg="#ffffff",
                     activebackground="#0369a1",
                     activeforeground="#ffffff",
                     font=("Segoe UI", 9, "bold"),
                     relief=tk.FLAT,
-                    padx=10,
+                    padx=8,
                     pady=5,
                     cursor="hand2",
                     command=copy_to_clipboard
                 )
-                copy_btn.pack(side=tk.LEFT, padx=(0, 6))
+                copy_btn.pack(side=tk.LEFT, padx=(0, 5))
 
                 browse_btn = tk.Button(
                     btn_frame,
@@ -356,28 +392,44 @@ class CompanionController:
                     activeforeground="#ffffff",
                     font=("Segoe UI", 9, "bold"),
                     relief=tk.FLAT,
-                    padx=10,
+                    padx=8,
                     pady=5,
                     cursor="hand2",
                     command=trigger_browse_terminal
                 )
-                browse_btn.pack(side=tk.LEFT, padx=(0, 6))
+                browse_btn.pack(side=tk.LEFT, padx=(0, 5))
 
                 sync_btn = tk.Button(
                     btn_frame,
-                    text="⚡ Sync Now",
+                    text="⚡ Sync (90d)",
                     bg="#059669",
                     fg="#ffffff",
                     activebackground="#047857",
                     activeforeground="#ffffff",
                     font=("Segoe UI", 9, "bold"),
                     relief=tk.FLAT,
-                    padx=10,
+                    padx=8,
                     pady=5,
                     cursor="hand2",
                     command=trigger_sync_from_dialog
                 )
-                sync_btn.pack(side=tk.LEFT, padx=(0, 6))
+                sync_btn.pack(side=tk.LEFT, padx=(0, 5))
+
+                full_sync_btn = tk.Button(
+                    btn_frame,
+                    text="🌐 Full Sync",
+                    bg="#0d9488",
+                    fg="#ffffff",
+                    activebackground="#0f766e",
+                    activeforeground="#ffffff",
+                    font=("Segoe UI", 9, "bold"),
+                    relief=tk.FLAT,
+                    padx=8,
+                    pady=5,
+                    cursor="hand2",
+                    command=trigger_full_sync_from_dialog
+                )
+                full_sync_btn.pack(side=tk.LEFT, padx=(0, 5))
 
                 pair_btn = tk.Button(
                     btn_frame,
@@ -388,12 +440,12 @@ class CompanionController:
                     activeforeground="#ffffff",
                     font=("Segoe UI", 9, "bold"),
                     relief=tk.FLAT,
-                    padx=10,
+                    padx=8,
                     pady=5,
                     cursor="hand2",
                     command=trigger_pair_from_dialog
                 )
-                pair_btn.pack(side=tk.LEFT, padx=(0, 6))
+                pair_btn.pack(side=tk.LEFT, padx=(0, 5))
 
                 close_btn = tk.Button(
                     btn_frame,
@@ -404,14 +456,13 @@ class CompanionController:
                     activeforeground="#ffffff",
                     font=("Segoe UI", 9),
                     relief=tk.FLAT,
-                    padx=10,
+                    padx=8,
                     pady=5,
                     cursor="hand2",
                     command=root.destroy
                 )
                 close_btn.pack(side=tk.RIGHT)
 
-                # Focus and run mainloop
                 root.attributes("-topmost", True)
                 root.mainloop()
 

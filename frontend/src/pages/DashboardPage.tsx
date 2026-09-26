@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   Target,
   BarChart3,
-  Calendar,
   Layers,
   ChevronRight,
   Zap,
@@ -173,48 +172,202 @@ export const DashboardPage: React.FC = () => {
 
       {/* Charts Section: Equity Curve & Daily P/L */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Equity Curve (2 Cols) */}
-        <div className="lg:col-span-2 framer-card p-6 rounded-3xl space-y-4">
-          <div className="flex items-center justify-between">
+        {/* Equity Curve (2 Cols) - Flat Clean Styling */}
+        <div className="lg:col-span-2 framer-card p-6 rounded-3xl space-y-4 relative overflow-hidden bg-surface border border-border-subtle shadow-sm">
+          {/* Chart Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
             <div>
-              <h2 className="text-base font-bold text-content-primary tracking-tight flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-brand-500" />
-                <span>Account Growth & Equity Curve</span>
-              </h2>
-              <p className="text-xs text-content-muted">Reconstructed 90-day MT5 cumulative trading progression</p>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                  <BarChart3 className="w-4 h-4" />
+                </div>
+                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-content-primary flex items-center gap-2">
+                  <span>Account Growth & Equity Curve</span>
+                  <span className="text-brand-500 font-mono text-sm font-semibold">
+                    ({selectedAccount ? selectedAccount.currency || 'USD' : 'MT5'})
+                  </span>
+                </h2>
+              </div>
+              <p className="text-xs text-content-muted mt-0.5">
+                Reconstructed 90-day MT5 cumulative trading progression
+              </p>
             </div>
-            <div className="flex items-center gap-2 text-xs font-mono text-content-muted">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-brand-500" />
-              <span>Equity ($)</span>
-            </div>
+
+            {/* Micro KPI Badges */}
+            {overview?.equityCurve && overview.equityCurve.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+                <div className="px-3 py-1.5 rounded-xl bg-surface-secondary border border-border-subtle flex items-center gap-2">
+                  <span className="text-[11px] text-content-muted font-medium">Current:</span>
+                  <span className="text-xs font-mono font-extrabold text-content-primary">
+                    ${(overview.equityCurve[overview.equityCurve.length - 1]?.equity || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+
+                <div className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 ${
+                  (overview.netProfit || 0) >= 0
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                }`}>
+                  <span className="text-[11px] font-bold">Growth:</span>
+                  <span className="text-xs font-mono font-extrabold">
+                    {(overview.netProfit || 0) >= 0 ? '+' : ''}${Number(overview.netProfit || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="h-72 w-full">
+          {/* Chart Canvas */}
+          <div className="h-72 sm:h-80 w-full relative z-10 pt-2">
             {overview?.equityCurve && overview.equityCurve.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={overview.equityCurve} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#171d29' : '#e2e8f0'} opacity={0.8} />
-                  <XAxis dataKey="tradeIndex" stroke={theme === 'dark' ? '#64748b' : '#94a3b8'} tick={{ fontSize: 11 }} />
-                  <YAxis stroke={theme === 'dark' ? '#64748b' : '#94a3b8'} tick={{ fontSize: 11 }} domain={['auto', 'auto']} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: theme === 'dark' ? '#0a0d12' : '#ffffff',
-                      borderColor: theme === 'dark' ? '#232c3d' : '#e2e8f0',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      color: theme === 'dark' ? '#f8fafc' : '#0f172a',
-                      boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'
-                    }}
-                    formatter={(val: any) => [`$${Number(val).toLocaleString()}`, 'Equity']}
-                    labelFormatter={(label) => `Trade #${label}`}
+                <AreaChart
+                  data={overview.equityCurve}
+                  margin={{ top: 20, right: 16, left: -10, bottom: 4 }}
+                >
+                  {/* Clean Horizontal Grid Lines */}
+                  <CartesianGrid
+                    stroke={theme === 'dark' ? '#172033' : '#e2e8f0'}
+                    strokeOpacity={0.7}
+                    vertical={false}
                   />
-                  <Area type="monotone" dataKey="equity" stroke="#3b82f6" strokeWidth={2} fill="#3b82f6" fillOpacity={0.08} />
+
+                  {/* X-Axis Formatted cleanly (e.g. 17. Oct, 2. Nov) */}
+                  <XAxis
+                    dataKey="tradeIndex"
+                    stroke={theme === 'dark' ? '#475569' : '#94a3b8'}
+                    tick={{ fontSize: 11, fill: theme === 'dark' ? '#64748b' : '#94a3b8' }}
+                    tickLine={false}
+                    axisLine={{ stroke: theme === 'dark' ? '#172033' : '#e2e8f0' }}
+                    minTickGap={24}
+                    tickFormatter={(tradeIdx) => {
+                      const item = overview.equityCurve[tradeIdx - 1];
+                      if (item?.date) {
+                        const d = new Date(item.date);
+                        const day = d.getDate();
+                        const month = d.toLocaleDateString(undefined, { month: 'short' });
+                        return `${day}. ${month}`;
+                      }
+                      return `${tradeIdx}`;
+                    }}
+                  />
+
+                  {/* Y-Axis Formatted with Currency */}
+                  <YAxis
+                    stroke="#475569"
+                    tick={{ fontSize: 11, fill: '#94a3b8' }}
+                    tickLine={false}
+                    axisLine={false}
+                    domain={['auto', 'auto']}
+                    tickFormatter={(val: number) => {
+                      if (Math.abs(val) >= 1000000) return `$${(val / 1000000).toFixed(1)}M`;
+                      if (Math.abs(val) >= 1000) return `$${(val / 1000).toFixed(1)}k`;
+                      return `$${val.toFixed(2)}`;
+                    }}
+                  />
+
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        const dateLabel = data.date
+                          ? new Date(data.date).toLocaleDateString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })
+                          : `Trade #${data.tradeIndex}`;
+                        const isWin = Number(data.netProfit) >= 0;
+                        const isCumulWin = Number(data.cumulativeProfit) >= 0;
+
+                        return (
+                          <div className="p-3.5 rounded-2xl bg-surface border border-border-strong shadow-2xl space-y-2 text-xs min-w-[210px] text-content-primary animate-in fade-in zoom-in-95 duration-150">
+                            <div className="flex items-center justify-between border-b border-border-subtle pb-1.5">
+                              <span className="text-[11px] font-semibold text-content-muted">{dateLabel}</span>
+                              <span className="px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 font-mono font-bold text-[10px] border border-brand-500/20">
+                                #{data.tradeIndex} • {data.symbol || 'MT5'}
+                              </span>
+                            </div>
+
+                            <div className="space-y-1 font-mono">
+                              <div className="flex items-center justify-between">
+                                <span className="text-content-muted font-sans text-[11px]">Reconstructed Equity:</span>
+                                <span className="font-extrabold text-content-primary text-sm">
+                                  ${Number(data.equity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <span className="text-content-muted font-sans text-[11px]">Trade Net P/L:</span>
+                                <span className={`font-bold ${isWin ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                  {isWin ? '+' : ''}${Number(data.netProfit).toFixed(2)}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <span className="text-content-muted font-sans text-[11px]">Cumulative Realized:</span>
+                                <span className={`font-bold ${isCumulWin ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                  {isCumulWin ? '+' : ''}${Number(data.cumulativeProfit).toFixed(2)}
+                                </span>
+                              </div>
+
+                              {data.drawdownPct > 0 && (
+                                <div className="flex items-center justify-between pt-1 border-t border-border-subtle text-[11px]">
+                                  <span className="text-amber-500 font-sans">Drawdown from Peak:</span>
+                                  <span className="text-amber-500 font-semibold">
+                                    -{data.drawdownPct.toFixed(1)}% (-${Number(data.drawdown).toFixed(2)})
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+
+                  {/* Smooth curve with solid translucent flat fill */}
+                  <Area
+                    type="monotone"
+                    dataKey="equity"
+                    stroke="#3b82f6"
+                    strokeWidth={2.5}
+                    fill="#3b82f6"
+                    fillOpacity={0.08}
+                    isAnimationActive={true}
+                    animationDuration={1000}
+                    animationEasing="ease-out"
+                    dot={false}
+                    activeDot={{
+                      r: 6,
+                      fill: '#3b82f6',
+                      stroke: theme === 'dark' ? '#0b0f17' : '#ffffff',
+                      strokeWidth: 3,
+                      className: 'drop-shadow-[0_0_8px_rgba(59,130,246,0.85)]'
+                    }}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-content-muted text-xs space-y-2">
-                <BarChart3 className="w-8 h-8 text-content-subtle" />
-                <span>No trade data synchronized yet. Connect MT5 Bridge to import 3-month history.</span>
+              <div className="h-full flex flex-col items-center justify-center text-content-muted text-xs space-y-3 p-6 text-center">
+                <div className="p-3 rounded-2xl bg-surface-secondary text-brand-500 border border-border-subtle">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-bold text-content-primary">No equity history available yet</p>
+                  <p className="text-[11px] max-w-sm text-content-muted">
+                    Connect and synchronize your MT5 trading terminal to automatically reconstruct 90-day equity progression.
+                  </p>
+                </div>
+                <Link
+                  to="/bridge"
+                  className="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-brand-500/20 transition"
+                >
+                  Configure MT5 Bridge
+                </Link>
               </div>
             )}
           </div>
@@ -224,10 +377,10 @@ export const DashboardPage: React.FC = () => {
         <div className="framer-card p-6 rounded-3xl space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-content-primary tracking-tight flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-emerald-500" />
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
               <span>Recent Daily P/L</span>
             </h2>
-            <Link to="/calendar" className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-semibold">View Calendar</Link>
+            <Link to="/performance" className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-semibold">View Performance</Link>
           </div>
 
           <div className="h-72 w-full">

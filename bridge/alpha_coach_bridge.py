@@ -1,9 +1,9 @@
 """
 Alpha Coach - Production MT5 Journal Bridge
-Authoritative Version: 1.0.4
+Authoritative Version: 1.0.5
 Seamlessly connects local MetaTrader 5 desktop terminal to Alpha Coach Performance OS.
 Features distinct MT5 state management, exhaustive terminal scanning, 1-click browser pairing,
-and resilient cloud synchronization to Production HTTPS API.
+authoritative historical deals/orders collection, live open positions sync, and reconciliation telemetry.
 """
 
 import sys
@@ -51,7 +51,7 @@ except ImportError:
 
 from companion_logger import companion_logger
 
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 APP_NAME = "Alpha Coach MT5 Companion"
 GITHUB_REPO = "gackstonew-lgtm/Alpha-Coach"
 
@@ -107,6 +107,7 @@ class AlphaCoachBridge:
         self.last_sync_time: Optional[datetime] = None
         self.last_error_message: Optional[str] = None
         self.last_auth_check_time: Optional[datetime] = None
+        self.last_reconciliation: Optional[Dict[str, Any]] = None
         self.consecutive_failures = 0
         self.is_sync_paused = False
         self.active_device_id: Optional[str] = None
@@ -241,7 +242,6 @@ class AlphaCoachBridge:
                 continue
             try:
                 for root, dirs, files in os.walk(base):
-                    # Limit scan depth to 3 levels to maintain rapid responsiveness
                     depth = root[len(base):].count(os.sep)
                     if depth > 3:
                         dirs[:] = []
@@ -254,7 +254,6 @@ class AlphaCoachBridge:
             except Exception:
                 continue
 
-        # De-duplicate while preserving order
         unique = []
         for p in found_paths:
             if p not in unique:
@@ -275,18 +274,15 @@ class AlphaCoachBridge:
             self.state = BridgeState.MT5_READY
             return True, "Mock MT5 environment active"
 
-        # Stage 1: Check Python Package
         if not MT5_PACKAGE_AVAILABLE or mt5 is None:
             self.state = BridgeState.MT5_ADAPTER_MISSING
             msg = f"MetaTrader 5 Python adapter is missing in this companion package ({MT5_IMPORT_ERROR or 'ModuleNotFoundError'})."
             self.last_error_message = msg
             return False, msg
 
-        # Stage 2: Discover Terminals
         installations = self.detect_mt5_installations()
         effective_path = self.selected_mt5_path if (self.selected_mt5_path and os.path.exists(self.selected_mt5_path)) else (installations[0] if installations else None)
 
-        # Stage 3: Attempt Initialize
         init_kwargs = {}
         if effective_path:
             init_kwargs["path"] = effective_path
@@ -298,7 +294,6 @@ class AlphaCoachBridge:
             companion_logger.warning(f"mt5.initialize exception: {e}")
 
         if not initialized:
-            last_err = mt5.last_error() if hasattr(mt5, 'last_error') else "Unknown"
             if not installations and not effective_path:
                 self.state = BridgeState.MT5_TERMINAL_NOT_FOUND
                 msg = "No MetaTrader 5 terminal found on this computer. Please install MT5 or select terminal64.exe."
@@ -310,7 +305,6 @@ class AlphaCoachBridge:
                 self.last_error_message = msg
                 return False, msg
 
-        # Stage 4: Check Active Account
         try:
             acc = mt5.account_info()
             if acc is None:
@@ -344,8 +338,8 @@ class AlphaCoachBridge:
 
             return {
                 "accountNumber": str(acc.login),
-                "brokerName": acc.company or "Exness (KE) Limited",
-                "serverName": acc.server or "ExnessKE-MT5Real21",
+                "brokerName": acc.company or "MetaQuotes",
+                "serverName": acc.server or "DefaultServer",
                 "currency": acc.currency or "USD",
                 "leverage": acc.leverage or 100,
                 "balance": float(acc.balance),
@@ -374,7 +368,6 @@ class AlphaCoachBridge:
     def start_browser_pairing(self, timeout_seconds: int = 600) -> bool:
         """
         Creates a temporary pairing session and opens user's browser for 1-click authorization.
-        Supports both custom HTTPS API and direct Supabase database operations.
         """
         self.log("PAIRING", "Initiating 1-Click Browser Pairing...", Fore.CYAN)
         session_code = f"pair_{secrets.token_hex(8)}{int(time.time())}"
@@ -429,14 +422,12 @@ class AlphaCoachBridge:
         except Exception as e:
             self.log("PAIR_WARN", f"Could not launch browser automatically: {e}", Fore.YELLOW)
 
-        # Poll for Authorization
         start_time = time.time()
         api_status_url = f"{self.api_url}/mt5/bridge/session/{session_code}/status"
         supa_status_url = f"{SUPABASE_URL}/rest/v1/bridge_pairing_sessions?session_code=eq.{session_code}&select=*"
 
         while time.time() - start_time < timeout_seconds:
             time.sleep(2)
-            # Try API status endpoint
             try:
                 api_resp = requests.get(api_status_url, timeout=3)
                 if api_resp.status_code == 200:
@@ -454,7 +445,6 @@ class AlphaCoachBridge:
             except Exception:
                 pass
 
-            # Try Supabase Direct status
             try:
                 supa_resp = requests.get(supa_status_url, headers=self._get_supabase_headers(), timeout=4)
                 if supa_resp.status_code == 200:
@@ -481,21 +471,72 @@ class AlphaCoachBridge:
         return False
 
     # =========================================================================
-    # Synchronization Engine (90-Day & Incremental)
+    # Live Open Positions & Historical Synchronization Engine
     # =========================================================================
 
-    def fetch_history(self, days_back: int = 90) -> Dict[str, Any]:
-        """Retrieves deals and orders using standard Python datetime objects."""
+    def fetch_open_positions(self) -> List[Dict[str, Any]]:
+        """Retrieves currently open MT5 positions using mt5.positions_get()."""
         if self.mock_mode:
-            from mock_mt5_adapter import generate_mock_3month_data
-            data = generate_mock_3month_data()
+            from mock_mt5_adapter import generate_mock_open_positions
+            return generate_mock_open_positions()
+
+        if not MT5_PACKAGE_AVAILABLE or mt5 is None:
+            return []
+
+        try:
+            raw_pos = mt5.positions_get()
+            if not raw_pos:
+                return []
+
+            positions_list = []
+            for p in raw_pos:
+                pos_time = datetime.fromtimestamp(p.time, tz=timezone.utc).isoformat()
+                pos_time_update = datetime.fromtimestamp(p.time_update, tz=timezone.utc).isoformat() if hasattr(p, 'time_update') and p.time_update else pos_time
+                positions_list.append({
+                    "ticket": str(p.ticket),
+                    "position_id": str(getattr(p, 'identifier', p.ticket) or p.ticket),
+                    "symbol": str(p.symbol or ""),
+                    "type": int(p.type),
+                    "magic": int(getattr(p, 'magic', 0) or 0),
+                    "identifier": str(getattr(p, 'identifier', p.ticket) or p.ticket),
+                    "reason": int(getattr(p, 'reason', 0) or 0),
+                    "volume": float(p.volume),
+                    "price_open": float(p.price_open),
+                    "sl": float(getattr(p, 'sl', 0.0) or 0.0),
+                    "tp": float(getattr(p, 'tp', 0.0) or 0.0),
+                    "price_current": float(p.price_current),
+                    "swap": float(getattr(p, 'swap', 0.0) or 0.0),
+                    "profit": float(getattr(p, 'profit', 0.0) or 0.0),
+                    "comment": str(getattr(p, 'comment', '') or ''),
+                    "external_id": str(getattr(p, 'external_id', '') or ''),
+                    "time": pos_time,
+                    "time_msc": int(getattr(p, 'time_msc', int(p.time * 1000))),
+                    "time_update": pos_time_update,
+                    "time_update_msc": int(getattr(p, 'time_update_msc', int(p.time_update * 1000) if hasattr(p, 'time_update') and p.time_update else None) or int(p.time * 1000))
+                })
+            return positions_list
+        except Exception as e:
+            companion_logger.error(f"Error fetching open positions: {e}")
+            return []
+
+    def fetch_history(self, days_back: Optional[int] = 90, full_history: bool = False) -> Dict[str, Any]:
+        """Retrieves deals and orders without arbitrary limit."""
+        if self.mock_mode:
+            from mock_mt5_adapter import generate_mock_3month_data, generate_mock_full_history
+            if full_history or (days_back and days_back > 180):
+                data = generate_mock_full_history()
+            else:
+                data = generate_mock_3month_data(days_back=days_back or 90)
             return {"deals": data["deals"], "orders": data["orders"]}
 
         if not MT5_PACKAGE_AVAILABLE or mt5 is None:
             return {"deals": [], "orders": []}
 
         now = datetime.now()
-        from_date = now - timedelta(days=days_back)
+        if full_history or days_back is None:
+            from_date = datetime(1970, 1, 1)
+        else:
+            from_date = now - timedelta(days=days_back)
 
         raw_deals = mt5.history_deals_get(from_date, now)
         raw_orders = mt5.history_orders_get(from_date, now)
@@ -507,21 +548,24 @@ class AlphaCoachBridge:
                 deals_list.append({
                     "ticket": str(d.ticket),
                     "order": str(d.order),
-                    "position_id": str(d.position_id) if hasattr(d, 'position_id') and d.position_id else str(d.order),
+                    "position_id": str(getattr(d, 'position_id', d.order) or d.order),
                     "symbol": str(d.symbol or ""),
                     "type": int(d.type),
                     "entry": int(d.entry),
                     "volume": float(d.volume),
                     "price": float(d.price),
-                    "commission": float(d.commission) if hasattr(d, 'commission') else 0.0,
-                    "swap": float(d.swap) if hasattr(d, 'swap') else 0.0,
-                    "profit": float(d.profit) if hasattr(d, 'profit') else 0.0,
-                    "fee": float(d.fee) if hasattr(d, 'fee') else 0.0,
-                    "sl": float(d.sl) if hasattr(d, 'sl') else 0.0,
-                    "tp": float(d.tp) if hasattr(d, 'tp') else 0.0,
+                    "commission": float(getattr(d, 'commission', 0.0) or 0.0),
+                    "swap": float(getattr(d, 'swap', 0.0) or 0.0),
+                    "profit": float(getattr(d, 'profit', 0.0) or 0.0),
+                    "fee": float(getattr(d, 'fee', 0.0) or 0.0),
+                    "sl": float(getattr(d, 'sl', 0.0) or 0.0),
+                    "tp": float(getattr(d, 'tp', 0.0) or 0.0),
                     "time": deal_time,
-                    "magic": int(d.magic) if hasattr(d, 'magic') else 0,
-                    "comment": str(d.comment or "")
+                    "time_msc": int(getattr(d, 'time_msc', int(d.time * 1000))),
+                    "magic": int(getattr(d, 'magic', 0) or 0),
+                    "comment": str(getattr(d, 'comment', '') or ''),
+                    "external_id": str(getattr(d, 'external_id', '') or ''),
+                    "reason": int(getattr(d, 'reason', 0) or 0)
                 })
 
         orders_list = []
@@ -529,6 +573,7 @@ class AlphaCoachBridge:
             for o in raw_orders:
                 time_setup = datetime.fromtimestamp(o.time_setup, tz=timezone.utc).isoformat()
                 time_done = datetime.fromtimestamp(o.time_done, tz=timezone.utc).isoformat() if o.time_done else None
+                time_exp = datetime.fromtimestamp(o.time_expiration, tz=timezone.utc).isoformat() if getattr(o, 'time_expiration', 0) else None
                 orders_list.append({
                     "ticket": str(o.ticket),
                     "symbol": str(o.symbol or ""),
@@ -537,22 +582,20 @@ class AlphaCoachBridge:
                     "volume_initial": float(o.volume_initial),
                     "volume_current": float(o.volume_current),
                     "price_open": float(o.price_open),
-                    "sl": float(o.sl) if hasattr(o, 'sl') else 0.0,
-                    "tp": float(o.tp) if hasattr(o, 'tp') else 0.0,
+                    "sl": float(getattr(o, 'sl', 0.0) or 0.0),
+                    "tp": float(getattr(o, 'tp', 0.0) or 0.0),
                     "time_setup": time_setup,
                     "time_done": time_done,
-                    "magic": int(o.magic) if hasattr(o, 'magic') else 0,
-                    "comment": str(o.comment or "")
+                    "time_expiration": time_exp,
+                    "magic": int(getattr(o, 'magic', 0) or 0),
+                    "comment": str(getattr(o, 'comment', '') or ''),
+                    "external_id": str(getattr(o, 'external_id', '') or '')
                 })
 
         return {"deals": deals_list, "orders": orders_list}
 
     def check_device_authorization(self) -> Tuple[bool, str]:
-        """
-        Phase 7 & 10: Dedicated device authentication verification check.
-        Validates the configured device token with the Alpha Coach backend.
-        Returns (is_valid, message).
-        """
+        """Dedicated device authentication verification check."""
         if self.mock_mode:
             return True, "Mock authorization active"
 
@@ -569,7 +612,6 @@ class AlphaCoachBridge:
             resp = requests.get(url, headers=headers, timeout=10)
             self.last_auth_check_time = datetime.now()
 
-            # Handle HTML response gracefully if routing is returning SPA index.html
             content_type = resp.headers.get("Content-Type", "")
             if "text/html" in content_type:
                 self.state = BridgeState.API_ROUTE_MISCONFIGURED
@@ -627,22 +669,43 @@ class AlphaCoachBridge:
             self.last_error_message = f"Alpha Coach API is temporarily unreachable ({e})"
             return False, self.last_error_message
 
-    def sync_payload_to_server(self, payload: Dict[str, Any]) -> bool:
+    def print_reconciliation_report(self, reconcil: Dict[str, Any]):
+        """Prints dynamically generated synchronization reconciliation telemetry."""
+        r = reconcil.get("reconciliation", {})
+        status = r.get("status", "SYNCHRONIZED")
+        color = Fore.GREEN if status == "SYNCHRONIZED" else Fore.YELLOW
+
+        print(f"\n{Style.BRIGHT}{'='*58}")
+        print(f"  ALPHA COACH — MT5 SYNCHRONIZATION RECONCILIATION")
+        print(f"{'='*58}{Style.RESET_ALL}")
+        print(f"  Historical Deals Received:   {r.get('mt5DealsCount', reconcil.get('dealsProcessed', 0))}")
+        print(f"  Historical Orders Received:  {r.get('mt5OrdersCount', reconcil.get('ordersProcessed', 0))}")
+        print(f"  Live Open Positions:         {r.get('mt5OpenPositionsCount', reconcil.get('openPositionsProcessed', 0))}")
+        print(f"  Reconstructed Positions:     {reconcil.get('positionsReconstructed', 0)}")
+        print(f"  Closed Completed Trades:     {reconcil.get('closedTradesCount', 0)}")
+        print(f"  Active Running Trades:       {reconcil.get('openTradesCount', 0)}")
+        print(f"  Skipped Duplicates:          {reconcil.get('skippedDuplicates', 0)}")
+        print(f"  Synchronization State:       {color}{status}{Style.RESET_ALL}")
+        print(f"  Timestamp (UTC):             {reconcil.get('lastSyncTime', datetime.now(timezone.utc).isoformat())}")
+        print(f"{'='*58}\n")
+
+    def sync_payload_to_server(self, payload: Dict[str, Any], is_full_sync: bool = False) -> bool:
         """Sends payload to Alpha Coach via authenticated backend HTTPS API."""
         self.state = BridgeState.SYNCING
         deals_cnt = len(payload.get('deals', []))
         orders_cnt = len(payload.get('orders', []))
-        self.log("SYNC", f"Transmitting {deals_cnt} deals, {orders_cnt} orders to Alpha Coach OS...", Fore.CYAN)
+        open_cnt = len(payload.get('openPositions', []))
+        sync_label = "Full History" if is_full_sync else "Incremental"
+        self.log("SYNC", f"Transmitting {sync_label} payload: {deals_cnt} deals, {orders_cnt} orders, {open_cnt} open positions to Alpha Coach OS...", Fore.CYAN)
 
-        api_url = f"{self.api_url}/mt5/sync"
+        api_url = f"{self.api_url}/mt5/sync/full" if is_full_sync else f"{self.api_url}/mt5/sync"
         headers = {
             "Content-Type": "application/json",
             "x-bridge-token": self.device_token
         }
         try:
-            resp = requests.post(api_url, json=payload, headers=headers, timeout=35)
+            resp = requests.post(api_url, json=payload, headers=headers, timeout=60)
             
-            # Detect HTML response from static SPA routing vs API JSON
             content_type = resp.headers.get("Content-Type", "")
             if "text/html" in content_type:
                 self.state = BridgeState.API_ROUTE_MISCONFIGURED
@@ -663,10 +726,13 @@ class AlphaCoachBridge:
             if resp.status_code == 200 and data.get("success") is not False:
                 self.state = BridgeState.SYNCED
                 self.last_sync_time = datetime.now()
+                self.last_reconciliation = data
                 self.consecutive_failures = 0
                 self.last_error_message = None
                 reconstructed = data.get('positionsReconstructed', deals_cnt)
-                self.log("SYNC_SUCCESS", f"Synchronized via API: {reconstructed} positions updated.", Fore.GREEN)
+                open_cnt_res = data.get('openTradesCount', open_cnt)
+                self.log("SYNC_SUCCESS", f"Synchronized via API: {reconstructed} total positions ({open_cnt_res} live running).", Fore.GREEN)
+                self.print_reconciliation_report(data)
                 return True
             elif resp.status_code == 401:
                 err_code = data.get("error", {}).get("code", "")
@@ -717,7 +783,7 @@ class AlphaCoachBridge:
             self.log("SYNC_NETWORK_FAIL", self.last_error_message, Fore.YELLOW)
             return False
 
-    def run_sync_cycle(self, days_back: int = 90) -> bool:
+    def run_sync_cycle(self, days_back: Optional[int] = 90, full_history: bool = False) -> bool:
         if self.is_sync_paused:
             self.log("SYNC", "Synchronization is currently paused.", Fore.YELLOW)
             return True
@@ -728,7 +794,6 @@ class AlphaCoachBridge:
             if not paired:
                 return False
 
-        # Phase 7: Pre-flight check device authorization
         auth_ok, auth_msg = self.check_device_authorization()
         if not auth_ok:
             self.log("AUTH_CHECK", auth_msg, Fore.RED)
@@ -753,14 +818,22 @@ class AlphaCoachBridge:
             self.last_error_message = "Unable to read MT5 account details."
             return False
 
-        history = self.fetch_history(days_back=days_back)
+        open_positions = self.fetch_open_positions()
+        history = self.fetch_history(days_back=days_back, full_history=full_history)
+
         payload = {
             "accountInfo": account_info,
             "deals": history["deals"],
-            "orders": history["orders"]
+            "orders": history["orders"],
+            "openPositions": open_positions
         }
 
-        return self.sync_payload_to_server(payload)
+        return self.sync_payload_to_server(payload, is_full_sync=full_history)
+
+    def run_full_sync(self) -> bool:
+        """Executes full history synchronization from epoch."""
+        self.log("FULL_SYNC", "Starting Full MT5 History Synchronization...", Fore.MAGENTA)
+        return self.run_sync_cycle(full_history=True)
 
     def run_daemon(self, interval_seconds: int = 30):
         self.log("DAEMON", f"Alpha Coach MT5 Companion daemon active ({interval_seconds}s interval).", Fore.MAGENTA)
@@ -784,6 +857,7 @@ def main():
     parser.add_argument("--token", default=None, help="Device Token")
     parser.add_argument("--daemon", action="store_true", help="Daemon mode")
     parser.add_argument("--days", type=int, default=90, help="Days back to sync")
+    parser.add_argument("--full-history", "--full-sync", dest="full_sync", action="store_true", help="Sync complete historical data")
     parser.add_argument("--mock", action="store_true", help="Mock mode")
     parser.add_argument("--diagnostics", action="store_true", help="Print diagnostics")
     args = parser.parse_args()
@@ -793,6 +867,7 @@ def main():
     if args.diagnostics:
         ready, msg = bridge.check_mt5_readiness()
         acc = bridge.get_account_data()
+        open_pos = bridge.fetch_open_positions()
         auth_ok, auth_msg = bridge.check_device_authorization()
         print(f"=== {APP_NAME} Diagnostics ===")
         print(f"Version: v{__version__}")
@@ -810,14 +885,16 @@ def main():
         print(f"MT5 Broker: {acc.get('brokerName', 'None') if acc else 'None'}")
         print(f"MT5 Server: {acc.get('serverName', 'None') if acc else 'None'}")
         print(f"MT5 Balance: ${acc.get('balance', 0.0):.2f} {acc.get('currency', 'USD') if acc else ''}")
+        print(f"MT5 Open Positions: {len(open_pos)}")
         print(f"Last Error: {bridge.last_error_message or 'None'}")
         return
 
     if args.daemon:
         bridge.run_daemon()
+    elif args.full_sync:
+        bridge.run_full_sync()
     else:
         bridge.run_sync_cycle(days_back=args.days)
 
 if __name__ == "__main__":
     main()
-

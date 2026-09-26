@@ -1,14 +1,14 @@
 """
 Automated Verification Suite for Alpha Coach MT5 Bridge
-Tests payload formatting, 3-month date range generation, mock generation,
-1-click pairing session flow, and readiness state machine.
+Tests payload formatting, 3-month date range generation, open positions collection,
+full history generation, reconciliation telemetry, 1-click pairing flow, and readiness state machine.
 """
 
 import unittest
 import os
 import json
 from datetime import datetime, timedelta, timezone
-from mock_mt5_adapter import generate_mock_3month_data
+from mock_mt5_adapter import generate_mock_3month_data, generate_mock_open_positions, generate_mock_full_history
 from alpha_coach_bridge import AlphaCoachBridge, BridgeState
 
 class TestMT5Bridge(unittest.TestCase):
@@ -17,8 +17,10 @@ class TestMT5Bridge(unittest.TestCase):
         self.assertIn("accountInfo", data)
         self.assertIn("deals", data)
         self.assertIn("orders", data)
+        self.assertIn("openPositions", data)
         self.assertGreater(len(data["deals"]), 50)
         self.assertGreater(len(data["orders"]), 50)
+        self.assertGreaterEqual(len(data["openPositions"]), 1)
         self.assertEqual(data["accountInfo"]["accountNumber"], "5892104")
 
         # Verify time range covers roughly 90 days
@@ -26,6 +28,25 @@ class TestMT5Bridge(unittest.TestCase):
         last_deal_time = datetime.fromisoformat(data["deals"][-1]["time"])
         days_span = (last_deal_time - first_deal_time).days
         self.assertGreaterEqual(days_span, 70)
+
+    def test_open_positions_structure(self):
+        open_positions = generate_mock_open_positions()
+        self.assertGreater(len(open_positions), 0)
+        for pos in open_positions:
+            self.assertIn("ticket", pos)
+            self.assertIn("symbol", pos)
+            self.assertIn("volume", pos)
+            self.assertIn("price_open", pos)
+            self.assertIn("price_current", pos)
+            self.assertIn("profit", pos)
+            self.assertIn("time", pos)
+            self.assertGreater(pos["volume"], 0)
+            self.assertGreater(pos["price_open"], 0)
+
+    def test_full_history_generation(self):
+        full_data = generate_mock_full_history()
+        self.assertGreater(len(full_data["deals"]), 100)
+        self.assertIn("openPositions", full_data)
 
     def test_bridge_config_handling(self):
         bridge = AlphaCoachBridge(api_url="https://alpha-coach-pi.vercel.app/api/v1", device_token="test_tok_123")
@@ -40,6 +61,13 @@ class TestMT5Bridge(unittest.TestCase):
         acc = bridge.get_account_data()
         self.assertIsNotNone(acc)
         self.assertEqual(acc["currency"], "USD")
+
+    def test_bridge_fetch_open_positions_mock(self):
+        bridge = AlphaCoachBridge(mock_mode=True)
+        open_pos = bridge.fetch_open_positions()
+        self.assertIsInstance(open_pos, list)
+        self.assertGreater(len(open_pos), 0)
+        self.assertEqual(open_pos[0]["symbol"], "XAUUSD")
 
     def test_bridge_payload_idempotency_structure(self):
         bridge = AlphaCoachBridge(mock_mode=True)
@@ -90,4 +118,3 @@ class TestMT5Bridge(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

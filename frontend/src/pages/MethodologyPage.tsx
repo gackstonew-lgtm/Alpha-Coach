@@ -8,7 +8,6 @@ import {
   Layers,
   LineChart,
   BookOpen,
-  Dna,
   Bot,
   ArrowRight,
   ShieldCheck,
@@ -89,22 +88,22 @@ export const MethodologyPage: React.FC = () => {
         'Strict separation between MT5 immutable facts and subjective notes',
         'Voice Journal with NLP extraction requiring trader confirmation',
         'Mistake taxonomy tracking (Moved SL, Chased, Oversized, Early Exit)',
-        'Interactive Trading Calendar with daily net P/L distributions'
+        'Detailed trade lifecycle with volume, entry/exit, and net P/L breakdown'
       ]
     },
     {
       step: '06',
-      title: 'IDENTIFY',
-      subtitle: 'Trader DNA & Session Intelligence Heatmaps',
-      icon: Dna,
+      title: 'PROTECT & OPTIMIZE',
+      subtitle: 'Smart Risk Guardian & Setup Analytics',
+      icon: ShieldCheck,
       color: 'text-cyan-500',
       description:
-        'Aggregates empirical trade data into a descriptive Trader DNA profile and 24x7 hourly session heatmaps, highlighting which sessions (London, New York, Overlap, Asia) and setups yield genuine statistical edge.',
+        'Computes dynamic position sizing, pip value across asset classes, and pre-execution compliance checks against daily loss limits and drawdown rules, while isolating edge per setup confluence in Strategy Lab.',
       details: [
-        '24x7 hourly trading density and profitability heatmaps',
-        'Session classification: London, NY, Overlap, Asia, Off-Hours',
-        'Confluence Matrix: Win rate per setup combination',
-        'Behavioral friction points and risk leak identification'
+        'Multi-asset position & lot size calculator (Forex, Gold, JPY, Indices)',
+        'Real-time account balance & drawdown threshold tracking',
+        'Confluence Matrix: Win rate & expectancy per setup combination',
+        'Pre-execution risk evaluation (Safe, Caution, Danger alerts)'
       ]
     },
     {

@@ -1,19 +1,13 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   BookOpen,
-  Calendar,
   LineChart,
   FlaskConical,
-  Clock,
-  Coins,
-  Dna,
   ShieldAlert,
-  PlayCircle,
-  Trophy,
   Bot,
-  FileSpreadsheet,
+  Trophy,
   Cpu,
   Settings,
   ShieldCheck,
@@ -22,6 +16,13 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { AlphaCoachLogo } from '../common/AlphaCoachLogo';
 
+interface NavItem {
+  id: string;
+  name: string;
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
@@ -29,27 +30,22 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
+  const location = useLocation();
 
-  const primaryNavigation = [
-    { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
-    { name: 'Trading Journal', to: '/journal', icon: BookOpen },
-    { name: 'Trading Calendar', to: '/calendar', icon: Calendar },
-    { name: 'Analytics Engine', to: '/analytics', icon: LineChart },
-    { name: 'Strategy Lab', to: '/strategy-lab', icon: FlaskConical },
-    { name: 'Session Intelligence', to: '/sessions', icon: Clock },
-    { name: 'Symbol Intelligence', to: '/symbols', icon: Coins },
-    { name: 'Trader DNA', to: '/trader-dna', icon: Dna },
-    { name: 'Risk Guardian', to: '/risk-guardian', icon: ShieldAlert },
-    { name: 'Replay Studio', to: '/replay', icon: PlayCircle },
-    { name: 'Gamification & XP', to: '/gamification', icon: Trophy },
-    { name: 'AI Trading Coach', to: '/ai-coach', icon: Bot },
-    { name: 'Reports & Export', to: '/reports', icon: FileSpreadsheet },
-    { name: 'MT5 Bridge & Accounts', to: '/bridge', icon: Cpu },
+  const navigationItems: NavItem[] = [
+    { id: 'dashboard', name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
+    { id: 'journal', name: 'Trading Journal', to: '/journal', icon: BookOpen },
+    { id: 'performance', name: 'Performance', to: '/performance', icon: LineChart },
+    { id: 'strategy-lab', name: 'Strategy Lab', to: '/strategy-lab', icon: FlaskConical },
+    { id: 'risk-guardian', name: 'Risk Guardian', to: '/risk-guardian', icon: ShieldAlert },
+    { id: 'ai-coach', name: 'AI Coach', to: '/ai-coach', icon: Bot },
+    { id: 'gamification', name: 'Gamification', to: '/gamification', icon: Trophy },
+    { id: 'bridge', name: 'Bridge', to: '/bridge', icon: Cpu },
+    { id: 'settings', name: 'Settings', to: '/settings', icon: Settings },
+    ...(user?.role === 'admin'
+      ? [{ id: 'admin', name: 'Admin', to: '/admin', icon: ShieldCheck }]
+      : [])
   ];
-
-  if (user?.role === 'admin') {
-    primaryNavigation.push({ name: 'Admin Operations', to: '/admin', icon: ShieldCheck });
-  }
 
   return (
     <>
@@ -80,61 +76,35 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Navigation Items */}
+        {/* Navigation Items - Continuous Clean List */}
         <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-          <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-content-subtle uppercase">
-            Performance OS
-          </div>
-
-          {primaryNavigation.map(item => {
+          {navigationItems.map(item => {
             const Icon = item.icon;
+            const isActive = location.pathname === item.to || (item.to === '/performance' && location.pathname === '/analytics');
+
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
                 onClick={() => onClose()}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group relative ${
-                    isActive
-                      ? 'bg-brand-600 text-white font-semibold shadow-md shadow-brand-500/20'
-                      : 'text-content-secondary hover:text-content-primary hover:bg-surface-secondary'
-                  }`
-                }
+                className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group relative ${
+                  isActive
+                    ? 'bg-brand-600 text-white font-semibold shadow-md shadow-brand-500/20'
+                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-secondary'
+                }`}
               >
-                {({ isActive }) => (
-                  <>
-                    <Icon className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isActive ? 'text-white scale-105' : 'text-content-muted group-hover:text-brand-500'}`} />
-                    <span className="truncate">{item.name}</span>
-                    {isActive && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    )}
-                  </>
+                <Icon
+                  className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
+                    isActive ? 'text-white scale-105' : 'text-content-muted group-hover:text-brand-500'
+                  }`}
+                />
+                <span className="truncate">{item.name}</span>
+                {isActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                 )}
               </NavLink>
             );
           })}
-
-          <div className="pt-3 px-3 py-1.5 text-[10px] font-bold tracking-wider text-content-subtle uppercase">
-            System
-          </div>
-          <NavLink
-            to="/settings"
-            onClick={() => onClose()}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group ${
-                isActive
-                  ? 'bg-brand-600 text-white font-semibold shadow-md shadow-brand-500/20'
-                  : 'text-content-secondary hover:text-content-primary hover:bg-surface-secondary'
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <Settings className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-content-muted group-hover:text-brand-500'}`} />
-                <span>Settings & Preferences</span>
-              </>
-            )}
-          </NavLink>
         </nav>
 
         {/* Footer Meta */}

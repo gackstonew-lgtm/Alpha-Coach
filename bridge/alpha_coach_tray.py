@@ -160,6 +160,10 @@ class AlphaCoachTrayApp:
                 lambda *args: self.controller.sync_now()
             ),
             pystray.MenuItem(
+                "Sync Full MT5 History",
+                lambda *args: self.controller.sync_full_history()
+            ),
+            pystray.MenuItem(
                 "Open Account Hub",
                 lambda *args: self.controller.open_account_hub()
             ),

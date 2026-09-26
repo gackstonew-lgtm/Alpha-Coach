@@ -51,8 +51,11 @@ export interface RawDeal {
   price_sl: number;
   price_tp: number;
   time: string;
+  time_msc?: number;
   magic: number;
   comment?: string;
+  external_id?: string;
+  reason?: number;
   created_at: string;
 }
 
@@ -73,7 +76,36 @@ export interface RawOrder {
   time_expiration?: string;
   magic: number;
   comment?: string;
+  external_id?: string;
   created_at: string;
+}
+
+export interface RawOpenPosition {
+  id: string;
+  account_id: string;
+  position_id: string;
+  ticket: string;
+  symbol: string;
+  type: number; // 0: BUY, 1: SELL
+  magic: number;
+  identifier?: string;
+  reason?: number;
+  volume: number;
+  price_open: number;
+  price_sl: number;
+  price_tp: number;
+  price_current: number;
+  swap: number;
+  profit: number; // Live floating profit
+  comment?: string;
+  external_id?: string;
+  time: string;
+  time_msc?: number;
+  time_update?: string;
+  time_update_msc?: number;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ReconstructedPosition {
@@ -85,6 +117,11 @@ export interface ReconstructedPosition {
   total_volume: number;
   entry_price_avg: number;
   exit_price_avg?: number;
+  current_price?: number;
+  floating_profit?: number;
+  magic?: number;
+  comment?: string;
+  external_id?: string;
   open_time: string;
   close_time?: string;
   status: 'OPEN' | 'CLOSED';
@@ -212,4 +249,25 @@ export interface Notification {
   is_read: number;
   link?: string;
   created_at: string;
+}
+
+export interface SyncReconciliation {
+  accountId: string;
+  ordersProcessed: number;
+  dealsProcessed: number;
+  openPositionsProcessed: number;
+  positionsReconstructed: number;
+  closedTradesCount: number;
+  openTradesCount: number;
+  skippedDuplicates: number;
+  reconciliation: {
+    mt5DealsCount: number;
+    dbDealsCount: number;
+    mt5OrdersCount: number;
+    dbOrdersCount: number;
+    mt5OpenPositionsCount: number;
+    dbOpenPositionsCount: number;
+    status: 'SYNCHRONIZED' | 'SYNC ATTENTION REQUIRED';
+  };
+  lastSyncTime: string;
 }

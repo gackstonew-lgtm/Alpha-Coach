@@ -17,17 +17,11 @@ import { PairDevicePage } from './pages/PairDevicePage';
 // Protected Application Pages
 import { DashboardPage } from './pages/DashboardPage';
 import { JournalPage } from './pages/JournalPage';
-import { CalendarPage } from './pages/CalendarPage';
-import { AnalyticsPage } from './pages/AnalyticsPage';
+import { PerformancePage } from './pages/PerformancePage';
 import { StrategyLabPage } from './pages/StrategyLabPage';
-import { SessionIntelligencePage } from './pages/SessionIntelligencePage';
-import { SymbolIntelligencePage } from './pages/SymbolIntelligencePage';
-import { TraderDNAPage } from './pages/TraderDNAPage';
 import { RiskGuardianPage } from './pages/RiskGuardianPage';
-import { ReplayStudioPage } from './pages/ReplayStudioPage';
-import { GamificationPage } from './pages/GamificationPage';
 import { AICoachPage } from './pages/AICoachPage';
-import { ReportsPage } from './pages/ReportsPage';
+import { GamificationPage } from './pages/GamificationPage';
 import { BridgeAccountsPage } from './pages/BridgeAccountsPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -77,25 +71,29 @@ export const App: React.FC = () => {
             </ProtectedRoute>
           }
         >
+          {/* Core Product Pillars */}
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/journal" element={<JournalPage />} />
-          <Route path="/calendar" element={<CalendarPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/performance" element={<PerformancePage />} />
           <Route path="/strategy-lab" element={<StrategyLabPage />} />
-          <Route path="/sessions" element={<SessionIntelligencePage />} />
-          <Route path="/symbols" element={<SymbolIntelligencePage />} />
-          <Route path="/trader-dna" element={<TraderDNAPage />} />
           <Route path="/risk-guardian" element={<RiskGuardianPage />} />
-          <Route path="/replay" element={<ReplayStudioPage />} />
-          <Route path="/gamification" element={<GamificationPage />} />
           <Route path="/ai-coach" element={<AICoachPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/gamification" element={<GamificationPage />} />
           <Route path="/bridge" element={<BridgeAccountsPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+
+          {/* Legacy Clean Redirects (Prevent Broken Bookmarks & 404s) */}
+          <Route path="/analytics" element={<Navigate to="/performance" replace />} />
+          <Route path="/calendar" element={<Navigate to="/journal" replace />} />
+          <Route path="/sessions" element={<Navigate to="/performance" replace />} />
+          <Route path="/symbols" element={<Navigate to="/performance" replace />} />
+          <Route path="/trader-dna" element={<Navigate to="/performance" replace />} />
+          <Route path="/reports" element={<Navigate to="/performance" replace />} />
+          <Route path="/replay" element={<Navigate to="/strategy-lab" replace />} />
         </Route>
 
-        {/* Fallback */}
+        {/* Global Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

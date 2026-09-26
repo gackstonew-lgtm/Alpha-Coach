@@ -278,7 +278,7 @@ router.get('/checkpoint/:accountId', requireBridgeOrUserAuth, async (req: Authen
   }
 });
 
-// Ingest MT5 Sync Payload (Historical 90-day or Incremental)
+// Ingest MT5 Sync Payload (Historical 90-day, Incremental, or Full History)
 router.post('/sync', requireBridgeOrUserAuth, async (req: AuthenticatedRequest, res) => {
   const reqId = req.requestId || uuidv4();
   try {
@@ -311,6 +311,68 @@ router.post('/sync', requireBridgeOrUserAuth, async (req: AuthenticatedRequest, 
       error: {
         code: 'SYNC_PROCESSING_ERROR',
         message: err.message || 'Failed to process sync payload.'
+      },
+      requestId: reqId
+    });
+  }
+});
+
+// Dedicated Full-History Synchronization Endpoint
+router.post('/sync/full', requireBridgeOrUserAuth, async (req: AuthenticatedRequest, res) => {
+  const reqId = req.requestId || uuidv4();
+  try {
+    const payload: MT5SyncPayload = req.body;
+    if (!payload || !payload.accountInfo || !payload.accountInfo.accountNumber) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_PAYLOAD',
+          message: 'Invalid MT5 full-sync payload. Missing accountInfo.'
+        },
+        requestId: reqId
+      });
+      return;
+    }
+
+    const userId = req.user!.userId;
+    const deviceId = req.bridgeDevice?.deviceId;
+
+    const result = await SyncService.processSyncPayload(userId, payload, deviceId);
+    res.status(200).json({
+      success: true,
+      mode: 'FULL_HISTORY',
+      ...result,
+      timestamp: new Date().toISOString(),
+      requestId: reqId
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FULL_SYNC_ERROR',
+        message: err.message || 'Failed to process full MT5 synchronization.'
+      },
+      requestId: reqId
+    });
+  }
+});
+
+// Live Synchronization Reconciliation Endpoint
+router.get('/reconcile/:accountId', requireBridgeOrUserAuth, async (req: AuthenticatedRequest, res) => {
+  const reqId = req.requestId || uuidv4();
+  try {
+    const result = await SyncService.getAccountReconciliation(req.params.accountId);
+    res.json({
+      success: true,
+      ...result,
+      requestId: reqId
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'RECONCILIATION_ERROR',
+        message: err.message || 'Failed to generate reconciliation report.'
       },
       requestId: reqId
     });
