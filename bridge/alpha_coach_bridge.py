@@ -836,6 +836,8 @@ class AlphaCoachBridge:
         history = self.fetch_history(days_back=days_back, full_history=full_history)
 
         payload = {
+            "sourceSystem": "MT5",
+            "sourceMode": "MOCK" if self.mock_mode else "REAL",
             "accountInfo": account_info,
             "deals": history["deals"],
             "orders": history["orders"],

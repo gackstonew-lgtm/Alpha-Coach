@@ -1,0 +1,8 @@
+{
+  "buildVersion": "1.0.5",
+  "gitCommit": "68e67e66272836c63738349e1766d1b92c6422d4",
+  "buildTimestamp": "2026-09-26T23:36:55.571Z",
+  "backendSource": "backend/src",
+  "target": "node18",
+  "generatedBy": "scripts/build-api-bundle.js"
+}

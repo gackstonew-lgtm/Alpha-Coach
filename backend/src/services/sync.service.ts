@@ -6,6 +6,8 @@ import { RiskGuardianService } from './risk.service';
 import { GamificationService } from './gamification.service';
 
 export interface MT5SyncPayload {
+  sourceSystem?: string;
+  sourceMode?: 'REAL' | 'MOCK';
   accountInfo: {
     accountNumber: string | number;
     brokerName: string;
@@ -154,6 +156,10 @@ export class SyncService {
     payload: MT5SyncPayload,
     deviceId?: string
   ): Promise<SyncReconciliation> {
+    if (process.env.NODE_ENV === 'production' && payload.sourceMode === 'MOCK') {
+      throw new Error('MOCK sync payloads are strictly prohibited in production mode');
+    }
+
     const db = getDatabase();
     const account = await this.getOrCreateAccount(userId, payload.accountInfo);
     const syncId = uuidv4();

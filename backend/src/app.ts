@@ -98,28 +98,54 @@ const apiLimiter = rateLimit({
 });
 app.use('/api', apiLimiter);
 
-// API Health (Phase 6 Production Health Contract)
+import { BUILD_INFO } from './buildInfo';
+
+// API Health (Production Health Contract with Truthful Status & 503 on Database Failure)
 app.get(['/', '/api', '/api/health', '/health'], async (req, res) => {
   let dbStatus = 'UNAVAILABLE';
+  let dbType = process.env.DATABASE_URL ? 'POSTGRESQL' : 'SQLITE';
+  let latencyMs = 0;
+  const start = Date.now();
+
   try {
     const db = await getDatabaseAsync();
     if (db) {
       await db.query('SELECT 1');
       dbStatus = 'CONNECTED';
+      latencyMs = Date.now() - start;
     } else {
-      dbStatus = 'DEGRADED';
+      dbStatus = 'UNAVAILABLE';
     }
   } catch (err) {
-    dbStatus = 'DEGRADED';
+    dbStatus = 'UNAVAILABLE';
   }
 
-  res.status(200).json({
-    success: true,
-    status: dbStatus === 'CONNECTED' ? 'ONLINE' : 'DEGRADED',
-    service: 'Alpha Coach API',
-    version: '1.0.4',
-    environment: process.env.NODE_ENV || 'production',
-    database: dbStatus,
+  const isHealthy = dbStatus === 'CONNECTED';
+  const statusCode = isHealthy ? 200 : 503;
+
+  res.status(statusCode).json({
+    success: isHealthy,
+    status: isHealthy ? 'ONLINE' : 'UNAVAILABLE',
+    service: 'Alpha Coach Performance API',
+    version: BUILD_INFO.version,
+    buildVersion: BUILD_INFO.version,
+    database: {
+      status: dbStatus,
+      type: dbType,
+      latencyMs,
+      persistent: !!process.env.DATABASE_URL || process.env.NODE_ENV !== 'production'
+    },
+    authentication: {
+      status: 'ONLINE',
+      authority: 'SUPABASE_AUTH'
+    },
+    bridgeService: {
+      status: 'ONLINE'
+    },
+    environment: BUILD_INFO.environment,
+    gitCommit: BUILD_INFO.gitCommit,
+    buildTimestamp: BUILD_INFO.buildTimestamp,
+    sourceOrigin: BUILD_INFO.sourceOrigin,
     timestamp: new Date().toISOString()
   });
 });

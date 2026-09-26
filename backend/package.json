@@ -4,7 +4,7 @@
   "description": "Alpha Coach - Professional Automated MT5 Trading Journal & Performance OS Backend API",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node ../scripts/build-api-bundle.js",
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "test": "jest --runInBand"

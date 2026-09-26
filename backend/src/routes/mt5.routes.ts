@@ -243,17 +243,137 @@ router.delete('/bridge/devices/:id', requireUserAuth, async (req: AuthenticatedR
   }
 });
 
+import { BUILD_INFO } from '../buildInfo';
+import { getDatabaseAsync } from '../db/db';
+
 // MT5 Bridge Status & Verification Endpoint
 router.get('/status', requireBridgeOrUserAuth, async (req: AuthenticatedRequest, res) => {
   const reqId = req.requestId || uuidv4();
+  let dbStatus = 'UNAVAILABLE';
+  let dbType = 'POSTGRESQL';
+  try {
+    const db = await getDatabaseAsync();
+    if (db) {
+      await db.query('SELECT 1');
+      dbStatus = 'CONNECTED';
+      dbType = process.env.DATABASE_URL ? 'POSTGRESQL' : 'SQLITE';
+    }
+  } catch {
+    dbStatus = 'DEGRADED';
+  }
+
   res.json({
     success: true,
-    status: 'ONLINE',
+    status: dbStatus === 'CONNECTED' ? 'ONLINE' : 'DEGRADED',
+    database: dbStatus,
+    databaseType: dbType,
     bridgeDevice: req.bridgeDevice || null,
     serverTime: new Date().toISOString(),
-    version: '1.0.4-PROD',
+    version: BUILD_INFO.version,
+    buildVersion: BUILD_INFO.version,
+    gitCommit: BUILD_INFO.gitCommit,
+    buildTimestamp: BUILD_INFO.buildTimestamp,
+    environment: BUILD_INFO.environment,
     requestId: reqId
   });
+});
+
+// Comprehensive MT5 Diagnostics Endpoint (Phase 22)
+router.get('/diagnostics', requireBridgeOrUserAuth, async (req: AuthenticatedRequest, res) => {
+  const reqId = req.requestId || uuidv4();
+  try {
+    const db = await getDatabaseAsync();
+    const userId = req.user?.userId || req.bridgeDevice?.userId;
+
+    let accountsCount = 0;
+    let rawDealsCount = 0;
+    let rawOrdersCount = 0;
+    let rawOpenPosCount = 0;
+    let reconstructedCount = 0;
+    let lastCheckpoint: any = null;
+
+    if (db && userId) {
+      const accRow = await db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM trading_accounts WHERE user_id = ?`,
+        [userId]
+      );
+      accountsCount = accRow?.count || 0;
+
+      const dealsRow = await db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM raw_deals d JOIN trading_accounts a ON d.account_id = a.id WHERE a.user_id = ?`,
+        [userId]
+      );
+      rawDealsCount = dealsRow?.count || 0;
+
+      const ordersRow = await db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM raw_orders o JOIN trading_accounts a ON o.account_id = a.id WHERE a.user_id = ?`,
+        [userId]
+      );
+      rawOrdersCount = ordersRow?.count || 0;
+
+      const openPosRow = await db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM raw_open_positions p JOIN trading_accounts a ON p.account_id = a.id WHERE a.user_id = ? AND p.is_active = 1`,
+        [userId]
+      );
+      rawOpenPosCount = openPosRow?.count || 0;
+
+      const reconRow = await db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM reconstructed_positions p JOIN trading_accounts a ON p.account_id = a.id WHERE a.user_id = ? AND p.symbol IS NOT NULL AND p.symbol != ''`,
+        [userId]
+      );
+      reconstructedCount = reconRow?.count || 0;
+
+      lastCheckpoint = await db.get(
+        `SELECT * FROM sync_checkpoints c JOIN trading_accounts a ON c.account_id = a.id WHERE a.user_id = ? ORDER BY c.started_at DESC LIMIT 1`,
+        [userId]
+      );
+    }
+
+    const isConnected = !!db;
+    const dbType = process.env.DATABASE_URL ? 'POSTGRESQL' : 'SQLITE';
+
+    res.json({
+      success: true,
+      bridgeAuthorized: !!req.bridgeDevice || !!req.user,
+      userId: userId || null,
+      deviceId: req.bridgeDevice?.deviceId || null,
+      database: {
+        connected: isConnected,
+        type: dbType,
+        persistent: !!process.env.DATABASE_URL || process.env.NODE_ENV !== 'production'
+      },
+      build: {
+        version: BUILD_INFO.version,
+        commit: BUILD_INFO.gitCommit,
+        timestamp: BUILD_INFO.buildTimestamp,
+        environment: BUILD_INFO.environment
+      },
+      accounts: {
+        persisted: accountsCount
+      },
+      telemetry: {
+        rawDeals: rawDealsCount,
+        rawOrders: rawOrdersCount,
+        rawOpenPositions: rawOpenPosCount,
+        reconstructedPositions: reconstructedCount
+      },
+      latestSync: lastCheckpoint ? {
+        syncId: lastCheckpoint.id,
+        status: lastCheckpoint.sync_status,
+        timestamp: lastCheckpoint.completed_at || lastCheckpoint.started_at
+      } : null,
+      requestId: reqId
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'DIAGNOSTICS_ERROR',
+        message: err.message || 'Failed to generate MT5 diagnostics.'
+      },
+      requestId: reqId
+    });
+  }
 });
 
 // Get Checkpoint For Incremental Sync

@@ -100,22 +100,89 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, pass: string) => {
-    const res = await api.login({ email, password: pass });
-    if (res.token) {
-      localStorage.setItem('alpha_coach_token', res.token);
-      setToken(res.token);
-      setUser(res.user);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: pass,
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Invalid email or password.');
     }
+
+    if (!data.user || !data.session) {
+      throw new Error('Authentication failed: no active session established.');
+    }
+
+    const token = data.session.access_token;
+    localStorage.setItem('alpha_coach_token', token);
+    setToken(token);
+
+    const meta = data.user.user_metadata || {};
+    const userObj: User = {
+      id: data.user.id,
+      email: data.user.email || email.trim(),
+      first_name: meta.first_name || 'Trader',
+      last_name: meta.last_name || 'Alpha',
+      role: meta.role || 'trader',
+      timezone: meta.timezone || 'UTC',
+      currency: meta.currency || 'USD',
+      subscription_tier: meta.subscription_tier || 'PRO',
+      is_active: 1
+    };
+    setUser(userObj);
   };
 
   const register = async (data: any) => {
-    const res = await api.register(data);
-    if (res.token && res.session) {
-      localStorage.setItem('alpha_coach_token', res.token);
-      setToken(res.token);
-      setUser(res.user);
+    const { data: authData, error } = await supabase.auth.signUp({
+      email: data.email.trim(),
+      password: data.password,
+      options: {
+        data: {
+          first_name: data.firstName,
+          last_name: data.lastName,
+          timezone: data.timezone || 'UTC',
+          currency: data.currency || 'USD',
+          subscription_tier: 'PRO',
+          role: 'trader'
+        }
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Registration failed.');
     }
-    return res;
+
+    if (!authData.user) {
+      throw new Error('Registration failed: no user record returned from authentication service.');
+    }
+
+    const meta = authData.user.user_metadata || {};
+    const userObj: User = {
+      id: authData.user.id,
+      email: authData.user.email || data.email.trim(),
+      first_name: meta.first_name || data.firstName,
+      last_name: meta.last_name || data.lastName,
+      role: meta.role || 'trader',
+      timezone: meta.timezone || data.timezone || 'UTC',
+      currency: meta.currency || data.currency || 'USD',
+      subscription_tier: meta.subscription_tier || 'PRO',
+      is_active: 1
+    };
+
+    const session = authData.session;
+    const token = session?.access_token || null;
+    if (token) {
+      localStorage.setItem('alpha_coach_token', token);
+      setToken(token);
+      setUser(userObj);
+    }
+
+    return {
+      user: userObj,
+      token,
+      session,
+      requiresEmailConfirmation: !session
+    };
   };
 
   const logout = async () => {

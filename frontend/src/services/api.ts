@@ -41,13 +41,12 @@ class ApiClient {
   // ==========================================
   // Auth
   // ==========================================
+  // ==========================================
+  // Auth (Canonical Supabase Auth)
+  // ==========================================
   async register(body: { email: string; password: string; firstName: string; lastName: string; timezone?: string; currency?: string }) {
-    if (USE_CUSTOM_BACKEND) {
-      return this.request('/auth/register', { method: 'POST', body: JSON.stringify(body) });
-    }
-
     const { data, error } = await supabase.auth.signUp({
-      email: body.email,
+      email: body.email.trim(),
       password: body.password,
       options: {
         data: {
@@ -61,7 +60,7 @@ class ApiClient {
       }
     });
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(error.message || 'Registration failed.');
 
     if (!data.user) {
       throw new Error('Registration failed: no user record returned from authentication service.');
@@ -70,7 +69,7 @@ class ApiClient {
     const meta = data.user.user_metadata || {};
     const user: User = {
       id: data.user.id,
-      email: data.user.email || body.email,
+      email: data.user.email || body.email.trim(),
       first_name: meta.first_name || body.firstName,
       last_name: meta.last_name || body.lastName,
       role: meta.role || 'trader',
@@ -91,16 +90,12 @@ class ApiClient {
   }
 
   async login(body: { email: string; password: string }) {
-    if (USE_CUSTOM_BACKEND) {
-      return this.request('/auth/login', { method: 'POST', body: JSON.stringify(body) });
-    }
-
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: body.email,
+      email: body.email.trim(),
       password: body.password
     });
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(error.message || 'Invalid email or password.');
     if (!data.user || !data.session) {
       throw new Error('Authentication failed: no active session established.');
     }
@@ -108,7 +103,7 @@ class ApiClient {
     const meta = data.user.user_metadata || {};
     const user: User = {
       id: data.user.id,
-      email: data.user.email || body.email,
+      email: data.user.email || body.email.trim(),
       first_name: meta.first_name || 'Trader',
       last_name: meta.last_name || 'Alpha',
       role: meta.role || 'trader',
@@ -123,10 +118,6 @@ class ApiClient {
   }
 
   async getMe() {
-    if (USE_CUSTOM_BACKEND) {
-      return this.request('/auth/me');
-    }
-
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
       throw new Error(error?.message || 'No authenticated session found.');
