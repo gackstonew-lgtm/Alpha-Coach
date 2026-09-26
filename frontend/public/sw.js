@@ -1,5 +1,5 @@
 /* Alpha Coach — Progressive Web App Service Worker */
-const CACHE_NAME = 'alpha-coach-v1.0.1';
+const CACHE_NAME = 'alpha-coach-v1.0.2';
 
 const PRECACHE_ASSETS = [
   '/',

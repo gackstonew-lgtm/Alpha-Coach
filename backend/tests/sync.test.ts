@@ -96,4 +96,45 @@ describe('MT5 Synchronization & Idempotency Integration Tests', () => {
     expect(positionsInDb.length).toBe(1);
     expect(positionsInDb[0].net_profit).toBe(147.0); // 150 - 3 commission
   });
+
+  it('should handle the 1-click browser pairing lifecycle and device validation properly', async () => {
+    const { BridgeService } = await import('../src/services/bridge.service');
+
+    // 1. Bridge creates pairing session
+    const { sessionCode, expiresAt } = await BridgeService.createPairingSession('Trading Room Laptop', '192.168.1.50');
+    expect(sessionCode).toBeDefined();
+    expect(expiresAt).toBeDefined();
+
+    // 2. Web UI checks pending session
+    const pendingSession = await BridgeService.getPairingSession(sessionCode);
+    expect(pendingSession).not.toBeNull();
+    expect(pendingSession!.status).toBe('PENDING');
+    expect(pendingSession!.device_name).toBe('Trading Room Laptop');
+
+    // 3. Authenticated user authorizes the session
+    const authRes = await BridgeService.authorizePairingSession(sessionCode, testUserId, '192.168.1.50');
+    expect(authRes.success).toBe(true);
+
+    // 4. Bridge polls and consumes the permanent device token
+    const pollRes = await BridgeService.pollAndConsumePairingToken(sessionCode);
+    expect(pollRes.status).toBe('AUTHORIZED');
+    expect(pollRes.deviceToken).toBeDefined();
+    expect(pollRes.deviceToken!.startsWith('ac_bridge_')).toBe(true);
+
+    // 5. Subsequent poll shows COMPLETED (single-use consumption)
+    const secondPoll = await BridgeService.pollAndConsumePairingToken(sessionCode);
+    expect(secondPoll.status).toBe('COMPLETED');
+    expect(secondPoll.deviceToken).toBeUndefined();
+
+    // 6. Validate device token authentication
+    const deviceAuth = await BridgeService.validateDeviceToken(pollRes.deviceToken!);
+    expect(deviceAuth).not.toBeNull();
+    expect(deviceAuth!.userId).toBe(testUserId);
+    expect(deviceAuth!.deviceName).toBe('Trading Room Laptop');
+
+    // 7. Revoke device
+    await BridgeService.revokeDevice(testUserId, deviceAuth!.deviceId);
+    const revokedAuth = await BridgeService.validateDeviceToken(pollRes.deviceToken!);
+    expect(revokedAuth).toBeNull();
+  });
 });

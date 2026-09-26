@@ -1086,8 +1086,121 @@ class ApiClient {
   }
 
   // ==========================================
-  // MT5 Bridge
   // ==========================================
+  // MT5 Bridge & 1-Click Browser Pairing
+  // ==========================================
+  async createBridgePairingSession(deviceName: string) {
+    if (USE_CUSTOM_BACKEND) {
+      return this.request<{ sessionCode: string; expiresAt: string }>('/mt5/bridge/session/create', {
+        method: 'POST',
+        body: JSON.stringify({ deviceName })
+      });
+    }
+
+    const sessionCode = `pair_${Math.random().toString(36).substring(2)}${Date.now()}`;
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const { error } = await supabase.from('bridge_pairing_sessions').insert({
+      session_code: sessionCode,
+      device_name: deviceName || 'Local Windows Terminal',
+      status: 'PENDING',
+      expires_at: expiresAt
+    });
+
+    if (error) throw new Error(error.message);
+    return { sessionCode, expiresAt };
+  }
+
+  async getBridgePairingSession(sessionCode: string) {
+    if (USE_CUSTOM_BACKEND) {
+      return this.request<{ sessionCode: string; deviceName: string; ipAddress?: string; status: string; expiresAt: string }>(
+        `/mt5/bridge/session/${sessionCode}`
+      );
+    }
+
+    const { data, error } = await supabase
+      .from('bridge_pairing_sessions')
+      .select('*')
+      .eq('session_code', sessionCode)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Pairing session not found or expired.');
+
+    return {
+      sessionCode: data.session_code,
+      deviceName: data.device_name,
+      ipAddress: data.ip_address,
+      status: data.status,
+      expiresAt: data.expires_at
+    };
+  }
+
+  async authorizeBridgePairingSession(sessionCode: string) {
+    if (USE_CUSTOM_BACKEND) {
+      return this.request<{ success: boolean; message: string }>(`/mt5/bridge/session/${sessionCode}/authorize`, {
+        method: 'POST'
+      });
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required to authorize MT5 Bridge.');
+
+    const { data: session, error: sessErr } = await supabase
+      .from('bridge_pairing_sessions')
+      .select('*')
+      .eq('session_code', sessionCode)
+      .maybeSingle();
+
+    if (sessErr || !session) throw new Error('Pairing session not found.');
+    if (session.status !== 'PENDING') throw new Error(`Pairing session is already ${session.status.toLowerCase()}.`);
+
+    // Create permanent device
+    const deviceToken = `ac_bridge_${Math.random().toString(36).substring(2)}${Date.now()}`;
+    const deviceId = `dev-${Date.now()}`;
+    const { error: devErr } = await supabase.from('bridge_devices').insert({
+      id: deviceId,
+      user_id: user.id,
+      device_name: session.device_name || 'Local Windows Terminal',
+      device_token: deviceToken,
+      is_active: 1
+    });
+
+    if (devErr) throw new Error(devErr.message);
+
+    // Update pairing session to AUTHORIZED
+    const { error: updateErr } = await supabase
+      .from('bridge_pairing_sessions')
+      .update({
+        status: 'AUTHORIZED',
+        user_id: user.id,
+        device_token: deviceToken
+      })
+      .eq('session_code', sessionCode);
+
+    if (updateErr) throw new Error(updateErr.message);
+    return { success: true, message: 'Device successfully authorized.' };
+  }
+
+  async rejectBridgePairingSession(sessionCode: string) {
+    if (USE_CUSTOM_BACKEND) {
+      return this.request<{ success: boolean; message: string }>(`/mt5/bridge/session/${sessionCode}/reject`, {
+        method: 'POST'
+      });
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from('bridge_pairing_sessions')
+      .update({
+        status: 'REJECTED',
+        user_id: user?.id || null
+      })
+      .eq('session_code', sessionCode);
+
+    if (error) throw new Error(error.message);
+    return { success: true, message: 'Device pairing rejected.' };
+  }
+
   async pairBridgeDevice(deviceName: string) {
     if (USE_CUSTOM_BACKEND) {
       return this.request<{ deviceId: string; deviceToken: string }>('/mt5/bridge/pair', { method: 'POST', body: JSON.stringify({ deviceName }) });

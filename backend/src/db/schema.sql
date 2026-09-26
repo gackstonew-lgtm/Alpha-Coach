@@ -60,6 +60,18 @@ CREATE TABLE IF NOT EXISTS bridge_devices (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS bridge_pairing_sessions (
+  id TEXT PRIMARY KEY,
+  session_code TEXT UNIQUE NOT NULL,
+  device_name TEXT NOT NULL,
+  ip_address TEXT,
+  status TEXT NOT NULL DEFAULT 'PENDING', -- 'PENDING' | 'AUTHORIZED' | 'REJECTED' | 'EXPIRED' | 'COMPLETED'
+  user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+  device_token TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS raw_orders (
   id TEXT PRIMARY KEY,
   account_id TEXT NOT NULL REFERENCES trading_accounts(id) ON DELETE CASCADE,
@@ -343,3 +355,5 @@ CREATE INDEX IF NOT EXISTS idx_trade_journals_reviewed ON trade_journals(is_revi
 CREATE INDEX IF NOT EXISTS idx_risk_alerts_user ON risk_alerts(user_id, is_acknowledged);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_action ON audit_logs(user_id, action);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_pairing_sessions_code ON bridge_pairing_sessions(session_code);
+CREATE INDEX IF NOT EXISTS idx_pairing_sessions_user ON bridge_pairing_sessions(user_id);

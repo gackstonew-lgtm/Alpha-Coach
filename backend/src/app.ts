@@ -31,10 +31,32 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
+// Dynamic CORS configuration for production and local development
+const allowedOrigins = [
+  'https://alpha-coach-pi.vercel.app',
+  'https://alpha-coach.vercel.app',
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173'
+].filter(Boolean) as string[];
+
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, MT5 Bridge desktop app)
+    if (!origin) return callback(null, true);
+    if (
+      process.env.NODE_ENV !== 'production' ||
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app')
+    ) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-bridge-token']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-bridge-token', 'x-device-name']
 }));
 
 app.use(express.json({ limit: '50mb' }));

@@ -1,12 +1,15 @@
 """
 Automated Verification Suite for Alpha Coach MT5 Bridge
-Tests payload formatting, 3-month date range generation, mock generation and backend API integration.
+Tests payload formatting, 3-month date range generation, mock generation,
+1-click pairing session flow, and readiness state machine.
 """
 
 import unittest
+import os
+import json
 from datetime import datetime, timedelta, timezone
 from mock_mt5_adapter import generate_mock_3month_data
-from alpha_coach_bridge import AlphaCoachBridge
+from alpha_coach_bridge import AlphaCoachBridge, BridgeState
 
 class TestMT5Bridge(unittest.TestCase):
     def test_mock_data_generation_3months(self):
@@ -25,9 +28,32 @@ class TestMT5Bridge(unittest.TestCase):
         self.assertGreaterEqual(days_span, 70)
 
     def test_bridge_config_handling(self):
-        bridge = AlphaCoachBridge(api_url="http://localhost:4000/api/v1", device_token="test_tok_123")
+        bridge = AlphaCoachBridge(api_url="https://alpha-coach-pi.vercel.app/api/v1", device_token="test_tok_123")
         self.assertEqual(bridge.device_token, "test_tok_123")
-        self.assertEqual(bridge.api_url, "http://localhost:4000/api/v1")
+        self.assertEqual(bridge.api_url, "https://alpha-coach-pi.vercel.app/api/v1")
+
+    def test_bridge_mock_mode_readiness(self):
+        bridge = AlphaCoachBridge(mock_mode=True)
+        ready, msg = bridge.check_mt5_readiness()
+        self.assertTrue(ready)
+        self.assertEqual(bridge.state, BridgeState.READY)
+        acc = bridge.get_account_data()
+        self.assertIsNotNone(acc)
+        self.assertEqual(acc["currency"], "USD")
+
+    def test_bridge_payload_idempotency_structure(self):
+        bridge = AlphaCoachBridge(mock_mode=True)
+        history = bridge.fetch_history(days_back=90)
+        self.assertGreater(len(history["deals"]), 0)
+        for deal in history["deals"]:
+            self.assertIn("ticket", deal)
+            self.assertIn("order", deal)
+            self.assertIn("volume", deal)
+            self.assertIn("time", deal)
+
+    def test_bridge_state_transitions(self):
+        bridge = AlphaCoachBridge(device_token="")
+        self.assertEqual(bridge.state, BridgeState.UNPAIRED)
 
 if __name__ == "__main__":
     unittest.main()
