@@ -129,6 +129,7 @@ export class AnalyticsService {
     }
 
     const closedPositions = positions.filter(p => p.status === 'CLOSED');
+    closedPositions.sort((a, b) => new Date(a.close_time || a.open_time).getTime() - new Date(b.close_time || b.open_time).getTime());
     const openTrades = positions.filter(p => p.status === 'OPEN').length;
     const totalTrades = closedPositions.length;
 
@@ -249,9 +250,10 @@ export class AnalyticsService {
       else if (net < 0) dayData.lossCount += 1;
 
       // Win / Loss classification
+      const gross = pos.gross_profit !== undefined && pos.gross_profit !== null ? pos.gross_profit : net;
       if (net > 0) {
         winningTrades++;
-        grossProfit += net;
+        grossProfit += gross > 0 ? gross : net;
         if (net > largestWin) largestWin = net;
 
         currentConsecutiveWins++;
@@ -259,7 +261,7 @@ export class AnalyticsService {
         if (currentConsecutiveWins > maxConsecutiveWins) maxConsecutiveWins = currentConsecutiveWins;
       } else if (net < 0) {
         losingTrades++;
-        grossLoss += Math.abs(net);
+        grossLoss += Math.abs(gross < 0 ? gross : net);
         if (net < largestLoss) largestLoss = net;
 
         currentConsecutiveLosses++;
@@ -304,7 +306,7 @@ export class AnalyticsService {
 
     const winRate = parseFloat(((winningTrades / totalTrades) * 100).toFixed(2));
     const lossRate = parseFloat(((losingTrades / totalTrades) * 100).toFixed(2));
-    const netProfit = parseFloat((grossProfit - grossLoss + totalCommissions + totalSwaps).toFixed(2));
+    const netProfit = parseFloat(cumulativeProfit.toFixed(2));
     const profitFactor = grossLoss > 0 ? parseFloat((grossProfit / grossLoss).toFixed(2)) : grossProfit > 0 ? 99.9 : 0;
 
     const averageWin = winningTrades > 0 ? parseFloat((grossProfit / winningTrades).toFixed(2)) : 0;

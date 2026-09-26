@@ -170,6 +170,7 @@ export interface PerformanceOverview {
     winCount: number;
     lossCount: number;
   }>;
+  initialBalance?: number;
 }
 
 export interface TraderProgression {

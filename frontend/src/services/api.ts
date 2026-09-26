@@ -367,6 +367,7 @@ class ApiClient {
 
     const posList = posRes.data || [];
     const closedList = posList.filter(p => p.status === 'CLOSED');
+    closedList.sort((a, b) => new Date(a.close_time || a.open_time).getTime() - new Date(b.close_time || b.open_time).getTime());
     const openList = posList.filter(p => p.status === 'OPEN');
 
     // Dynamic starting equity calculation based on synchronized broker balances
@@ -384,9 +385,9 @@ class ApiClient {
     const losses = closedList.filter(p => Number(p.net_profit) < 0);
     const breakevens = closedList.filter(p => Number(p.net_profit) === 0);
 
-    const grossProfit = wins.reduce((sum, p) => sum + Number(p.net_profit || 0), 0);
-    const grossLoss = Math.abs(losses.reduce((sum, p) => sum + Number(p.net_profit || 0), 0));
-    const netProfit = grossProfit - grossLoss;
+    const grossProfit = wins.reduce((sum, p) => sum + Number(p.gross_profit !== undefined && p.gross_profit !== null ? p.gross_profit : (p.net_profit || 0)), 0);
+    const grossLoss = Math.abs(losses.reduce((sum, p) => sum + Number(p.gross_profit !== undefined && p.gross_profit !== null ? p.gross_profit : (p.net_profit || 0)), 0));
+    const netProfit = closedList.reduce((sum, p) => sum + Number(p.net_profit || 0), 0);
     const totalCommissions = posList.reduce((sum, p) => sum + Number(p.commission_total || 0), 0);
     const totalSwaps = posList.reduce((sum, p) => sum + Number(p.swap_total || 0), 0);
 
@@ -455,7 +456,7 @@ class ApiClient {
       if (ddPct > maxDrawdownPct) maxDrawdownPct = ddPct;
 
       return {
-        date: p.close_time ? p.close_time.slice(0, 10) : (p.open_time ? p.open_time.slice(0, 10) : ''),
+        date: p.close_time || p.open_time || '',
         tradeIndex: idx + 1,
         symbol: p.symbol,
         netProfit: Number(np.toFixed(2)),

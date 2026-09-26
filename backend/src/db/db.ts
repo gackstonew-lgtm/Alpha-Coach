@@ -217,6 +217,23 @@ export async function initDatabase(): Promise<IDatabase | null> {
     const db = await getDatabaseAsync();
     if (!db) return null;
     await db.exec(SCHEMA_SQL);
+    const safeMigrations = [
+      'ALTER TABLE raw_orders ADD COLUMN external_id TEXT',
+      'ALTER TABLE reconstructed_positions ADD COLUMN current_price REAL',
+      'ALTER TABLE reconstructed_positions ADD COLUMN floating_profit REAL DEFAULT 0.0',
+      'ALTER TABLE reconstructed_positions ADD COLUMN magic INTEGER DEFAULT 0',
+      'ALTER TABLE reconstructed_positions ADD COLUMN comment TEXT',
+      'ALTER TABLE reconstructed_positions ADD COLUMN external_id TEXT',
+      'ALTER TABLE reconstructed_positions ADD COLUMN fee_total REAL DEFAULT 0.0',
+      'ALTER TABLE reconstructed_positions ADD COLUMN is_hedged INTEGER DEFAULT 0'
+    ];
+    for (const sql of safeMigrations) {
+      try {
+        await db.exec(sql);
+      } catch {
+        // ignore if already exists
+      }
+    }
     await seedInitialData(db);
     return db;
   } catch (err) {

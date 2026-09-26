@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS raw_orders (
   time_expiration TEXT,
   magic INTEGER DEFAULT 0,
   comment TEXT,
+  external_id TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(account_id, order_id)
 );
