@@ -1,10 +1,6 @@
 const { app } = require('./app.bundle.js');
 
-module.exports = (req, res) => {
-  if (req.query && req.query.path) {
-    const pathStr = Array.isArray(req.query.path) ? req.query.path.join('/') : req.query.path;
-    req.url = `/api/${pathStr}`;
-  }
+function handler(req, res) {
   return new Promise((resolve) => {
     res.on('finish', resolve);
     res.on('close', resolve);
@@ -25,4 +21,7 @@ module.exports = (req, res) => {
       resolve();
     }
   });
-};
+}
+
+module.exports = handler;
+module.exports.default = handler;
