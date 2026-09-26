@@ -1,5 +1,5 @@
 """
-Alpha Coach - Windows System Tray Application
+Alpha Coach - Windows System Tray Companion Application
 Runs quietly in the Windows notification area, monitors MetaTrader 5,
 and keeps your Alpha Coach trade journal synchronized in the background.
 """
@@ -10,7 +10,7 @@ import time
 import threading
 import webbrowser
 from datetime import datetime
-from alpha_coach_bridge import AlphaCoachBridge, BridgeState
+from alpha_coach_bridge import AlphaCoachBridge, BridgeState, __version__, APP_NAME
 
 # Try importing pystray and Pillow for tray support
 try:
@@ -83,11 +83,17 @@ class AlphaCoachTrayApp:
         self.bridge.save_config()
         threading.Thread(target=self.bridge.start_browser_pairing, daemon=True).start()
 
+    def check_updates(self):
+        has_update, msg, download_url = self.bridge.check_for_updates()
+        if has_update and download_url:
+            webbrowser.open(download_url)
+        print(f"[Update Check] {msg}")
+
     def show_diagnostics(self):
         ready, msg = self.bridge.check_mt5_readiness()
         acc = self.bridge.get_account_data()
         lines = [
-            "Alpha Coach MT5 Bridge Diagnostics",
+            f"{APP_NAME} v{__version__} Diagnostics",
             "==================================",
             f"API Endpoint: {self.bridge.api_url}",
             f"Web URL: {self.bridge.web_url}",
@@ -124,7 +130,7 @@ class AlphaCoachTrayApp:
 
     def run(self):
         if not HAS_TRAY_DEPS:
-            print("[Info] pystray/Pillow not detected. Running Alpha Coach Bridge in background CLI mode.")
+            print(f"[Info] pystray/Pillow not detected. Running {APP_NAME} in background CLI mode.")
             self.bridge.run_daemon(interval_seconds=30)
             return
 
@@ -134,7 +140,7 @@ class AlphaCoachTrayApp:
 
         # Build menu
         menu = pystray.Menu(
-            pystray.MenuItem("Alpha Coach MT5 Bridge", self.open_dashboard, default=True),
+            pystray.MenuItem(f"{APP_NAME} v{__version__}", self.open_dashboard, default=True),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem(lambda text: self.get_status_text(), None, enabled=False),
             pystray.MenuItem("Sync Now (90-Day History)", lambda icon, item: self.trigger_sync_now()),
@@ -145,14 +151,15 @@ class AlphaCoachTrayApp:
                 lambda icon, item: self.toggle_pause()
             ),
             pystray.MenuItem("Re-pair with Alpha Coach...", lambda icon, item: self.trigger_repair()),
+            pystray.MenuItem("Check for Updates", lambda icon, item: self.check_updates()),
             pystray.MenuItem("Diagnostics", lambda icon, item: self.show_diagnostics()),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Quit Alpha Coach Bridge", lambda icon, item: self.on_quit())
+            pystray.MenuItem(f"Quit {APP_NAME}", lambda icon, item: self.on_quit())
         )
 
         image = self.create_tray_image("green")
-        self.icon = pystray.Icon("AlphaCoachMT5Bridge", image, "Alpha Coach MT5 Bridge", menu)
-        print("Alpha Coach MT5 Bridge running in Windows System Tray.")
+        self.icon = pystray.Icon("AlphaCoachMT5Companion", image, f"{APP_NAME} v{__version__}", menu)
+        print(f"{APP_NAME} v{__version__} running in Windows System Tray.")
         self.icon.run()
 
 def main():

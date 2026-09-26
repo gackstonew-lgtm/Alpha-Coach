@@ -1,0 +1,80 @@
+name: Release Alpha Coach MT5 Companion
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Release Windows Companion
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pystray pillow requests colorama
+
+      - name: Run Bridge Tests
+        run: |
+          python bridge/test_bridge.py
+
+      - name: Build Windows Executable
+        run: |
+          python bridge/build_windows_bridge.py
+
+      - name: Verify Installer Exists
+        run: |
+          if (!(Test-Path "bridge/dist/AlphaCoach-MT5-Companion-Setup.exe")) {
+            Write-Error "Installer binary AlphaCoach-MT5-Companion-Setup.exe was not created!"
+            exit 1
+          }
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Alpha Coach MT5 Companion ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+          files: |
+            bridge/dist/AlphaCoach-MT5-Companion-Setup.exe
+            bridge/dist/AlphaCoach-MT5-Companion.exe
+            bridge/dist/AlphaCoach-MT5-Companion-Setup.exe.sha256
+            bridge/dist/checksums.txt
+          body: |
+            ## Alpha Coach MT5 Companion Release ${{ github.ref_name }}
+            
+            Alpha Coach MT5 Companion is a Windows background companion application that automatically synchronizes your local MetaTrader 5 trading accounts, deals, orders, and open positions with the Alpha Coach Performance OS.
+            
+            ### Key Features:
+            - **Zero Password Exposure:** Uses official MetaTrader API locally; never requires or transmits broker credentials.
+            - **1-Click Browser Pairing:** Instant pairing with the Alpha Coach web platform.
+            - **Comprehensive 90-Day & Live Sync:** Idempotent historical trade reconstruction and 30-second live background sync.
+            - **Silent System Tray Operation:** Operates in the Windows notification area with live status badges.
+            
+            ### Quick Installation:
+            1. Download **`AlphaCoach-MT5-Companion-Setup.exe`** from below.
+            2. Run the installer/executable on the Windows PC running MetaTrader 5.
+            3. Authorize in your browser via 1-click pairing when prompted.
+            
+            ### Release Assets:
+            - **`AlphaCoach-MT5-Companion-Setup.exe`**: Windows standalone setup and runner.
+            - **`AlphaCoach-MT5-Companion.exe`**: Windows portable executable.
+            - **`AlphaCoach-MT5-Companion-Setup.exe.sha256`**: SHA-256 integrity hash for the setup installer.
+            - **`checksums.txt`**: Complete SHA-256 integrity verification file.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

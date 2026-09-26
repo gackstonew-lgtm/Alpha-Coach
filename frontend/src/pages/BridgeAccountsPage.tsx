@@ -153,7 +153,7 @@ export const BridgeAccountsPage: React.FC = () => {
             </p>
           </div>
           <a
-            href="https://github.com/gackstonew-lgtm/Alpha-Coach/releases"
+            href="https://github.com/gackstonew-lgtm/Alpha-Coach/releases/latest/download/AlphaCoach-MT5-Companion-Setup.exe"
             target="_blank"
             rel="noopener noreferrer"
             className="framer-btn-primary px-4 py-2.5 flex items-center gap-2 text-xs shrink-0"
@@ -172,9 +172,9 @@ export const BridgeAccountsPage: React.FC = () => {
               </span>
               <Laptop className="w-4 h-4 text-content-muted" />
             </div>
-            <h3 className="font-bold text-content-primary">Install Bridge App</h3>
+            <h3 className="font-bold text-content-primary">Install Companion App</h3>
             <p className="text-content-secondary text-[11px] leading-relaxed">
-              Download and run <strong>Alpha Coach MT5 Bridge</strong> on the Windows machine where MetaTrader 5 is installed.
+              Download and run <strong>Alpha Coach MT5 Companion</strong> on the Windows machine where MetaTrader 5 is installed.
             </p>
           </div>
 

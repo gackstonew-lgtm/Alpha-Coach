@@ -40,6 +40,10 @@ except ImportError:
         BRIGHT = ''
         RESET_ALL = ''
 
+__version__ = "1.0.0"
+APP_NAME = "Alpha Coach MT5 Companion"
+GITHUB_REPO = "gackstonew-lgtm/Alpha-Coach"
+
 # Default Configuration Constants
 DEFAULT_PROD_WEB = "https://alpha-coach-pi.vercel.app"
 DEFAULT_PROD_API = "https://alpha-coach-pi.vercel.app/api/v1"
@@ -58,6 +62,7 @@ class BridgeState:
     ERROR = "ERROR"
 
 class AlphaCoachBridge:
+    VERSION = __version__
     def __init__(
         self,
         api_url: Optional[str] = None,
@@ -132,6 +137,25 @@ class AlphaCoachBridge:
                 json.dump(payload, f, indent=2)
         except Exception as e:
             self.log("CONFIG_WARN", f"Failed to save configuration: {e}", Fore.YELLOW)
+
+    def check_for_updates(self) -> Tuple[bool, str, Optional[str]]:
+        """
+        Checks GitHub Releases for a newer version of the Alpha Coach MT5 Companion.
+        Returns (has_update, message, download_url).
+        """
+        try:
+            url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+            resp = requests.get(url, headers={"User-Agent": f"AlphaCoachCompanion/{__version__}"}, timeout=5)
+            if resp.status_code == 200:
+                rel = resp.json()
+                latest_tag = rel.get("tag_name", "").lstrip("v")
+                if latest_tag and latest_tag > __version__:
+                    download_url = f"https://github.com/{GITHUB_REPO}/releases/latest/download/AlphaCoach-MT5-Companion-Setup.exe"
+                    return True, f"New version {latest_tag} available!", download_url
+                return False, f"You are running the latest version (v{__version__})", None
+            return False, "No update information available.", None
+        except Exception as e:
+            return False, f"Unable to check for updates: {e}", None
 
     def log(self, tag: str, msg: str, color=Fore.CYAN):
         timestamp = datetime.now().strftime('%H:%M:%S')
