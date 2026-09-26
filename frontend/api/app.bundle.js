@@ -52553,6 +52553,7 @@ var SqlJsDatabaseWrapper = class {
     this.filePath = filePath;
   }
   scheduleSave() {
+    if (this.filePath === ":memory:") return;
     if (this.saveDebounceTimer) {
       clearTimeout(this.saveDebounceTimer);
     }
@@ -52567,6 +52568,7 @@ var SqlJsDatabaseWrapper = class {
     }, 100);
   }
   flushSync() {
+    if (this.filePath === ":memory:") return;
     try {
       const data = this.db.export();
       const buffer = Buffer.from(data);
@@ -52675,30 +52677,32 @@ async function getDatabaseAsync() {
         console.warn("[DB] PostgreSQL connection failed in non-production, falling back to local SQLite engine:", err);
       }
     }
-    if (isProd || process.env.VERCEL === "1") {
-      console.warn(
-        "[DB WARNING] Production environment requires DATABASE_URL pointing to Supabase PostgreSQL. Database operations will fail gracefully until DATABASE_URL is configured in Vercel environment variables."
-      );
-      return null;
-    }
     try {
       const initSqlJsModule = require_sql_wasm();
       const initSqlJs = typeof initSqlJsModule === "function" ? initSqlJsModule : initSqlJsModule.default;
       const SQL = await initSqlJs();
-      const dataDir = process.env.DATA_DIR || import_path.default.join(__dirname, "../../../data");
-      if (!import_fs.default.existsSync(dataDir)) {
-        import_fs.default.mkdirSync(dataDir, { recursive: true });
-      }
-      const dbPath = process.env.DB_PATH || import_path.default.join(dataDir, "alphacoach.sqlite");
-      let db;
-      if (import_fs.default.existsSync(dbPath)) {
-        const fileBuffer = import_fs.default.readFileSync(dbPath);
-        db = new SQL.Database(fileBuffer);
+      let dbInstanceLocal;
+      if (isProd || process.env.VERCEL === "1") {
+        const db = new SQL.Database();
+        dbInstanceLocal = new SqlJsDatabaseWrapper(db, ":memory:");
+        console.log("[DB] In-memory SQLite engine initialized for serverless fallback.");
       } else {
-        db = new SQL.Database();
+        const dataDir = process.env.DATA_DIR || import_path.default.join(__dirname, "../../../data");
+        if (!import_fs.default.existsSync(dataDir)) {
+          import_fs.default.mkdirSync(dataDir, { recursive: true });
+        }
+        const dbPath = process.env.DB_PATH || import_path.default.join(dataDir, "alphacoach.sqlite");
+        let db;
+        if (import_fs.default.existsSync(dbPath)) {
+          const fileBuffer = import_fs.default.readFileSync(dbPath);
+          db = new SQL.Database(fileBuffer);
+        } else {
+          db = new SQL.Database();
+        }
+        dbInstanceLocal = new SqlJsDatabaseWrapper(db, dbPath);
+        console.log("[DB] Local SQLite engine initialized for non-production environment.");
       }
-      dbInstance = new SqlJsDatabaseWrapper(db, dbPath);
-      console.log("[DB] Local SQLite engine initialized for non-production environment.");
+      dbInstance = dbInstanceLocal;
       return dbInstance;
     } catch (sqliteErr) {
       console.warn("[DB] SQLite fallback unavailable:", sqliteErr);
