@@ -8,14 +8,15 @@ import sys
 import os
 import time
 import threading
-import webbrowser
 from datetime import datetime
 from alpha_coach_bridge import AlphaCoachBridge, BridgeState, __version__, APP_NAME
+from companion_controller import CompanionController
+from companion_logger import companion_logger
 
 # Try importing pystray and Pillow for tray support
 try:
     import pystray
-    from PIL import Image, ImageDraw, ImageFont
+    from PIL import Image, ImageDraw
     HAS_TRAY_DEPS = True
 except ImportError:
     HAS_TRAY_DEPS = False
@@ -26,6 +27,15 @@ class AlphaCoachTrayApp:
         self.icon = None
         self.is_running = True
         self.worker_thread = None
+        self.controller = CompanionController(self.bridge, notify_fn=self.send_system_notification)
+
+    def send_system_notification(self, title: str, message: str):
+        """Displays native Windows tray toast notification."""
+        if self.icon:
+            try:
+                self.icon.notify(message, title)
+            except Exception as e:
+                companion_logger.warning(f"pystray notify failed: {e}")
 
     def create_tray_image(self, color="green"):
         """Generates dynamic tray badge icon."""
@@ -34,7 +44,6 @@ class AlphaCoachTrayApp:
         img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        # Draw outer circle / badge
         bg_colors = {
             "green": (16, 185, 129, 255),   # emerald-500
             "yellow": (245, 158, 11, 255),  # amber-500
@@ -56,110 +65,98 @@ class AlphaCoachTrayApp:
             last = self.bridge.last_sync_time.strftime('%H:%M:%S') if self.bridge.last_sync_time else "Just now"
             return f"Status: Synced ({last})"
         elif self.bridge.state == BridgeState.MT5_CLOSED:
-            return "Status: MT5 is closed (Waiting)"
+            return "Status: MT5 closed (Waiting)"
         elif self.bridge.state == BridgeState.MT5_NOT_LOGGED_IN:
             return "Status: MT5 not logged in"
         elif self.bridge.state == BridgeState.UNPAIRED:
             return "Status: Pairing required"
         elif self.bridge.state == BridgeState.API_UNAVAILABLE:
-            return "Status: Reconnecting to Alpha Coach..."
+            return "Status: Reconnecting..."
         else:
             return f"Status: {self.bridge.state}"
 
-    def trigger_sync_now(self):
-        threading.Thread(target=lambda: self.bridge.run_sync_cycle(days_back=90), daemon=True).start()
-
-    def toggle_pause(self):
-        self.bridge.is_sync_paused = not self.bridge.is_sync_paused
-
-    def open_dashboard(self):
-        webbrowser.open(f"{self.bridge.web_url}/dashboard")
-
-    def open_bridge_hub(self):
-        webbrowser.open(f"{self.bridge.web_url}/bridge")
-
-    def trigger_repair(self):
-        self.bridge.device_token = ""
-        self.bridge.save_config()
-        threading.Thread(target=self.bridge.start_browser_pairing, daemon=True).start()
-
-    def check_updates(self):
-        has_update, msg, download_url = self.bridge.check_for_updates()
-        if has_update and download_url:
-            webbrowser.open(download_url)
-        print(f"[Update Check] {msg}")
-
-    def show_diagnostics(self):
-        ready, msg = self.bridge.check_mt5_readiness()
-        acc = self.bridge.get_account_data()
-        lines = [
-            f"{APP_NAME} v{__version__} Diagnostics",
-            "==================================",
-            f"API Endpoint: {self.bridge.api_url}",
-            f"Web URL: {self.bridge.web_url}",
-            f"Device Name: {self.bridge.device_name}",
-            f"Paired: {'YES' if self.bridge.device_token else 'NO'}",
-            f"Bridge State: {self.bridge.state}",
-            f"MT5 Readiness: {msg}",
-            f"Account: #{acc.get('accountNumber', 'N/A') if acc else 'None'} ({acc.get('brokerName', '') if acc else ''})",
-            f"Last Sync: {self.bridge.last_sync_time or 'Never'}"
-        ]
-        print("\n".join(lines))
-
-    def on_quit(self):
-        self.is_running = False
-        if self.icon:
-            self.icon.stop()
-        sys.exit(0)
-
     def background_sync_worker(self):
-        # Initial 90-day sync
+        """Background thread running periodic 30-second synchronization cycles."""
+        companion_logger.info("Starting background synchronization worker...")
+        
+        # Initial 90-day sync attempt
         try:
-            self.bridge.run_sync_cycle(days_back=90)
+            if self.bridge.device_token:
+                self.bridge.run_sync_cycle(days_back=90)
         except Exception as e:
-            self.bridge.log("SYNC_ERR", f"Initial sync issue: {e}")
+            companion_logger.warning(f"Initial sync warning: {e}")
 
         while self.is_running:
             time.sleep(30)
             if not self.is_running:
                 break
             try:
-                self.bridge.run_sync_cycle(days_back=7)
+                if self.bridge.device_token and not self.bridge.is_sync_paused:
+                    self.bridge.run_sync_cycle(days_back=7)
             except Exception as e:
-                self.bridge.log("WORKER_WARN", f"Sync attempt interrupted: {e}")
+                companion_logger.warning(f"Background sync cycle warning: {e}")
+
+    def on_quit(self, *args):
+        companion_logger.info("Exiting tray application...")
+        self.is_running = False
+        if self.icon:
+            self.icon.stop()
+        self.controller.quit()
 
     def run(self):
         if not HAS_TRAY_DEPS:
-            print(f"[Info] pystray/Pillow not detected. Running {APP_NAME} in background CLI mode.")
+            companion_logger.warning("Pystray/Pillow not available. Falling back to background daemon.")
             self.bridge.run_daemon(interval_seconds=30)
             return
 
         # Start background worker thread
-        self.worker_thread = threading.Thread(target=self.background_sync_worker, daemon=True)
+        self.worker_thread = threading.Thread(target=self.background_sync_worker, daemon=True, name="TraySyncWorker")
         self.worker_thread.start()
 
-        # Build menu
+        # Build context menu with safe signature handling
         menu = pystray.Menu(
-            pystray.MenuItem(f"{APP_NAME} v{__version__}", self.open_dashboard, default=True),
+            pystray.MenuItem(
+                f"{APP_NAME} v{__version__}",
+                lambda *args: self.controller.open_dashboard(),
+                default=True
+            ),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem(lambda text: self.get_status_text(), None, enabled=False),
-            pystray.MenuItem("Sync Now (90-Day History)", lambda icon, item: self.trigger_sync_now()),
-            pystray.MenuItem("Open Account Hub", lambda icon, item: self.open_bridge_hub()),
+            pystray.MenuItem(
+                "Sync Now (90-Day History)",
+                lambda *args: self.controller.sync_now()
+            ),
+            pystray.MenuItem(
+                "Open Account Hub",
+                lambda *args: self.controller.open_account_hub()
+            ),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem(
                 lambda text: "Resume Synchronization" if self.bridge.is_sync_paused else "Pause Synchronization",
-                lambda icon, item: self.toggle_pause()
+                lambda *args: self.controller.toggle_pause()
             ),
-            pystray.MenuItem("Re-pair with Alpha Coach...", lambda icon, item: self.trigger_repair()),
-            pystray.MenuItem("Check for Updates", lambda icon, item: self.check_updates()),
-            pystray.MenuItem("Diagnostics", lambda icon, item: self.show_diagnostics()),
+            pystray.MenuItem(
+                "Re-pair with Alpha Coach...",
+                lambda *args: self.controller.repair_pairing()
+            ),
+            pystray.MenuItem(
+                "Check for Updates",
+                lambda *args: self.controller.check_for_updates()
+            ),
+            pystray.MenuItem(
+                "Diagnostics",
+                lambda *args: self.controller.run_diagnostics()
+            ),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem(f"Quit {APP_NAME}", lambda icon, item: self.on_quit())
+            pystray.MenuItem(
+                f"Quit {APP_NAME}",
+                lambda *args: self.on_quit()
+            )
         )
 
         image = self.create_tray_image("green")
         self.icon = pystray.Icon("AlphaCoachMT5Companion", image, f"{APP_NAME} v{__version__}", menu)
-        print(f"{APP_NAME} v{__version__} running in Windows System Tray.")
+        companion_logger.info(f"{APP_NAME} v{__version__} running in Windows System Tray.")
         self.icon.run()
 
 def main():

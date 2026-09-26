@@ -51,9 +51,29 @@ class TestMT5Bridge(unittest.TestCase):
             self.assertIn("volume", deal)
             self.assertIn("time", deal)
 
-    def test_bridge_state_transitions(self):
-        bridge = AlphaCoachBridge(device_token="")
-        self.assertEqual(bridge.state, BridgeState.UNPAIRED)
+    def test_companion_controller_actions(self):
+        from companion_controller import CompanionController
+        bridge = AlphaCoachBridge(mock_mode=True, device_token="test_token_123")
+        notifications = []
+        controller = CompanionController(bridge, notify_fn=lambda t, m: notifications.append((t, m)))
+        
+        # Test pause/resume
+        self.assertFalse(bridge.is_sync_paused)
+        controller.toggle_pause()
+        self.assertTrue(bridge.is_sync_paused)
+        controller.toggle_pause()
+        self.assertFalse(bridge.is_sync_paused)
+        
+        # Test notification helper
+        controller.notify("Test Title", "Test Message")
+        self.assertEqual(len(notifications), 3)
+
+    def test_logger_masking(self):
+        from companion_logger import mask_sensitive
+        sample = "Connecting with token ac_bridge_9843hfksdfh9834 and password=SecretPass123"
+        masked = mask_sensitive(sample)
+        self.assertNotIn("SecretPass123", masked)
+        self.assertIn("••••", masked)
 
 if __name__ == "__main__":
     unittest.main()

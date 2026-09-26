@@ -28,11 +28,16 @@ def build():
         "--noconsole",
         f"--add-data={os.path.join(bridge_dir, 'mock_mt5_adapter.py')};.",
         f"--add-data={os.path.join(bridge_dir, 'alpha_coach_bridge.py')};.",
+        f"--add-data={os.path.join(bridge_dir, 'companion_controller.py')};.",
+        f"--add-data={os.path.join(bridge_dir, 'companion_logger.py')};.",
         "--hidden-import=requests",
         "--hidden-import=pystray",
         "--hidden-import=PIL",
         "--hidden-import=MetaTrader5",
         "--hidden-import=colorama",
+        "--hidden-import=tkinter",
+        "--hidden-import=tkinter.ttk",
+        "--hidden-import=tkinter.messagebox",
         main_script
     ]
 
