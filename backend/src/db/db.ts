@@ -132,6 +132,8 @@ class PgDatabaseWrapper implements IDatabase {
   }
 }
 
+import { SQL_WASM_BASE64 } from './wasm';
+
 let dbInstance: IDatabase | null = null;
 let dbInstancePromise: Promise<IDatabase> | null = null;
 
@@ -157,25 +159,22 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
         console.log('[DB] Connected to persistent PostgreSQL database.');
         return dbInstance;
       } catch (err) {
-        if (isProd) {
-          console.error('[DB FATAL] PostgreSQL connection failed in production mode:', err);
-          return null as any;
-        }
-        console.warn('[DB] PostgreSQL connection failed in non-production, falling back to local SQLite engine:', err);
+        console.warn('[DB] PostgreSQL connection failed, falling back to SQLite engine:', err);
       }
     }
 
-    // Fallback: Local/In-Memory SQLite engine via SQL.js
+    // Fallback: Local/In-Memory SQLite engine via SQL.js with embedded WASM binary
     try {
       const initSqlJsModule = require('sql.js');
       const initSqlJs = typeof initSqlJsModule === 'function' ? initSqlJsModule : initSqlJsModule.default;
-      const SQL = await initSqlJs();
+      const wasmBinary = Buffer.from(SQL_WASM_BASE64, 'base64');
+      const SQL = await initSqlJs({ wasmBinary });
       
       let dbInstanceLocal: SqlJsDatabaseWrapper;
       if (isProd || process.env.VERCEL === '1') {
         const db = new SQL.Database();
         dbInstanceLocal = new SqlJsDatabaseWrapper(db, ':memory:');
-        console.log('[DB] In-memory SQLite engine initialized for serverless fallback.');
+        console.log('[DB] In-memory SQLite engine initialized successfully with embedded wasm.');
       } else {
         const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../../data');
         if (!fs.existsSync(dataDir)) {
@@ -196,8 +195,8 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
       dbInstance = dbInstanceLocal;
       return dbInstance;
     } catch (sqliteErr) {
-      console.warn('[DB] SQLite fallback unavailable:', sqliteErr);
-      return null as any;
+      console.error('[DB FATAL] SQLite fallback unavailable:', sqliteErr);
+      throw sqliteErr;
     }
   })();
 
@@ -206,7 +205,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
 
 export function getDatabase(): IDatabase {
   if (!dbInstance) {
-    throw new Error('Database is unavailable. Please ensure DATABASE_URL is configured in environment variables.');
+    throw new Error('Database is unavailable. Please ensure database initialization has completed.');
   }
   return dbInstance;
 }
