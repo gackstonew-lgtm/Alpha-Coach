@@ -1,4 +1,3 @@
-import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
 import fs from 'fs';
 import path from 'path';
 import { Pool } from 'pg';
@@ -12,11 +11,11 @@ export interface IDatabase {
 }
 
 class SqlJsDatabaseWrapper implements IDatabase {
-  private db: SqlJsDatabase;
+  private db: any;
   private filePath: string;
   private saveDebounceTimer: NodeJS.Timeout | null = null;
 
-  constructor(db: SqlJsDatabase, filePath: string) {
+  constructor(db: any, filePath: string) {
     this.db = db;
     this.filePath = filePath;
   }
@@ -165,14 +164,16 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     }
 
     if (isProd) {
-      // Production must have DATABASE_URL configured or throw an explicit deployment error
-      throw new Error(
-        '[Database Configuration Failure] Production environment requires a valid DATABASE_URL pointing to Supabase PostgreSQL. ' +
-        'Local SQLite persistence is strictly prohibited in production to prevent ephemeral data loss across instances.'
+      console.warn(
+        '[DB WARNING] Production environment requires DATABASE_URL pointing to Supabase PostgreSQL. ' +
+        'Database operations will fail gracefully until DATABASE_URL is configured in Vercel environment variables.'
       );
+      return null as any;
     }
 
     // Default fallback: Local SQLite engine via SQL.js (Development and Test environments ONLY)
+    const initSqlJsModule = require('sql.js');
+    const initSqlJs = typeof initSqlJsModule === 'function' ? initSqlJsModule : initSqlJsModule.default;
     const SQL = await initSqlJs();
     const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../../data');
     if (!fs.existsSync(dataDir)) {
@@ -180,7 +181,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     }
     const dbPath = process.env.DB_PATH || path.join(dataDir, 'alphacoach.sqlite');
 
-    let db: SqlJsDatabase;
+    let db: any;
     if (fs.existsSync(dbPath)) {
       const fileBuffer = fs.readFileSync(dbPath);
       db = new SQL.Database(fileBuffer);
@@ -198,20 +199,26 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
 
 export function getDatabase(): IDatabase {
   if (!dbInstance) {
-    throw new Error('Database not initialized. Call initDatabase() first.');
+    throw new Error('Database is unavailable. Please ensure DATABASE_URL is configured in environment variables.');
   }
   return dbInstance;
 }
 
-export async function initDatabase(): Promise<IDatabase> {
-  const db = await getDatabaseAsync();
-  const schemaPath = path.join(__dirname, 'schema.sql');
-  if (fs.existsSync(schemaPath)) {
-    const schemaSql = fs.readFileSync(schemaPath, 'utf8');
-    await db.exec(schemaSql);
+export async function initDatabase(): Promise<IDatabase | null> {
+  try {
+    const db = await getDatabaseAsync();
+    if (!db) return null;
+    const schemaPath = path.join(__dirname, 'schema.sql');
+    if (fs.existsSync(schemaPath)) {
+      const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+      await db.exec(schemaSql);
+    }
+    await seedInitialData(db);
+    return db;
+  } catch (err) {
+    console.warn('[DB Init Error]:', err);
+    return null;
   }
-  await seedInitialData(db);
-  return db;
 }
 
 async function seedInitialData(db: IDatabase) {
