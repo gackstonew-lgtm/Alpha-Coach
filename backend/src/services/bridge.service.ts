@@ -1,6 +1,16 @@
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
-import { getDatabase } from '../db/db';
+import { getDatabaseAsync } from '../db/db';
+
+export class BridgePairingError extends Error {
+  public code: string;
+  constructor(code: string, message: string) {
+    super(message);
+    this.name = 'BridgePairingError';
+    this.code = code;
+    Object.setPrototypeOf(this, BridgePairingError.prototype);
+  }
+}
 
 export interface BridgePairingSession {
   id: string;
@@ -39,7 +49,7 @@ export class BridgeService {
    * Generates a secure device token and stores both hash and token for the MT5 Local Bridge
    */
   public static async registerDevice(userId: string, deviceName: string, ipAddress?: string): Promise<{ deviceId: string; deviceToken: string }> {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const deviceId = uuidv4();
     const rawToken = 'ac_bridge_' + crypto.randomBytes(32).toString('hex');
     const tokenHash = this.hashToken(rawToken);
@@ -55,6 +65,27 @@ export class BridgeService {
        VALUES (?, ?, 'BRIDGE_DEVICE_PAIRED', 'bridge_device', ?, ?, ?)`,
       [uuidv4(), userId, deviceId, ipAddress || null, JSON.stringify({ deviceName, deviceId })]
     );
+
+    // Synchronize to cloud database if available
+    try {
+      const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+      const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+        ? getSupabaseAdmin()
+        : getSupabaseAnon();
+      if (supabase) {
+        await supabase.from('bridge_devices').upsert({
+          id: deviceId,
+          user_id: userId,
+          device_name: deviceName,
+          device_token: rawToken,
+          token_hash: tokenHash,
+          ip_address: ipAddress || null,
+          is_active: 1
+        }, { onConflict: 'id' });
+      }
+    } catch (supaErr) {
+      // Non-fatal fallback
+    }
 
     return { deviceId, deviceToken: rawToken };
   }
@@ -76,10 +107,10 @@ export class BridgeService {
       };
     }
 
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const tokenHash = this.hashToken(deviceToken.trim());
 
-    // Check by token_hash or raw token (backward compatibility)
+    // Check by token_hash or raw token
     let device = await db.get<{ id: string; user_id: string; device_name: string; is_active: number }>(
       `SELECT id, user_id, device_name, is_active FROM bridge_devices WHERE token_hash = ? OR device_token = ?`,
       [tokenHash, deviceToken.trim()]
@@ -104,48 +135,16 @@ export class BridgeService {
               device_name: data.device_name,
               is_active: data.is_active !== undefined ? Number(data.is_active) : 1
             };
-            // Cache locally
+            // Cache in primary DB
             await db.run(
               `INSERT OR IGNORE INTO bridge_devices (id, user_id, device_name, device_token, token_hash, is_active, last_seen_at)
                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
               [device.id, device.user_id, device.device_name, deviceToken.trim(), tokenHash, device.is_active]
             );
-          } else {
-            // Also check bridge_pairing_sessions in Supabase
-            const { data: sessData } = await supabase
-              .from('bridge_pairing_sessions')
-              .select('id, user_id, device_name')
-              .eq('device_token', deviceToken.trim())
-              .maybeSingle();
-            if (sessData && sessData.user_id) {
-              device = {
-                id: sessData.id,
-                user_id: sessData.user_id,
-                device_name: sessData.device_name || 'Local Windows Terminal',
-                is_active: 1
-              };
-              // Cache locally
-              await db.run(
-                `INSERT OR IGNORE INTO bridge_devices (id, user_id, device_name, device_token, token_hash, is_active, last_seen_at)
-                 VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`,
-                [device.id, device.user_id, device.device_name, deviceToken.trim(), tokenHash]
-              );
-              // Also record in Supabase bridge_devices table
-              try {
-                await supabase.from('bridge_devices').upsert({
-                  id: sessData.id,
-                  user_id: sessData.user_id,
-                  device_name: sessData.device_name || 'Local Windows Terminal',
-                  device_token: deviceToken.trim(),
-                  token_hash: tokenHash,
-                  is_active: 1
-                }, { onConflict: 'id' });
-              } catch (e) {}
-            }
           }
         }
       } catch (supaErr) {
-        console.warn('[BridgeAuth] Supabase fallback check skipped:', supaErr);
+        // Non-fatal
       }
     }
 
@@ -208,7 +207,7 @@ export class BridgeService {
    * List devices paired by user (never returning raw secret token to prevent leaks)
    */
   public static async getUserDevices(userId: string) {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     return db.query(
       `SELECT id, device_name, ip_address, is_active, last_seen_at, created_at FROM bridge_devices WHERE user_id = ? ORDER BY created_at DESC`,
       [userId]
@@ -219,7 +218,7 @@ export class BridgeService {
    * Revoke device authorization
    */
   public static async revokeDevice(userId: string, deviceId: string) {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     await db.run(`UPDATE bridge_devices SET is_active = 0 WHERE id = ? AND user_id = ?`, [deviceId, userId]);
     await db.run(
       `INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json)
@@ -236,7 +235,7 @@ export class BridgeService {
    * Bridge app creates a new temporary pairing session (valid for 10 minutes)
    */
   public static async createPairingSession(deviceName: string, ipAddress?: string): Promise<{ sessionCode: string; expiresAt: string }> {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const sessionId = uuidv4();
     const sessionCode = 'pair_' + crypto.randomBytes(16).toString('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
@@ -263,7 +262,7 @@ export class BridgeService {
         });
       }
     } catch (supaErr) {
-      console.warn('[BridgePairing] Supabase session write skipped:', supaErr);
+      // Non-fatal
     }
 
     return { sessionCode, expiresAt };
@@ -273,7 +272,7 @@ export class BridgeService {
    * Fetch current status of a pairing session
    */
   public static async getPairingSession(sessionCode: string): Promise<BridgePairingSession | null> {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     let session = await db.get<BridgePairingSession>(
       `SELECT * FROM bridge_pairing_sessions WHERE session_code = ?`,
       [sessionCode]
@@ -296,7 +295,7 @@ export class BridgeService {
           }
         }
       } catch (supaErr) {
-        console.warn('[BridgePairing] Supabase session lookup skipped:', supaErr);
+        // Non-fatal
       }
     }
 
@@ -315,29 +314,49 @@ export class BridgeService {
    * Authenticated web user authorizes the pairing session from their browser
    */
   public static async authorizePairingSession(sessionCode: string, userId: string, ipAddress?: string): Promise<{ success: boolean; deviceToken?: string }> {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const session = await this.getPairingSession(sessionCode);
 
     if (!session) {
-      throw new Error('Pairing session not found.');
+      throw new BridgePairingError('PAIRING_SESSION_NOT_FOUND', 'Pairing session not found or has expired. Please initiate a new pairing from the MT5 Bridge app.');
+    }
+
+    if (session.status === 'EXPIRED') {
+      throw new BridgePairingError('PAIRING_SESSION_EXPIRED', 'This pairing session has expired (10-minute limit). Please initiate a fresh pairing request from the MT5 Bridge app.');
+    }
+
+    if (session.status === 'COMPLETED') {
+      throw new BridgePairingError('PAIRING_SESSION_ALREADY_COMPLETED', 'This pairing session has already been completed and cannot be reused. Please generate a new pairing request from the MT5 Bridge app.');
+    }
+
+    if (session.status === 'REJECTED') {
+      throw new BridgePairingError('PAIRING_SESSION_REJECTED', 'This pairing session was previously declined.');
+    }
+
+    if (session.status === 'AUTHORIZED') {
+      throw new BridgePairingError('PAIRING_SESSION_ALREADY_AUTHORIZED', 'This pairing session has already been authorized and is waiting for the MT5 Bridge app to finalize.');
     }
 
     if (session.status !== 'PENDING') {
-      throw new Error(`Cannot authorize pairing session in status: ${session.status}`);
+      throw new BridgePairingError('PAIRING_SESSION_INVALID_STATE', `Cannot authorize pairing session in status: ${session.status}`);
     }
 
-    // Register permanent device first
+    // Register permanent device identity for the authenticated user
     const { deviceToken } = await this.registerDevice(userId, session.device_name, ipAddress || session.ip_address);
 
-    // Update session to AUTHORIZED
-    await db.run(
+    // Atomically transition session status from PENDING to AUTHORIZED
+    const res = await db.run(
       `UPDATE bridge_pairing_sessions SET
         status = 'AUTHORIZED',
         user_id = ?,
         device_token = ?
-       WHERE session_code = ?`,
+       WHERE session_code = ? AND status = 'PENDING'`,
       [userId, deviceToken, sessionCode]
     );
+
+    if (res.changes === 0) {
+      throw new BridgePairingError('PAIRING_CONCURRENT_UPDATE', 'Pairing session was updated concurrently. Please retry with a fresh pairing link.');
+    }
 
     try {
       const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
@@ -355,7 +374,7 @@ export class BridgeService {
           .eq('session_code', sessionCode);
       }
     } catch (supaErr) {
-      console.warn('[BridgePairing] Supabase session auth update skipped:', supaErr);
+      // Non-fatal
     }
 
     return { success: true, deviceToken };
@@ -365,7 +384,7 @@ export class BridgeService {
    * Authenticated web user rejects the pairing session
    */
   public static async rejectPairingSession(sessionCode: string, userId: string): Promise<{ success: boolean }> {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     await db.run(
       `UPDATE bridge_pairing_sessions SET status = 'REJECTED', user_id = ? WHERE session_code = ? AND status = 'PENDING'`,
       [userId, sessionCode]
@@ -374,10 +393,10 @@ export class BridgeService {
   }
 
   /**
-   * Bridge polls this to obtain the authorized device token (single-use consumption)
+   * Bridge polls this to obtain the authorized device token (single-use atomic consumption)
    */
   public static async pollAndConsumePairingToken(sessionCode: string): Promise<{ status: string; deviceToken?: string; deviceName?: string }> {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const session = await this.getPairingSession(sessionCode);
 
     if (!session) {
@@ -386,26 +405,31 @@ export class BridgeService {
 
     if (session.status === 'AUTHORIZED' && session.device_token) {
       const token = session.device_token;
-      // Mark COMPLETED so token is consumed and erased from session table
-      await db.run(
-        `UPDATE bridge_pairing_sessions SET status = 'COMPLETED', device_token = NULL WHERE session_code = ?`,
+      // Atomically mark COMPLETED so token is consumed and erased from session table
+      const res = await db.run(
+        `UPDATE bridge_pairing_sessions SET status = 'COMPLETED', device_token = NULL WHERE session_code = ? AND status = 'AUTHORIZED'`,
         [sessionCode]
       );
-      try {
-        const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
-        const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
-          ? getSupabaseAdmin()
-          : getSupabaseAnon();
-        if (supabase) {
-          await supabase
-            .from('bridge_pairing_sessions')
-            .update({ status: 'COMPLETED', device_token: null })
-            .eq('session_code', sessionCode);
-        }
-      } catch (e) {}
-      return { status: 'AUTHORIZED', deviceToken: token, deviceName: session.device_name };
+
+      if (res.changes > 0) {
+        try {
+          const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+          const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+            ? getSupabaseAdmin()
+            : getSupabaseAnon();
+          if (supabase) {
+            await supabase
+              .from('bridge_pairing_sessions')
+              .update({ status: 'COMPLETED', device_token: null })
+              .eq('session_code', sessionCode);
+          }
+        } catch (e) {}
+
+        return { status: 'AUTHORIZED', deviceToken: token, deviceName: session.device_name };
+      }
     }
 
     return { status: session.status, deviceName: session.device_name };
   }
 }
+

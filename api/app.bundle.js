@@ -52118,6 +52118,15 @@ var AuthService = class {
 
 // backend/src/services/bridge.service.ts
 var import_crypto3 = __toESM(require("crypto"));
+var BridgePairingError = class _BridgePairingError extends Error {
+  code;
+  constructor(code, message) {
+    super(message);
+    this.name = "BridgePairingError";
+    this.code = code;
+    Object.setPrototypeOf(this, _BridgePairingError.prototype);
+  }
+};
 var BridgeService = class {
   /**
    * Generates a SHA-256 hash of the device token for secure backend persistence
@@ -52129,7 +52138,7 @@ var BridgeService = class {
    * Generates a secure device token and stores both hash and token for the MT5 Local Bridge
    */
   static async registerDevice(userId, deviceName, ipAddress) {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const deviceId = v4_default();
     const rawToken = "ac_bridge_" + import_crypto3.default.randomBytes(32).toString("hex");
     const tokenHash = this.hashToken(rawToken);
@@ -52143,6 +52152,22 @@ var BridgeService = class {
        VALUES (?, ?, 'BRIDGE_DEVICE_PAIRED', 'bridge_device', ?, ?, ?)`,
       [v4_default(), userId, deviceId, ipAddress || null, JSON.stringify({ deviceName, deviceId })]
     );
+    try {
+      const { getSupabaseAdmin: getSupabaseAdmin2, getSupabaseAnon: getSupabaseAnon2 } = (init_supabase(), __toCommonJS(supabase_exports));
+      const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY ? getSupabaseAdmin2() : getSupabaseAnon2();
+      if (supabase) {
+        await supabase.from("bridge_devices").upsert({
+          id: deviceId,
+          user_id: userId,
+          device_name: deviceName,
+          device_token: rawToken,
+          token_hash: tokenHash,
+          ip_address: ipAddress || null,
+          is_active: 1
+        }, { onConflict: "id" });
+      }
+    } catch (supaErr) {
+    }
     return { deviceId, deviceToken: rawToken };
   }
   /**
@@ -52161,7 +52186,7 @@ var BridgeService = class {
         }
       };
     }
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const tokenHash = this.hashToken(deviceToken.trim());
     let device = await db.get(
       `SELECT id, user_id, device_name, is_active FROM bridge_devices WHERE token_hash = ? OR device_token = ?`,
@@ -52185,36 +52210,9 @@ var BridgeService = class {
                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
               [device.id, device.user_id, device.device_name, deviceToken.trim(), tokenHash, device.is_active]
             );
-          } else {
-            const { data: sessData } = await supabase.from("bridge_pairing_sessions").select("id, user_id, device_name").eq("device_token", deviceToken.trim()).maybeSingle();
-            if (sessData && sessData.user_id) {
-              device = {
-                id: sessData.id,
-                user_id: sessData.user_id,
-                device_name: sessData.device_name || "Local Windows Terminal",
-                is_active: 1
-              };
-              await db.run(
-                `INSERT OR IGNORE INTO bridge_devices (id, user_id, device_name, device_token, token_hash, is_active, last_seen_at)
-                 VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`,
-                [device.id, device.user_id, device.device_name, deviceToken.trim(), tokenHash]
-              );
-              try {
-                await supabase.from("bridge_devices").upsert({
-                  id: sessData.id,
-                  user_id: sessData.user_id,
-                  device_name: sessData.device_name || "Local Windows Terminal",
-                  device_token: deviceToken.trim(),
-                  token_hash: tokenHash,
-                  is_active: 1
-                }, { onConflict: "id" });
-              } catch (e) {
-              }
-            }
           }
         }
       } catch (supaErr) {
-        console.warn("[BridgeAuth] Supabase fallback check skipped:", supaErr);
       }
     }
     if (!device) {
@@ -52270,7 +52268,7 @@ var BridgeService = class {
    * List devices paired by user (never returning raw secret token to prevent leaks)
    */
   static async getUserDevices(userId) {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     return db.query(
       `SELECT id, device_name, ip_address, is_active, last_seen_at, created_at FROM bridge_devices WHERE user_id = ? ORDER BY created_at DESC`,
       [userId]
@@ -52280,7 +52278,7 @@ var BridgeService = class {
    * Revoke device authorization
    */
   static async revokeDevice(userId, deviceId) {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     await db.run(`UPDATE bridge_devices SET is_active = 0 WHERE id = ? AND user_id = ?`, [deviceId, userId]);
     await db.run(
       `INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json)
@@ -52295,7 +52293,7 @@ var BridgeService = class {
    * Bridge app creates a new temporary pairing session (valid for 10 minutes)
    */
   static async createPairingSession(deviceName, ipAddress) {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const sessionId = v4_default();
     const sessionCode = "pair_" + import_crypto3.default.randomBytes(16).toString("hex");
     const expiresAt = new Date(Date.now() + 10 * 60 * 1e3).toISOString();
@@ -52318,7 +52316,6 @@ var BridgeService = class {
         });
       }
     } catch (supaErr) {
-      console.warn("[BridgePairing] Supabase session write skipped:", supaErr);
     }
     return { sessionCode, expiresAt };
   }
@@ -52326,7 +52323,7 @@ var BridgeService = class {
    * Fetch current status of a pairing session
    */
   static async getPairingSession(sessionCode) {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     let session = await db.get(
       `SELECT * FROM bridge_pairing_sessions WHERE session_code = ?`,
       [sessionCode]
@@ -52342,7 +52339,6 @@ var BridgeService = class {
           }
         }
       } catch (supaErr) {
-        console.warn("[BridgePairing] Supabase session lookup skipped:", supaErr);
       }
     }
     if (!session) return null;
@@ -52356,23 +52352,38 @@ var BridgeService = class {
    * Authenticated web user authorizes the pairing session from their browser
    */
   static async authorizePairingSession(sessionCode, userId, ipAddress) {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const session = await this.getPairingSession(sessionCode);
     if (!session) {
-      throw new Error("Pairing session not found.");
+      throw new BridgePairingError("PAIRING_SESSION_NOT_FOUND", "Pairing session not found or has expired. Please initiate a new pairing from the MT5 Bridge app.");
+    }
+    if (session.status === "EXPIRED") {
+      throw new BridgePairingError("PAIRING_SESSION_EXPIRED", "This pairing session has expired (10-minute limit). Please initiate a fresh pairing request from the MT5 Bridge app.");
+    }
+    if (session.status === "COMPLETED") {
+      throw new BridgePairingError("PAIRING_SESSION_ALREADY_COMPLETED", "This pairing session has already been completed and cannot be reused. Please generate a new pairing request from the MT5 Bridge app.");
+    }
+    if (session.status === "REJECTED") {
+      throw new BridgePairingError("PAIRING_SESSION_REJECTED", "This pairing session was previously declined.");
+    }
+    if (session.status === "AUTHORIZED") {
+      throw new BridgePairingError("PAIRING_SESSION_ALREADY_AUTHORIZED", "This pairing session has already been authorized and is waiting for the MT5 Bridge app to finalize.");
     }
     if (session.status !== "PENDING") {
-      throw new Error(`Cannot authorize pairing session in status: ${session.status}`);
+      throw new BridgePairingError("PAIRING_SESSION_INVALID_STATE", `Cannot authorize pairing session in status: ${session.status}`);
     }
     const { deviceToken } = await this.registerDevice(userId, session.device_name, ipAddress || session.ip_address);
-    await db.run(
+    const res = await db.run(
       `UPDATE bridge_pairing_sessions SET
         status = 'AUTHORIZED',
         user_id = ?,
         device_token = ?
-       WHERE session_code = ?`,
+       WHERE session_code = ? AND status = 'PENDING'`,
       [userId, deviceToken, sessionCode]
     );
+    if (res.changes === 0) {
+      throw new BridgePairingError("PAIRING_CONCURRENT_UPDATE", "Pairing session was updated concurrently. Please retry with a fresh pairing link.");
+    }
     try {
       const { getSupabaseAdmin: getSupabaseAdmin2, getSupabaseAnon: getSupabaseAnon2 } = (init_supabase(), __toCommonJS(supabase_exports));
       const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY ? getSupabaseAdmin2() : getSupabaseAnon2();
@@ -52384,7 +52395,6 @@ var BridgeService = class {
         }).eq("session_code", sessionCode);
       }
     } catch (supaErr) {
-      console.warn("[BridgePairing] Supabase session auth update skipped:", supaErr);
     }
     return { success: true, deviceToken };
   }
@@ -52392,7 +52402,7 @@ var BridgeService = class {
    * Authenticated web user rejects the pairing session
    */
   static async rejectPairingSession(sessionCode, userId) {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     await db.run(
       `UPDATE bridge_pairing_sessions SET status = 'REJECTED', user_id = ? WHERE session_code = ? AND status = 'PENDING'`,
       [userId, sessionCode]
@@ -52400,29 +52410,31 @@ var BridgeService = class {
     return { success: true };
   }
   /**
-   * Bridge polls this to obtain the authorized device token (single-use consumption)
+   * Bridge polls this to obtain the authorized device token (single-use atomic consumption)
    */
   static async pollAndConsumePairingToken(sessionCode) {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const session = await this.getPairingSession(sessionCode);
     if (!session) {
       return { status: "NOT_FOUND" };
     }
     if (session.status === "AUTHORIZED" && session.device_token) {
       const token = session.device_token;
-      await db.run(
-        `UPDATE bridge_pairing_sessions SET status = 'COMPLETED', device_token = NULL WHERE session_code = ?`,
+      const res = await db.run(
+        `UPDATE bridge_pairing_sessions SET status = 'COMPLETED', device_token = NULL WHERE session_code = ? AND status = 'AUTHORIZED'`,
         [sessionCode]
       );
-      try {
-        const { getSupabaseAdmin: getSupabaseAdmin2, getSupabaseAnon: getSupabaseAnon2 } = (init_supabase(), __toCommonJS(supabase_exports));
-        const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY ? getSupabaseAdmin2() : getSupabaseAnon2();
-        if (supabase) {
-          await supabase.from("bridge_pairing_sessions").update({ status: "COMPLETED", device_token: null }).eq("session_code", sessionCode);
+      if (res.changes > 0) {
+        try {
+          const { getSupabaseAdmin: getSupabaseAdmin2, getSupabaseAnon: getSupabaseAnon2 } = (init_supabase(), __toCommonJS(supabase_exports));
+          const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY ? getSupabaseAdmin2() : getSupabaseAnon2();
+          if (supabase) {
+            await supabase.from("bridge_pairing_sessions").update({ status: "COMPLETED", device_token: null }).eq("session_code", sessionCode);
+          }
+        } catch (e) {
         }
-      } catch (e) {
+        return { status: "AUTHORIZED", deviceToken: token, deviceName: session.device_name };
       }
-      return { status: "AUTHORIZED", deviceToken: token, deviceName: session.device_name };
     }
     return { status: session.status, deviceName: session.device_name };
   }
@@ -53685,8 +53697,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "68e67e66272836c63738349e1766d1b92c6422d4",
-  buildTimestamp: "2026-09-26T23:36:55.571Z",
+  gitCommit: "92ed7eaf912b13798cce2cf0478bf9bcc77bd179",
+  buildTimestamp: "2026-09-26T23:55:33.726Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -53699,16 +53711,19 @@ router3.post("/bridge/session/create", async (req, res) => {
     const { deviceName } = req.body;
     const clientIp = req.ip || req.socket.remoteAddress;
     const session = await BridgeService.createPairingSession(deviceName || "Local Windows Terminal", clientIp);
+    console.log(`[BridgePairing] Created pairing session [${session.sessionCode}] for device "${deviceName}" (reqId: ${reqId})`);
     res.json({
       success: true,
       ...session,
       requestId: reqId
     });
   } catch (err) {
+    const code = err.code || "SESSION_CREATE_ERROR";
+    console.error(`[BridgePairing] Session creation error [${code}]:`, err.message, `(reqId: ${reqId})`);
     res.status(500).json({
       success: false,
       error: {
-        code: "SESSION_CREATE_ERROR",
+        code,
         message: err.message || "Failed to create pairing session."
       },
       requestId: reqId
@@ -53725,10 +53740,12 @@ router3.get("/bridge/session/:sessionCode/status", async (req, res) => {
       requestId: reqId
     });
   } catch (err) {
+    const code = err.code || "SESSION_POLL_ERROR";
+    console.error(`[BridgePairing] Session poll error [${code}]:`, err.message, `(reqId: ${reqId})`);
     res.status(500).json({
       success: false,
       error: {
-        code: "SESSION_POLL_ERROR",
+        code,
         message: err.message || "Failed to poll pairing session."
       },
       requestId: reqId
@@ -53740,11 +53757,12 @@ router3.get("/bridge/session/:sessionCode", async (req, res) => {
   try {
     const session = await BridgeService.getPairingSession(req.params.sessionCode);
     if (!session) {
+      console.warn(`[BridgePairing] Session [${req.params.sessionCode}] not found or expired (reqId: ${reqId})`);
       res.status(404).json({
         success: false,
         error: {
-          code: "SESSION_NOT_FOUND",
-          message: "Pairing session not found or expired."
+          code: "PAIRING_SESSION_NOT_FOUND",
+          message: "Pairing session not found or has expired. Please initiate a new pairing from the MT5 Bridge app."
         },
         requestId: reqId
       });
@@ -53760,10 +53778,12 @@ router3.get("/bridge/session/:sessionCode", async (req, res) => {
       requestId: reqId
     });
   } catch (err) {
+    const code = err.code || "SESSION_FETCH_ERROR";
+    console.error(`[BridgePairing] Session fetch error [${code}]:`, err.message, `(reqId: ${reqId})`);
     res.status(500).json({
       success: false,
       error: {
-        code: "SESSION_FETCH_ERROR",
+        code,
         message: err.message || "Failed to fetch pairing session."
       },
       requestId: reqId
@@ -53775,16 +53795,19 @@ router3.post("/bridge/session/:sessionCode/authorize", requireUserAuth, async (r
   try {
     const clientIp = req.ip || req.socket.remoteAddress;
     const result = await BridgeService.authorizePairingSession(req.params.sessionCode, req.user.userId, clientIp);
+    console.log(`[BridgePairing] Authorized session [${req.params.sessionCode}] for user [${req.user.userId}] (reqId: ${reqId})`);
     res.json({
       success: true,
       message: "Device successfully authorized.",
       requestId: reqId
     });
   } catch (err) {
+    const code = err.code || "AUTHORIZATION_FAILED";
+    console.error(`[BridgePairing] Authorization rejected [${code}] for session [${req.params.sessionCode}]:`, err.message, `(reqId: ${reqId})`);
     res.status(400).json({
       success: false,
       error: {
-        code: "AUTHORIZATION_FAILED",
+        code,
         message: err.message || "Failed to authorize pairing session."
       },
       requestId: reqId
@@ -53795,16 +53818,19 @@ router3.post("/bridge/session/:sessionCode/reject", requireUserAuth, async (req,
   const reqId = req.requestId || v4_default();
   try {
     await BridgeService.rejectPairingSession(req.params.sessionCode, req.user.userId);
+    console.log(`[BridgePairing] Rejected session [${req.params.sessionCode}] by user [${req.user.userId}] (reqId: ${reqId})`);
     res.json({
       success: true,
       message: "Device pairing rejected.",
       requestId: reqId
     });
   } catch (err) {
+    const code = err.code || "REJECTION_FAILED";
+    console.error(`[BridgePairing] Rejection error [${code}] for session [${req.params.sessionCode}]:`, err.message, `(reqId: ${reqId})`);
     res.status(400).json({
       success: false,
       error: {
-        code: "REJECTION_FAILED",
+        code,
         message: err.message || "Failed to reject pairing session."
       },
       requestId: reqId

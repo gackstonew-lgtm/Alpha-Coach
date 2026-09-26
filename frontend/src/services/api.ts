@@ -1,6 +1,83 @@
 import { supabase } from '../lib/supabase';
 import { User, TradingAccount, ReconstructedTrade, RiskRule, PerformanceOverview } from '../types';
 
+export interface NormalizedApiError {
+  message: string;
+  code: string;
+  status?: number;
+  requestId?: string;
+  details?: any;
+}
+
+export class AppApiError extends Error {
+  public code: string;
+  public status?: number;
+  public requestId?: string;
+  public details?: any;
+
+  constructor(normalized: NormalizedApiError) {
+    super(normalized.message);
+    this.name = 'AppApiError';
+    this.code = normalized.code;
+    this.status = normalized.status;
+    this.requestId = normalized.requestId;
+    this.details = normalized.details;
+    Object.setPrototypeOf(this, AppApiError.prototype);
+  }
+}
+
+export function normalizeApiError(err: any): NormalizedApiError {
+  if (!err) {
+    return {
+      message: 'An unexpected error occurred.',
+      code: 'UNKNOWN_ERROR'
+    };
+  }
+
+  if (err instanceof AppApiError) {
+    return {
+      message: err.message,
+      code: err.code,
+      status: err.status,
+      requestId: err.requestId,
+      details: err.details
+    };
+  }
+
+  let message = 'An unexpected error occurred.';
+  let code = 'API_ERROR';
+  let status = err.status;
+  let requestId = err.requestId;
+  let details = err.details;
+
+  if (typeof err === 'string') {
+    message = err;
+  } else if (typeof err.error === 'string') {
+    message = err.error;
+    code = err.code || 'API_ERROR';
+  } else if (err.error && typeof err.error === 'object') {
+    message = err.error.message || err.error.msg || 'An unexpected error occurred.';
+    code = err.error.code || err.code || 'API_ERROR';
+    requestId = err.requestId || err.error.requestId;
+    details = err.error.details;
+  } else if (err.message && typeof err.message === 'string') {
+    if (err.message === '[object Object]') {
+      message = 'An unexpected error occurred during the request.';
+    } else {
+      message = err.message;
+    }
+    code = err.code || 'API_ERROR';
+  }
+
+  return {
+    message,
+    code,
+    status,
+    requestId,
+    details
+  };
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.origin.includes('localhost') ? 'http://localhost:4000/api/v1' : '/api/v1');
 const USE_CUSTOM_BACKEND = Boolean(API_BASE_URL && API_BASE_URL.trim() !== '');
 
@@ -30,9 +107,34 @@ class ApiClient {
       headers,
     });
 
-    const data = await response.json();
+    let data: any = null;
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+    } else {
+      const text = await response.text();
+      data = { error: { message: text || response.statusText, code: 'NON_JSON_RESPONSE' } };
+    }
+
     if (!response.ok) {
-      throw new Error(data.error || 'An unexpected error occurred.');
+      const errObj = data?.error;
+      const msg = typeof errObj === 'string'
+        ? errObj
+        : (errObj?.message || data?.message || response.statusText || 'An unexpected error occurred.');
+      const code = (typeof errObj === 'object' && errObj?.code) || data?.code || `HTTP_${response.status}`;
+      const reqId = data?.requestId || response.headers.get('x-request-id') || undefined;
+
+      throw new AppApiError({
+        message: msg,
+        code,
+        status: response.status,
+        requestId: reqId,
+        details: typeof errObj === 'object' ? errObj.details : undefined
+      });
     }
 
     return data;

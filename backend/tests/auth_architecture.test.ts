@@ -224,4 +224,110 @@ describe('Canonical Authentication & MT5 Persistence Architecture Tests', () => 
       expect(res.body.bridgeService.status).toBe('ONLINE');
     });
   });
+
+  describe('5. Atomic MT5 Bridge Pairing Lifecycle & Re-Pairing', () => {
+    let sessionCode: string;
+    let deviceToken: string;
+
+    it('Step A: Creates a fresh PENDING pairing session', async () => {
+      const res = await request(app)
+        .post('/api/v1/mt5/bridge/session/create')
+        .send({ deviceName: 'Windows Desktop Terminal 64' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.sessionCode).toMatch(/^pair_/);
+      expect(res.body.expiresAt).toBeDefined();
+      sessionCode = res.body.sessionCode;
+
+      // Verify session exists in PENDING state
+      const checkRes = await request(app).get(`/api/v1/mt5/bridge/session/${sessionCode}`);
+      expect(checkRes.status).toBe(200);
+      expect(checkRes.body.status).toBe('PENDING');
+      expect(checkRes.body.deviceName).toBe('Windows Desktop Terminal 64');
+    });
+
+    it('Step B: Authenticated web user authorizes the pairing session (PENDING -> AUTHORIZED)', async () => {
+      const res = await request(app)
+        .post(`/api/v1/mt5/bridge/session/${sessionCode}/authorize`)
+        .set('Authorization', `Bearer ${validToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toMatch(/authorized/i);
+    });
+
+    it('Step C: Bridge polls session and atomically consumes device token (AUTHORIZED -> COMPLETED)', async () => {
+      const res = await request(app)
+        .get(`/api/v1/mt5/bridge/session/${sessionCode}/status`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('AUTHORIZED');
+      expect(res.body.deviceToken).toMatch(/^ac_bridge_/);
+      deviceToken = res.body.deviceToken;
+
+      // Verify session is now COMPLETED and token cannot be fetched again
+      const repeatRes = await request(app)
+        .get(`/api/v1/mt5/bridge/session/${sessionCode}/status`);
+      expect(repeatRes.status).toBe(200);
+      expect(repeatRes.body.status).toBe('COMPLETED');
+      expect(repeatRes.body.deviceToken).toBeUndefined();
+    });
+
+    it('Step D: Companion checks device authorization with token (returns ACTIVE with correct userId)', async () => {
+      const res = await request(app)
+        .get('/api/v1/mt5/bridge/device/status')
+        .set('x-bridge-token', deviceToken);
+
+      expect(res.status).toBe(200);
+      expect(res.body.authorized).toBe(true);
+      expect(res.body.status).toBe('ACTIVE');
+      expect(res.body.userId).toBe(testUserId);
+    });
+
+    it('Step E: Re-pairing creates fresh device token without wiping existing historical records', async () => {
+      // Create new session
+      const createRes = await request(app)
+        .post('/api/v1/mt5/bridge/session/create')
+        .send({ deviceName: 'Re-paired Terminal' });
+      const newSessionCode = createRes.body.sessionCode;
+
+      // Authorize
+      await request(app)
+        .post(`/api/v1/mt5/bridge/session/${newSessionCode}/authorize`)
+        .set('Authorization', `Bearer ${validToken}`);
+
+      // Consume
+      const consumeRes = await request(app)
+        .get(`/api/v1/mt5/bridge/session/${newSessionCode}/status`);
+      const newDeviceToken = consumeRes.body.deviceToken;
+      expect(newDeviceToken).toBeDefined();
+      expect(newDeviceToken).not.toBe(deviceToken);
+
+      // Verify new token works
+      const authRes = await request(app)
+        .get('/api/v1/mt5/bridge/device/status')
+        .set('x-bridge-token', newDeviceToken);
+      expect(authRes.body.authorized).toBe(true);
+      expect(authRes.body.userId).toBe(testUserId);
+
+      // Verify user's accounts still exist
+      const accountsRes = await request(app)
+        .get('/api/v1/accounts')
+        .set('Authorization', `Bearer ${validToken}`);
+      expect(accountsRes.body.accounts.length).toBeGreaterThan(0);
+    });
+
+    it('Step F: Rejects attempt to authorize an already completed session with typed error code', async () => {
+      const res = await request(app)
+        .post(`/api/v1/mt5/bridge/session/${sessionCode}/authorize`)
+        .set('Authorization', `Bearer ${validToken}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe('PAIRING_SESSION_ALREADY_COMPLETED');
+      expect(typeof res.body.error.message).toBe('string');
+      expect(res.body.error.message).not.toContain('[object');
+    });
+  });
 });

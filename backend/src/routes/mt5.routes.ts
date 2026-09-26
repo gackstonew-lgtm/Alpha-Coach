@@ -11,22 +11,26 @@ const router = Router();
 // =========================================================================
 
 // Create pairing session (called by Bridge App on startup)
+// Create pairing session (called by Bridge App on startup)
 router.post('/bridge/session/create', async (req, res) => {
   const reqId = (req.headers['x-request-id'] as string) || uuidv4();
   try {
     const { deviceName } = req.body;
     const clientIp = req.ip || req.socket.remoteAddress;
     const session = await BridgeService.createPairingSession(deviceName || 'Local Windows Terminal', clientIp);
+    console.log(`[BridgePairing] Created pairing session [${session.sessionCode}] for device "${deviceName}" (reqId: ${reqId})`);
     res.json({
       success: true,
       ...session,
       requestId: reqId
     });
   } catch (err: any) {
+    const code = err.code || 'SESSION_CREATE_ERROR';
+    console.error(`[BridgePairing] Session creation error [${code}]:`, err.message, `(reqId: ${reqId})`);
     res.status(500).json({
       success: false,
       error: {
-        code: 'SESSION_CREATE_ERROR',
+        code,
         message: err.message || 'Failed to create pairing session.'
       },
       requestId: reqId
@@ -45,10 +49,12 @@ router.get('/bridge/session/:sessionCode/status', async (req, res) => {
       requestId: reqId
     });
   } catch (err: any) {
+    const code = err.code || 'SESSION_POLL_ERROR';
+    console.error(`[BridgePairing] Session poll error [${code}]:`, err.message, `(reqId: ${reqId})`);
     res.status(500).json({
       success: false,
       error: {
-        code: 'SESSION_POLL_ERROR',
+        code,
         message: err.message || 'Failed to poll pairing session.'
       },
       requestId: reqId
@@ -62,11 +68,12 @@ router.get('/bridge/session/:sessionCode', async (req, res) => {
   try {
     const session = await BridgeService.getPairingSession(req.params.sessionCode);
     if (!session) {
+      console.warn(`[BridgePairing] Session [${req.params.sessionCode}] not found or expired (reqId: ${reqId})`);
       res.status(404).json({
         success: false,
         error: {
-          code: 'SESSION_NOT_FOUND',
-          message: 'Pairing session not found or expired.'
+          code: 'PAIRING_SESSION_NOT_FOUND',
+          message: 'Pairing session not found or has expired. Please initiate a new pairing from the MT5 Bridge app.'
         },
         requestId: reqId
       });
@@ -82,10 +89,12 @@ router.get('/bridge/session/:sessionCode', async (req, res) => {
       requestId: reqId
     });
   } catch (err: any) {
+    const code = err.code || 'SESSION_FETCH_ERROR';
+    console.error(`[BridgePairing] Session fetch error [${code}]:`, err.message, `(reqId: ${reqId})`);
     res.status(500).json({
       success: false,
       error: {
-        code: 'SESSION_FETCH_ERROR',
+        code,
         message: err.message || 'Failed to fetch pairing session.'
       },
       requestId: reqId
@@ -99,16 +108,19 @@ router.post('/bridge/session/:sessionCode/authorize', requireUserAuth, async (re
   try {
     const clientIp = req.ip || req.socket.remoteAddress;
     const result = await BridgeService.authorizePairingSession(req.params.sessionCode, req.user!.userId, clientIp);
+    console.log(`[BridgePairing] Authorized session [${req.params.sessionCode}] for user [${req.user!.userId}] (reqId: ${reqId})`);
     res.json({
       success: true,
       message: 'Device successfully authorized.',
       requestId: reqId
     });
   } catch (err: any) {
+    const code = err.code || 'AUTHORIZATION_FAILED';
+    console.error(`[BridgePairing] Authorization rejected [${code}] for session [${req.params.sessionCode}]:`, err.message, `(reqId: ${reqId})`);
     res.status(400).json({
       success: false,
       error: {
-        code: 'AUTHORIZATION_FAILED',
+        code,
         message: err.message || 'Failed to authorize pairing session.'
       },
       requestId: reqId
@@ -121,16 +133,19 @@ router.post('/bridge/session/:sessionCode/reject', requireUserAuth, async (req: 
   const reqId = req.requestId || uuidv4();
   try {
     await BridgeService.rejectPairingSession(req.params.sessionCode, req.user!.userId);
+    console.log(`[BridgePairing] Rejected session [${req.params.sessionCode}] by user [${req.user!.userId}] (reqId: ${reqId})`);
     res.json({
       success: true,
       message: 'Device pairing rejected.',
       requestId: reqId
     });
   } catch (err: any) {
+    const code = err.code || 'REJECTION_FAILED';
+    console.error(`[BridgePairing] Rejection error [${code}] for session [${req.params.sessionCode}]:`, err.message, `(reqId: ${reqId})`);
     res.status(400).json({
       success: false,
       error: {
-        code: 'REJECTION_FAILED',
+        code,
         message: err.message || 'Failed to reject pairing session.'
       },
       requestId: reqId

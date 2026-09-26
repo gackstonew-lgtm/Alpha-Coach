@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import { api, normalizeApiError, NormalizedApiError } from '../services/api';
 import { ShieldCheck, Cpu, CheckCircle2, XCircle, ArrowRight, AlertTriangle, Laptop, Lock } from 'lucide-react';
 import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
 
@@ -21,7 +21,7 @@ export const PairDevicePage: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<NormalizedApiError | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [rejected, setRejected] = useState<boolean>(false);
 
@@ -30,13 +30,17 @@ export const PairDevicePage: React.FC = () => {
       loadSession();
     } else {
       setIsLoading(false);
-      setError('No pairing session provided in URL. Please initiate pairing from the Alpha Coach MT5 Bridge application.');
+      setError({
+        message: 'No pairing session provided in URL. Please initiate pairing from the Alpha Coach MT5 Bridge application.',
+        code: 'MISSING_SESSION_PARAM'
+      });
     }
   }, [sessionCode]);
 
   const loadSession = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const data = await api.getBridgePairingSession(sessionCode!);
       setSessionData(data);
       if (data.status === 'AUTHORIZED' || data.status === 'COMPLETED') {
@@ -44,10 +48,20 @@ export const PairDevicePage: React.FC = () => {
       } else if (data.status === 'REJECTED') {
         setRejected(true);
       } else if (data.status === 'EXPIRED') {
-        setError('This pairing session has expired. Please restart the Alpha Coach MT5 Bridge to generate a fresh pairing link.');
+        setError({
+          message: 'This pairing session has expired (10-minute limit). Please restart the Alpha Coach MT5 Bridge to generate a fresh pairing link.',
+          code: 'PAIRING_SESSION_EXPIRED'
+        });
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to retrieve pairing session.');
+      const norm = normalizeApiError(err);
+      setError(norm);
+      console.error('[BridgePairing] Session fetch failed:', {
+        code: norm.code,
+        message: norm.message,
+        requestId: norm.requestId,
+        sessionCode
+      });
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +75,14 @@ export const PairDevicePage: React.FC = () => {
       await api.authorizeBridgePairingSession(sessionCode);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to authorize device.');
+      const norm = normalizeApiError(err);
+      setError(norm);
+      console.error('[BridgePairing] Authorization failed:', {
+        code: norm.code,
+        message: norm.message,
+        requestId: norm.requestId,
+        sessionCode
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -71,10 +92,18 @@ export const PairDevicePage: React.FC = () => {
     if (!sessionCode) return;
     try {
       setIsSubmitting(true);
+      setError(null);
       await api.rejectBridgePairingSession(sessionCode);
       setRejected(true);
     } catch (err: any) {
-      setError(err.message || 'Failed to reject device.');
+      const norm = normalizeApiError(err);
+      setError(norm);
+      console.error('[BridgePairing] Rejection failed:', {
+        code: norm.code,
+        message: norm.message,
+        requestId: norm.requestId,
+        sessionCode
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -129,14 +158,20 @@ export const PairDevicePage: React.FC = () => {
           </div>
         )}
 
-        {/* Error Notice */}
+        {/* Normalized Error Display */}
         {error && (
-          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-500 space-y-2">
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-500 space-y-2 animate-in fade-in">
             <div className="flex items-center space-x-2 font-bold">
-              <AlertTriangle className="w-4 h-4" />
+              <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>Pairing Request Error</span>
             </div>
-            <p className="text-content-secondary">{error}</p>
+            <p className="text-content-secondary font-medium">{error.message}</p>
+            {(error.code || error.requestId) && (
+              <div className="pt-1.5 border-t border-rose-500/15 flex flex-col gap-0.5 text-[11px] font-mono text-content-muted">
+                {error.code && <div><span className="text-rose-400 font-semibold">Code:</span> {error.code}</div>}
+                {error.requestId && <div><span className="text-rose-400 font-semibold">Request ID:</span> {error.requestId}</div>}
+              </div>
+            )}
           </div>
         )}
 
