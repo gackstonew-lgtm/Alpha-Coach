@@ -61261,6 +61261,32 @@ var BridgeService = class {
                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
               [device.id, device.user_id, device.device_name, deviceToken.trim(), tokenHash, device.is_active]
             );
+          } else {
+            const { data: sessData } = await supabase.from("bridge_pairing_sessions").select("id, user_id, device_name").eq("device_token", deviceToken.trim()).maybeSingle();
+            if (sessData && sessData.user_id) {
+              device = {
+                id: sessData.id,
+                user_id: sessData.user_id,
+                device_name: sessData.device_name || "Local Windows Terminal",
+                is_active: 1
+              };
+              await db.run(
+                `INSERT OR IGNORE INTO bridge_devices (id, user_id, device_name, device_token, token_hash, is_active, last_seen_at)
+                 VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`,
+                [device.id, device.user_id, device.device_name, deviceToken.trim(), tokenHash]
+              );
+              try {
+                await supabase.from("bridge_devices").upsert({
+                  id: sessData.id,
+                  user_id: sessData.user_id,
+                  device_name: sessData.device_name || "Local Windows Terminal",
+                  device_token: deviceToken.trim(),
+                  token_hash: tokenHash,
+                  is_active: 1
+                }, { onConflict: "id" });
+              } catch (e) {
+              }
+            }
           }
         }
       } catch (supaErr) {
