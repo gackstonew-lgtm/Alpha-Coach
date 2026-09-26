@@ -145,7 +145,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     const isProd = process.env.NODE_ENV === 'production';
     const isTest = process.env.NODE_ENV === 'test';
 
-    // In production or when DATABASE_URL is configured, connect to PostgreSQL / Supabase Postgres
+    // In production (or when DATABASE_URL is configured in non-test), connect to PostgreSQL / Supabase Postgres
     if (process.env.DATABASE_URL && !isTest) {
       try {
         const { Pool } = require('pg');
@@ -158,12 +158,18 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
         dbInstance = new PgDatabaseWrapper(pool);
         console.log('[DB] Connected to persistent PostgreSQL database.');
         return dbInstance;
-      } catch (err) {
-        console.warn('[DB] PostgreSQL connection failed, falling back to SQLite engine:', err);
+      } catch (err: any) {
+        if (isProd || process.env.VERCEL === '1') {
+          console.error('[DB FATAL] Production PostgreSQL connection failed:', err);
+          throw new Error(`[DB FATAL] Failed to connect to persistent PostgreSQL database: ${err.message}`);
+        }
+        console.warn('[DB] PostgreSQL connection failed, falling back to local SQLite engine:', err);
       }
+    } else if (isProd || process.env.VERCEL === '1') {
+      throw new Error('[DB FATAL] Production environment requires a valid persistent PostgreSQL/Supabase DATABASE_URL. Ephemeral in-memory fallback is disabled to preserve financial data integrity.');
     }
 
-    // Fallback: Local/In-Memory SQLite engine via SQL.js with embedded WASM binary
+    // Local / Development / Test Engine: Persistent Local SQLite file (or in-memory for Jest tests)
     try {
       const initSqlJsModule = require('sql.js');
       const initSqlJs = typeof initSqlJsModule === 'function' ? initSqlJsModule : initSqlJsModule.default;
@@ -171,10 +177,10 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
       const SQL = await initSqlJs({ wasmBinary });
       
       let dbInstanceLocal: SqlJsDatabaseWrapper;
-      if (isProd || process.env.VERCEL === '1') {
+      if (isTest) {
         const db = new SQL.Database();
         dbInstanceLocal = new SqlJsDatabaseWrapper(db, ':memory:');
-        console.log('[DB] In-memory SQLite engine initialized successfully with embedded wasm.');
+        console.log('[DB] Test in-memory SQLite engine initialized.');
       } else {
         const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../../data');
         if (!fs.existsSync(dataDir)) {
@@ -195,7 +201,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
       dbInstance = dbInstanceLocal;
       return dbInstance;
     } catch (sqliteErr) {
-      console.error('[DB FATAL] SQLite fallback unavailable:', sqliteErr);
+      console.error('[DB FATAL] SQLite engine unavailable:', sqliteErr);
       throw sqliteErr;
     }
   })();

@@ -1,8 +1,8 @@
 import { supabase } from '../lib/supabase';
 import { User, TradingAccount, ReconstructedTrade, RiskRule, PerformanceOverview } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-const USE_CUSTOM_BACKEND = Boolean(API_BASE_URL && API_BASE_URL.trim() !== '' && !API_BASE_URL.includes('localhost'));
+const API_BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.origin.includes('localhost') ? 'http://localhost:4000/api/v1' : '/api/v1');
+const USE_CUSTOM_BACKEND = Boolean(API_BASE_URL && API_BASE_URL.trim() !== '');
 
 class ApiClient {
   private getToken(): string | null {

@@ -391,31 +391,51 @@ export class SyncService {
       // 7. Award Gamification XP for synchronization
       await GamificationService.recordSyncActivity(userId, closedTradesCount);
 
-      // 8. Calculate Reconciliation Metrics
-      const dealsCountRow = await db.get<{ count: number }>(
-        `SELECT COUNT(*) as count FROM raw_deals WHERE account_id = ?`,
-        [account.id]
-      );
-      const ordersCountRow = await db.get<{ count: number }>(
-        `SELECT COUNT(*) as count FROM raw_orders WHERE account_id = ?`,
-        [account.id]
-      );
-      const openPosCountRow = await db.get<{ count: number }>(
-        `SELECT COUNT(*) as count FROM raw_open_positions WHERE account_id = ? AND is_active = 1`,
-        [account.id]
-      );
+      // 7. Award Gamification XP for synchronization
+      await GamificationService.recordSyncActivity(userId, closedTradesCount);
 
-      const dbDealsCount = dealsCountRow?.count || 0;
-      const dbOrdersCount = ordersCountRow?.count || 0;
-      const dbOpenPositionsCount = openPosCountRow?.count || 0;
-      const mt5DealsCount = payload.deals?.length ?? dbDealsCount;
-      const mt5OrdersCount = payload.orders?.length ?? dbOrdersCount;
-      const mt5OpenPositionsCount = payload.openPositions?.length ?? dbOpenPositionsCount;
+      // 8. Calculate Ticket-Level Reconciliation Metrics
+      const dbDeals = await db.query<{ deal_id: string }>(
+        `SELECT deal_id FROM raw_deals WHERE account_id = ?`,
+        [account.id]
+      );
+      const dbDealIds = new Set(dbDeals.map(d => String(d.deal_id)));
+
+      const dbOrders = await db.query<{ order_id: string }>(
+        `SELECT order_id FROM raw_orders WHERE account_id = ?`,
+        [account.id]
+      );
+      const dbOrderIds = new Set(dbOrders.map(o => String(o.order_id)));
+
+      const dbOpenPositions = await db.query<{ position_id: string }>(
+        `SELECT position_id FROM raw_open_positions WHERE account_id = ? AND is_active = 1`,
+        [account.id]
+      );
+      const dbOpenPosIds = new Set(dbOpenPositions.map(p => String(p.position_id)));
+
+      const mt5DealIds = new Set((payload.deals || []).map(d => String(d.ticket)));
+      const mt5OrderIds = new Set((payload.orders || []).map(o => String(o.ticket)));
+      const mt5OpenPosIds = new Set((payload.openPositions || []).map(p => String(p.position_id || p.ticket)));
+
+      const missingDeals: string[] = [];
+      for (const id of mt5DealIds) {
+        if (!dbDealIds.has(id)) missingDeals.push(id);
+      }
+
+      const missingOrders: string[] = [];
+      for (const id of mt5OrderIds) {
+        if (!dbOrderIds.has(id)) missingOrders.push(id);
+      }
+
+      const missingOpenPositions: string[] = [];
+      for (const id of mt5OpenPosIds) {
+        if (!dbOpenPosIds.has(id)) missingOpenPositions.push(id);
+      }
 
       const isSynchronized = (
-        (payload.deals === undefined || payload.deals.length <= dbDealsCount) &&
-        (payload.orders === undefined || payload.orders.length <= dbOrdersCount) &&
-        (payload.openPositions === undefined || payload.openPositions.length === dbOpenPositionsCount)
+        missingDeals.length === 0 &&
+        missingOrders.length === 0 &&
+        missingOpenPositions.length === 0
       );
 
       const reconciliationResult: SyncReconciliation = {
@@ -428,12 +448,12 @@ export class SyncService {
         openTradesCount,
         skippedDuplicates,
         reconciliation: {
-          mt5DealsCount,
-          dbDealsCount,
-          mt5OrdersCount,
-          dbOrdersCount,
-          mt5OpenPositionsCount,
-          dbOpenPositionsCount,
+          mt5DealsCount: mt5DealIds.size,
+          dbDealsCount: dbDealIds.size,
+          mt5OrdersCount: mt5OrderIds.size,
+          dbOrdersCount: dbOrderIds.size,
+          mt5OpenPositionsCount: mt5OpenPosIds.size,
+          dbOpenPositionsCount: dbOpenPosIds.size,
           status: isSynchronized ? 'SYNCHRONIZED' : 'SYNC ATTENTION REQUIRED'
         },
         lastSyncTime: new Date().toISOString()
@@ -463,7 +483,7 @@ export class SyncService {
         ]
       );
 
-      // 11. Optional Supabase Cloud Sync
+      // 11. Cloud Synchronization for complete persistence across Supabase datastores
       try {
         const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
         const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
@@ -489,15 +509,24 @@ export class SyncService {
           }, { onConflict: 'id' });
 
           const positions = await db.query(
-            `SELECT * FROM reconstructed_positions WHERE account_id = ?`,
+            `SELECT * FROM reconstructed_positions WHERE account_id = ? AND symbol IS NOT NULL AND symbol != ''`,
             [account.id]
           );
           if (positions && positions.length > 0) {
             await supabase.from('reconstructed_positions').upsert(positions, { onConflict: 'id' });
           }
+
+          // Clean legacy synthetic demo records from cloud if present
+          try {
+            await supabase.from('reconstructed_positions').delete().eq('position_id', '79001');
+            await supabase.from('raw_deals').delete().in('deal_id', ['99001', '99002']);
+            await supabase.from('raw_orders').delete().eq('order_id', '89001');
+          } catch {
+            // Ignore if cloud table does not contain them
+          }
         }
       } catch (supaSyncErr) {
-        // Cloud sync optional
+        // Cloud sync optional in offline development
       }
 
       return reconciliationResult;

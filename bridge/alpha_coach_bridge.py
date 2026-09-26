@@ -533,13 +533,27 @@ class AlphaCoachBridge:
             return {"deals": [], "orders": []}
 
         now = datetime.now()
+        to_date = now + timedelta(days=1)
         if full_history or days_back is None:
-            from_date = datetime(1970, 1, 1)
+            from_date = datetime(2000, 1, 1, 0, 0, 0)
         else:
             from_date = now - timedelta(days=days_back)
 
-        raw_deals = mt5.history_deals_get(from_date, now)
-        raw_orders = mt5.history_orders_get(from_date, now)
+        try:
+            raw_deals = mt5.history_deals_get(from_date, to_date)
+            if raw_deals is None:
+                companion_logger.warning(f"mt5.history_deals_get returned None (error: {mt5.last_error()})")
+        except Exception as e:
+            companion_logger.error(f"Exception in history_deals_get: {e}")
+            raw_deals = None
+
+        try:
+            raw_orders = mt5.history_orders_get(from_date, to_date)
+            if raw_orders is None:
+                companion_logger.warning(f"mt5.history_orders_get returned None (error: {mt5.last_error()})")
+        except Exception as e:
+            companion_logger.error(f"Exception in history_orders_get: {e}")
+            raw_orders = None
 
         deals_list = []
         if raw_deals:

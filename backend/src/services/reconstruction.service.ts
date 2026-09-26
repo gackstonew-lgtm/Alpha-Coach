@@ -95,7 +95,9 @@ export class PositionReconstructionService {
     // 4. Group deals by position_id
     const dealsByPosition = new Map<string, RawDeal[]>();
     for (const deal of rawDeals) {
-      const posId = deal.position_id || deal.order_id;
+      const validPosId = deal.position_id && String(deal.position_id) !== '0' ? String(deal.position_id) : null;
+      const validOrdId = deal.order_id && String(deal.order_id) !== '0' ? String(deal.order_id) : null;
+      const posId = validPosId || validOrdId || String(deal.deal_id);
       if (!dealsByPosition.has(posId)) {
         dealsByPosition.set(posId, []);
       }
@@ -189,7 +191,12 @@ export class PositionReconstructionService {
         initialTp = liveOpenPos.price_tp > 0 ? liveOpenPos.price_tp : undefined;
       } else if (deals.length > 0) {
         // Position is derived from Historical Deals
-        const firstDeal = deals[0];
+        const tradeDeals = deals.filter(d => d.symbol && d.symbol.trim().length > 0);
+        if (tradeDeals.length === 0) {
+          // Skip balance transactions or cash deposits/withdrawals without market symbols
+          continue;
+        }
+        const firstDeal = tradeDeals[0];
         symbol = firstDeal.symbol;
         positionType = (entryDeals.length > 0 ? entryDeals[0].type : firstDeal.type) === 0 ? 'BUY' : 'SELL';
         entryPriceAvg = totalEntryVolume > 0 ? (totalEntryCost / totalEntryVolume) : firstDeal.price;
@@ -210,6 +217,10 @@ export class PositionReconstructionService {
         if (!initialSl && firstDeal.price_sl && firstDeal.price_sl > 0) initialSl = firstDeal.price_sl;
         if (!initialTp && firstDeal.price_tp && firstDeal.price_tp > 0) initialTp = firstDeal.price_tp;
       } else {
+        continue;
+      }
+
+      if (!symbol || symbol.trim() === '') {
         continue;
       }
 
