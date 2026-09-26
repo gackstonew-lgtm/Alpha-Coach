@@ -1,7 +1,19 @@
 export default async function handler(req: any, res: any) {
   try {
-    const { app } = await import('../backend/src/app');
-    return app(req, res);
+    const mod = await import('../backend/src/app');
+    const app = mod.default || mod.app;
+    return new Promise<void>((resolve, reject) => {
+      res.on('finish', resolve);
+      res.on('close', resolve);
+      res.on('error', reject);
+      app(req, res, (err: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   } catch (err: any) {
     console.error('[Vercel Serverless Error]:', err);
     if (!res.headersSent) {
