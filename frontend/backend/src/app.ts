@@ -66,7 +66,36 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
-import { getDatabaseAsync } from './db/db';
+import { getDatabaseAsync, initDatabase } from './db/db';
+
+// Vercel path restoration middleware
+app.use((req, res, next) => {
+  const matchedPath = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
+  if (matchedPath && typeof matchedPath === 'string' && matchedPath.startsWith('/api')) {
+    req.url = matchedPath;
+  }
+  next();
+});
+
+// Lazy DB Init middleware
+let dbInitialized = false;
+let dbInitPromise: Promise<any> | null = null;
+app.use(async (req, res, next) => {
+  if (!dbInitialized) {
+    if (!dbInitPromise) {
+      dbInitPromise = initDatabase().catch(err => {
+        console.error('[DB Init Middleware Error]:', err);
+      });
+    }
+    try {
+      await dbInitPromise;
+      dbInitialized = true;
+    } catch {
+      // Allow request to proceed so health checks can report DEGRADED and routes report error
+    }
+  }
+  next();
+});
 
 // Rate Limiter
 const apiLimiter = rateLimit({
