@@ -75,5 +75,19 @@ class TestMT5Bridge(unittest.TestCase):
         self.assertNotIn("SecretPass123", masked)
         self.assertIn("••••", masked)
 
+    def test_bridge_token_fingerprint_and_clear(self):
+        bridge = AlphaCoachBridge(device_token="ac_bridge_1234567890abcdef")
+        self.assertEqual(bridge.get_masked_token(), "••••abcdef")
+        bridge.clear_device_token()
+        self.assertEqual(bridge.device_token, "")
+        self.assertEqual(bridge.state, BridgeState.UNPAIRED)
+        self.assertEqual(bridge.get_masked_token(), "None")
+
+    def test_bridge_mock_authorization(self):
+        bridge = AlphaCoachBridge(mock_mode=True, device_token="test_tok")
+        ok, msg = bridge.check_device_authorization()
+        self.assertTrue(ok)
+
 if __name__ == "__main__":
     unittest.main()
+

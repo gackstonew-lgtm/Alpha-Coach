@@ -14,56 +14,134 @@ export interface BridgePairingSession {
   expires_at: string;
 }
 
+export interface DeviceAuthCheckResult {
+  authorized: boolean;
+  status: 'ACTIVE' | 'INVALID' | 'REVOKED' | 'EXPIRED';
+  deviceId?: string;
+  deviceName?: string;
+  userId?: string;
+  serverTime: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
 export class BridgeService {
   /**
-   * Generates a secure device token for the MT5 Local Bridge
+   * Generates a SHA-256 hash of the device token for secure backend persistence
+   */
+  public static hashToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
+  /**
+   * Generates a secure device token and stores both hash and token for the MT5 Local Bridge
    */
   public static async registerDevice(userId: string, deviceName: string, ipAddress?: string): Promise<{ deviceId: string; deviceToken: string }> {
     const db = getDatabase();
     const deviceId = uuidv4();
     const rawToken = 'ac_bridge_' + crypto.randomBytes(32).toString('hex');
+    const tokenHash = this.hashToken(rawToken);
 
     await db.run(
-      `INSERT INTO bridge_devices (id, user_id, device_name, device_token, ip_address, is_active, last_seen_at)
-       VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`,
-      [deviceId, userId, deviceName, rawToken, ipAddress || null]
+      `INSERT INTO bridge_devices (id, user_id, device_name, device_token, token_hash, ip_address, is_active, last_seen_at)
+       VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`,
+      [deviceId, userId, deviceName, rawToken, tokenHash, ipAddress || null]
     );
 
     await db.run(
       `INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, ip_address, details_json)
        VALUES (?, ?, 'BRIDGE_DEVICE_PAIRED', 'bridge_device', ?, ?, ?)`,
-      [uuidv4(), userId, deviceId, ipAddress || null, JSON.stringify({ deviceName })]
+      [uuidv4(), userId, deviceId, ipAddress || null, JSON.stringify({ deviceName, deviceId })]
     );
 
     return { deviceId, deviceToken: rawToken };
   }
 
   /**
-   * Validates device token and returns user
+   * Dedicated device authentication verification check
    */
-  public static async validateDeviceToken(deviceToken: string): Promise<{ userId: string; deviceId: string; deviceName: string } | null> {
-    const db = getDatabase();
-    const device = await db.get<{ id: string; user_id: string; device_name: string; is_active: number }>(
-      `SELECT id, user_id, device_name, is_active FROM bridge_devices WHERE device_token = ?`,
-      [deviceToken]
-    );
-
-    if (!device || !device.is_active) {
-      return null;
+  public static async checkDeviceAuth(deviceToken: string): Promise<DeviceAuthCheckResult> {
+    const serverTime = new Date().toISOString();
+    if (!deviceToken || typeof deviceToken !== 'string' || !deviceToken.trim()) {
+      return {
+        authorized: false,
+        status: 'INVALID',
+        serverTime,
+        error: {
+          code: 'INVALID_BRIDGE_TOKEN',
+          message: 'Device authorization token is empty or missing.'
+        }
+      };
     }
 
-    // Update last seen
+    const db = getDatabase();
+    const tokenHash = this.hashToken(deviceToken.trim());
+
+    // Check by token_hash or raw token (backward compatibility)
+    const device = await db.get<{ id: string; user_id: string; device_name: string; is_active: number }>(
+      `SELECT id, user_id, device_name, is_active FROM bridge_devices WHERE token_hash = ? OR device_token = ?`,
+      [tokenHash, deviceToken.trim()]
+    );
+
+    if (!device) {
+      return {
+        authorized: false,
+        status: 'INVALID',
+        serverTime,
+        error: {
+          code: 'INVALID_BRIDGE_TOKEN',
+          message: 'Device authorization token is invalid or unassigned in the database.'
+        }
+      };
+    }
+
+    if (!device.is_active || Number(device.is_active) === 0) {
+      return {
+        authorized: false,
+        status: 'REVOKED',
+        deviceId: device.id,
+        deviceName: device.device_name,
+        userId: device.user_id,
+        serverTime,
+        error: {
+          code: 'BRIDGE_DEVICE_REVOKED',
+          message: 'This MT5 Bridge companion device authorization has been explicitly revoked.'
+        }
+      };
+    }
+
+    // Update last seen timestamp
     await db.run(`UPDATE bridge_devices SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?`, [device.id]);
 
     return {
-      userId: device.user_id,
+      authorized: true,
+      status: 'ACTIVE',
       deviceId: device.id,
-      deviceName: device.device_name
+      deviceName: device.device_name,
+      userId: device.user_id,
+      serverTime
     };
   }
 
   /**
-   * List devices paired by user
+   * Validates device token and returns authenticated user and device identity
+   */
+  public static async validateDeviceToken(deviceToken: string): Promise<{ userId: string; deviceId: string; deviceName: string } | null> {
+    const authCheck = await this.checkDeviceAuth(deviceToken);
+    if (!authCheck.authorized || !authCheck.userId || !authCheck.deviceId) {
+      return null;
+    }
+    return {
+      userId: authCheck.userId,
+      deviceId: authCheck.deviceId,
+      deviceName: authCheck.deviceName || 'Local Windows Terminal'
+    };
+  }
+
+  /**
+   * List devices paired by user (never returning raw secret token to prevent leaks)
    */
   public static async getUserDevices(userId: string) {
     const db = getDatabase();
@@ -74,11 +152,16 @@ export class BridgeService {
   }
 
   /**
-   * Revoke device
+   * Revoke device authorization
    */
   public static async revokeDevice(userId: string, deviceId: string) {
     const db = getDatabase();
     await db.run(`UPDATE bridge_devices SET is_active = 0 WHERE id = ? AND user_id = ?`, [deviceId, userId]);
+    await db.run(
+      `INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, details_json)
+       VALUES (?, ?, 'BRIDGE_DEVICE_REVOKED', 'bridge_device', ?, ?)`,
+      [uuidv4(), userId, deviceId, JSON.stringify({ revokedAt: new Date().toISOString() })]
+    );
   }
 
   // =========================================================================
@@ -127,7 +210,7 @@ export class BridgeService {
   /**
    * Authenticated web user authorizes the pairing session from their browser
    */
-  public static async authorizePairingSession(sessionCode: string, userId: string, ipAddress?: string): Promise<{ success: boolean }> {
+  public static async authorizePairingSession(sessionCode: string, userId: string, ipAddress?: string): Promise<{ success: boolean; deviceToken?: string }> {
     const db = getDatabase();
     const session = await this.getPairingSession(sessionCode);
 
@@ -139,7 +222,7 @@ export class BridgeService {
       throw new Error(`Cannot authorize pairing session in status: ${session.status}`);
     }
 
-    // Register permanent device
+    // Register permanent device first
     const { deviceToken } = await this.registerDevice(userId, session.device_name, ipAddress || session.ip_address);
 
     // Update session to AUTHORIZED
@@ -152,7 +235,7 @@ export class BridgeService {
       [userId, deviceToken, sessionCode]
     );
 
-    return { success: true };
+    return { success: true, deviceToken };
   }
 
   /**
@@ -170,7 +253,7 @@ export class BridgeService {
   /**
    * Bridge polls this to obtain the authorized device token (single-use consumption)
    */
-  public static async pollAndConsumePairingToken(sessionCode: string): Promise<{ status: string; deviceToken?: string }> {
+  public static async pollAndConsumePairingToken(sessionCode: string): Promise<{ status: string; deviceToken?: string; deviceName?: string }> {
     const db = getDatabase();
     const session = await this.getPairingSession(sessionCode);
 
@@ -185,9 +268,9 @@ export class BridgeService {
         `UPDATE bridge_pairing_sessions SET status = 'COMPLETED', device_token = NULL WHERE session_code = ?`,
         [sessionCode]
       );
-      return { status: 'AUTHORIZED', deviceToken: token };
+      return { status: 'AUTHORIZED', deviceToken: token, deviceName: session.device_name };
     }
 
-    return { status: session.status };
+    return { status: session.status, deviceName: session.device_name };
   }
 }

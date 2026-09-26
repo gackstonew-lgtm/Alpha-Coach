@@ -62,9 +62,17 @@ class AlphaCoachTrayApp:
     def get_status_text(self) -> str:
         if self.bridge.state == BridgeState.SYNCING:
             return "Status: Synchronizing trades..."
-        elif self.bridge.state in (BridgeState.SYNCED, BridgeState.MT5_READY):
+        elif self.bridge.state in (BridgeState.SYNCED, BridgeState.MT5_READY, BridgeState.READY):
             last = self.bridge.last_sync_time.strftime('%H:%M:%S') if self.bridge.last_sync_time else "Ready"
             return f"Status: Synced ({last})"
+        elif self.bridge.state == BridgeState.BRIDGE_TOKEN_INVALID:
+            return "Status: Auth Expired (Re-pair required)"
+        elif self.bridge.state == BridgeState.BRIDGE_DEVICE_REVOKED:
+            return "Status: Device Revoked (Re-pair required)"
+        elif self.bridge.state == BridgeState.BRIDGE_DEVICE_EXPIRED:
+            return "Status: Auth Expired"
+        elif self.bridge.state == BridgeState.AUTH_CHECK_FAILED:
+            return "Status: Auth Check Failed"
         elif self.bridge.state == BridgeState.MT5_ADAPTER_MISSING:
             return "Status: MT5 Adapter Missing"
         elif self.bridge.state == BridgeState.MT5_TERMINAL_NOT_FOUND:

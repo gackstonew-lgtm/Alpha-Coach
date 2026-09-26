@@ -140,8 +140,11 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
   if (dbInstancePromise) return dbInstancePromise;
 
   dbInstancePromise = (async () => {
-    // If DATABASE_URL is provided and valid, connect to PostgreSQL / Supabase Postgres
-    if (process.env.DATABASE_URL && process.env.NODE_ENV !== 'test') {
+    const isProd = process.env.NODE_ENV === 'production';
+    const isTest = process.env.NODE_ENV === 'test';
+
+    // In production or when DATABASE_URL is configured, connect to PostgreSQL / Supabase Postgres
+    if (process.env.DATABASE_URL && !isTest) {
       try {
         const pool = new Pool({
           connectionString: process.env.DATABASE_URL,
@@ -150,13 +153,26 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
         // Test connection
         await pool.query('SELECT 1');
         dbInstance = new PgDatabaseWrapper(pool);
+        console.log('[DB] Connected to persistent PostgreSQL database.');
         return dbInstance;
       } catch (err) {
-        console.warn('[DB] PostgreSQL connection failed, falling back to local SQLite engine:', err);
+        if (isProd) {
+          console.error('[DB FATAL] PostgreSQL connection failed in production mode:', err);
+          throw new Error(`[Database Configuration Failure] Failed to connect to PostgreSQL (DATABASE_URL): ${err instanceof Error ? err.message : String(err)}`);
+        }
+        console.warn('[DB] PostgreSQL connection failed in non-production, falling back to local SQLite engine:', err);
       }
     }
 
-    // Default fallback: Local SQLite engine via SQL.js
+    if (isProd) {
+      // Production must have DATABASE_URL configured or throw an explicit deployment error
+      throw new Error(
+        '[Database Configuration Failure] Production environment requires a valid DATABASE_URL pointing to Supabase PostgreSQL. ' +
+        'Local SQLite persistence is strictly prohibited in production to prevent ephemeral data loss across instances.'
+      );
+    }
+
+    // Default fallback: Local SQLite engine via SQL.js (Development and Test environments ONLY)
     const SQL = await initSqlJs();
     const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../../data');
     if (!fs.existsSync(dataDir)) {
@@ -173,6 +189,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     }
 
     dbInstance = new SqlJsDatabaseWrapper(db, dbPath);
+    console.log('[DB] Local SQLite engine initialized for non-production environment.');
     return dbInstance;
   })();
 

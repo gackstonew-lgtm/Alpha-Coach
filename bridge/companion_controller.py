@@ -247,8 +247,8 @@ class CompanionController:
                 )
                 diag_text.pack(fill=tk.BOTH, expand=True)
 
-                # Build Telemetry Data
-                token_masked = (self.bridge.device_token[:12] + "••••••••") if self.bridge.device_token else "NOT PAIRED"
+                auth_ok, auth_msg = self.bridge.check_device_authorization()
+                token_fingerprint = self.bridge.get_masked_token()
                 acc_num = acc.get("accountNumber", "N/A") if acc else "N/A"
                 broker = acc.get("brokerName", "N/A") if acc else "N/A"
                 server = acc.get("serverName", "N/A") if acc else "N/A"
@@ -290,8 +290,11 @@ class CompanionController:
                     f"",
                     f"--- [ AUTHORIZATION & CLOUD PAIRING ] ---",
                     f"  Device Name:       {self.bridge.device_name}",
+                    f"  Device ID:         {self.bridge.active_device_id or 'None'}",
                     f"  Bridge State:      {self.bridge.state}",
-                    f"  Device Credential: {token_masked}",
+                    f"  Token Configured:  {'YES' if self.bridge.device_token else 'NO'}",
+                    f"  Token Fingerprint: {token_fingerprint}",
+                    f"  Auth Status:       {'ACTIVE' if auth_ok else 'UNAUTHORIZED'} ({auth_msg})",
                     f"",
                     f"--- [ SYNCHRONIZATION ENGINE ] ---",
                     f"  Background Sync:   {'PAUSED' if self.bridge.is_sync_paused else 'ACTIVE (30s Interval)'}",

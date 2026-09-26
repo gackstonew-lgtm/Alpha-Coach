@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS bridge_devices (
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   device_name TEXT NOT NULL,
   device_token TEXT UNIQUE NOT NULL,
+  token_hash TEXT,
   ip_address TEXT,
   is_active INTEGER NOT NULL DEFAULT 1,
   last_seen_at TEXT,

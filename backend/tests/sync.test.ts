@@ -126,15 +126,25 @@ describe('MT5 Synchronization & Idempotency Integration Tests', () => {
     expect(secondPoll.status).toBe('COMPLETED');
     expect(secondPoll.deviceToken).toBeUndefined();
 
-    // 6. Validate device token authentication
-    const deviceAuth = await BridgeService.validateDeviceToken(pollRes.deviceToken!);
-    expect(deviceAuth).not.toBeNull();
-    expect(deviceAuth!.userId).toBe(testUserId);
-    expect(deviceAuth!.deviceName).toBe('Trading Room Laptop');
+    // 6. Validate device token authentication with checkDeviceAuth
+    const authStatus = await BridgeService.checkDeviceAuth(pollRes.deviceToken!);
+    expect(authStatus.authorized).toBe(true);
+    expect(authStatus.status).toBe('ACTIVE');
+    expect(authStatus.userId).toBe(testUserId);
+    expect(authStatus.deviceName).toBe('Trading Room Laptop');
 
-    // 7. Revoke device
-    await BridgeService.revokeDevice(testUserId, deviceAuth!.deviceId);
-    const revokedAuth = await BridgeService.validateDeviceToken(pollRes.deviceToken!);
-    expect(revokedAuth).toBeNull();
+    // 7. Check invalid device token handling
+    const invalidAuth = await BridgeService.checkDeviceAuth('ac_bridge_invalid_token_9999');
+    expect(invalidAuth.authorized).toBe(false);
+    expect(invalidAuth.status).toBe('INVALID');
+    expect(invalidAuth.error?.code).toBe('INVALID_BRIDGE_TOKEN');
+
+    // 8. Revoke device
+    await BridgeService.revokeDevice(testUserId, authStatus.deviceId!);
+    const revokedAuth = await BridgeService.checkDeviceAuth(pollRes.deviceToken!);
+    expect(revokedAuth.authorized).toBe(false);
+    expect(revokedAuth.status).toBe('REVOKED');
+    expect(revokedAuth.error?.code).toBe('BRIDGE_DEVICE_REVOKED');
   });
 });
+

@@ -51,7 +51,7 @@ except ImportError:
 
 from companion_logger import companion_logger
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 APP_NAME = "Alpha Coach MT5 Companion"
 GITHUB_REPO = "gackstonew-lgtm/Alpha-Coach"
 
@@ -66,6 +66,14 @@ SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 class BridgeState:
     UNPAIRED = "UNPAIRED"
+    PAIRING = "PAIRING"
+    AUTHORIZING = "AUTHORIZING"
+    AUTHORIZED = "AUTHORIZED"
+    AUTH_CHECK_FAILED = "AUTH_CHECK_FAILED"
+    BRIDGE_TOKEN_INVALID = "BRIDGE_TOKEN_INVALID"
+    BRIDGE_DEVICE_REVOKED = "BRIDGE_DEVICE_REVOKED"
+    BRIDGE_DEVICE_EXPIRED = "BRIDGE_DEVICE_EXPIRED"
+    API_UNAVAILABLE = "API_UNAVAILABLE"
     MT5_ADAPTER_MISSING = "MT5_ADAPTER_MISSING"
     MT5_TERMINAL_NOT_FOUND = "MT5_TERMINAL_NOT_FOUND"
     MT5_TERMINAL_CLOSED = "MT5_TERMINAL_CLOSED"
@@ -73,10 +81,10 @@ class BridgeState:
     MT5_NOT_LOGGED_IN = "MT5_NOT_LOGGED_IN"
     MT5_CONNECTED = "MT5_CONNECTED"
     MT5_READY = "MT5_READY"
+    READY = "READY"
     SYNCING = "SYNCING"
     SYNCED = "SYNCED"
     SYNC_FAILED = "SYNC_FAILED"
-    API_UNAVAILABLE = "API_UNAVAILABLE"
     REVOKED = "REVOKED"
     ERROR = "ERROR"
 
@@ -94,8 +102,11 @@ class AlphaCoachBridge:
         self.state = BridgeState.UNPAIRED
         self.last_sync_time: Optional[datetime] = None
         self.last_error_message: Optional[str] = None
+        self.last_auth_check_time: Optional[datetime] = None
         self.consecutive_failures = 0
         self.is_sync_paused = False
+        self.active_device_id: Optional[str] = None
+        self.active_user_id: Optional[str] = None
 
         # Config directory (%APPDATA%/AlphaCoach on Windows)
         self.config_dir = self._get_config_dir()
@@ -139,6 +150,10 @@ class AlphaCoachBridge:
                         self.web_url = cfg['web_url'].rstrip('/')
                     if cfg.get('selected_mt5_path'):
                         self.selected_mt5_path = cfg['selected_mt5_path']
+                    if cfg.get('active_device_id'):
+                        self.active_device_id = cfg['active_device_id']
+                    if cfg.get('active_user_id'):
+                        self.active_user_id = cfg['active_user_id']
                     if self.device_token:
                         self.state = BridgeState.MT5_CONNECTED
             except Exception as e:
@@ -152,6 +167,8 @@ class AlphaCoachBridge:
                 "device_token": self.device_token,
                 "device_name": self.device_name,
                 "selected_mt5_path": self.selected_mt5_path,
+                "active_device_id": self.active_device_id,
+                "active_user_id": self.active_user_id,
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
             with open(self.config_file, 'w', encoding='utf-8') as f:
@@ -159,6 +176,21 @@ class AlphaCoachBridge:
             companion_logger.info("Configuration saved successfully.")
         except Exception as e:
             companion_logger.error(f"Failed to save configuration: {e}")
+
+    def get_masked_token(self) -> str:
+        if not self.device_token:
+            return "None"
+        if len(self.device_token) > 8:
+            return f"••••{self.device_token[-6:]}"
+        return "••••"
+
+    def clear_device_token(self):
+        self.device_token = ""
+        self.active_device_id = None
+        self.active_user_id = None
+        self.state = BridgeState.UNPAIRED
+        self.save_config()
+        self.log("AUTH", "Device authorization cleared from local storage.", Fore.YELLOW)
 
     def check_for_updates(self) -> Tuple[bool, str, Optional[str]]:
         """Checks GitHub Releases for a newer version of the companion."""
@@ -511,6 +543,67 @@ class AlphaCoachBridge:
 
         return {"deals": deals_list, "orders": orders_list}
 
+    def check_device_authorization(self) -> Tuple[bool, str]:
+        """
+        Phase 7: Dedicated device authentication verification check.
+        Validates the configured device token with the Alpha Coach backend.
+        Returns (is_valid, message).
+        """
+        if self.mock_mode:
+            return True, "Mock authorization active"
+
+        if not self.device_token:
+            self.state = BridgeState.UNPAIRED
+            return False, "Device is not paired with Alpha Coach."
+
+        url = f"{self.api_url}/mt5/bridge/device/status"
+        headers = {
+            "Content-Type": "application/json",
+            "x-bridge-token": self.device_token
+        }
+        try:
+            resp = requests.get(url, headers=headers, timeout=8)
+            self.last_auth_check_time = datetime.now()
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get("authorized") and data.get("status") == "ACTIVE":
+                    self.active_device_id = data.get("deviceId")
+                    self.active_user_id = data.get("userId")
+                    self.state = BridgeState.MT5_CONNECTED
+                    return True, "Device authorization is ACTIVE"
+
+            # Parse structured error
+            try:
+                err_data = resp.json()
+                err_code = err_data.get("error", {}).get("code", "")
+                err_msg = err_data.get("error", {}).get("message", "Authorization failed.")
+            except Exception:
+                err_code = ""
+                err_msg = resp.text
+
+            if resp.status_code == 401:
+                if err_code == "BRIDGE_DEVICE_REVOKED":
+                    self.state = BridgeState.BRIDGE_DEVICE_REVOKED
+                    self.last_error_message = "This companion device was revoked from the Alpha Coach Account Hub."
+                    return False, self.last_error_message
+                elif err_code == "BRIDGE_DEVICE_EXPIRED":
+                    self.state = BridgeState.BRIDGE_DEVICE_EXPIRED
+                    self.last_error_message = "This companion device authorization has expired."
+                    return False, self.last_error_message
+                else:
+                    self.state = BridgeState.BRIDGE_TOKEN_INVALID
+                    self.last_error_message = "Alpha Coach authorization needs to be renewed. Device token is invalid."
+                    return False, self.last_error_message
+
+            self.state = BridgeState.AUTH_CHECK_FAILED
+            self.last_error_message = f"Authorization check failed ({resp.status_code}): {err_msg}"
+            return False, self.last_error_message
+
+        except requests.exceptions.RequestException as e:
+            companion_logger.warning(f"Could not reach API authorization endpoint: {e}")
+            self.state = BridgeState.API_UNAVAILABLE
+            return False, f"Alpha Coach API is temporarily unreachable ({e})"
+
     def sync_payload_to_server(self, payload: Dict[str, Any]) -> bool:
         """Sends payload to Alpha Coach via API or direct Supabase Cloud synchronization."""
         self.state = BridgeState.SYNCING
@@ -525,7 +618,7 @@ class AlphaCoachBridge:
             "x-bridge-token": self.device_token
         }
         try:
-            resp = requests.post(api_url, json=payload, headers=headers, timeout=20)
+            resp = requests.post(api_url, json=payload, headers=headers, timeout=30)
             if resp.status_code == 200:
                 data = resp.json()
                 self.state = BridgeState.SYNCED
@@ -535,8 +628,28 @@ class AlphaCoachBridge:
                 self.log("SYNC_SUCCESS", f"Synchronized via API: {data.get('positionsReconstructed', deals_cnt)} positions updated.", Fore.GREEN)
                 return True
             elif resp.status_code == 401:
-                self.state = BridgeState.REVOKED
-                self.last_error_message = "Device authorization was revoked or expired."
+                try:
+                    err_data = resp.json()
+                    err_code = err_data.get("error", {}).get("code", "")
+                    err_msg = err_data.get("error", {}).get("message", "Device authorization failed.")
+                except Exception:
+                    err_code = ""
+                    err_msg = resp.text
+
+                if err_code == "BRIDGE_DEVICE_REVOKED":
+                    self.state = BridgeState.BRIDGE_DEVICE_REVOKED
+                elif err_code == "BRIDGE_DEVICE_EXPIRED":
+                    self.state = BridgeState.BRIDGE_DEVICE_EXPIRED
+                else:
+                    self.state = BridgeState.BRIDGE_TOKEN_INVALID
+
+                self.last_error_message = err_msg
+                self.consecutive_failures += 1
+                return False
+            else:
+                self.state = BridgeState.SYNC_FAILED
+                self.last_error_message = f"Sync API returned HTTP {resp.status_code}: {resp.text}"
+                self.consecutive_failures += 1
                 return False
         except Exception as e:
             companion_logger.info(f"API sync endpoint unreachable ({e}), switching to direct Supabase Cloud Sync...")
@@ -553,14 +666,14 @@ class AlphaCoachBridge:
             dev_url = f"{SUPABASE_URL}/rest/v1/bridge_devices?device_token=eq.{self.device_token}&select=*"
             dev_resp = requests.get(dev_url, headers=supa_headers, timeout=5)
             if dev_resp.status_code != 200 or not dev_resp.json():
-                self.state = BridgeState.REVOKED
+                self.state = BridgeState.BRIDGE_TOKEN_INVALID
                 self.last_error_message = "Device authorization token is invalid or unassigned."
                 return False
 
             device_record = dev_resp.json()[0]
             user_id = device_record.get("user_id")
             if not user_id:
-                self.state = BridgeState.REVOKED
+                self.state = BridgeState.BRIDGE_TOKEN_INVALID
                 self.last_error_message = "No authorized user is linked to this bridge device."
                 return False
 
@@ -608,7 +721,7 @@ class AlphaCoachBridge:
                 p_deals.sort(key=lambda x: x.get("time", ""))
                 first_deal = p_deals[0]
                 last_deal = p_deals[-1]
-                
+
                 # Calculate metrics
                 total_volume = sum(float(d.get("volume", 0)) for d in p_deals if d.get("entry") == 0)
                 if total_volume == 0:
@@ -713,6 +826,19 @@ class AlphaCoachBridge:
             if not paired:
                 return False
 
+        # Phase 7: Pre-flight check device authorization
+        auth_ok, auth_msg = self.check_device_authorization()
+        if not auth_ok:
+            self.log("AUTH_CHECK", auth_msg, Fore.RED)
+            if self.state in (BridgeState.BRIDGE_TOKEN_INVALID, BridgeState.BRIDGE_DEVICE_REVOKED, BridgeState.BRIDGE_DEVICE_EXPIRED):
+                self.log("RECOVERY", "Clearing invalid token to allow re-pairing...", Fore.YELLOW)
+                self.clear_device_token()
+                paired = self.start_browser_pairing()
+                if not paired:
+                    return False
+            else:
+                return False
+
         ready, msg = self.check_mt5_readiness()
         if not ready:
             self.log("MT5_STATUS", msg, Fore.YELLOW)
@@ -765,15 +891,24 @@ def main():
     if args.diagnostics:
         ready, msg = bridge.check_mt5_readiness()
         acc = bridge.get_account_data()
+        auth_ok, auth_msg = bridge.check_device_authorization()
         print(f"=== {APP_NAME} Diagnostics ===")
-        print(f"Version: {__version__}")
-        print(f"Web URL: {bridge.web_url}")
+        print(f"Version: v{__version__}")
         print(f"API URL: {bridge.api_url}")
-        print(f"Device: {bridge.device_name}")
-        print(f"Token: {'Configured' if bridge.device_token else 'None'}")
+        print(f"Web URL: {bridge.web_url}")
+        print(f"Device ID: {bridge.active_device_id or 'None'}")
+        print(f"Device Name: {bridge.device_name}")
+        print(f"Authorization Status: {'ACTIVE' if auth_ok else bridge.state} ({auth_msg})")
+        print(f"Token Configured: {'YES' if bridge.device_token else 'NO'}")
+        print(f"Token Fingerprint: {bridge.get_masked_token()}")
         print(f"MT5 Adapter: {'Available (v' + str(MT5_PACKAGE_VERSION) + ')' if MT5_PACKAGE_AVAILABLE else 'MISSING'}")
+        print(f"MT5 Terminal Path: {bridge.selected_mt5_path or 'Auto-Detected'}")
         print(f"MT5 Readiness: {msg}")
-        print(f"Account: #{acc.get('accountNumber', 'None') if acc else 'None'} ({acc.get('brokerName', '') if acc else ''})")
+        print(f"MT5 Account: #{acc.get('accountNumber', 'None') if acc else 'None'}")
+        print(f"MT5 Broker: {acc.get('brokerName', 'None') if acc else 'None'}")
+        print(f"MT5 Server: {acc.get('serverName', 'None') if acc else 'None'}")
+        print(f"MT5 Balance: ${acc.get('balance', 0.0):.2f} {acc.get('currency', 'USD') if acc else ''}")
+        print(f"Last Error: {bridge.last_error_message or 'None'}")
         return
 
     if args.daemon:
@@ -783,3 +918,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
