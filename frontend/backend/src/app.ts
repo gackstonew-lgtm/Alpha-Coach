@@ -107,7 +107,7 @@ const apiLimiter = rateLimit({
 app.use('/api', apiLimiter);
 
 // API Health (Phase 6 Production Health Contract)
-app.get(['/api/health', '/health'], async (req, res) => {
+app.get(['/', '/api', '/api/health', '/health'], async (req, res) => {
   let dbStatus = 'UNAVAILABLE';
   try {
     const db = await getDatabaseAsync();

@@ -64381,7 +64381,7 @@ var apiLimiter = lib_default({
   legacyHeaders: false
 });
 app.use("/api", apiLimiter);
-app.get(["/api/health", "/health"], async (req, res) => {
+app.get(["/", "/api", "/api/health", "/health"], async (req, res) => {
   let dbStatus = "UNAVAILABLE";
   try {
     const db = await getDatabaseAsync();
