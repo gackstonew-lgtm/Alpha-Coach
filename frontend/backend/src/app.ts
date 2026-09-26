@@ -68,14 +68,6 @@ if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
 
 import { getDatabaseAsync, initDatabase } from './db/db';
 
-// Vercel path restoration middleware
-app.use((req, res, next) => {
-  const matchedPath = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
-  if (matchedPath && typeof matchedPath === 'string' && matchedPath.startsWith('/api')) {
-    req.url = matchedPath;
-  }
-  next();
-});
 
 // Lazy DB Init middleware
 let dbInitialized = false;

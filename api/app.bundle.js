@@ -64350,13 +64350,6 @@ app.use(import_express18.default.urlencoded({ extended: true, limit: "50mb" }));
 if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
   app.use((0, import_morgan.default)("dev"));
 }
-app.use((req, res, next) => {
-  const matchedPath = req.headers["x-matched-path"] || req.headers["x-vercel-matched-path"];
-  if (matchedPath && typeof matchedPath === "string" && matchedPath.startsWith("/api")) {
-    req.url = matchedPath;
-  }
-  next();
-});
 var dbInitialized = false;
 var dbInitPromise = null;
 app.use(async (req, res, next) => {
