@@ -59032,7 +59032,7 @@ async function verifySupabaseToken(token) {
     return null;
   }
 }
-var import_dotenv, import_path2, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, supabaseAdminInstance, supabaseAnonInstance, supabase_default;
+var import_dotenv, import_path2, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_SERVICE_ROLE, DEFAULT_SUPABASE_ANON, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, supabaseAdminInstance, supabaseAnonInstance, supabase_default;
 var init_supabase = __esm({
   "backend/src/lib/supabase.ts"() {
     "use strict";
@@ -59041,9 +59041,12 @@ var init_supabase = __esm({
     import_path2 = __toESM(require("path"));
     import_dotenv.default.config({ path: import_path2.default.resolve(__dirname, "../../../.env") });
     import_dotenv.default.config({ path: import_path2.default.resolve(__dirname, "../../.env") });
-    SUPABASE_URL = process.env.SUPABASE_URL;
-    SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
-    SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+    DEFAULT_SUPABASE_URL = "https://rmnudqejyrrklltodiaf.supabase.co";
+    DEFAULT_SUPABASE_SERVICE_ROLE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtbnVkcWVqeXJya2xsdG9kaWFmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDM1NDI5NiwiZXhwIjoyMTA1OTMwMjk2fQ.mrJWj1hVYNdSjCGR92WTuAUFLPE1E7wrqAALUkufcso";
+    DEFAULT_SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtbnVkcWVqeXJya2xsdG9kaWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTQyOTYsImV4cCI6MjEwNTkzMDI5Nn0.2Tg6KzAFA7gnQ09tQPhz_lES4X5by09-n3G1PePXId8";
+    SUPABASE_URL = process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL;
+    SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || DEFAULT_SUPABASE_SERVICE_ROLE;
+    SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON;
     supabaseAdminInstance = null;
     supabaseAnonInstance = null;
     supabase_default = {
@@ -62410,6 +62413,38 @@ var SyncService = class {
           `Synchronized ${dealsProcessed} deals across ${positionsCount} positions (${closedTradesCount} completed trades).`
         ]
       );
+      try {
+        const { getSupabaseAdmin: getSupabaseAdmin2, getSupabaseAnon: getSupabaseAnon2 } = (init_supabase(), __toCommonJS(supabase_exports));
+        const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY ? getSupabaseAdmin2() : getSupabaseAnon2();
+        if (supabase) {
+          await supabase.from("trading_accounts").upsert({
+            id: account.id,
+            user_id: userId,
+            account_number: String(payload.accountInfo.accountNumber),
+            broker_name: payload.accountInfo.brokerName || "Exness (KE) Limited",
+            server_name: payload.accountInfo.serverName || "ExnessKE-MT5Real21",
+            currency: payload.accountInfo.currency || "USD",
+            leverage: payload.accountInfo.leverage || 100,
+            balance: payload.accountInfo.balance,
+            equity: payload.accountInfo.equity,
+            margin: payload.accountInfo.margin,
+            free_margin: payload.accountInfo.freeMargin,
+            margin_level: payload.accountInfo.marginLevel || 0,
+            account_type: payload.accountInfo.accountType || "hedging",
+            is_active: 1,
+            last_synced_at: (/* @__PURE__ */ new Date()).toISOString()
+          }, { onConflict: "id" });
+          const positions = await db.query(
+            `SELECT * FROM reconstructed_positions WHERE account_id = ?`,
+            [account.id]
+          );
+          if (positions && positions.length > 0) {
+            await supabase.from("reconstructed_positions").upsert(positions, { onConflict: "id" });
+          }
+        }
+      } catch (supaSyncErr) {
+        console.warn("[SyncService] Supabase cloud sync skipped:", supaSyncErr);
+      }
       return {
         accountId: account.id,
         ordersProcessed,
