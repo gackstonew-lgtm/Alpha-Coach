@@ -36,7 +36,7 @@ class TestMT5Bridge(unittest.TestCase):
         bridge = AlphaCoachBridge(mock_mode=True)
         ready, msg = bridge.check_mt5_readiness()
         self.assertTrue(ready)
-        self.assertEqual(bridge.state, BridgeState.READY)
+        self.assertEqual(bridge.state, BridgeState.MT5_READY)
         acc = bridge.get_account_data()
         self.assertIsNotNone(acc)
         self.assertEqual(acc["currency"], "USD")

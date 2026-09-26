@@ -1,5 +1,6 @@
 """
 Alpha Coach - Windows System Tray Companion Application
+Authoritative Version: 1.0.2
 Runs quietly in the Windows notification area, monitors MetaTrader 5,
 and keeps your Alpha Coach trade journal synchronized in the background.
 """
@@ -61,15 +62,23 @@ class AlphaCoachTrayApp:
     def get_status_text(self) -> str:
         if self.bridge.state == BridgeState.SYNCING:
             return "Status: Synchronizing trades..."
-        elif self.bridge.state == BridgeState.SYNCED or self.bridge.state == BridgeState.READY:
-            last = self.bridge.last_sync_time.strftime('%H:%M:%S') if self.bridge.last_sync_time else "Just now"
+        elif self.bridge.state in (BridgeState.SYNCED, BridgeState.MT5_READY):
+            last = self.bridge.last_sync_time.strftime('%H:%M:%S') if self.bridge.last_sync_time else "Ready"
             return f"Status: Synced ({last})"
-        elif self.bridge.state == BridgeState.MT5_CLOSED:
-            return "Status: MT5 closed (Waiting)"
+        elif self.bridge.state == BridgeState.MT5_ADAPTER_MISSING:
+            return "Status: MT5 Adapter Missing"
+        elif self.bridge.state == BridgeState.MT5_TERMINAL_NOT_FOUND:
+            return "Status: MT5 Terminal Not Found"
+        elif self.bridge.state == BridgeState.MT5_TERMINAL_CLOSED:
+            return "Status: MT5 Closed (Waiting)"
+        elif self.bridge.state == BridgeState.MT5_INITIALIZATION_FAILED:
+            return "Status: MT5 Init Failed"
         elif self.bridge.state == BridgeState.MT5_NOT_LOGGED_IN:
-            return "Status: MT5 not logged in"
+            return "Status: MT5 Not Logged In"
         elif self.bridge.state == BridgeState.UNPAIRED:
-            return "Status: Pairing required"
+            return "Status: Pairing Required"
+        elif self.bridge.state == BridgeState.SYNC_FAILED:
+            return "Status: Sync Failed"
         elif self.bridge.state == BridgeState.API_UNAVAILABLE:
             return "Status: Reconnecting..."
         else:
@@ -77,9 +86,9 @@ class AlphaCoachTrayApp:
 
     def background_sync_worker(self):
         """Background thread running periodic 30-second synchronization cycles."""
-        companion_logger.info("Starting background synchronization worker...")
+        companion_logger.info(f"Starting {APP_NAME} background synchronization worker...")
         
-        # Initial 90-day sync attempt
+        # Initial 90-day sync attempt if paired
         try:
             if self.bridge.device_token:
                 self.bridge.run_sync_cycle(days_back=90)

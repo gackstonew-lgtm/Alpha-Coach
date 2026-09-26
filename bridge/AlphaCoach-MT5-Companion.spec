@@ -1,12 +1,25 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all
+
+datas = [('C:/Users/Gackstone_Baraka/Downloads/Alpha Coach/bridge/mock_mt5_adapter.py', '.'), ('C:/Users/Gackstone_Baraka/Downloads/Alpha Coach/bridge/alpha_coach_bridge.py', '.'), ('C:/Users/Gackstone_Baraka/Downloads/Alpha Coach/bridge/companion_controller.py', '.'), ('C:/Users/Gackstone_Baraka/Downloads/Alpha Coach/bridge/companion_logger.py', '.')]
+binaries = []
+hiddenimports = ['requests', 'pystray', 'PIL', 'MetaTrader5', 'colorama', 'tkinter', 'tkinter.ttk', 'tkinter.messagebox', 'tkinter.filedialog']
+tmp_ret = collect_all('MetaTrader5')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+tmp_ret = collect_all('pystray')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+tmp_ret = collect_all('PIL')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+tmp_ret = collect_all('colorama')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
     ['C:/Users/Gackstone_Baraka/Downloads/Alpha Coach/bridge/alpha_coach_tray.py'],
     pathex=[],
-    binaries=[],
-    datas=[('C:/Users/Gackstone_Baraka/Downloads/Alpha Coach/bridge/mock_mt5_adapter.py', '.'), ('C:/Users/Gackstone_Baraka/Downloads/Alpha Coach/bridge/alpha_coach_bridge.py', '.'), ('C:/Users/Gackstone_Baraka/Downloads/Alpha Coach/bridge/companion_controller.py', '.'), ('C:/Users/Gackstone_Baraka/Downloads/Alpha Coach/bridge/companion_logger.py', '.')],
-    hiddenimports=['requests', 'pystray', 'PIL', 'MetaTrader5', 'colorama', 'tkinter', 'tkinter.ttk', 'tkinter.messagebox'],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

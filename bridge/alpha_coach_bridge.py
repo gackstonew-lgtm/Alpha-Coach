@@ -1,7 +1,8 @@
 """
 Alpha Coach - Production MT5 Journal Bridge
+Authoritative Version: 1.0.2
 Seamlessly connects local MetaTrader 5 desktop terminal to Alpha Coach Performance OS.
-Features 1-click browser authorization, automatic MT5 detection, zero broker password exposure,
+Features distinct MT5 state management, exhaustive terminal scanning, 1-click browser pairing,
 and resilient cloud synchronization to Supabase / Production HTTPS API.
 """
 
@@ -20,9 +21,14 @@ import requests
 
 try:
     import MetaTrader5 as mt5
-    MT5_AVAILABLE = True
-except ImportError:
-    MT5_AVAILABLE = False
+    MT5_PACKAGE_AVAILABLE = True
+    MT5_PACKAGE_VERSION = getattr(mt5, '__version__', '5.0.x')
+    MT5_IMPORT_ERROR = None
+except Exception as e:
+    mt5 = None
+    MT5_PACKAGE_AVAILABLE = False
+    MT5_PACKAGE_VERSION = "Unavailable"
+    MT5_IMPORT_ERROR = str(e)
 
 try:
     from colorama import init, Fore, Style
@@ -45,7 +51,7 @@ except ImportError:
 
 from companion_logger import companion_logger
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 APP_NAME = "Alpha Coach MT5 Companion"
 GITHUB_REPO = "gackstonew-lgtm/Alpha-Coach"
 
@@ -60,13 +66,17 @@ SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 class BridgeState:
     UNPAIRED = "UNPAIRED"
-    API_UNAVAILABLE = "API_UNAVAILABLE"
-    MT5_NOT_INSTALLED = "MT5_NOT_INSTALLED"
-    MT5_CLOSED = "MT5_CLOSED"
+    MT5_ADAPTER_MISSING = "MT5_ADAPTER_MISSING"
+    MT5_TERMINAL_NOT_FOUND = "MT5_TERMINAL_NOT_FOUND"
+    MT5_TERMINAL_CLOSED = "MT5_TERMINAL_CLOSED"
+    MT5_INITIALIZATION_FAILED = "MT5_INITIALIZATION_FAILED"
     MT5_NOT_LOGGED_IN = "MT5_NOT_LOGGED_IN"
-    READY = "READY"
+    MT5_CONNECTED = "MT5_CONNECTED"
+    MT5_READY = "MT5_READY"
     SYNCING = "SYNCING"
     SYNCED = "SYNCED"
+    SYNC_FAILED = "SYNC_FAILED"
+    API_UNAVAILABLE = "API_UNAVAILABLE"
     REVOKED = "REVOKED"
     ERROR = "ERROR"
 
@@ -103,7 +113,7 @@ class AlphaCoachBridge:
         self.selected_mt5_path: Optional[str] = None
 
         self.load_config()
-        companion_logger.info(f"Initialized AlphaCoachBridge: API={self.api_url}, Web={self.web_url}, Token={'Configured' if self.device_token else 'None'}")
+        companion_logger.info(f"Initialized AlphaCoachBridge v{__version__}: API={self.api_url}, MT5 Adapter={'Available (v' + str(MT5_PACKAGE_VERSION) + ')' if MT5_PACKAGE_AVAILABLE else 'MISSING: ' + str(MT5_IMPORT_ERROR)}")
 
     def _get_config_dir(self) -> str:
         if platform.system() == "Windows":
@@ -130,7 +140,7 @@ class AlphaCoachBridge:
                     if cfg.get('selected_mt5_path'):
                         self.selected_mt5_path = cfg['selected_mt5_path']
                     if self.device_token:
-                        self.state = BridgeState.READY
+                        self.state = BridgeState.MT5_CONNECTED
             except Exception as e:
                 companion_logger.warning(f"Error loading config file: {e}")
 
@@ -173,96 +183,145 @@ class AlphaCoachBridge:
         companion_logger.info(f"[{tag}] {msg}")
 
     # =========================================================================
-    # Automatic MT5 Terminal Detection & Readiness
+    # Comprehensive MT5 Terminal Detection & Readiness Health Check
     # =========================================================================
 
     def detect_mt5_installations(self) -> List[str]:
-        """Finds common MetaTrader 5 terminal paths on Windows."""
+        """Exhaustively discovers MT5 terminal64.exe and terminal.exe across Windows."""
         if platform.system() != "Windows":
             return []
 
-        search_dirs = [
-            os.environ.get("ProgramFiles", "C:\\Program Files"),
-            os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)"),
-            os.path.expanduser("~\\AppData\\Local\\Programs")
+        search_roots = [
+            os.environ.get("ProgramFiles", r"C:\Program Files"),
+            os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"),
+            os.environ.get("LOCALAPPDATA", ""),
+            os.environ.get("APPDATA", ""),
+            os.path.expanduser(r"~\Desktop")
         ]
 
         found_paths = []
-        for base in search_dirs:
-            if not os.path.exists(base):
+        for base in search_roots:
+            if not base or not os.path.exists(base):
                 continue
             try:
-                for entry in os.listdir(base):
-                    full = os.path.join(base, entry)
-                    if os.path.isdir(full) and any(k in entry.lower() for k in ["metatrader", "mt5", "exness", "terminal"]):
-                        t64 = os.path.join(full, "terminal64.exe")
-                        t32 = os.path.join(full, "terminal.exe")
-                        if os.path.exists(t64):
-                            found_paths.append(t64)
-                        elif os.path.exists(t32):
-                            found_paths.append(t32)
+                for root, dirs, files in os.walk(base):
+                    # Limit scan depth to 3 levels to maintain rapid responsiveness
+                    depth = root[len(base):].count(os.sep)
+                    if depth > 3:
+                        dirs[:] = []
+                        continue
+                    for f in files:
+                        if f.lower() in ("terminal64.exe", "terminal.exe"):
+                            full_path = os.path.join(root, f)
+                            if os.path.exists(full_path):
+                                found_paths.append(full_path)
             except Exception:
                 continue
 
-        return list(set(found_paths))
+        # De-duplicate while preserving order
+        unique = []
+        for p in found_paths:
+            if p not in unique:
+                unique.append(p)
+        return unique
 
     def check_mt5_readiness(self) -> Tuple[bool, str]:
-        """Checks MetaTrader 5 availability, process running state, and account login."""
+        """
+        Distinct Multi-Stage MT5 Health Check:
+        1. MT5_ADAPTER_MISSING (Python package import failure)
+        2. MT5_TERMINAL_NOT_FOUND (No terminal executable on system)
+        3. MT5_TERMINAL_CLOSED (Terminal installed but process not running)
+        4. MT5_INITIALIZATION_FAILED (IPC initialization failed)
+        5. MT5_NOT_LOGGED_IN (Terminal running without active account)
+        6. MT5_READY (Terminal active, connected, account detected)
+        """
         if self.mock_mode:
-            self.state = BridgeState.READY
+            self.state = BridgeState.MT5_READY
             return True, "Mock MT5 environment active"
 
-        if not MT5_AVAILABLE:
-            self.state = BridgeState.MT5_NOT_INSTALLED
-            return False, "MetaTrader 5 Python adapter is not available on this platform"
+        # Stage 1: Check Python Package
+        if not MT5_PACKAGE_AVAILABLE or mt5 is None:
+            self.state = BridgeState.MT5_ADAPTER_MISSING
+            msg = f"MetaTrader 5 Python adapter is missing in this companion package ({MT5_IMPORT_ERROR or 'ModuleNotFoundError'})."
+            self.last_error_message = msg
+            return False, msg
 
+        # Stage 2: Discover Terminals
+        installations = self.detect_mt5_installations()
+        effective_path = self.selected_mt5_path if (self.selected_mt5_path and os.path.exists(self.selected_mt5_path)) else (installations[0] if installations else None)
+
+        # Stage 3: Attempt Initialize
         init_kwargs = {}
-        if self.selected_mt5_path and os.path.exists(self.selected_mt5_path):
-            init_kwargs["path"] = self.selected_mt5_path
+        if effective_path:
+            init_kwargs["path"] = effective_path
 
-        initialized = mt5.initialize(**init_kwargs)
+        initialized = False
+        try:
+            initialized = mt5.initialize(**init_kwargs)
+        except Exception as e:
+            companion_logger.warning(f"mt5.initialize exception: {e}")
+
         if not initialized:
-            installations = self.detect_mt5_installations()
-            if not installations:
-                self.state = BridgeState.MT5_NOT_INSTALLED
-                return False, "MetaTrader 5 is not installed on this computer."
+            last_err = mt5.last_error() if hasattr(mt5, 'last_error') else "Unknown"
+            if not installations and not effective_path:
+                self.state = BridgeState.MT5_TERMINAL_NOT_FOUND
+                msg = "No MetaTrader 5 terminal found on this computer. Please install MT5 or select terminal64.exe."
+                self.last_error_message = msg
+                return False, msg
             else:
-                self.state = BridgeState.MT5_CLOSED
-                return False, "MetaTrader 5 desktop terminal is not running. Please open MT5."
+                self.state = BridgeState.MT5_TERMINAL_CLOSED
+                msg = f"MetaTrader 5 terminal is not running. Please open MT5 ({os.path.basename(effective_path or 'terminal64.exe')})."
+                self.last_error_message = msg
+                return False, msg
 
-        acc = mt5.account_info()
-        if acc is None:
-            self.state = BridgeState.MT5_NOT_LOGGED_IN
-            return False, "MetaTrader 5 is running, but no trading account is logged in."
+        # Stage 4: Check Active Account
+        try:
+            acc = mt5.account_info()
+            if acc is None:
+                self.state = BridgeState.MT5_NOT_LOGGED_IN
+                msg = "MetaTrader 5 is running, but no trading account is logged in."
+                self.last_error_message = msg
+                return False, msg
 
-        self.state = BridgeState.READY
-        return True, f"Connected to Account #{acc.login} ({acc.company or acc.server})"
+            self.state = BridgeState.MT5_READY
+            msg = f"Connected to Account #{acc.login} ({acc.company or acc.server})"
+            self.last_error_message = None
+            return True, msg
+        except Exception as e:
+            self.state = BridgeState.MT5_INITIALIZATION_FAILED
+            msg = f"Failed to retrieve account from MT5: {e}"
+            self.last_error_message = msg
+            return False, msg
 
     def get_account_data(self) -> Optional[Dict[str, Any]]:
         if self.mock_mode:
             from mock_mt5_adapter import generate_mock_3month_data
             return generate_mock_3month_data()["accountInfo"]
 
-        if not MT5_AVAILABLE:
+        if not MT5_PACKAGE_AVAILABLE or mt5 is None:
             return None
 
-        acc = mt5.account_info()
-        if not acc:
-            return None
+        try:
+            acc = mt5.account_info()
+            if not acc:
+                return None
 
-        return {
-            "accountNumber": str(acc.login),
-            "brokerName": acc.company or "Exness (KE) Limited",
-            "serverName": acc.server or "ExnessKE-MT5Real21",
-            "currency": acc.currency or "USD",
-            "leverage": acc.leverage or 100,
-            "balance": float(acc.balance),
-            "equity": float(acc.equity),
-            "margin": float(acc.margin),
-            "freeMargin": float(acc.margin_free),
-            "marginLevel": float(acc.margin_level) if hasattr(acc, 'margin_level') else 0.0,
-            "accountType": "hedging" if getattr(acc, 'margin_mode', 0) == getattr(mt5, 'ACCOUNT_MARGIN_MODE_RETAIL_HEDGING', 0) else "netting"
-        }
+            return {
+                "accountNumber": str(acc.login),
+                "brokerName": acc.company or "Exness (KE) Limited",
+                "serverName": acc.server or "ExnessKE-MT5Real21",
+                "currency": acc.currency or "USD",
+                "leverage": acc.leverage or 100,
+                "balance": float(acc.balance),
+                "equity": float(acc.equity),
+                "margin": float(acc.margin),
+                "freeMargin": float(acc.margin_free),
+                "marginLevel": float(acc.margin_level) if hasattr(acc, 'margin_level') else 0.0,
+                "accountType": "hedging" if getattr(acc, 'margin_mode', 0) == getattr(mt5, 'ACCOUNT_MARGIN_MODE_RETAIL_HEDGING', 0) else "netting"
+            }
+        except Exception as e:
+            companion_logger.error(f"Error in get_account_data: {e}")
+            return None
 
     # =========================================================================
     # 1-Click Secure Browser-to-Bridge Pairing (Hybrid Mode)
@@ -350,7 +409,7 @@ class AlphaCoachBridge:
                     if status == "AUTHORIZED" and data.get("deviceToken"):
                         self.device_token = data.get("deviceToken")
                         self.save_config()
-                        self.state = BridgeState.READY
+                        self.state = BridgeState.MT5_CONNECTED
                         self.log("PAIR_SUCCESS", "Device authorized via API! Companion is paired.", Fore.GREEN)
                         return True
                     elif status == "REJECTED":
@@ -370,7 +429,7 @@ class AlphaCoachBridge:
                         if status == "AUTHORIZED" and sess.get("device_token"):
                             self.device_token = sess.get("device_token")
                             self.save_config()
-                            self.state = BridgeState.READY
+                            self.state = BridgeState.MT5_CONNECTED
                             self.log("PAIR_SUCCESS", "Device authorized via Supabase! Companion is paired.", Fore.GREEN)
                             return True
                         elif status == "REJECTED":
@@ -396,7 +455,7 @@ class AlphaCoachBridge:
             data = generate_mock_3month_data()
             return {"deals": data["deals"], "orders": data["orders"]}
 
-        if not MT5_AVAILABLE:
+        if not MT5_PACKAGE_AVAILABLE or mt5 is None:
             return {"deals": [], "orders": []}
 
         now = datetime.now()
@@ -637,7 +696,7 @@ class AlphaCoachBridge:
             return True
 
         except Exception as e:
-            self.state = BridgeState.ERROR
+            self.state = BridgeState.SYNC_FAILED
             self.last_error_message = f"Supabase Cloud Sync error: {str(e)}"
             self.consecutive_failures += 1
             companion_logger.exception(f"Supabase Cloud Sync failure: {e}")
@@ -712,6 +771,7 @@ def main():
         print(f"API URL: {bridge.api_url}")
         print(f"Device: {bridge.device_name}")
         print(f"Token: {'Configured' if bridge.device_token else 'None'}")
+        print(f"MT5 Adapter: {'Available (v' + str(MT5_PACKAGE_VERSION) + ')' if MT5_PACKAGE_AVAILABLE else 'MISSING'}")
         print(f"MT5 Readiness: {msg}")
         print(f"Account: #{acc.get('accountNumber', 'None') if acc else 'None'} ({acc.get('brokerName', '') if acc else ''})")
         return

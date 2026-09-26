@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller pystray pillow requests colorama
+          pip install pyinstaller pystray pillow requests colorama MetaTrader5
 
       - name: Run Bridge Tests
         run: |
@@ -59,7 +59,10 @@ jobs:
             
             Alpha Coach MT5 Companion is a Windows background companion application that automatically synchronizes your local MetaTrader 5 trading accounts, deals, orders, and open positions with the Alpha Coach Performance OS.
             
-            ### Key Features:
+            ### Key Features & Diagnostics:
+            - **Self-Contained MetaTrader 5 Adapter:** Pre-bundled with complete native MetaTrader 5 C-extensions for seamless execution on clean Windows environments.
+            - **Multi-Stage MT5 Health Diagnostics:** Distinct state separation (`MT5_READY`, `MT5_TERMINAL_CLOSED`, `MT5_NOT_LOGGED_IN`, `MT5_ADAPTER_MISSING`).
+            - **Dedicated GUI Diagnostics Window:** Live account telemetry, balance/equity tracking, MT5 terminal path selector, and 1-click clipboard export.
             - **Zero Password Exposure:** Uses official MetaTrader API locally; never requires or transmits broker credentials.
             - **1-Click Browser Pairing:** Instant pairing with the Alpha Coach web platform.
             - **Comprehensive 90-Day & Live Sync:** Idempotent historical trade reconstruction and 30-second live background sync.

@@ -1,7 +1,8 @@
 """
 Alpha Coach - Companion Controller Layer
-Orchestrates Tray Actions, Real GUI Diagnostics Dialog, Desktop Notifications,
-Background Sync, and End-to-End Pairing Lifecycles.
+Authoritative Version: 1.0.2
+Orchestrates Tray Actions, Real GUI Diagnostics Dialog, MT5 Terminal File Browser,
+Desktop Toast Notifications, Background Sync, and End-to-End Pairing Lifecycles.
 """
 
 import os
@@ -12,8 +13,21 @@ import webbrowser
 from datetime import datetime, timezone
 from typing import Optional, Callable
 
-from alpha_coach_bridge import AlphaCoachBridge, BridgeState, __version__, APP_NAME
+from alpha_coach_bridge import (
+    AlphaCoachBridge,
+    BridgeState,
+    __version__,
+    APP_NAME,
+    MT5_PACKAGE_AVAILABLE,
+    MT5_PACKAGE_VERSION,
+    MT5_IMPORT_ERROR
+)
 from companion_logger import companion_logger, get_log_dir
+
+try:
+    import MetaTrader5 as mt5
+except Exception:
+    mt5 = None
 
 class CompanionController:
     def __init__(self, bridge: AlphaCoachBridge, notify_fn: Optional[Callable[[str, str], None]] = None):
@@ -139,8 +153,27 @@ class CompanionController:
 
         threading.Thread(target=_do_check, daemon=True, name="UpdateCheckWorker").start()
 
+    def select_mt5_terminal_path(self, parent_window=None) -> Optional[str]:
+        """Allows user to select custom terminal64.exe path and saves configuration."""
+        try:
+            import tkinter.filedialog as fd
+            file_path = fd.askopenfilename(
+                parent=parent_window,
+                title="Select MetaTrader 5 Terminal Executable",
+                filetypes=[("MetaTrader Terminal", "terminal64.exe;terminal.exe"), ("All Executables", "*.exe")]
+            )
+            if file_path and os.path.exists(file_path):
+                self.bridge.selected_mt5_path = file_path
+                self.bridge.save_config()
+                self.notify("MT5 Terminal Selected", f"Configured: {os.path.basename(file_path)}")
+                companion_logger.info(f"User manually selected MT5 terminal path: {file_path}")
+                return file_path
+        except Exception as e:
+            companion_logger.error(f"Failed to select MT5 terminal path: {e}")
+        return None
+
     def run_diagnostics(self, *args):
-        """Displays a dedicated GUI Diagnostics Window with live system status."""
+        """Displays a dedicated GUI Diagnostics Window with live telemetry and terminal selector."""
         def _show_gui():
             try:
                 import tkinter as tk
@@ -150,10 +183,26 @@ class CompanionController:
                 ready, msg = self.bridge.check_mt5_readiness()
                 acc = self.bridge.get_account_data()
                 
+                term_name = "N/A"
+                term_build = "N/A"
+                term_path = self.bridge.selected_mt5_path or "Auto-detected"
+                
+                if MT5_PACKAGE_AVAILABLE and mt5 is not None:
+                    try:
+                        t_info = mt5.terminal_info()
+                        v_info = mt5.version()
+                        if t_info:
+                            term_name = t_info.name or "MetaTrader 5"
+                            term_path = t_info.path or term_path
+                        if v_info:
+                            term_build = f"Build {v_info[1]} ({v_info[2]})"
+                    except Exception:
+                        pass
+                
                 root = tk.Tk()
                 root.title(f"{APP_NAME} — Diagnostics & Health")
-                root.geometry("640x520")
-                root.minsize(580, 480)
+                root.geometry("680x560")
+                root.minsize(620, 500)
                 root.configure(bg="#0f172a")  # Slate 900
                 
                 # Header
@@ -171,7 +220,7 @@ class CompanionController:
                 
                 sub_lbl = tk.Label(
                     header_frame,
-                    text="Live Diagnostic Telemetry & Connection Inspector",
+                    text="Live Diagnostic Telemetry, Adapter Verification & Connection Inspector",
                     font=("Segoe UI", 9),
                     fg="#94a3b8",
                     bg="#1e293b"
@@ -206,6 +255,8 @@ class CompanionController:
                 balance = f"${acc.get('balance', 0):.2f}" if acc else "N/A"
                 equity = f"${acc.get('equity', 0):.2f}" if acc else "N/A"
                 
+                adapter_status = f"Available (MetaTrader5 v{MT5_PACKAGE_VERSION})" if MT5_PACKAGE_AVAILABLE else f"MISSING / ERROR ({MT5_IMPORT_ERROR or 'ModuleNotFoundError'})"
+                
                 log_file_path = os.path.join(get_log_dir(), "companion.log")
                 
                 diag_lines = [
@@ -217,23 +268,30 @@ class CompanionController:
                     f"--- [ APPLICATION & ENVIRONMENT ] ---",
                     f"  App Name:          {APP_NAME}",
                     f"  App Version:       v{__version__}",
-                    f"  Python Platform:   {sys.platform} (64-bit)",
+                    f"  Python Runtime:    {platform.python_version()} ({platform.architecture()[0]})",
                     f"  Web Platform URL:  {self.bridge.web_url}",
                     f"  Backend API URL:   {self.bridge.api_url}",
                     f"  Log File Location: {log_file_path}",
                     f"",
-                    f"--- [ AUTHORIZATION & PAIRING ] ---",
-                    f"  Device Name:       {self.bridge.device_name}",
-                    f"  Pairing State:     {self.bridge.state}",
-                    f"  Device Credential: {token_masked}",
+                    f"--- [ METATRADER 5 PYTHON ADAPTER ] ---",
+                    f"  Adapter Status:    {adapter_status}",
+                    f"  Import Integrity:  {'PASS (Native C-Extension Loaded)' if MT5_PACKAGE_AVAILABLE else 'FAIL'}",
                     f"",
-                    f"--- [ METATRADER 5 TERMINAL ] ---",
+                    f"--- [ METATRADER 5 DESKTOP TERMINAL ] ---",
                     f"  MT5 Readiness:     {msg}",
+                    f"  Terminal Name:     {term_name}",
+                    f"  Terminal Build:    {term_build}",
+                    f"  Terminal Path:     {term_path}",
                     f"  Account Number:    #{acc_num}",
-                    f"  Broker Name:       {broker}",
+                    f"  Broker Company:    {broker}",
                     f"  Server Name:       {server}",
                     f"  Current Balance:   {balance}",
                     f"  Current Equity:    {equity}",
+                    f"",
+                    f"--- [ AUTHORIZATION & CLOUD PAIRING ] ---",
+                    f"  Device Name:       {self.bridge.device_name}",
+                    f"  Bridge State:      {self.bridge.state}",
+                    f"  Device Credential: {token_masked}",
                     f"",
                     f"--- [ SYNCHRONIZATION ENGINE ] ---",
                     f"  Background Sync:   {'PAUSED' if self.bridge.is_sync_paused else 'ACTIVE (30s Interval)'}",
@@ -264,21 +322,43 @@ class CompanionController:
                     root.destroy()
                     self.repair_pairing()
 
+                def trigger_browse_terminal():
+                    chosen = self.select_mt5_terminal_path(root)
+                    if chosen:
+                        root.destroy()
+                        self.run_diagnostics()
+
                 copy_btn = tk.Button(
                     btn_frame,
-                    text="📋 Copy to Clipboard",
+                    text="📋 Copy Report",
                     bg="#0284c7",
                     fg="#ffffff",
                     activebackground="#0369a1",
                     activeforeground="#ffffff",
                     font=("Segoe UI", 9, "bold"),
                     relief=tk.FLAT,
-                    padx=12,
+                    padx=10,
                     pady=5,
                     cursor="hand2",
                     command=copy_to_clipboard
                 )
-                copy_btn.pack(side=tk.LEFT, padx=(0, 8))
+                copy_btn.pack(side=tk.LEFT, padx=(0, 6))
+
+                browse_btn = tk.Button(
+                    btn_frame,
+                    text="📁 Browse MT5",
+                    bg="#6366f1",
+                    fg="#ffffff",
+                    activebackground="#4f46e5",
+                    activeforeground="#ffffff",
+                    font=("Segoe UI", 9, "bold"),
+                    relief=tk.FLAT,
+                    padx=10,
+                    pady=5,
+                    cursor="hand2",
+                    command=trigger_browse_terminal
+                )
+                browse_btn.pack(side=tk.LEFT, padx=(0, 6))
 
                 sync_btn = tk.Button(
                     btn_frame,
@@ -289,28 +369,28 @@ class CompanionController:
                     activeforeground="#ffffff",
                     font=("Segoe UI", 9, "bold"),
                     relief=tk.FLAT,
-                    padx=12,
+                    padx=10,
                     pady=5,
                     cursor="hand2",
                     command=trigger_sync_from_dialog
                 )
-                sync_btn.pack(side=tk.LEFT, padx=(0, 8))
+                sync_btn.pack(side=tk.LEFT, padx=(0, 6))
 
                 pair_btn = tk.Button(
                     btn_frame,
-                    text="🔗 Re-pair Device",
-                    bg="#4f46e5",
+                    text="🔗 Re-pair",
+                    bg="#8b5cf6",
                     fg="#ffffff",
-                    activebackground="#4338ca",
+                    activebackground="#7c3aed",
                     activeforeground="#ffffff",
                     font=("Segoe UI", 9, "bold"),
                     relief=tk.FLAT,
-                    padx=12,
+                    padx=10,
                     pady=5,
                     cursor="hand2",
                     command=trigger_pair_from_dialog
                 )
-                pair_btn.pack(side=tk.LEFT, padx=(0, 8))
+                pair_btn.pack(side=tk.LEFT, padx=(0, 6))
 
                 close_btn = tk.Button(
                     btn_frame,
@@ -321,7 +401,7 @@ class CompanionController:
                     activeforeground="#ffffff",
                     font=("Segoe UI", 9),
                     relief=tk.FLAT,
-                    padx=12,
+                    padx=10,
                     pady=5,
                     cursor="hand2",
                     command=root.destroy
@@ -343,6 +423,11 @@ class CompanionController:
         try:
             companion_logger.info("Companion application shutdown requested.")
             self.bridge.state = BridgeState.UNPAIRED
+            if MT5_PACKAGE_AVAILABLE and mt5 is not None:
+                try:
+                    mt5.shutdown()
+                except Exception:
+                    pass
         except Exception:
             pass
         sys.exit(0)
