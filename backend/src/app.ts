@@ -66,6 +66,8 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
+import { getDatabaseAsync } from './db/db';
+
 // Rate Limiter
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -75,40 +77,75 @@ const apiLimiter = rateLimit({
 });
 app.use('/api', apiLimiter);
 
-// API Health
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ONLINE',
-    app: 'Alpha Coach Trading Performance OS Backend',
-    version: '1.0.0',
-    time: new Date().toISOString()
+// API Health (Phase 6 Production Health Contract)
+app.get(['/api/health', '/health'], async (req, res) => {
+  let dbStatus = 'UNAVAILABLE';
+  try {
+    const db = await getDatabaseAsync();
+    await db.query('SELECT 1');
+    dbStatus = 'CONNECTED';
+  } catch (err) {
+    dbStatus = 'DEGRADED';
+  }
+
+  res.status(200).json({
+    success: true,
+    status: dbStatus === 'CONNECTED' ? 'ONLINE' : 'DEGRADED',
+    service: 'Alpha Coach API',
+    version: '1.0.4',
+    environment: process.env.NODE_ENV || 'production',
+    database: dbStatus,
+    timestamp: new Date().toISOString()
   });
 });
 
-// API v1 Endpoints
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/accounts', accountsRoutes);
-app.use('/api/v1/mt5', mt5Routes);
-app.use('/api/v1/trades', tradesRoutes);
-app.use('/api/v1/analytics', analyticsRoutes);
-app.use('/api/v1/strategies', strategiesRoutes);
-app.use('/api/v1/sessions', sessionsRoutes);
-app.use('/api/v1/symbols', symbolsRoutes);
-app.use('/api/v1/risk', riskRoutes);
-app.use('/api/v1/reviews', reviewsRoutes);
-app.use('/api/v1/voice', voiceRoutes);
-app.use('/api/v1/gamification', gamificationRoutes);
-app.use('/api/v1/ai', aiRoutes);
-app.use('/api/v1/reports', reportsRoutes);
-app.use('/api/v1/admin', adminRoutes);
-app.use('/api/v1/notifications', notificationsRoutes);
-app.use('/api/v1/economic', economicRoutes);
+// API v1 Endpoints (Dual-mounted for /api/v1 and /v1 to guarantee serverless route compatibility)
+const routePairs = [
+  ['/auth', authRoutes],
+  ['/accounts', accountsRoutes],
+  ['/mt5', mt5Routes],
+  ['/trades', tradesRoutes],
+  ['/analytics', analyticsRoutes],
+  ['/strategies', strategiesRoutes],
+  ['/sessions', sessionsRoutes],
+  ['/symbols', symbolsRoutes],
+  ['/risk', riskRoutes],
+  ['/reviews', reviewsRoutes],
+  ['/voice', voiceRoutes],
+  ['/gamification', gamificationRoutes],
+  ['/ai', aiRoutes],
+  ['/reports', reportsRoutes],
+  ['/admin', adminRoutes],
+  ['/notifications', notificationsRoutes],
+  ['/economic', economicRoutes]
+] as const;
 
-// Global Error Handler
+routePairs.forEach(([prefix, router]) => {
+  app.use(`/api/v1${prefix}`, router);
+  app.use(`/v1${prefix}`, router);
+});
+
+// 404 Catch-All (Always return JSON, NEVER HTML)
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: {
+      code: 'ROUTE_NOT_FOUND',
+      message: `API route not found: ${req.method} ${req.originalUrl || req.url}`
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Global Error Handler (Standardized Phase 16 JSON)
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('[Alpha Coach API Error]:', err);
   res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error',
+    success: false,
+    error: {
+      code: err.code || 'INTERNAL_SERVER_ERROR',
+      message: err.message || 'Internal Server Error'
+    },
     timestamp: new Date().toISOString()
   });
 });

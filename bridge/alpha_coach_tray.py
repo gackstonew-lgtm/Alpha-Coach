@@ -73,6 +73,14 @@ class AlphaCoachTrayApp:
             return "Status: Auth Expired"
         elif self.bridge.state == BridgeState.AUTH_CHECK_FAILED:
             return "Status: Auth Check Failed"
+        elif self.bridge.state == BridgeState.API_ROUTE_MISCONFIGURED:
+            return "Status: API Route Misconfigured (Waiting)"
+        elif self.bridge.state == BridgeState.API_ROUTE_NOT_FOUND:
+            return "Status: API Route Not Found (404)"
+        elif self.bridge.state == BridgeState.API_SERVER_ERROR:
+            return "Status: API Server Error (500)"
+        elif self.bridge.state == BridgeState.API_TIMEOUT:
+            return "Status: API Timeout (Retrying...)"
         elif self.bridge.state == BridgeState.MT5_ADAPTER_MISSING:
             return "Status: MT5 Adapter Missing"
         elif self.bridge.state == BridgeState.MT5_TERMINAL_NOT_FOUND:
@@ -93,7 +101,7 @@ class AlphaCoachTrayApp:
             return f"Status: {self.bridge.state}"
 
     def background_sync_worker(self):
-        """Background thread running periodic 30-second synchronization cycles."""
+        """Background thread running periodic synchronization with bounded exponential backoff on errors."""
         companion_logger.info(f"Starting {APP_NAME} background synchronization worker...")
         
         # Initial 90-day sync attempt if paired
@@ -103,8 +111,16 @@ class AlphaCoachTrayApp:
         except Exception as e:
             companion_logger.warning(f"Initial sync warning: {e}")
 
+        backoff_intervals = [30, 60, 120, 300, 600]
         while self.is_running:
-            time.sleep(30)
+            failures = min(self.bridge.consecutive_failures, len(backoff_intervals) - 1)
+            interval = backoff_intervals[failures] if failures > 0 else 30
+
+            for _ in range(interval):
+                if not self.is_running:
+                    break
+                time.sleep(1)
+
             if not self.is_running:
                 break
             try:

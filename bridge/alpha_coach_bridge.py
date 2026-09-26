@@ -74,6 +74,10 @@ class BridgeState:
     BRIDGE_DEVICE_REVOKED = "BRIDGE_DEVICE_REVOKED"
     BRIDGE_DEVICE_EXPIRED = "BRIDGE_DEVICE_EXPIRED"
     API_UNAVAILABLE = "API_UNAVAILABLE"
+    API_ROUTE_MISCONFIGURED = "API_ROUTE_MISCONFIGURED"
+    API_ROUTE_NOT_FOUND = "API_ROUTE_NOT_FOUND"
+    API_SERVER_ERROR = "API_SERVER_ERROR"
+    API_TIMEOUT = "API_TIMEOUT"
     MT5_ADAPTER_MISSING = "MT5_ADAPTER_MISSING"
     MT5_TERMINAL_NOT_FOUND = "MT5_TERMINAL_NOT_FOUND"
     MT5_TERMINAL_CLOSED = "MT5_TERMINAL_CLOSED"
@@ -545,7 +549,7 @@ class AlphaCoachBridge:
 
     def check_device_authorization(self) -> Tuple[bool, str]:
         """
-        Phase 7: Dedicated device authentication verification check.
+        Phase 7 & 10: Dedicated device authentication verification check.
         Validates the configured device token with the Alpha Coach backend.
         Returns (is_valid, message).
         """
@@ -568,14 +572,14 @@ class AlphaCoachBridge:
             # Handle HTML response gracefully if routing is returning SPA index.html
             content_type = resp.headers.get("Content-Type", "")
             if "text/html" in content_type:
-                self.state = BridgeState.API_UNAVAILABLE
+                self.state = BridgeState.API_ROUTE_MISCONFIGURED
                 self.last_error_message = f"API endpoint returned HTML instead of JSON (Status {resp.status_code}). Production API routing required."
                 return False, self.last_error_message
 
             try:
                 data = resp.json()
             except Exception as e:
-                self.state = BridgeState.API_UNAVAILABLE
+                self.state = BridgeState.API_ROUTE_MISCONFIGURED
                 self.last_error_message = f"Failed to parse auth response: {e} (Status {resp.status_code})"
                 return False, self.last_error_message
 
@@ -600,11 +604,23 @@ class AlphaCoachBridge:
                     self.state = BridgeState.BRIDGE_TOKEN_INVALID
                     self.last_error_message = err_msg or "Alpha Coach authorization needs to be renewed. Device token is invalid."
                 return False, self.last_error_message
+            elif resp.status_code == 404:
+                self.state = BridgeState.API_ROUTE_NOT_FOUND
+                self.last_error_message = f"Device status endpoint not found (HTTP 404): {url}"
+                return False, self.last_error_message
+            elif resp.status_code >= 500:
+                self.state = BridgeState.API_SERVER_ERROR
+                self.last_error_message = f"API server error ({resp.status_code}): {err_msg}"
+                return False, self.last_error_message
 
             self.state = BridgeState.AUTH_CHECK_FAILED
             self.last_error_message = f"Authorization check failed ({resp.status_code}): {err_msg}"
             return False, self.last_error_message
 
+        except requests.exceptions.Timeout as e:
+            self.state = BridgeState.API_TIMEOUT
+            self.last_error_message = f"Authorization check timed out: {e}"
+            return False, self.last_error_message
         except requests.exceptions.RequestException as e:
             companion_logger.warning(f"Could not reach API authorization endpoint: {e}")
             self.state = BridgeState.API_UNAVAILABLE
@@ -629,7 +645,7 @@ class AlphaCoachBridge:
             # Detect HTML response from static SPA routing vs API JSON
             content_type = resp.headers.get("Content-Type", "")
             if "text/html" in content_type:
-                self.state = BridgeState.API_UNAVAILABLE
+                self.state = BridgeState.API_ROUTE_MISCONFIGURED
                 self.last_error_message = f"API endpoint returned HTML instead of JSON (Status {resp.status_code}). Production API routing required."
                 self.consecutive_failures += 1
                 self.log("SYNC_ERROR", self.last_error_message, Fore.RED)
@@ -638,7 +654,7 @@ class AlphaCoachBridge:
             try:
                 data = resp.json()
             except Exception as e:
-                self.state = BridgeState.API_UNAVAILABLE
+                self.state = BridgeState.API_ROUTE_MISCONFIGURED
                 self.last_error_message = f"Failed to parse API response: {e} (Status {resp.status_code})"
                 self.consecutive_failures += 1
                 self.log("SYNC_ERROR", self.last_error_message, Fore.RED)
@@ -667,6 +683,19 @@ class AlphaCoachBridge:
                 self.consecutive_failures += 1
                 self.log("SYNC_AUTH_FAIL", f"Authorization rejected: {err_msg}", Fore.RED)
                 return False
+            elif resp.status_code == 404:
+                self.state = BridgeState.API_ROUTE_NOT_FOUND
+                self.last_error_message = f"Sync endpoint not found (HTTP 404): {api_url}"
+                self.consecutive_failures += 1
+                self.log("SYNC_FAIL", self.last_error_message, Fore.RED)
+                return False
+            elif resp.status_code >= 500:
+                err_msg = data.get("error", {}).get("message", f"Sync API returned HTTP {resp.status_code}")
+                self.state = BridgeState.API_SERVER_ERROR
+                self.last_error_message = err_msg
+                self.consecutive_failures += 1
+                self.log("SYNC_FAIL", f"Server error: {err_msg}", Fore.RED)
+                return False
             else:
                 err_msg = data.get("error", {}).get("message", f"Sync API returned HTTP {resp.status_code}")
                 self.state = BridgeState.SYNC_FAILED
@@ -674,6 +703,12 @@ class AlphaCoachBridge:
                 self.consecutive_failures += 1
                 self.log("SYNC_FAIL", f"Sync failed: {err_msg}", Fore.RED)
                 return False
+        except requests.exceptions.Timeout as e:
+            self.state = BridgeState.API_TIMEOUT
+            self.last_error_message = f"Sync request timed out: {e}"
+            self.consecutive_failures += 1
+            self.log("SYNC_TIMEOUT", self.last_error_message, Fore.YELLOW)
+            return False
         except requests.exceptions.RequestException as e:
             self.state = BridgeState.API_UNAVAILABLE
             self.last_error_message = f"Alpha Coach API unreachable: {e}"

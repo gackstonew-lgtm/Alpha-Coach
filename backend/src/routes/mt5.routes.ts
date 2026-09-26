@@ -251,7 +251,7 @@ router.get('/status', requireBridgeOrUserAuth, async (req: AuthenticatedRequest,
     status: 'ONLINE',
     bridgeDevice: req.bridgeDevice || null,
     serverTime: new Date().toISOString(),
-    version: '1.0.3-PROD',
+    version: '1.0.4-PROD',
     requestId: reqId
   });
 });

@@ -10,7 +10,6 @@ export default async function handler(req: any, res: any) {
       isInitialized = true;
     } catch (err: any) {
       console.error('[Vercel Serverless Init Error]:', err);
-      // If in production and database init fails fatally, return JSON 500
       if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
         return res.status(500).json({
           success: false,
