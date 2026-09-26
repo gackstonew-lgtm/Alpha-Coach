@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { Pool } from 'pg';
 
 export interface IDatabase {
   query<T = any>(sql: string, params?: any[]): Promise<T[]>;
@@ -87,9 +86,9 @@ class SqlJsDatabaseWrapper implements IDatabase {
 }
 
 class PgDatabaseWrapper implements IDatabase {
-  private pool: Pool;
+  private pool: any;
 
-  constructor(pool: Pool) {
+  constructor(pool: any) {
     this.pool = pool;
   }
 
@@ -145,6 +144,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     // In production or when DATABASE_URL is configured, connect to PostgreSQL / Supabase Postgres
     if (process.env.DATABASE_URL && !isTest) {
       try {
+        const { Pool } = require('pg');
         const pool = new Pool({
           connectionString: process.env.DATABASE_URL,
           ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false }
@@ -157,7 +157,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
       } catch (err) {
         if (isProd) {
           console.error('[DB FATAL] PostgreSQL connection failed in production mode:', err);
-          throw new Error(`[Database Configuration Failure] Failed to connect to PostgreSQL (DATABASE_URL): ${err instanceof Error ? err.message : String(err)}`);
+          return null as any;
         }
         console.warn('[DB] PostgreSQL connection failed in non-production, falling back to local SQLite engine:', err);
       }
