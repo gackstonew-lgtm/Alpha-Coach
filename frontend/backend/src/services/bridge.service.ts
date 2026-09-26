@@ -80,10 +80,42 @@ export class BridgeService {
     const tokenHash = this.hashToken(deviceToken.trim());
 
     // Check by token_hash or raw token (backward compatibility)
-    const device = await db.get<{ id: string; user_id: string; device_name: string; is_active: number }>(
+    let device = await db.get<{ id: string; user_id: string; device_name: string; is_active: number }>(
       `SELECT id, user_id, device_name, is_active FROM bridge_devices WHERE token_hash = ? OR device_token = ?`,
       [tokenHash, deviceToken.trim()]
     );
+
+    if (!device) {
+      try {
+        const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+        const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+          ? getSupabaseAdmin()
+          : getSupabaseAnon();
+        if (supabase) {
+          const { data } = await supabase
+            .from('bridge_devices')
+            .select('id, user_id, device_name, is_active')
+            .or(`device_token.eq.${deviceToken.trim()},token_hash.eq.${tokenHash}`)
+            .maybeSingle();
+          if (data) {
+            device = {
+              id: data.id,
+              user_id: data.user_id,
+              device_name: data.device_name,
+              is_active: data.is_active !== undefined ? Number(data.is_active) : 1
+            };
+            // Cache locally
+            await db.run(
+              `INSERT OR IGNORE INTO bridge_devices (id, user_id, device_name, device_token, token_hash, is_active, last_seen_at)
+               VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+              [device.id, device.user_id, device.device_name, deviceToken.trim(), tokenHash, device.is_active]
+            );
+          }
+        }
+      } catch (supaErr) {
+        console.warn('[BridgeAuth] Supabase fallback check skipped:', supaErr);
+      }
+    }
 
     if (!device) {
       return {
@@ -183,6 +215,25 @@ export class BridgeService {
       [sessionId, sessionCode, deviceName || 'Local Windows Terminal', ipAddress || null, expiresAt]
     );
 
+    try {
+      const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+      const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+        ? getSupabaseAdmin()
+        : getSupabaseAnon();
+      if (supabase) {
+        await supabase.from('bridge_pairing_sessions').insert({
+          id: sessionId,
+          session_code: sessionCode,
+          device_name: deviceName || 'Local Windows Terminal',
+          ip_address: ipAddress || null,
+          status: 'PENDING',
+          expires_at: expiresAt
+        });
+      }
+    } catch (supaErr) {
+      console.warn('[BridgePairing] Supabase session write skipped:', supaErr);
+    }
+
     return { sessionCode, expiresAt };
   }
 
@@ -191,10 +242,31 @@ export class BridgeService {
    */
   public static async getPairingSession(sessionCode: string): Promise<BridgePairingSession | null> {
     const db = getDatabase();
-    const session = await db.get<BridgePairingSession>(
+    let session = await db.get<BridgePairingSession>(
       `SELECT * FROM bridge_pairing_sessions WHERE session_code = ?`,
       [sessionCode]
     );
+
+    if (!session) {
+      try {
+        const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+        const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+          ? getSupabaseAdmin()
+          : getSupabaseAnon();
+        if (supabase) {
+          const { data } = await supabase
+            .from('bridge_pairing_sessions')
+            .select('*')
+            .eq('session_code', sessionCode)
+            .maybeSingle();
+          if (data) {
+            session = data as BridgePairingSession;
+          }
+        }
+      } catch (supaErr) {
+        console.warn('[BridgePairing] Supabase session lookup skipped:', supaErr);
+      }
+    }
 
     if (!session) return null;
 
@@ -235,6 +307,25 @@ export class BridgeService {
       [userId, deviceToken, sessionCode]
     );
 
+    try {
+      const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+      const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+        ? getSupabaseAdmin()
+        : getSupabaseAnon();
+      if (supabase) {
+        await supabase
+          .from('bridge_pairing_sessions')
+          .update({
+            status: 'AUTHORIZED',
+            user_id: userId,
+            device_token: deviceToken
+          })
+          .eq('session_code', sessionCode);
+      }
+    } catch (supaErr) {
+      console.warn('[BridgePairing] Supabase session auth update skipped:', supaErr);
+    }
+
     return { success: true, deviceToken };
   }
 
@@ -268,6 +359,18 @@ export class BridgeService {
         `UPDATE bridge_pairing_sessions SET status = 'COMPLETED', device_token = NULL WHERE session_code = ?`,
         [sessionCode]
       );
+      try {
+        const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+        const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+          ? getSupabaseAdmin()
+          : getSupabaseAnon();
+        if (supabase) {
+          await supabase
+            .from('bridge_pairing_sessions')
+            .update({ status: 'COMPLETED', device_token: null })
+            .eq('session_code', sessionCode);
+        }
+      } catch (e) {}
       return { status: 'AUTHORIZED', deviceToken: token, deviceName: session.device_name };
     }
 
