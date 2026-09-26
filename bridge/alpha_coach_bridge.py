@@ -1,9 +1,9 @@
 """
 Alpha Coach - Production MT5 Journal Bridge
-Authoritative Version: 1.0.2
+Authoritative Version: 1.0.4
 Seamlessly connects local MetaTrader 5 desktop terminal to Alpha Coach Performance OS.
 Features distinct MT5 state management, exhaustive terminal scanning, 1-click browser pairing,
-and resilient cloud synchronization to Supabase / Production HTTPS API.
+and resilient cloud synchronization to Production HTTPS API.
 """
 
 import sys
@@ -51,7 +51,7 @@ except ImportError:
 
 from companion_logger import companion_logger
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 APP_NAME = "Alpha Coach MT5 Companion"
 GITHUB_REPO = "gackstonew-lgtm/Alpha-Coach"
 
@@ -562,38 +562,44 @@ class AlphaCoachBridge:
             "x-bridge-token": self.device_token
         }
         try:
-            resp = requests.get(url, headers=headers, timeout=8)
+            resp = requests.get(url, headers=headers, timeout=10)
             self.last_auth_check_time = datetime.now()
-            if resp.status_code == 200:
+
+            # Handle HTML response gracefully if routing is returning SPA index.html
+            content_type = resp.headers.get("Content-Type", "")
+            if "text/html" in content_type:
+                self.state = BridgeState.API_UNAVAILABLE
+                self.last_error_message = f"API endpoint returned HTML instead of JSON (Status {resp.status_code}). Production API routing required."
+                return False, self.last_error_message
+
+            try:
                 data = resp.json()
+            except Exception as e:
+                self.state = BridgeState.API_UNAVAILABLE
+                self.last_error_message = f"Failed to parse auth response: {e} (Status {resp.status_code})"
+                return False, self.last_error_message
+
+            if resp.status_code == 200:
                 if data.get("authorized") and data.get("status") == "ACTIVE":
                     self.active_device_id = data.get("deviceId")
                     self.active_user_id = data.get("userId")
                     self.state = BridgeState.MT5_CONNECTED
                     return True, "Device authorization is ACTIVE"
 
-            # Parse structured error
-            try:
-                err_data = resp.json()
-                err_code = err_data.get("error", {}).get("code", "")
-                err_msg = err_data.get("error", {}).get("message", "Authorization failed.")
-            except Exception:
-                err_code = ""
-                err_msg = resp.text
+            err_code = data.get("error", {}).get("code", "")
+            err_msg = data.get("error", {}).get("message", f"Authorization failed ({resp.status_code})")
 
             if resp.status_code == 401:
                 if err_code == "BRIDGE_DEVICE_REVOKED":
                     self.state = BridgeState.BRIDGE_DEVICE_REVOKED
                     self.last_error_message = "This companion device was revoked from the Alpha Coach Account Hub."
-                    return False, self.last_error_message
                 elif err_code == "BRIDGE_DEVICE_EXPIRED":
                     self.state = BridgeState.BRIDGE_DEVICE_EXPIRED
                     self.last_error_message = "This companion device authorization has expired."
-                    return False, self.last_error_message
                 else:
                     self.state = BridgeState.BRIDGE_TOKEN_INVALID
-                    self.last_error_message = "Alpha Coach authorization needs to be renewed. Device token is invalid."
-                    return False, self.last_error_message
+                    self.last_error_message = err_msg or "Alpha Coach authorization needs to be renewed. Device token is invalid."
+                return False, self.last_error_message
 
             self.state = BridgeState.AUTH_CHECK_FAILED
             self.last_error_message = f"Authorization check failed ({resp.status_code}): {err_msg}"
@@ -602,39 +608,53 @@ class AlphaCoachBridge:
         except requests.exceptions.RequestException as e:
             companion_logger.warning(f"Could not reach API authorization endpoint: {e}")
             self.state = BridgeState.API_UNAVAILABLE
-            return False, f"Alpha Coach API is temporarily unreachable ({e})"
+            self.last_error_message = f"Alpha Coach API is temporarily unreachable ({e})"
+            return False, self.last_error_message
 
     def sync_payload_to_server(self, payload: Dict[str, Any]) -> bool:
-        """Sends payload to Alpha Coach via API or direct Supabase Cloud synchronization."""
+        """Sends payload to Alpha Coach via authenticated backend HTTPS API."""
         self.state = BridgeState.SYNCING
         deals_cnt = len(payload.get('deals', []))
         orders_cnt = len(payload.get('orders', []))
         self.log("SYNC", f"Transmitting {deals_cnt} deals, {orders_cnt} orders to Alpha Coach OS...", Fore.CYAN)
 
-        # Attempt 1: Standard Backend API
         api_url = f"{self.api_url}/mt5/sync"
         headers = {
             "Content-Type": "application/json",
             "x-bridge-token": self.device_token
         }
         try:
-            resp = requests.post(api_url, json=payload, headers=headers, timeout=30)
-            if resp.status_code == 200:
+            resp = requests.post(api_url, json=payload, headers=headers, timeout=35)
+            
+            # Detect HTML response from static SPA routing vs API JSON
+            content_type = resp.headers.get("Content-Type", "")
+            if "text/html" in content_type:
+                self.state = BridgeState.API_UNAVAILABLE
+                self.last_error_message = f"API endpoint returned HTML instead of JSON (Status {resp.status_code}). Production API routing required."
+                self.consecutive_failures += 1
+                self.log("SYNC_ERROR", self.last_error_message, Fore.RED)
+                return False
+
+            try:
                 data = resp.json()
+            except Exception as e:
+                self.state = BridgeState.API_UNAVAILABLE
+                self.last_error_message = f"Failed to parse API response: {e} (Status {resp.status_code})"
+                self.consecutive_failures += 1
+                self.log("SYNC_ERROR", self.last_error_message, Fore.RED)
+                return False
+
+            if resp.status_code == 200 and data.get("success") is not False:
                 self.state = BridgeState.SYNCED
                 self.last_sync_time = datetime.now()
                 self.consecutive_failures = 0
                 self.last_error_message = None
-                self.log("SYNC_SUCCESS", f"Synchronized via API: {data.get('positionsReconstructed', deals_cnt)} positions updated.", Fore.GREEN)
+                reconstructed = data.get('positionsReconstructed', deals_cnt)
+                self.log("SYNC_SUCCESS", f"Synchronized via API: {reconstructed} positions updated.", Fore.GREEN)
                 return True
             elif resp.status_code == 401:
-                try:
-                    err_data = resp.json()
-                    err_code = err_data.get("error", {}).get("code", "")
-                    err_msg = err_data.get("error", {}).get("message", "Device authorization failed.")
-                except Exception:
-                    err_code = ""
-                    err_msg = resp.text
+                err_code = data.get("error", {}).get("code", "")
+                err_msg = data.get("error", {}).get("message", "Device authorization failed.")
 
                 if err_code == "BRIDGE_DEVICE_REVOKED":
                     self.state = BridgeState.BRIDGE_DEVICE_REVOKED
@@ -645,174 +665,21 @@ class AlphaCoachBridge:
 
                 self.last_error_message = err_msg
                 self.consecutive_failures += 1
+                self.log("SYNC_AUTH_FAIL", f"Authorization rejected: {err_msg}", Fore.RED)
                 return False
             else:
+                err_msg = data.get("error", {}).get("message", f"Sync API returned HTTP {resp.status_code}")
                 self.state = BridgeState.SYNC_FAILED
-                self.last_error_message = f"Sync API returned HTTP {resp.status_code}: {resp.text}"
+                self.last_error_message = err_msg
                 self.consecutive_failures += 1
+                self.log("SYNC_FAIL", f"Sync failed: {err_msg}", Fore.RED)
                 return False
-        except Exception as e:
-            companion_logger.info(f"API sync endpoint unreachable ({e}), switching to direct Supabase Cloud Sync...")
-
-        # Attempt 2: Direct Supabase Cloud Ingestion
-        return self._sync_direct_to_supabase(payload)
-
-    def _sync_direct_to_supabase(self, payload: Dict[str, Any]) -> bool:
-        """Directly synchronizes account information and reconstructed trades to Supabase tables."""
-        try:
-            supa_headers = self._get_supabase_headers()
-
-            # 1. Resolve user ID from device token
-            dev_url = f"{SUPABASE_URL}/rest/v1/bridge_devices?device_token=eq.{self.device_token}&select=*"
-            dev_resp = requests.get(dev_url, headers=supa_headers, timeout=5)
-            if dev_resp.status_code != 200 or not dev_resp.json():
-                self.state = BridgeState.BRIDGE_TOKEN_INVALID
-                self.last_error_message = "Device authorization token is invalid or unassigned."
-                return False
-
-            device_record = dev_resp.json()[0]
-            user_id = device_record.get("user_id")
-            if not user_id:
-                self.state = BridgeState.BRIDGE_TOKEN_INVALID
-                self.last_error_message = "No authorized user is linked to this bridge device."
-                return False
-
-            # 2. Upsert Trading Account
-            acc_info = payload.get("accountInfo", {})
-            acc_num = str(acc_info.get("accountNumber", "0"))
-            account_id = f"acc-{user_id[:8]}-{acc_num}"
-
-            acc_payload = {
-                "id": account_id,
-                "user_id": user_id,
-                "account_number": acc_num,
-                "broker_name": acc_info.get("brokerName", "MT5 Broker"),
-                "server_name": acc_info.get("serverName", "MT5 Server"),
-                "account_type": acc_info.get("accountType", "hedging"),
-                "currency": acc_info.get("currency", "USD"),
-                "leverage": acc_info.get("leverage", 100),
-                "balance": acc_info.get("balance", 0.0),
-                "equity": acc_info.get("equity", 0.0),
-                "margin": acc_info.get("margin", 0.0),
-                "free_margin": acc_info.get("freeMargin", 0.0),
-                "margin_level": acc_info.get("marginLevel", 0.0),
-                "is_active": 1,
-                "last_sync_at": datetime.now(timezone.utc).isoformat()
-            }
-
-            # Upsert into trading_accounts
-            acc_upsert_url = f"{SUPABASE_URL}/rest/v1/trading_accounts"
-            upsert_headers = {**supa_headers, "Prefer": "resolution=merge-duplicates,return=representation"}
-            requests.post(acc_upsert_url, json=acc_payload, headers=upsert_headers, timeout=10)
-
-            # 3. Group deals into reconstructed positions
-            deals = payload.get("deals", [])
-            positions_by_id: Dict[str, List[Dict[str, Any]]] = {}
-            for d in deals:
-                pid = str(d.get("position_id") or d.get("order") or d.get("ticket"))
-                if pid not in positions_by_id:
-                    positions_by_id[pid] = []
-                positions_by_id[pid].append(d)
-
-            reconstructed_records = []
-            execution_records = []
-
-            for pid, p_deals in positions_by_id.items():
-                p_deals.sort(key=lambda x: x.get("time", ""))
-                first_deal = p_deals[0]
-                last_deal = p_deals[-1]
-
-                # Calculate metrics
-                total_volume = sum(float(d.get("volume", 0)) for d in p_deals if d.get("entry") == 0)
-                if total_volume == 0:
-                    total_volume = float(first_deal.get("volume", 0))
-
-                net_profit = sum(float(d.get("profit", 0)) + float(d.get("commission", 0)) + float(d.get("swap", 0)) for d in p_deals)
-                gross_profit = sum(float(d.get("profit", 0)) for d in p_deals)
-                total_comm = sum(float(d.get("commission", 0)) for d in p_deals)
-                total_swap = sum(float(d.get("swap", 0)) for d in p_deals)
-
-                is_closed = any(d.get("entry") == 1 for d in p_deals)
-                pos_status = "CLOSED" if is_closed else "OPEN"
-                direction = "BUY" if first_deal.get("type") == 0 else "SELL"
-
-                rec_id = f"pos-{account_id[:12]}-{pid}"
-                reconstructed_records.append({
-                    "id": rec_id,
-                    "user_id": user_id,
-                    "account_id": account_id,
-                    "position_id": pid,
-                    "symbol": first_deal.get("symbol") or "EURUSD",
-                    "position_type": direction,
-                    "status": pos_status,
-                    "open_time": first_deal.get("time"),
-                    "close_time": last_deal.get("time") if is_closed else None,
-                    "open_price": float(first_deal.get("price", 0.0)),
-                    "close_price": float(last_deal.get("price", 0.0)) if is_closed else None,
-                    "total_volume": float(total_volume),
-                    "gross_profit": float(gross_profit),
-                    "commission_total": float(total_comm),
-                    "swap_total": float(total_swap),
-                    "net_profit": float(net_profit),
-                    "magic_number": int(first_deal.get("magic", 0)),
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                })
-
-                for d in p_deals:
-                    exec_id = f"exec-{d.get('ticket')}"
-                    execution_records.append({
-                        "id": exec_id,
-                        "user_id": user_id,
-                        "account_id": account_id,
-                        "position_id": rec_id,
-                        "deal_ticket": str(d.get("ticket")),
-                        "order_ticket": str(d.get("order")),
-                        "execution_type": "ENTRY" if d.get("entry") == 0 else "EXIT",
-                        "symbol": d.get("symbol") or "EURUSD",
-                        "volume": float(d.get("volume", 0)),
-                        "price": float(d.get("price", 0)),
-                        "profit": float(d.get("profit", 0)),
-                        "commission": float(d.get("commission", 0)),
-                        "swap": float(d.get("swap", 0)),
-                        "execution_time": d.get("time")
-                    })
-
-            # Batch upsert reconstructed positions (chunks of 100)
-            rec_url = f"{SUPABASE_URL}/rest/v1/reconstructed_positions"
-            for i in range(0, len(reconstructed_records), 100):
-                chunk = reconstructed_records[i:i+100]
-                requests.post(rec_url, json=chunk, headers=upsert_headers, timeout=15)
-
-            # Batch upsert executions
-            exec_url = f"{SUPABASE_URL}/rest/v1/position_executions"
-            for i in range(0, len(execution_records), 100):
-                chunk = execution_records[i:i+100]
-                requests.post(exec_url, json=chunk, headers=upsert_headers, timeout=15)
-
-            # Insert checkpoint
-            chk_url = f"{SUPABASE_URL}/rest/v1/sync_checkpoints"
-            requests.post(chk_url, json={
-                "id": str(uuid.uuid4()),
-                "account_id": account_id,
-                "deals_synced": len(deals),
-                "positions_reconstructed": len(reconstructed_records),
-                "sync_status": "COMPLETED",
-                "started_at": datetime.now(timezone.utc).isoformat(),
-                "completed_at": datetime.now(timezone.utc).isoformat()
-            }, headers=supa_headers, timeout=10)
-
-            self.state = BridgeState.SYNCED
-            self.last_sync_time = datetime.now()
-            self.consecutive_failures = 0
-            self.last_error_message = None
-            self.log("SYNC_SUCCESS", f"Synchronized {len(reconstructed_records)} trades directly to Alpha Coach Cloud.", Fore.GREEN)
-            return True
-
-        except Exception as e:
-            self.state = BridgeState.SYNC_FAILED
-            self.last_error_message = f"Supabase Cloud Sync error: {str(e)}"
+        except requests.exceptions.RequestException as e:
+            self.state = BridgeState.API_UNAVAILABLE
+            self.last_error_message = f"Alpha Coach API unreachable: {e}"
             self.consecutive_failures += 1
-            companion_logger.exception(f"Supabase Cloud Sync failure: {e}")
+            companion_logger.warning(f"Sync API network exception: {e}")
+            self.log("SYNC_NETWORK_FAIL", self.last_error_message, Fore.YELLOW)
             return False
 
     def run_sync_cycle(self, days_back: int = 90) -> bool:

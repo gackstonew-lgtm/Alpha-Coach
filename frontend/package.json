@@ -1,6 +1,6 @@
 {
   "name": "alpha-coach-frontend",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Alpha Coach - Professional Automated MT5 Trading Journal & Performance OS Frontend",
   "private": true,
   "type": "module",

@@ -1,6 +1,6 @@
 """
 Alpha Coach - Windows System Tray Companion Application
-Authoritative Version: 1.0.2
+Authoritative Version: 1.0.4
 Runs quietly in the Windows notification area, monitors MetaTrader 5,
 and keeps your Alpha Coach trade journal synchronized in the background.
 """

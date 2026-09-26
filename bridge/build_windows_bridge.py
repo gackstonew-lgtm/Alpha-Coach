@@ -1,6 +1,6 @@
 """
 Alpha Coach - Windows Bridge Packaging Script
-Authoritative Version: 1.0.3
+Authoritative Version: 1.0.4
 Compiles the MT5 Bridge, System Tray companion, and full MetaTrader5 C-extension runtime
 into a standalone Windows executable (.exe).
 """
@@ -13,7 +13,7 @@ import hashlib
 
 def build():
     print("==================================================")
-    print("Building Alpha Coach MT5 Companion for Windows (v1.0.3)")
+    print("Building Alpha Coach MT5 Companion for Windows (v1.0.4)")
     print("==================================================")
 
     bridge_dir = os.path.dirname(os.path.abspath(__file__))

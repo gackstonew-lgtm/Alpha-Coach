@@ -1,6 +1,6 @@
 {
   "name": "alpha-coach-backend",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Alpha Coach - Professional Automated MT5 Trading Journal & Performance OS Backend API",
   "main": "dist/server.js",
   "scripts": {

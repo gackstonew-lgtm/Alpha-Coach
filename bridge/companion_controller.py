@@ -1,6 +1,6 @@
 """
 Alpha Coach - Companion Controller Layer
-Authoritative Version: 1.0.2
+Authoritative Version: 1.0.4
 Orchestrates Tray Actions, Real GUI Diagnostics Dialog, MT5 Terminal File Browser,
 Desktop Toast Notifications, Background Sync, and End-to-End Pairing Lifecycles.
 """
