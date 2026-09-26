@@ -204,15 +204,13 @@ export function getDatabase(): IDatabase {
   return dbInstance;
 }
 
+import { SCHEMA_SQL } from './schema';
+
 export async function initDatabase(): Promise<IDatabase | null> {
   try {
     const db = await getDatabaseAsync();
     if (!db) return null;
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    if (fs.existsSync(schemaPath)) {
-      const schemaSql = fs.readFileSync(schemaPath, 'utf8');
-      await db.exec(schemaSql);
-    }
+    await db.exec(SCHEMA_SQL);
     await seedInitialData(db);
     return db;
   } catch (err) {

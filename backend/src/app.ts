@@ -111,8 +111,12 @@ app.get(['/api/health', '/health'], async (req, res) => {
   let dbStatus = 'UNAVAILABLE';
   try {
     const db = await getDatabaseAsync();
-    await db.query('SELECT 1');
-    dbStatus = 'CONNECTED';
+    if (db) {
+      await db.query('SELECT 1');
+      dbStatus = 'CONNECTED';
+    } else {
+      dbStatus = 'DEGRADED';
+    }
   } catch (err) {
     dbStatus = 'DEGRADED';
   }
