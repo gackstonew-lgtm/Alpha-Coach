@@ -163,7 +163,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
       }
     }
 
-    if (isProd) {
+    if (isProd || process.env.VERCEL === '1') {
       console.warn(
         '[DB WARNING] Production environment requires DATABASE_URL pointing to Supabase PostgreSQL. ' +
         'Database operations will fail gracefully until DATABASE_URL is configured in Vercel environment variables.'
@@ -172,26 +172,31 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     }
 
     // Default fallback: Local SQLite engine via SQL.js (Development and Test environments ONLY)
-    const initSqlJsModule = require('sql.js');
-    const initSqlJs = typeof initSqlJsModule === 'function' ? initSqlJsModule : initSqlJsModule.default;
-    const SQL = await initSqlJs();
-    const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../../data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    const dbPath = process.env.DB_PATH || path.join(dataDir, 'alphacoach.sqlite');
+    try {
+      const initSqlJsModule = require('sql.js');
+      const initSqlJs = typeof initSqlJsModule === 'function' ? initSqlJsModule : initSqlJsModule.default;
+      const SQL = await initSqlJs();
+      const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../../data');
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      const dbPath = process.env.DB_PATH || path.join(dataDir, 'alphacoach.sqlite');
 
-    let db: any;
-    if (fs.existsSync(dbPath)) {
-      const fileBuffer = fs.readFileSync(dbPath);
-      db = new SQL.Database(fileBuffer);
-    } else {
-      db = new SQL.Database();
-    }
+      let db: any;
+      if (fs.existsSync(dbPath)) {
+        const fileBuffer = fs.readFileSync(dbPath);
+        db = new SQL.Database(fileBuffer);
+      } else {
+        db = new SQL.Database();
+      }
 
-    dbInstance = new SqlJsDatabaseWrapper(db, dbPath);
-    console.log('[DB] Local SQLite engine initialized for non-production environment.');
-    return dbInstance;
+      dbInstance = new SqlJsDatabaseWrapper(db, dbPath);
+      console.log('[DB] Local SQLite engine initialized for non-production environment.');
+      return dbInstance;
+    } catch (sqliteErr) {
+      console.warn('[DB] SQLite fallback unavailable:', sqliteErr);
+      return null as any;
+    }
   })();
 
   return dbInstancePromise;
