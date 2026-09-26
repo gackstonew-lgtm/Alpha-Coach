@@ -1,4 +1,3 @@
-import initSqlJs, { Database as SqlJsDatabase } from 'sql.js';
 import fs from 'fs';
 import path from 'path';
 import { Pool } from 'pg';
@@ -12,11 +11,11 @@ export interface IDatabase {
 }
 
 class SqlJsDatabaseWrapper implements IDatabase {
-  private db: SqlJsDatabase;
+  private db: any;
   private filePath: string;
   private saveDebounceTimer: NodeJS.Timeout | null = null;
 
-  constructor(db: SqlJsDatabase, filePath: string) {
+  constructor(db: any, filePath: string) {
     this.db = db;
     this.filePath = filePath;
   }
@@ -173,6 +172,8 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     }
 
     // Default fallback: Local SQLite engine via SQL.js (Development and Test environments ONLY)
+    const initSqlJsModule = require('sql.js');
+    const initSqlJs = typeof initSqlJsModule === 'function' ? initSqlJsModule : initSqlJsModule.default;
     const SQL = await initSqlJs();
     const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../../data');
     if (!fs.existsSync(dataDir)) {
@@ -180,7 +181,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     }
     const dbPath = process.env.DB_PATH || path.join(dataDir, 'alphacoach.sqlite');
 
-    let db: SqlJsDatabase;
+    let db: any;
     if (fs.existsSync(dbPath)) {
       const fileBuffer = fs.readFileSync(dbPath);
       db = new SQL.Database(fileBuffer);

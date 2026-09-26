@@ -4,13 +4,17 @@ import { initDatabase } from '../backend/src/db/db';
 let isInitialized = false;
 
 export default async function handler(req: any, res: any) {
+  const matchedPath = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
+  if (matchedPath && typeof matchedPath === 'string' && matchedPath.startsWith('/api')) {
+    req.url = matchedPath;
+  }
+
   if (!isInitialized) {
     try {
       await initDatabase();
       isInitialized = true;
     } catch (err: any) {
       console.error('[Vercel Serverless Init Error]:', err);
-      // If in production and database init fails fatally, return JSON 500
       if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
         return res.status(500).json({
           success: false,
