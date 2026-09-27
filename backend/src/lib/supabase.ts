@@ -182,10 +182,37 @@ export async function verifySupabaseTokenDetailed(token: string): Promise<{
     if (error) {
       const msg = (error.message || '').toLowerCase();
       const status = (error as any).status;
+
+      // IMPORTANT: check for backend-configuration-shaped errors BEFORE the generic
+      // "invalid" catch-all below. If the backend's own SUPABASE_ANON_KEY is wrong, stale,
+      // rotated, or simply pointed at the wrong Supabase project, Supabase's Auth API responds
+      // with something like "Invalid API key" or "Project not found" — NOT because the user's
+      // token is bad, but because the request itself was rejected before the token was even
+      // evaluated. Generic string matching below would otherwise classify this as
+      // SUPABASE_TOKEN_INVALID (a definitive 401), which sends every single request — for
+      // every user, regardless of how fresh their session is — into a permanent
+      // authorize→401→login→authorize loop that no amount of re-authentication can ever fix,
+      // because the frontend's token was never the problem.
+      if (
+        msg.includes('api key') ||
+        msg.includes('apikey') ||
+        msg.includes('no api key') ||
+        msg.includes('project not found') ||
+        msg.includes('unable to find project') ||
+        msg.includes('unauthorized to access project')
+      ) {
+        console.error(`[Supabase] Backend rejected by Supabase Auth API — check SUPABASE_URL / SUPABASE_ANON_KEY (or SUPABASE_PUBLISHABLE_KEY) in this deployment's environment variables. Raw error: ${error.message}`);
+        return { valid: false, failureReason: 'SUPABASE_CONFIGURATION_ERROR' };
+      }
       if (msg.includes('expired') || msg.includes('jwt expired')) {
         return { valid: false, failureReason: 'SUPABASE_TOKEN_EXPIRED' };
       }
       if (msg.includes('issuer') || msg.includes('claim') || msg.includes('audience')) {
+        // The presented token was issued by a DIFFERENT Supabase project than the one this
+        // backend is configured to verify against. Logging the user out and back in will
+        // never fix this — it's a deployment configuration mismatch, not a bad credential —
+        // so this is intentionally NOT bucketed as a definitive 401 either.
+        console.error('[Supabase] Token issuer/audience mismatch — the frontend and backend are configured against DIFFERENT Supabase projects. Verify SUPABASE_URL matches VITE_SUPABASE_URL in this deployment.');
         return { valid: false, failureReason: 'SUPABASE_TOKEN_ISSUER_INVALID' };
       }
       if (

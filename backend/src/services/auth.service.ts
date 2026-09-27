@@ -19,7 +19,8 @@ const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET || 
  */
 export const TRANSIENT_AUTH_FAILURE_REASONS = new Set<string>([
   'SUPABASE_VERIFICATION_FAILED', // network/timeout/exception while contacting Supabase Auth
-  'SUPABASE_CONFIGURATION_ERROR', // backend missing/misconfigured SUPABASE_URL or anon key
+  'SUPABASE_CONFIGURATION_ERROR', // backend missing/misconfigured SUPABASE_URL, anon key, or Supabase rejected the request itself (e.g. bad/rotated API key)
+  'SUPABASE_TOKEN_ISSUER_INVALID', // frontend and backend point at two different Supabase projects
   'DB_SYNC_FAILED' // Supabase confirmed the token but the application DB is unavailable
 ]);
 
