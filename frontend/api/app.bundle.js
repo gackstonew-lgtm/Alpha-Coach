@@ -51820,7 +51820,10 @@ async function getDatabaseAsync() {
     const isTest = process.env.NODE_ENV === "test";
     if (process.env.DATABASE_URL && !isTest) {
       try {
-        const { Pool } = require("pg");
+        const { Pool, types } = require("pg");
+        if (types && typeof types.setTypeParser === "function") {
+          types.setTypeParser(1700, (val) => parseFloat(val));
+        }
         const pool = new Pool({
           connectionString: process.env.DATABASE_URL,
           ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false }
@@ -52935,8 +52938,10 @@ var PositionReconstructionService = class {
       let totalEntryVolume = 0;
       let totalEntryCost = 0;
       for (const d of entryDeals) {
-        totalEntryVolume += d.volume;
-        totalEntryCost += d.price * d.volume;
+        const vol = Number(d.volume) || 0;
+        const price = Number(d.price) || 0;
+        totalEntryVolume += vol;
+        totalEntryCost += price * vol;
       }
       let totalExitVolume = 0;
       let totalExitCost = 0;
@@ -52945,14 +52950,16 @@ var PositionReconstructionService = class {
       let swapTotal = 0;
       let feeTotal = 0;
       for (const d of deals) {
-        commissionTotal += d.commission || 0;
-        swapTotal += d.swap || 0;
-        grossProfit += d.profit || 0;
-        feeTotal += d.fee || 0;
+        commissionTotal += Number(d.commission) || 0;
+        swapTotal += Number(d.swap) || 0;
+        grossProfit += Number(d.profit) || 0;
+        feeTotal += Number(d.fee) || 0;
       }
       for (const d of exitDeals) {
-        totalExitVolume += d.volume;
-        totalExitCost += d.price * d.volume;
+        const vol = Number(d.volume) || 0;
+        const price = Number(d.price) || 0;
+        totalExitVolume += vol;
+        totalExitCost += price * vol;
       }
       const isClosed = !liveOpenPos && (totalExitVolume >= totalEntryVolume && totalEntryVolume > 0 || exitDeals.length > 0 && totalEntryVolume === 0);
       let symbol = "";
@@ -53244,18 +53251,19 @@ var RiskGuardianService = class {
     const todayStr = (/* @__PURE__ */ new Date()).toISOString().substring(0, 10);
     const todayTrades = await db.query(
       `SELECT * FROM reconstructed_positions
-       WHERE account_id = ? AND status = 'CLOSED' AND (close_time LIKE ? OR open_time LIKE ?)`,
+       WHERE account_id = ? AND status = 'CLOSED' AND (CAST(close_time AS TEXT) LIKE ? OR CAST(open_time AS TEXT) LIKE ?)`,
       [accountId, `${todayStr}%`, `${todayStr}%`]
     );
     let todayNetProfit = 0;
     let todayLossCount = 0;
     let consecutiveLosses = 0;
     for (const t of todayTrades) {
-      todayNetProfit += t.net_profit;
-      if (t.net_profit < 0) {
+      const net = Number(t.net_profit) || 0;
+      todayNetProfit += net;
+      if (net < 0) {
         todayLossCount++;
         consecutiveLosses++;
-      } else if (t.net_profit > 0) {
+      } else if (net > 0) {
         consecutiveLosses = 0;
       }
     }
@@ -53918,8 +53926,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "fecde27c921d3e515d65323db48dbcf12b8b24b6",
-  buildTimestamp: "2026-09-27T08:16:40.595Z",
+  gitCommit: "b198f2088eefd6f2f28388ce3978d7e47cd2af3c",
+  buildTimestamp: "2026-09-27T15:19:26.644Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };

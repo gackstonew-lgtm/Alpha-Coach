@@ -145,10 +145,13 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     const isProd = process.env.NODE_ENV === 'production';
     const isTest = process.env.NODE_ENV === 'test';
 
-    // In production or when DATABASE_URL is configured, connect to PostgreSQL / Supabase Postgres
+    // In production (or when DATABASE_URL is configured in non-test), connect to PostgreSQL / Supabase Postgres
     if (process.env.DATABASE_URL && !isTest) {
       try {
-        const { Pool } = require('pg');
+        const { Pool, types } = require('pg');
+        if (types && typeof types.setTypeParser === 'function') {
+          types.setTypeParser(1700, (val: string) => parseFloat(val));
+        }
         const pool = new Pool({
           connectionString: process.env.DATABASE_URL,
           ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false }
@@ -158,12 +161,18 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
         dbInstance = new PgDatabaseWrapper(pool);
         console.log('[DB] Connected to persistent PostgreSQL database.');
         return dbInstance;
-      } catch (err) {
-        console.warn('[DB] PostgreSQL connection failed, falling back to SQLite engine:', err);
+      } catch (err: any) {
+        if (isProd || process.env.VERCEL === '1') {
+          console.error('[DB FATAL] Production PostgreSQL connection failed:', err);
+          throw new Error(`[DB FATAL] Failed to connect to persistent PostgreSQL database: ${err.message}`);
+        }
+        console.warn('[DB] PostgreSQL connection failed, falling back to local SQLite engine:', err);
       }
+    } else if (isProd || process.env.VERCEL === '1') {
+      throw new Error('[DB FATAL] Production environment requires a valid persistent PostgreSQL/Supabase DATABASE_URL. Ephemeral in-memory fallback is disabled to preserve financial data integrity.');
     }
 
-    // Fallback: Local/In-Memory SQLite engine via SQL.js with embedded WASM binary
+    // Local / Development / Test Engine: Persistent Local SQLite file (or in-memory for Jest tests)
     try {
       const initSqlJsModule = require('sql.js');
       const initSqlJs = typeof initSqlJsModule === 'function' ? initSqlJsModule : initSqlJsModule.default;
@@ -171,10 +180,10 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
       const SQL = await initSqlJs({ wasmBinary });
       
       let dbInstanceLocal: SqlJsDatabaseWrapper;
-      if (isProd || process.env.VERCEL === '1') {
+      if (isTest) {
         const db = new SQL.Database();
         dbInstanceLocal = new SqlJsDatabaseWrapper(db, ':memory:');
-        console.log('[DB] In-memory SQLite engine initialized successfully with embedded wasm.');
+        console.log('[DB] Test in-memory SQLite engine initialized.');
       } else {
         const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../../data');
         if (!fs.existsSync(dataDir)) {
@@ -195,7 +204,7 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
       dbInstance = dbInstanceLocal;
       return dbInstance;
     } catch (sqliteErr) {
-      console.error('[DB FATAL] SQLite fallback unavailable:', sqliteErr);
+      console.error('[DB FATAL] SQLite engine unavailable:', sqliteErr);
       throw sqliteErr;
     }
   })();
@@ -210,6 +219,78 @@ export function getDatabase(): IDatabase {
   return dbInstance;
 }
 
+export interface DatabaseDiagnostics {
+  databaseProvider: 'postgresql' | 'sqlite';
+  databasePersistent: boolean;
+  databaseConnection: 'healthy' | 'unreachable' | 'unconfigured' | 'degraded';
+  databaseLatencyMs: number;
+  realQueryVerified: boolean;
+  supabaseConfigured: boolean;
+  supabaseServiceRoleConfigured: boolean;
+  environment: 'production' | 'development' | 'test';
+  productionStorageEnforced: boolean;
+  error?: string;
+}
+
+export async function getDatabaseDiagnostics(): Promise<DatabaseDiagnostics> {
+  const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+  const isTest = process.env.NODE_ENV === 'test';
+  const env: 'production' | 'development' | 'test' = isTest ? 'test' : (isProd ? 'production' : 'development');
+
+  const { getSupabaseDiagnostics } = require('../lib/supabase');
+  const supaDiag = getSupabaseDiagnostics();
+
+  const start = Date.now();
+  let dbStatus: 'healthy' | 'unreachable' | 'unconfigured' | 'degraded' = 'unconfigured';
+  let provider: 'postgresql' | 'sqlite' = (process.env.DATABASE_URL || isProd) ? 'postgresql' : 'sqlite';
+  let isPersistent = false;
+  let realQuerySuccess = false;
+  let errMsg: string | undefined = undefined;
+
+  try {
+    const db = await getDatabaseAsync();
+    if (db) {
+      // Execute a real SQL query to verify the engine and connection
+      const res = await db.query('SELECT 1 as test_val');
+      const latencyMs = Date.now() - start;
+      if (res && res.length > 0) {
+        realQuerySuccess = true;
+        dbStatus = 'healthy';
+        provider = process.env.DATABASE_URL ? 'postgresql' : 'sqlite';
+        isPersistent = Boolean(process.env.DATABASE_URL || (!isTest && !isProd));
+        return {
+          databaseProvider: provider,
+          databasePersistent: isPersistent,
+          databaseConnection: dbStatus,
+          databaseLatencyMs: latencyMs,
+          realQueryVerified: realQuerySuccess,
+          supabaseConfigured: supaDiag.supabaseConfigured,
+          supabaseServiceRoleConfigured: supaDiag.supabaseServiceRoleConfigured,
+          environment: env,
+          productionStorageEnforced: true
+        };
+      }
+    }
+    dbStatus = 'unreachable';
+  } catch (err: any) {
+    dbStatus = 'unreachable';
+    errMsg = err.message || 'Database connection error';
+  }
+
+  return {
+    databaseProvider: provider,
+    databasePersistent: isPersistent,
+    databaseConnection: dbStatus,
+    databaseLatencyMs: Date.now() - start,
+    realQueryVerified: realQuerySuccess,
+    supabaseConfigured: supaDiag.supabaseConfigured,
+    supabaseServiceRoleConfigured: supaDiag.supabaseServiceRoleConfigured,
+    environment: env,
+    productionStorageEnforced: true,
+    error: errMsg
+  };
+}
+
 import { SCHEMA_SQL } from './schema';
 
 export async function initDatabase(): Promise<IDatabase | null> {
@@ -217,6 +298,23 @@ export async function initDatabase(): Promise<IDatabase | null> {
     const db = await getDatabaseAsync();
     if (!db) return null;
     await db.exec(SCHEMA_SQL);
+    const safeMigrations = [
+      'ALTER TABLE raw_orders ADD COLUMN external_id TEXT',
+      'ALTER TABLE reconstructed_positions ADD COLUMN current_price REAL',
+      'ALTER TABLE reconstructed_positions ADD COLUMN floating_profit REAL DEFAULT 0.0',
+      'ALTER TABLE reconstructed_positions ADD COLUMN magic INTEGER DEFAULT 0',
+      'ALTER TABLE reconstructed_positions ADD COLUMN comment TEXT',
+      'ALTER TABLE reconstructed_positions ADD COLUMN external_id TEXT',
+      'ALTER TABLE reconstructed_positions ADD COLUMN fee_total REAL DEFAULT 0.0',
+      'ALTER TABLE reconstructed_positions ADD COLUMN is_hedged INTEGER DEFAULT 0'
+    ];
+    for (const sql of safeMigrations) {
+      try {
+        await db.exec(sql);
+      } catch {
+        // ignore if already exists
+      }
+    }
     await seedInitialData(db);
     return db;
   } catch (err) {

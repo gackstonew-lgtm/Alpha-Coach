@@ -126,8 +126,10 @@ export class PositionReconstructionService {
       let totalEntryVolume = 0;
       let totalEntryCost = 0;
       for (const d of entryDeals) {
-        totalEntryVolume += d.volume;
-        totalEntryCost += d.price * d.volume;
+        const vol = Number(d.volume) || 0;
+        const price = Number(d.price) || 0;
+        totalEntryVolume += vol;
+        totalEntryCost += price * vol;
       }
 
       let totalExitVolume = 0;
@@ -138,15 +140,17 @@ export class PositionReconstructionService {
       let feeTotal = 0;
 
       for (const d of deals) {
-        commissionTotal += d.commission || 0;
-        swapTotal += d.swap || 0;
-        grossProfit += d.profit || 0;
-        feeTotal += d.fee || 0;
+        commissionTotal += Number(d.commission) || 0;
+        swapTotal += Number(d.swap) || 0;
+        grossProfit += Number(d.profit) || 0;
+        feeTotal += Number(d.fee) || 0;
       }
 
       for (const d of exitDeals) {
-        totalExitVolume += d.volume;
-        totalExitCost += d.price * d.volume;
+        const vol = Number(d.volume) || 0;
+        const price = Number(d.price) || 0;
+        totalExitVolume += vol;
+        totalExitCost += price * vol;
       }
 
       // Determine whether position is CLOSED or OPEN based on MT5 facts:

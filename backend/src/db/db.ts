@@ -148,7 +148,10 @@ export async function getDatabaseAsync(): Promise<IDatabase> {
     // In production (or when DATABASE_URL is configured in non-test), connect to PostgreSQL / Supabase Postgres
     if (process.env.DATABASE_URL && !isTest) {
       try {
-        const { Pool } = require('pg');
+        const { Pool, types } = require('pg');
+        if (types && typeof types.setTypeParser === 'function') {
+          types.setTypeParser(1700, (val: string) => parseFloat(val));
+        }
         const pool = new Pool({
           connectionString: process.env.DATABASE_URL,
           ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false }

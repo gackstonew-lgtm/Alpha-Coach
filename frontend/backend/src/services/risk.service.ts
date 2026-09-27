@@ -87,7 +87,7 @@ export class RiskGuardianService {
     // Fetch today's closed positions
     const todayTrades = await db.query(
       `SELECT * FROM reconstructed_positions
-       WHERE account_id = ? AND status = 'CLOSED' AND (close_time LIKE ? OR open_time LIKE ?)`,
+       WHERE account_id = ? AND status = 'CLOSED' AND (CAST(close_time AS TEXT) LIKE ? OR CAST(open_time AS TEXT) LIKE ?)`,
       [accountId, `${todayStr}%`, `${todayStr}%`]
     );
 
@@ -96,11 +96,12 @@ export class RiskGuardianService {
     let consecutiveLosses = 0;
 
     for (const t of todayTrades) {
-      todayNetProfit += t.net_profit;
-      if (t.net_profit < 0) {
+      const net = Number(t.net_profit) || 0;
+      todayNetProfit += net;
+      if (net < 0) {
         todayLossCount++;
         consecutiveLosses++;
-      } else if (t.net_profit > 0) {
+      } else if (net > 0) {
         consecutiveLosses = 0;
       }
     }
