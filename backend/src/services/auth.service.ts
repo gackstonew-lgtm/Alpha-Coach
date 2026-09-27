@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { getDatabase, getDatabaseAsync } from '../db/db';
 import { User, TraderProgression } from '../models/types';
-import { getSupabaseAnon, verifySupabaseToken } from '../lib/supabase';
+import { getSupabaseAnon, verifySupabaseToken, verifySupabaseTokenDetailed } from '../lib/supabase';
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET || 'alpha-coach-super-secure-production-secret-key-2026';
 
@@ -106,35 +106,46 @@ export class AuthService {
   }
 
   /**
-   * Cryptographically verifies token against Supabase Auth (or JWT_SECRET for test runners).
-   * Strictly rejects tampered, expired, or unverified tokens with null (HTTP 401).
+   * Cryptographically verifies token against Supabase Auth (or JWT_SECRET for test suites) with detailed failure reporting.
+   * Strictly rejects tampered, expired, or unverified tokens (HTTP 401).
    * Never trusts unverified decoded tokens.
    */
-  public static async verifyTokenAsync(token: string): Promise<{
-    userId: string;
-    email: string;
-    role: string;
-    tier: string;
-  } | null> {
+  public static async verifyTokenDetailed(token: string): Promise<{
+    valid: boolean;
+    user?: {
+      userId: string;
+      supabaseUserId: string;
+      email: string;
+      role: string;
+      tier: string;
+    };
+    failureReason?: string;
+  }> {
     if (!token || typeof token !== 'string' || token.trim() === '') {
-      return null;
+      return { valid: false, failureReason: 'SUPABASE_TOKEN_MISSING' };
     }
 
     // 1. Verify token with Supabase Auth authority
     try {
-      const supabaseUser = await verifySupabaseToken(token);
-      if (supabaseUser && supabaseUser.id) {
-        await this.syncSupabaseUser(supabaseUser);
-        const meta = supabaseUser.user_metadata || {};
+      const detailed = await verifySupabaseTokenDetailed(token);
+      if (detailed.valid && detailed.user && detailed.user.id) {
+        const safeUser = await this.syncSupabaseUser(detailed.user);
+        const meta = detailed.user.user_metadata || {};
         return {
-          userId: supabaseUser.id,
-          email: supabaseUser.email || '',
-          role: (meta.role as string) || 'trader',
-          tier: (meta.subscription_tier as string) || 'PRO'
+          valid: true,
+          user: {
+            userId: safeUser.id,
+            supabaseUserId: detailed.user.id,
+            email: detailed.user.email || '',
+            role: safeUser.role || (meta.role as string) || 'trader',
+            tier: safeUser.subscription_tier || (meta.subscription_tier as string) || 'PRO'
+          }
         };
+      } else if (detailed.failureReason && process.env.NODE_ENV !== 'test') {
+        return { valid: false, failureReason: detailed.failureReason };
       }
     } catch {
-      // Supabase verification error
+      // Supabase verification exception
     }
 
     // 2. Fallback: Verify signature with JWT_SECRET for test suites / internal service tokens
@@ -143,10 +154,14 @@ export class AuthService {
       if (payload && (payload.userId || payload.sub)) {
         const uid = payload.userId || payload.sub;
         return {
-          userId: uid,
-          email: payload.email || '',
-          role: payload.role || 'trader',
-          tier: payload.tier || payload.subscription_tier || 'PRO'
+          valid: true,
+          user: {
+            userId: uid,
+            supabaseUserId: uid,
+            email: payload.email || '',
+            role: payload.role || 'trader',
+            tier: payload.tier || payload.subscription_tier || 'PRO'
+          }
         };
       }
     } catch {
@@ -154,7 +169,23 @@ export class AuthService {
     }
 
     // NEVER trust decoded tokens. If verification failed, reject token.
-    return null;
+    return { valid: false, failureReason: 'SUPABASE_TOKEN_INVALID' };
+  }
+
+  /**
+   * Cryptographically verifies token against Supabase Auth (or JWT_SECRET for test runners).
+   * Strictly rejects tampered, expired, or unverified tokens with null (HTTP 401).
+   * Never trusts unverified decoded tokens.
+   */
+  public static async verifyTokenAsync(token: string): Promise<{
+    userId: string;
+    supabaseUserId?: string;
+    email: string;
+    role: string;
+    tier: string;
+  } | null> {
+    const result = await this.verifyTokenDetailed(token);
+    return result.valid && result.user ? result.user : null;
   }
 
   /**

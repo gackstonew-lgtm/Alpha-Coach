@@ -77,17 +77,45 @@ export function getSupabaseUserClient(accessToken: string): SupabaseClient {
 }
 
 /**
+ * Verifies a Supabase JWT access token using Supabase Auth with detailed failure reporting.
+ */
+export async function verifySupabaseTokenDetailed(token: string): Promise<{
+  valid: boolean;
+  user?: any;
+  failureReason?: string;
+}> {
+  if (!token || typeof token !== 'string' || !token.trim()) {
+    return { valid: false, failureReason: 'SUPABASE_TOKEN_MISSING' };
+  }
+
+  try {
+    const supabase = getSupabaseAnon();
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error) {
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('expired') || msg.includes('jwt expired')) {
+        return { valid: false, failureReason: 'SUPABASE_TOKEN_EXPIRED' };
+      }
+      if (msg.includes('issuer') || msg.includes('invalid claim')) {
+        return { valid: false, failureReason: 'SUPABASE_TOKEN_ISSUER_INVALID' };
+      }
+      return { valid: false, failureReason: 'SUPABASE_TOKEN_INVALID' };
+    }
+    if (!data.user) {
+      return { valid: false, failureReason: 'SUPABASE_USER_NOT_FOUND' };
+    }
+    return { valid: true, user: data.user };
+  } catch {
+    return { valid: false, failureReason: 'SUPABASE_VERIFICATION_EXCEPTION' };
+  }
+}
+
+/**
  * Verifies a Supabase JWT access token using Supabase Auth.
  */
 export async function verifySupabaseToken(token: string) {
-  try {
-    const supabase = getSupabaseAnon();
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) return null;
-    return user;
-  } catch {
-    return null;
-  }
+  const result = await verifySupabaseTokenDetailed(token);
+  return result.valid ? result.user : null;
 }
 
 /**
@@ -110,6 +138,7 @@ export default {
   getSupabaseAnon,
   getSupabaseUserClient,
   verifySupabaseToken,
+  verifySupabaseTokenDetailed,
   getSupabaseDiagnostics
 };
 

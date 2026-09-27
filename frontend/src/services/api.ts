@@ -82,16 +82,57 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefin
 const USE_CUSTOM_BACKEND = Boolean(API_BASE_URL && API_BASE_URL.trim() !== '');
 
 class ApiClient {
-  private getToken(): string | null {
-    return localStorage.getItem('alpha_coach_token');
+  private refreshPromise: Promise<string | null> | null = null;
+
+  /**
+   * Retrieves the current Supabase session access token.
+   * Supabase Auth manages persistence and auto-refreshes tokens.
+   */
+  private async getAccessToken(): Promise<string | null> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token || null;
+    } catch {
+      return null;
+    }
   }
 
-  private async request<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const token = this.getToken();
+  /**
+   * Single-flight recovery mechanism to refresh token exactly once on 401
+   */
+  private async refreshAccessToken(): Promise<string | null> {
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.refreshPromise = (async () => {
+      try {
+        const { data, error } = await supabase.auth.refreshSession();
+        if (error || !data.session) {
+          return null;
+        }
+        return data.session.access_token;
+      } catch {
+        return null;
+      } finally {
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
+  }
+
+  /**
+   * Central authenticated request executor with single-flight 401 retry
+   */
+  private async request<T = any>(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<T> {
     const baseUrl = API_BASE_URL || '';
     if (!baseUrl) {
       throw new Error('Custom backend API_BASE_URL is not configured.');
     }
+
+    // 1. Obtain current Supabase access token
+    const token = await this.getAccessToken();
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -106,6 +147,14 @@ class ApiClient {
       ...options,
       headers,
     });
+
+    // 2. If 401 Unauthorized and not already a retry, attempt single-flight token refresh
+    if (response.status === 401 && !isRetry) {
+      const refreshedToken = await this.refreshAccessToken();
+      if (refreshedToken) {
+        return this.request<T>(endpoint, options, true);
+      }
+    }
 
     let data: any = null;
     const contentType = response.headers.get('content-type') || '';
@@ -138,6 +187,28 @@ class ApiClient {
     }
 
     return data;
+  }
+
+  // Diagnostic session verification endpoint
+  async sessionCheck() {
+    if (USE_CUSTOM_BACKEND) {
+      return this.request<{
+        authenticated: boolean;
+        supabaseUserId: string;
+        applicationUserId: string;
+        email: string;
+        tokenValid: boolean;
+        requestId?: string;
+      }>('/auth/session-check');
+    }
+    const { data: { session } } = await supabase.auth.getSession();
+    return {
+      authenticated: Boolean(session),
+      supabaseUserId: session?.user?.id || '',
+      applicationUserId: session?.user?.id || '',
+      email: session?.user?.email || '',
+      tokenValid: Boolean(session?.access_token)
+    };
   }
 
   // ==========================================

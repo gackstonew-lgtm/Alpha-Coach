@@ -49734,7 +49734,8 @@ __export(supabase_exports, {
   getSupabaseAnon: () => getSupabaseAnon,
   getSupabaseDiagnostics: () => getSupabaseDiagnostics,
   getSupabaseUserClient: () => getSupabaseUserClient,
-  verifySupabaseToken: () => verifySupabaseToken
+  verifySupabaseToken: () => verifySupabaseToken,
+  verifySupabaseTokenDetailed: () => verifySupabaseTokenDetailed
 });
 function getSupabaseAdmin() {
   if (!supabaseAdminInstance) {
@@ -49780,15 +49781,34 @@ function getSupabaseUserClient(accessToken) {
     }
   });
 }
-async function verifySupabaseToken(token) {
+async function verifySupabaseTokenDetailed(token) {
+  if (!token || typeof token !== "string" || !token.trim()) {
+    return { valid: false, failureReason: "SUPABASE_TOKEN_MISSING" };
+  }
   try {
     const supabase = getSupabaseAnon();
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) return null;
-    return user;
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error) {
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("expired") || msg.includes("jwt expired")) {
+        return { valid: false, failureReason: "SUPABASE_TOKEN_EXPIRED" };
+      }
+      if (msg.includes("issuer") || msg.includes("invalid claim")) {
+        return { valid: false, failureReason: "SUPABASE_TOKEN_ISSUER_INVALID" };
+      }
+      return { valid: false, failureReason: "SUPABASE_TOKEN_INVALID" };
+    }
+    if (!data.user) {
+      return { valid: false, failureReason: "SUPABASE_USER_NOT_FOUND" };
+    }
+    return { valid: true, user: data.user };
   } catch {
-    return null;
+    return { valid: false, failureReason: "SUPABASE_VERIFICATION_EXCEPTION" };
   }
+}
+async function verifySupabaseToken(token) {
+  const result = await verifySupabaseTokenDetailed(token);
+  return result.valid ? result.user : null;
 }
 function getSupabaseDiagnostics() {
   const hasUrl = Boolean(process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL);
@@ -49822,6 +49842,7 @@ var init_supabase = __esm({
       getSupabaseAnon,
       getSupabaseUserClient,
       verifySupabaseToken,
+      verifySupabaseTokenDetailed,
       getSupabaseDiagnostics
     };
   }
@@ -52017,25 +52038,31 @@ var AuthService = class {
     return safeUser;
   }
   /**
-   * Cryptographically verifies token against Supabase Auth (or JWT_SECRET for test runners).
-   * Strictly rejects tampered, expired, or unverified tokens with null (HTTP 401).
+   * Cryptographically verifies token against Supabase Auth (or JWT_SECRET for test suites) with detailed failure reporting.
+   * Strictly rejects tampered, expired, or unverified tokens (HTTP 401).
    * Never trusts unverified decoded tokens.
    */
-  static async verifyTokenAsync(token) {
+  static async verifyTokenDetailed(token) {
     if (!token || typeof token !== "string" || token.trim() === "") {
-      return null;
+      return { valid: false, failureReason: "SUPABASE_TOKEN_MISSING" };
     }
     try {
-      const supabaseUser = await verifySupabaseToken(token);
-      if (supabaseUser && supabaseUser.id) {
-        await this.syncSupabaseUser(supabaseUser);
-        const meta = supabaseUser.user_metadata || {};
+      const detailed = await verifySupabaseTokenDetailed(token);
+      if (detailed.valid && detailed.user && detailed.user.id) {
+        const safeUser = await this.syncSupabaseUser(detailed.user);
+        const meta = detailed.user.user_metadata || {};
         return {
-          userId: supabaseUser.id,
-          email: supabaseUser.email || "",
-          role: meta.role || "trader",
-          tier: meta.subscription_tier || "PRO"
+          valid: true,
+          user: {
+            userId: safeUser.id,
+            supabaseUserId: detailed.user.id,
+            email: detailed.user.email || "",
+            role: safeUser.role || meta.role || "trader",
+            tier: safeUser.subscription_tier || meta.subscription_tier || "PRO"
+          }
         };
+      } else if (detailed.failureReason && process.env.NODE_ENV !== "test") {
+        return { valid: false, failureReason: detailed.failureReason };
       }
     } catch {
     }
@@ -52044,15 +52071,28 @@ var AuthService = class {
       if (payload && (payload.userId || payload.sub)) {
         const uid = payload.userId || payload.sub;
         return {
-          userId: uid,
-          email: payload.email || "",
-          role: payload.role || "trader",
-          tier: payload.tier || payload.subscription_tier || "PRO"
+          valid: true,
+          user: {
+            userId: uid,
+            supabaseUserId: uid,
+            email: payload.email || "",
+            role: payload.role || "trader",
+            tier: payload.tier || payload.subscription_tier || "PRO"
+          }
         };
       }
     } catch {
     }
-    return null;
+    return { valid: false, failureReason: "SUPABASE_TOKEN_INVALID" };
+  }
+  /**
+   * Cryptographically verifies token against Supabase Auth (or JWT_SECRET for test runners).
+   * Strictly rejects tampered, expired, or unverified tokens with null (HTTP 401).
+   * Never trusts unverified decoded tokens.
+   */
+  static async verifyTokenAsync(token) {
+    const result = await this.verifyTokenDetailed(token);
+    return result.valid && result.user ? result.user : null;
   }
   /**
    * Synchronous token verification for backwards compatibility (delegates to JWT verify without decode fallback).
@@ -52510,6 +52550,7 @@ async function requireUserAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   const reqId = req.requestId || v4_default();
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: SUPABASE_TOKEN_MISSING`);
     res.status(401).json({
       success: false,
       error: {
@@ -52521,8 +52562,10 @@ async function requireUserAuth(req, res, next) {
     return;
   }
   const token = authHeader.split(" ")[1];
-  const payload = await AuthService.verifyTokenAsync(token);
-  if (!payload) {
+  const authResult = await AuthService.verifyTokenDetailed(token);
+  if (!authResult.valid || !authResult.user) {
+    const reason = authResult.failureReason || "SUPABASE_TOKEN_INVALID";
+    console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${reason}`);
     res.status(401).json({
       success: false,
       error: {
@@ -52533,7 +52576,7 @@ async function requireUserAuth(req, res, next) {
     });
     return;
   }
-  req.user = payload;
+  req.user = authResult.user;
   next();
 }
 async function requireBridgeOrUserAuth(req, res, next) {
@@ -52545,6 +52588,7 @@ async function requireBridgeOrUserAuth(req, res, next) {
     if (!authCheck.authorized || !authCheck.userId || !authCheck.deviceId) {
       const errCode = authCheck.error?.code || "INVALID_BRIDGE_TOKEN";
       const errMsg = authCheck.error?.message || "Invalid or inactive MT5 Bridge device token.";
+      console.warn(`[BRIDGE AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${errCode}`);
       res.status(401).json({
         success: false,
         error: {
@@ -52560,18 +52604,22 @@ async function requireBridgeOrUserAuth(req, res, next) {
       deviceId: authCheck.deviceId,
       deviceName: authCheck.deviceName || "Local Windows Terminal"
     };
-    req.user = { userId: authCheck.userId, email: "", role: "trader", tier: "PRO" };
+    req.user = { userId: authCheck.userId, supabaseUserId: authCheck.userId, email: "", role: "trader", tier: "PRO" };
     next();
     return;
   }
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.split(" ")[1];
-    const payload = await AuthService.verifyTokenAsync(token);
-    if (payload) {
-      req.user = payload;
+    const authResult = await AuthService.verifyTokenDetailed(token);
+    if (authResult.valid && authResult.user) {
+      req.user = authResult.user;
       next();
       return;
     }
+    const reason = authResult.failureReason || "SUPABASE_TOKEN_INVALID";
+    console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${reason}`);
+  } else {
+    console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: CREDENTIALS_MISSING`);
   }
   res.status(401).json({
     success: false,
@@ -52622,6 +52670,16 @@ router.get("/me", requireUserAuth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+router.get("/session-check", requireUserAuth, async (req, res) => {
+  res.json({
+    authenticated: true,
+    supabaseUserId: req.user.supabaseUserId || req.user.userId,
+    applicationUserId: req.user.userId,
+    email: req.user.email,
+    tokenValid: true,
+    requestId: req.requestId
+  });
 });
 var auth_routes_default = router;
 
@@ -53762,8 +53820,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "b5c5f37053c8ae050aea0a8d4ca8667ab1234f5a",
-  buildTimestamp: "2026-09-27T00:28:16.106Z",
+  gitCommit: "f32773d843610baf7446404c51812abd86f821bc",
+  buildTimestamp: "2026-09-27T01:08:40.133Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -53869,7 +53927,11 @@ router3.post("/bridge/session/:sessionCode/authorize", requireUserAuth, async (r
   } catch (err) {
     const code = err.code || "AUTHORIZATION_FAILED";
     console.error(`[BridgePairing] Authorization rejected [${code}] for session [${req.params.sessionCode}]:`, err.message, `(reqId: ${reqId})`);
-    res.status(400).json({
+    let statusCode = 400;
+    if (code === "PAIRING_SESSION_NOT_FOUND") statusCode = 404;
+    else if (code === "PAIRING_SESSION_EXPIRED") statusCode = 410;
+    else if (code === "FORBIDDEN") statusCode = 403;
+    res.status(statusCode).json({
       success: false,
       error: {
         code,

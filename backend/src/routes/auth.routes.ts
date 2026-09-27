@@ -45,4 +45,15 @@ router.get('/me', requireUserAuth, async (req: AuthenticatedRequest, res) => {
   }
 });
 
+router.get('/session-check', requireUserAuth, async (req: AuthenticatedRequest, res) => {
+  res.json({
+    authenticated: true,
+    supabaseUserId: req.user!.supabaseUserId || req.user!.userId,
+    applicationUserId: req.user!.userId,
+    email: req.user!.email,
+    tokenValid: true,
+    requestId: req.requestId
+  });
+});
+
 export default router;

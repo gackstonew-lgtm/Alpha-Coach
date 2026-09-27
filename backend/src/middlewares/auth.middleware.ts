@@ -7,6 +7,7 @@ export interface AuthenticatedRequest extends Request {
   requestId?: string;
   user?: {
     userId: string;
+    supabaseUserId?: string;
     email: string;
     role: string;
     tier: string;
@@ -25,11 +26,16 @@ export function attachRequestId(req: AuthenticatedRequest, res: Response, next: 
   next();
 }
 
+/**
+ * Canonical user authentication middleware.
+ * Verifies Supabase Auth Bearer token and attaches verified application identity.
+ */
 export async function requireUserAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   const reqId = req.requestId || uuidv4();
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: SUPABASE_TOKEN_MISSING`);
     res.status(401).json({
       success: false,
       error: {
@@ -42,8 +48,10 @@ export async function requireUserAuth(req: AuthenticatedRequest, res: Response, 
   }
 
   const token = authHeader.split(' ')[1];
-  const payload = await AuthService.verifyTokenAsync(token);
-  if (!payload) {
+  const authResult = await AuthService.verifyTokenDetailed(token);
+  if (!authResult.valid || !authResult.user) {
+    const reason = authResult.failureReason || 'SUPABASE_TOKEN_INVALID';
+    console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${reason}`);
     res.status(401).json({
       success: false,
       error: {
@@ -55,10 +63,16 @@ export async function requireUserAuth(req: AuthenticatedRequest, res: Response, 
     return;
   }
 
-  req.user = payload;
+  req.user = authResult.user;
   next();
 }
 
+// Alias to guarantee compatibility with canonical naming
+export const requireAuthenticatedUser = requireUserAuth;
+
+/**
+ * Dual authentication middleware for endpoints supporting either local MT5 Bridge device tokens or Web Users.
+ */
 export async function requireBridgeOrUserAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   const bridgeToken = req.headers['x-bridge-token'] as string;
@@ -69,6 +83,7 @@ export async function requireBridgeOrUserAuth(req: AuthenticatedRequest, res: Re
     if (!authCheck.authorized || !authCheck.userId || !authCheck.deviceId) {
       const errCode = authCheck.error?.code || 'INVALID_BRIDGE_TOKEN';
       const errMsg = authCheck.error?.message || 'Invalid or inactive MT5 Bridge device token.';
+      console.warn(`[BRIDGE AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${errCode}`);
       res.status(401).json({
         success: false,
         error: {
@@ -84,19 +99,23 @@ export async function requireBridgeOrUserAuth(req: AuthenticatedRequest, res: Re
       deviceId: authCheck.deviceId,
       deviceName: authCheck.deviceName || 'Local Windows Terminal'
     };
-    req.user = { userId: authCheck.userId, email: '', role: 'trader', tier: 'PRO' };
+    req.user = { userId: authCheck.userId, supabaseUserId: authCheck.userId, email: '', role: 'trader', tier: 'PRO' };
     next();
     return;
   }
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
-    const payload = await AuthService.verifyTokenAsync(token);
-    if (payload) {
-      req.user = payload;
+    const authResult = await AuthService.verifyTokenDetailed(token);
+    if (authResult.valid && authResult.user) {
+      req.user = authResult.user;
       next();
       return;
     }
+    const reason = authResult.failureReason || 'SUPABASE_TOKEN_INVALID';
+    console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${reason}`);
+  } else {
+    console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: CREDENTIALS_MISSING`);
   }
 
   res.status(401).json({

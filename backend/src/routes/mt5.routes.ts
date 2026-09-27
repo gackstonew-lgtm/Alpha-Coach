@@ -117,7 +117,12 @@ router.post('/bridge/session/:sessionCode/authorize', requireUserAuth, async (re
   } catch (err: any) {
     const code = err.code || 'AUTHORIZATION_FAILED';
     console.error(`[BridgePairing] Authorization rejected [${code}] for session [${req.params.sessionCode}]:`, err.message, `(reqId: ${reqId})`);
-    res.status(400).json({
+    let statusCode = 400;
+    if (code === 'PAIRING_SESSION_NOT_FOUND') statusCode = 404;
+    else if (code === 'PAIRING_SESSION_EXPIRED') statusCode = 410;
+    else if (code === 'FORBIDDEN') statusCode = 403;
+
+    res.status(statusCode).json({
       success: false,
       error: {
         code,

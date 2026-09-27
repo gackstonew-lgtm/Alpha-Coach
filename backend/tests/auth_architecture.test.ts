@@ -223,6 +223,22 @@ describe('Canonical Authentication & MT5 Persistence Architecture Tests', () => 
       expect(res.body.authentication.authority).toBe('SUPABASE_AUTH');
       expect(res.body.bridgeService.status).toBe('ONLINE');
     });
+
+    it('Exposes authenticated session diagnostics on /api/v1/auth/session-check', async () => {
+      const res = await request(app)
+        .get('/api/v1/auth/session-check')
+        .set('Authorization', `Bearer ${validToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.authenticated).toBe(true);
+      expect(res.body.applicationUserId).toBe(testUserId);
+      expect(res.body.tokenValid).toBe(true);
+    });
+
+    it('Rejects unauthenticated session check with 401', async () => {
+      const res = await request(app).get('/api/v1/auth/session-check');
+      expect(res.status).toBe(401);
+      expect(res.body.error.code).toBe('AUTH_REQUIRED');
+    });
   });
 
   describe('5. Atomic MT5 Bridge Pairing Lifecycle & Re-Pairing', () => {
@@ -328,6 +344,41 @@ describe('Canonical Authentication & MT5 Persistence Architecture Tests', () => 
       expect(res.body.error.code).toBe('PAIRING_SESSION_ALREADY_COMPLETED');
       expect(typeof res.body.error.message).toBe('string');
       expect(res.body.error.message).not.toContain('[object');
+    });
+
+    it('Step G: Rejects authorization of expired pairing session with HTTP 410', async () => {
+      // Create session and artificially expire it in DB
+      const createRes = await request(app)
+        .post('/api/v1/mt5/bridge/session/create')
+        .send({ deviceName: 'Expired Terminal Test' });
+      const expCode = createRes.body.sessionCode;
+      await db.run(
+        `UPDATE bridge_pairing_sessions SET expires_at = ? WHERE session_code = ?`,
+        [new Date(Date.now() - 60000).toISOString(), expCode]
+      );
+
+      const res = await request(app)
+        .post(`/api/v1/mt5/bridge/session/${expCode}/authorize`)
+        .set('Authorization', `Bearer ${validToken}`);
+
+      expect(res.status).toBe(410);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe('PAIRING_SESSION_EXPIRED');
+    });
+
+    it('Step H: Rejects pairing authorization with invalid user token (HTTP 401)', async () => {
+      const createRes = await request(app)
+        .post('/api/v1/mt5/bridge/session/create')
+        .send({ deviceName: 'Unauthorized Test Terminal' });
+      const pendingCode = createRes.body.sessionCode;
+
+      const res = await request(app)
+        .post(`/api/v1/mt5/bridge/session/${pendingCode}/authorize`)
+        .set('Authorization', 'Bearer invalid_bogus_token_12345');
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe('INVALID_AUTH_TOKEN');
     });
   });
 });

@@ -15,12 +15,13 @@ interface AccountContextType {
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
 
 export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('ALL');
   const [isLoadingAccounts, setIsLoadingAccounts] = useState<boolean>(false);
 
   const refreshAccounts = async () => {
+    if (authLoading) return;
     if (!user) {
       setAccounts([]);
       return;
@@ -28,17 +29,23 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       setIsLoadingAccounts(true);
       const res = await api.getAccounts();
-      setAccounts(res.accounts || []);
+      if (res && Array.isArray(res.accounts)) {
+        setAccounts(res.accounts);
+      }
     } catch (err) {
-      console.error('Failed to load trading accounts:', err);
+      console.warn('Failed to load trading accounts (preserving previous state):', err);
     } finally {
       setIsLoadingAccounts(false);
     }
   };
 
   useEffect(() => {
-    refreshAccounts();
-  }, [user]);
+    if (!authLoading && user) {
+      refreshAccounts();
+    } else if (!authLoading && !user) {
+      setAccounts([]);
+    }
+  }, [user, authLoading]);
 
   const selectedAccount = selectedAccountId === 'ALL'
     ? null

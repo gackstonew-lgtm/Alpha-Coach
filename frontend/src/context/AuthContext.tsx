@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Session } from '@supabase/supabase-js';
 import { api } from '../services/api';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   token: string | null;
   isLoading: boolean;
+  isAuthenticated: boolean;
   login: (email: string, pass: string) => Promise<void>;
   register: (data: any) => Promise<{ user: User; token: string | null; session: any; requiresEmailConfirmation: boolean }>;
   logout: () => Promise<void>;
@@ -17,84 +20,86 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('alpha_coach_token'));
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Clean up legacy alpha_coach_token storage key
+  useEffect(() => {
+    try {
+      localStorage.removeItem('alpha_coach_token');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const buildUserFromSession = (currentSession: Session | null): User | null => {
+    if (!currentSession || !currentSession.user) return null;
+    const meta = currentSession.user.user_metadata || {};
+    return {
+      id: currentSession.user.id,
+      email: currentSession.user.email || '',
+      first_name: meta.first_name || 'Trader',
+      last_name: meta.last_name || 'Alpha',
+      role: meta.role || 'trader',
+      timezone: meta.timezone || 'UTC',
+      currency: meta.currency || 'USD',
+      subscription_tier: meta.subscription_tier || 'PRO',
+      is_active: 1
+    };
+  };
 
   const refreshUser = async () => {
     try {
       const res = await api.getMe();
-      setUser(res.user);
-    } catch {
-      localStorage.removeItem('alpha_coach_token');
-      setToken(null);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
+      if (res?.user) {
+        setUser(res.user);
+      }
+    } catch (err) {
+      console.warn('[AuthContext] Failed to fetch /me profile:', err);
     }
   };
 
   useEffect(() => {
-    // Initial check
-    const checkSession = async () => {
+    let mounted = true;
+
+    // 1. Initial Session Check directly from Supabase
+    const initSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          localStorage.setItem('alpha_coach_token', session.access_token);
-          setToken(session.access_token);
-          const meta = session.user.user_metadata || {};
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            first_name: meta.first_name || 'Trader',
-            last_name: meta.last_name || 'Alpha',
-            role: meta.role || 'trader',
-            timezone: meta.timezone || 'UTC',
-            currency: meta.currency || 'USD',
-            subscription_tier: meta.subscription_tier || 'PRO',
-            is_active: 1
-          });
-        } else {
-          localStorage.removeItem('alpha_coach_token');
-          setToken(null);
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (mounted) {
+          setSession(initialSession);
+          setUser(buildUserFromSession(initialSession));
+        }
+      } catch (err) {
+        if (mounted) {
+          setSession(null);
           setUser(null);
         }
-      } catch {
-        localStorage.removeItem('alpha_coach_token');
-        setToken(null);
-        setUser(null);
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    checkSession();
+    initSession();
 
-    // Listen to Supabase auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        localStorage.setItem('alpha_coach_token', session.access_token);
-        setToken(session.access_token);
-        const meta = session.user.user_metadata || {};
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          first_name: meta.first_name || 'Trader',
-          last_name: meta.last_name || 'Alpha',
-          role: meta.role || 'trader',
-          timezone: meta.timezone || 'UTC',
-          currency: meta.currency || 'USD',
-          subscription_tier: meta.subscription_tier || 'PRO',
-          is_active: 1
-        });
-      } else {
-        localStorage.removeItem('alpha_coach_token');
-        setToken(null);
-        setUser(null);
-      }
+    // 2. Continuous Listener for Supabase Auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!mounted) return;
+      
+      setSession(currentSession);
+      setUser(buildUserFromSession(currentSession));
       setIsLoading(false);
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        // Asynchronously synchronize session check with backend
+        api.sessionCheck().catch(() => {});
+      }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -113,23 +118,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Authentication failed: no active session established.');
     }
 
-    const token = data.session.access_token;
-    localStorage.setItem('alpha_coach_token', token);
-    setToken(token);
-
-    const meta = data.user.user_metadata || {};
-    const userObj: User = {
-      id: data.user.id,
-      email: data.user.email || email.trim(),
-      first_name: meta.first_name || 'Trader',
-      last_name: meta.last_name || 'Alpha',
-      role: meta.role || 'trader',
-      timezone: meta.timezone || 'UTC',
-      currency: meta.currency || 'USD',
-      subscription_tier: meta.subscription_tier || 'PRO',
-      is_active: 1
-    };
-    setUser(userObj);
+    setSession(data.session);
+    setUser(buildUserFromSession(data.session));
   };
 
   const register = async (data: any) => {
@@ -156,32 +146,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Registration failed: no user record returned from authentication service.');
     }
 
-    const meta = authData.user.user_metadata || {};
-    const userObj: User = {
+    const currentSession = authData.session;
+    setSession(currentSession);
+    const userObj = buildUserFromSession(currentSession) || {
       id: authData.user.id,
       email: authData.user.email || data.email.trim(),
-      first_name: meta.first_name || data.firstName,
-      last_name: meta.last_name || data.lastName,
-      role: meta.role || 'trader',
-      timezone: meta.timezone || data.timezone || 'UTC',
-      currency: meta.currency || data.currency || 'USD',
-      subscription_tier: meta.subscription_tier || 'PRO',
+      first_name: data.firstName,
+      last_name: data.lastName,
+      role: 'trader',
+      timezone: data.timezone || 'UTC',
+      currency: data.currency || 'USD',
+      subscription_tier: 'PRO',
       is_active: 1
     };
-
-    const session = authData.session;
-    const token = session?.access_token || null;
-    if (token) {
-      localStorage.setItem('alpha_coach_token', token);
-      setToken(token);
-      setUser(userObj);
-    }
+    setUser(userObj);
 
     return {
       user: userObj,
-      token,
-      session,
-      requiresEmailConfirmation: !session
+      token: currentSession?.access_token || null,
+      session: currentSession,
+      requiresEmailConfirmation: !currentSession
     };
   };
 
@@ -191,14 +175,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // ignore
     } finally {
-      localStorage.removeItem('alpha_coach_token');
-      setToken(null);
+      setSession(null);
       setUser(null);
+      try {
+        localStorage.removeItem('alpha_coach_token');
+      } catch {}
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        token: session?.access_token || null,
+        isLoading,
+        isAuthenticated: Boolean(user && session),
+        login,
+        register,
+        logout,
+        refreshUser
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
