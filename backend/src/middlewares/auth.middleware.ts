@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { AuthService } from '../services/auth.service';
+import { AuthService, isTransientAuthFailureReason } from '../services/auth.service';
 import { BridgeService } from '../services/bridge.service';
 
 export interface AuthenticatedRequest extends Request {
@@ -52,16 +52,18 @@ export async function requireUserAuth(req: AuthenticatedRequest, res: Response, 
   if (!authResult.valid || !authResult.user) {
     const reason = authResult.failureReason || 'SUPABASE_TOKEN_INVALID';
 
-    // DB_SYNC_FAILED: Supabase verified the token but the application database
-    // is unavailable. Return 503 (not 401) so clients don't log out due to a
-    // transient database connection issue.
-    if (reason === 'DB_SYNC_FAILED') {
-      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Database unavailable for verified user`);
+    // Transient failures (network/timeout contacting Supabase, missing backend config, or a
+    // verified-but-unsynced DB record) are NOT proof the token is invalid. Return 503 so
+    // clients treat this as "try again" rather than "log the user out" — this is what
+    // prevents a transient hiccup from becoming a re-authentication loop on flows like
+    // MT5 bridge pairing authorization.
+    if (isTransientAuthFailureReason(reason)) {
+      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Transient auth verification failure: ${reason}`);
       res.status(503).json({
         success: false,
         error: {
           code: 'SERVICE_UNAVAILABLE',
-          message: 'Service temporarily unavailable. Your session is valid — please try again in a moment.'
+          message: 'Service temporarily unavailable while verifying your session. Your login is valid — please try again in a moment.'
         },
         requestId: reqId
       });
@@ -130,8 +132,8 @@ export async function requireBridgeOrUserAuth(req: AuthenticatedRequest, res: Re
       return;
     }
     const reason = authResult.failureReason || 'SUPABASE_TOKEN_INVALID';
-    if (reason === 'DB_SYNC_FAILED') {
-      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Database unavailable for verified user`);
+    if (isTransientAuthFailureReason(reason)) {
+      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Transient auth verification failure: ${reason}`);
       res.status(503).json({
         success: false,
         error: {

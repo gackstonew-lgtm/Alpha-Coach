@@ -6,6 +6,16 @@ import { api, normalizeApiError, NormalizedApiError } from '../services/api';
 import { ShieldCheck, Cpu, CheckCircle2, XCircle, ArrowRight, AlertTriangle, Laptop, Lock } from 'lucide-react';
 import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
 
+/**
+ * True when the error is a transient service problem (backend momentarily unable to verify
+ * the Supabase session — e.g. cold-start latency or a network blip reaching Supabase Auth)
+ * rather than a genuinely invalid/expired credential. The user's login is still valid, so we
+ * offer an in-place retry instead of routing them back through /login.
+ */
+function isRetryableServiceError(error: NormalizedApiError): boolean {
+  return error.status === 503 || error.code === 'SERVICE_UNAVAILABLE';
+}
+
 export const PairDevicePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const sessionCode = searchParams.get('session');
@@ -77,6 +87,15 @@ export const PairDevicePage: React.FC = () => {
       setSuccess(true);
     } catch (err: any) {
       const norm = normalizeApiError(err);
+      if (
+        norm.code === 'INVALID_AUTH_TOKEN' ||
+        norm.code === 'AUTH_REQUIRED' ||
+        norm.code === 'UNAUTHORIZED' ||
+        norm.status === 401
+      ) {
+        navigate(`/login?redirect=${encodeURIComponent(`/pair?session=${sessionCode}`)}`);
+        return;
+      }
       setError(norm);
       console.error('[BridgePairing] Authorization failed:', {
         code: norm.code,
@@ -172,6 +191,20 @@ export const PairDevicePage: React.FC = () => {
                 {error.code && <div><span className="text-rose-400 font-semibold">Code:</span> {error.code}</div>}
                 {error.requestId && <div><span className="text-rose-400 font-semibold">Request ID:</span> {error.requestId}</div>}
               </div>
+            )}
+            {/* A 503/SERVICE_UNAVAILABLE error means the session is still valid but the
+                server hit a transient issue verifying it (e.g. a momentary network blip
+                talking to Supabase). This is NOT an authentication failure, so we offer a
+                retry here instead of forcing the user back through login. */}
+            {isRetryableServiceError(error) && (
+              <button
+                type="button"
+                onClick={handleAuthorize}
+                disabled={isSubmitting}
+                className="mt-1 w-full py-2 bg-surface hover:bg-surface-secondary border border-rose-500/20 text-rose-400 hover:text-rose-300 font-bold rounded-xl transition text-xs disabled:opacity-50"
+              >
+                {isSubmitting ? 'Retrying…' : 'Try Again'}
+              </button>
             )}
           </div>
         )}

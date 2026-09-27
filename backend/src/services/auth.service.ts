@@ -6,6 +6,27 @@ import { getSupabaseAnon, getSupabaseUrl, verifySupabaseToken, verifySupabaseTok
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET || 'alpha-coach-super-secure-production-secret-key-2026';
 
+/**
+ * Failure reasons that indicate a TRANSIENT problem verifying the token (network hiccup,
+ * Supabase outage, missing backend configuration) rather than a definitively invalid/expired
+ * credential. These must never be reported to the client as a 401 "invalid token" — doing so
+ * causes clients to sign the user out / redirect to login even though their Supabase session
+ * and access token are perfectly valid, which produces a spurious re-authentication loop
+ * (most visible on the MT5 bridge pairing/authorize flow).
+ *
+ * Only a reason OUTSIDE this set represents a credential Supabase has definitively rejected
+ * (bad signature, expired token, revoked user, etc.) and is safe to answer with 401.
+ */
+export const TRANSIENT_AUTH_FAILURE_REASONS = new Set<string>([
+  'SUPABASE_VERIFICATION_FAILED', // network/timeout/exception while contacting Supabase Auth
+  'SUPABASE_CONFIGURATION_ERROR', // backend missing/misconfigured SUPABASE_URL or anon key
+  'DB_SYNC_FAILED' // Supabase confirmed the token but the application DB is unavailable
+]);
+
+export function isTransientAuthFailureReason(reason?: string): boolean {
+  return Boolean(reason && TRANSIENT_AUTH_FAILURE_REASONS.has(reason));
+}
+
 export class AuthService {
   /**
    * Synchronizes and ensures an application user record exists for the canonical Supabase identity.

@@ -6,8 +6,26 @@ import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
+// SECURITY NOTE (rotation required):
+// This file previously contained hardcoded literal fallback values for the Supabase project
+// URL, the public anon key, AND the service-role key. Because this repository is public, the
+// service-role key must be treated as compromised. It has been removed from source entirely —
+// there is no source-level fallback for it anymore. The application now fails closed
+// (throws a clear configuration error) if SUPABASE_SERVICE_ROLE_KEY is not present in the
+// environment, instead of silently falling back to a hardcoded, publicly-exposed credential.
+//
+// ACTION REQUIRED IN SUPABASE DASHBOARD (not performed automatically to avoid disrupting
+// production without confirmation):
+//   1. Rotate/regenerate the service-role (secret) API key for this project.
+//   2. Set the new value as SUPABASE_SERVICE_ROLE_KEY in the Vercel production environment
+//      variables (and any other deployment environment) — never in source code.
+//   3. Redeploy so the running backend picks up the rotated key.
+//
+// The project URL and anon/public key are not secrets by design (the anon key is meant to be
+// shipped to the browser and is protected by Row Level Security), so a non-secret default is
+// kept only for local-developer convenience; it can still be overridden by environment
+// variables in every environment, including production.
 const DEFAULT_SUPABASE_URL = 'https://rmnudqejyrrklltodiaf.supabase.co';
-const DEFAULT_SUPABASE_SERVICE_ROLE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtbnVkcWVqeXJya2xsdG9kaWFmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDM1NDI5NiwiZXhwIjoyMTA1OTMwMjk2fQ.mrJWj1hVYNdSjCGR92WTuAUFLPE1E7wrqAALUkufcso';
 const DEFAULT_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtbnVkcWVqeXJya2xsdG9kaWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTQyOTYsImV4cCI6MjEwNTkzMDI5Nn0.2Tg6KzAFA7gnQ09tQPhz_lES4X5by09-n3G1PePXId8';
 
 /**
@@ -19,6 +37,8 @@ export function getSupabaseUrl(): string {
 
 /**
  * Dynamically resolves the Supabase public/anon key with SUPABASE_ANON_KEY preferred and SUPABASE_PUBLISHABLE_KEY fallback.
+ * The anon key is a public, RLS-protected credential — not a secret — so a non-secret default
+ * is acceptable here purely for local-developer convenience.
  */
 export function getSupabaseAnonKey(): string {
   return (
@@ -31,14 +51,18 @@ export function getSupabaseAnonKey(): string {
 }
 
 /**
- * Dynamically resolves the Supabase service role key for trusted administrative tasks.
+ * Resolves the Supabase service-role key EXCLUSIVELY from environment variables.
+ * There is intentionally no hardcoded fallback: a service-role key grants full administrative
+ * access bypassing Row Level Security, so it must never live in source control. Returns an
+ * empty string if not configured — callers must treat that as "not configured" and fail
+ * closed (see getSupabaseAdmin below), never fall back to a bundled default.
  */
 export function getSupabaseServiceRoleKey(): string {
   return (
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_SECRET_KEY ||
     process.env.SUPABASE_KEY ||
-    DEFAULT_SUPABASE_SERVICE_ROLE
+    ''
   ).trim();
 }
 
