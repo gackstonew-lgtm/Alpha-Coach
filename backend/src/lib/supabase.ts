@@ -90,9 +90,26 @@ export async function verifySupabaseToken(token: string) {
   }
 }
 
+/**
+ * Exposes safe diagnostics regarding Supabase environment configuration without exposing secret values.
+ */
+export function getSupabaseDiagnostics() {
+  const hasUrl = Boolean(process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL);
+  const hasAnon = Boolean(process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON);
+  const hasServiceRole = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || DEFAULT_SUPABASE_SERVICE_ROLE);
+
+  return {
+    supabaseConfigured: hasUrl && hasAnon,
+    supabaseServiceRoleConfigured: hasServiceRole,
+    supabaseUrlConfigured: hasUrl
+  };
+}
+
 export default {
   getSupabaseAdmin,
   getSupabaseAnon,
   getSupabaseUserClient,
-  verifySupabaseToken
+  verifySupabaseToken,
+  getSupabaseDiagnostics
 };
+

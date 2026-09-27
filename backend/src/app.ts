@@ -66,8 +66,8 @@ if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.use(morgan('dev'));
 }
 
-import { getDatabaseAsync, initDatabase } from './db/db';
-
+import { BUILD_INFO } from './buildInfo';
+import { getDatabaseAsync, initDatabase, getDatabaseDiagnostics } from './db/db';
 
 // Lazy DB Init middleware
 let dbInitialized = false;
@@ -98,29 +98,10 @@ const apiLimiter = rateLimit({
 });
 app.use('/api', apiLimiter);
 
-import { BUILD_INFO } from './buildInfo';
-
 // API Health (Production Health Contract with Truthful Status & 503 on Database Failure)
 app.get(['/', '/api', '/api/health', '/health'], async (req, res) => {
-  let dbStatus = 'UNAVAILABLE';
-  let dbType = process.env.DATABASE_URL ? 'POSTGRESQL' : 'SQLITE';
-  let latencyMs = 0;
-  const start = Date.now();
-
-  try {
-    const db = await getDatabaseAsync();
-    if (db) {
-      await db.query('SELECT 1');
-      dbStatus = 'CONNECTED';
-      latencyMs = Date.now() - start;
-    } else {
-      dbStatus = 'UNAVAILABLE';
-    }
-  } catch (err) {
-    dbStatus = 'UNAVAILABLE';
-  }
-
-  const isHealthy = dbStatus === 'CONNECTED';
+  const diag = await getDatabaseDiagnostics();
+  const isHealthy = diag.databaseConnection === 'healthy' && diag.realQueryVerified;
   const statusCode = isHealthy ? 200 : 503;
 
   res.status(statusCode).json({
@@ -129,20 +110,27 @@ app.get(['/', '/api', '/api/health', '/health'], async (req, res) => {
     service: 'Alpha Coach Performance API',
     version: BUILD_INFO.version,
     buildVersion: BUILD_INFO.version,
+    databaseProvider: diag.databaseProvider,
+    databasePersistent: diag.databasePersistent,
+    databaseConnection: diag.databaseConnection,
+    databaseLatencyMs: diag.databaseLatencyMs,
+    realQueryVerified: diag.realQueryVerified,
+    supabaseConfigured: diag.supabaseConfigured,
+    supabaseServiceRoleConfigured: diag.supabaseServiceRoleConfigured,
+    environment: diag.environment,
+    productionStorageEnforced: diag.productionStorageEnforced,
     database: {
-      status: dbStatus,
-      type: dbType,
-      latencyMs,
-      persistent: !!process.env.DATABASE_URL || process.env.NODE_ENV !== 'production'
+      status: isHealthy ? 'CONNECTED' : 'DISCONNECTED',
+      provider: diag.databaseProvider,
+      persistent: diag.databasePersistent
     },
     authentication: {
-      status: 'ONLINE',
-      authority: 'SUPABASE_AUTH'
+      authority: 'SUPABASE_AUTH',
+      configured: diag.supabaseConfigured
     },
     bridgeService: {
       status: 'ONLINE'
     },
-    environment: BUILD_INFO.environment,
     gitCommit: BUILD_INFO.gitCommit,
     buildTimestamp: BUILD_INFO.buildTimestamp,
     sourceOrigin: BUILD_INFO.sourceOrigin,

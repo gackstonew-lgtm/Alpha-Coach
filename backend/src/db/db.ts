@@ -216,6 +216,78 @@ export function getDatabase(): IDatabase {
   return dbInstance;
 }
 
+export interface DatabaseDiagnostics {
+  databaseProvider: 'postgresql' | 'sqlite';
+  databasePersistent: boolean;
+  databaseConnection: 'healthy' | 'unreachable' | 'unconfigured' | 'degraded';
+  databaseLatencyMs: number;
+  realQueryVerified: boolean;
+  supabaseConfigured: boolean;
+  supabaseServiceRoleConfigured: boolean;
+  environment: 'production' | 'development' | 'test';
+  productionStorageEnforced: boolean;
+  error?: string;
+}
+
+export async function getDatabaseDiagnostics(): Promise<DatabaseDiagnostics> {
+  const isProd = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+  const isTest = process.env.NODE_ENV === 'test';
+  const env: 'production' | 'development' | 'test' = isTest ? 'test' : (isProd ? 'production' : 'development');
+
+  const { getSupabaseDiagnostics } = require('../lib/supabase');
+  const supaDiag = getSupabaseDiagnostics();
+
+  const start = Date.now();
+  let dbStatus: 'healthy' | 'unreachable' | 'unconfigured' | 'degraded' = 'unconfigured';
+  let provider: 'postgresql' | 'sqlite' = (process.env.DATABASE_URL || isProd) ? 'postgresql' : 'sqlite';
+  let isPersistent = false;
+  let realQuerySuccess = false;
+  let errMsg: string | undefined = undefined;
+
+  try {
+    const db = await getDatabaseAsync();
+    if (db) {
+      // Execute a real SQL query to verify the engine and connection
+      const res = await db.query('SELECT 1 as test_val');
+      const latencyMs = Date.now() - start;
+      if (res && res.length > 0) {
+        realQuerySuccess = true;
+        dbStatus = 'healthy';
+        provider = process.env.DATABASE_URL ? 'postgresql' : 'sqlite';
+        isPersistent = Boolean(process.env.DATABASE_URL || (!isTest && !isProd));
+        return {
+          databaseProvider: provider,
+          databasePersistent: isPersistent,
+          databaseConnection: dbStatus,
+          databaseLatencyMs: latencyMs,
+          realQueryVerified: realQuerySuccess,
+          supabaseConfigured: supaDiag.supabaseConfigured,
+          supabaseServiceRoleConfigured: supaDiag.supabaseServiceRoleConfigured,
+          environment: env,
+          productionStorageEnforced: true
+        };
+      }
+    }
+    dbStatus = 'unreachable';
+  } catch (err: any) {
+    dbStatus = 'unreachable';
+    errMsg = err.message || 'Database connection error';
+  }
+
+  return {
+    databaseProvider: provider,
+    databasePersistent: isPersistent,
+    databaseConnection: dbStatus,
+    databaseLatencyMs: Date.now() - start,
+    realQueryVerified: realQuerySuccess,
+    supabaseConfigured: supaDiag.supabaseConfigured,
+    supabaseServiceRoleConfigured: supaDiag.supabaseServiceRoleConfigured,
+    environment: env,
+    productionStorageEnforced: true,
+    error: errMsg
+  };
+}
+
 import { SCHEMA_SQL } from './schema';
 
 export async function initDatabase(): Promise<IDatabase | null> {
