@@ -36,9 +36,16 @@ export const DashboardPage: React.FC = () => {
   const [riskMonitor, setRiskMonitor] = useState<any>(null);
   const [chartMode, setChartMode] = useState<'cumulative' | 'equity'>('cumulative');
 
+  // Derive stable dependency values from accounts to avoid re-triggering
+  // this effect every time AccountContext produces a new array reference
+  // (e.g. on TOKEN_REFRESHED). The dashboard only needs to reload when the
+  // selected account changes or the number of available accounts changes.
+  const firstAccountId = accounts[0]?.id ?? '';
+
   useEffect(() => {
     loadDashboardData();
-  }, [selectedAccountId, accounts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccountId, accounts.length, firstAccountId]);
 
   const loadDashboardData = async () => {
     try {

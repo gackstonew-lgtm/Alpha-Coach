@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Session } from '@supabase/supabase-js';
-import { api } from '../services/api';
+import { api, markSessionValid } from '../services/api';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 
@@ -22,6 +22,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Ref to track the current user ID so we can avoid emitting a new user
+  // object reference (and re-triggering dependent useEffects) when the
+  // underlying Supabase user identity hasn't actually changed.
+  const userIdRef = useRef<string | null>(null);
 
   // Clean up legacy alpha_coach_token storage key
   useEffect(() => {
@@ -68,12 +73,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session: initialSession } } = await supabase.auth.getSession();
         if (mounted) {
           setSession(initialSession);
-          setUser(buildUserFromSession(initialSession));
+          const builtUser = buildUserFromSession(initialSession);
+          setUser(builtUser);
+          userIdRef.current = builtUser?.id ?? null;
+          if (initialSession?.access_token) {
+            markSessionValid();
+          }
         }
       } catch (err) {
         if (mounted) {
           setSession(null);
           setUser(null);
+          userIdRef.current = null;
         }
       } finally {
         if (mounted) {
@@ -84,20 +95,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initSession();
 
-    // 2. Continuous Listener for Supabase Auth state changes (Pure state updates, zero recursive API side-effects)
+    // 2. Continuous Listener for Supabase Auth state changes.
+    //    KEY FIX: On TOKEN_REFRESHED, avoid creating a new user object reference
+    //    if the user ID hasn't changed. This prevents AccountContext's
+    //    useEffect([user, authLoading]) from re-firing and spawning a new
+    //    /accounts request on every token refresh cycle.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       if (!mounted) return;
-      
+
+      if (event === 'TOKEN_REFRESHED') {
+        // Session is alive again — mark valid, update session token, but do NOT
+        // rebuild the user object if the identity hasn't changed.
+        markSessionValid();
+        setSession(currentSession);
+        // Only update user if the identity actually changed (e.g. different account).
+        const newId = currentSession?.user?.id ?? null;
+        if (newId !== userIdRef.current) {
+          const builtUser = buildUserFromSession(currentSession);
+          setUser(builtUser);
+          userIdRef.current = newId;
+        }
+        return;
+      }
+
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        markSessionValid();
+      }
+
       setSession(currentSession);
-      setUser(buildUserFromSession(currentSession));
+      const builtUser = buildUserFromSession(currentSession);
+      setUser(builtUser);
+      userIdRef.current = builtUser?.id ?? null;
       setIsLoading(false);
     });
 
-    // 3. Listener for application-wide auth invalidation events (e.g. 401s on password changes)
+    // 3. Handle session-dead events from ApiClient (refresh storm prevention).
+    //    Performs a single, clean login redirect with the current location
+    //    preserved so the user can return after re-authenticating.
     const handleAuthInvalid = () => {
       if (!mounted) return;
       setSession(null);
       setUser(null);
+      userIdRef.current = null;
+      // Redirect to login preserving the current path so the user returns
+      // to the right page (e.g. /pair?session=...) after re-authenticating.
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname + window.location.search;
+        const isSafePath = currentPath.startsWith('/') && !currentPath.startsWith('//');
+        const loginPath = isSafePath && currentPath !== '/login'
+          ? `/login?redirect=${encodeURIComponent(currentPath)}`
+          : '/login';
+        // Use replace to avoid adding a dead-session page to browser history.
+        window.location.replace(loginPath);
+      }
     };
     window.addEventListener('alpha:auth-invalid', handleAuthInvalid);
 
@@ -130,8 +180,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Authentication failed: no active session established.');
     }
 
+    markSessionValid();
     setSession(data.session);
-    setUser(buildUserFromSession(data.session));
+    const builtUser = buildUserFromSession(data.session);
+    setUser(builtUser);
+    userIdRef.current = builtUser?.id ?? null;
   };
 
   const register = async (data: any) => {
@@ -172,6 +225,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       is_active: 1
     };
     setUser(userObj);
+    userIdRef.current = userObj.id;
+    if (currentSession) {
+      markSessionValid();
+    }
 
     return {
       user: userObj,
@@ -189,6 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setSession(null);
       setUser(null);
+      userIdRef.current = null;
       try {
         localStorage.removeItem('alpha_coach_token');
       } catch {}
@@ -219,3 +277,4 @@ export const useAuth = () => {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 };
+

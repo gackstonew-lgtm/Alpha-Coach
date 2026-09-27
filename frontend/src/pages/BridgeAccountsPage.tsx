@@ -33,11 +33,16 @@ export const BridgeAccountsPage: React.FC = () => {
   const [showDevMode, setShowDevMode] = useState<boolean>(false);
   const [apiStatus, setApiStatus] = useState<any>(null);
 
+  // Derive stable dependency values to avoid re-triggering on every array
+  // reference change produced by AccountContext on token refresh cycles.
+  const accountsKey = accounts.map(a => a.id).join(',');
+
   useEffect(() => {
     loadDevices();
     checkStatus();
     loadReconciliations();
-  }, [accounts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountsKey]);
 
   const loadReconciliations = async () => {
     try {

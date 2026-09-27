@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { api, isSessionInvalid } from '../services/api';
 import { TradingAccount } from '../types';
 import { useAuth } from './AuthContext';
 
@@ -24,6 +24,11 @@ export const AccountProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (authLoading) return;
     if (!user) {
       setAccounts([]);
+      return;
+    }
+    // If the session is known-dead, do not fire an authenticated request.
+    // The session-recovery flow (login redirect) will reset the flag.
+    if (isSessionInvalid()) {
       return;
     }
     try {

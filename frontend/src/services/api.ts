@@ -81,28 +81,69 @@ export function normalizeApiError(err: any): NormalizedApiError {
 const API_BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.origin.includes('localhost') ? 'http://localhost:4000/api/v1' : '/api/v1');
 const USE_CUSTOM_BACKEND = Boolean(API_BASE_URL && API_BASE_URL.trim() !== '');
 
+// ─── Session-Invalid State Machine ────────────────────────────────────────────
+// A module-level flag that prevents ALL authenticated API requests and refresh
+// attempts once a session is confirmed dead (e.g. refresh returns 429 or fails
+// permanently). Cleared by markSessionValid() on successful login or refresh.
+let _sessionInvalid = false;
+let _sessionRecoveryScheduled = false;
+
+/** Called by AuthContext after a successful login or TOKEN_REFRESHED event. */
+export function markSessionValid(): void {
+  _sessionInvalid = false;
+  _sessionRecoveryScheduled = false;
+}
+
+/** Returns true if the session is currently known-dead. */
+export function isSessionInvalid(): boolean {
+  return _sessionInvalid;
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
 class ApiClient {
+  /**
+   * Single-flight refresh promise. At most ONE refresh executes at a time.
+   * All concurrent callers share the same promise.
+   */
   private refreshPromise: Promise<string | null> | null = null;
+
+  /**
+   * Timestamp of last refresh failure.
+   * After a 429 or persistent failure we wait at least 30 s before retrying.
+   * This prevents the 2-second retry window from causing a secondary storm.
+   */
   private lastRefreshFailedAt = 0;
+  private static readonly REFRESH_COOLDOWN_MS = 30_000; // 30 s after 429
 
   /**
    * Retrieves the current Supabase session access token.
-   * Proactively checks for expiration and refreshes token before making requests.
+   * Does NOT proactively refresh on every request — that was causing every
+   * concurrent request to each independently trigger a refresh when the token
+   * was near expiry. Supabase's autoRefreshToken handles background refresh.
+   * We only refresh proactively if the token is already expired.
    */
   private async getAccessToken(): Promise<string | null> {
+    // If the session is known-dead, do not even attempt to get a token.
+    if (_sessionInvalid) {
+      return null;
+    }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         return null;
       }
 
-      // Proactively refresh if token expires within the next 60 seconds
+      // Only proactively refresh if the token is actually expired (not just near expiry).
+      // Supabase autoRefreshToken handles near-expiry background refresh.
       const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
-      if (expiresAt && Date.now() > expiresAt - 60000) {
+      if (expiresAt && Date.now() > expiresAt) {
+        console.warn('[Auth] Access token expired, attempting single refresh before request.');
         const refreshed = await this.refreshAccessToken();
         if (refreshed) {
           return refreshed;
         }
+        // Refresh failed — session is dead.
+        return null;
       }
 
       return session.access_token;
@@ -112,27 +153,59 @@ class ApiClient {
   }
 
   /**
-   * Single-flight recovery mechanism to refresh token on 401 with short rate-limit cooldown
+   * Single-flight, failure-safe refresh.
+   * – At most ONE concurrent refresh.
+   * – After a 429 or any refresh failure, waits REFRESH_COOLDOWN_MS (30 s).
+   * – If refresh fails, marks the session invalid to stop further requests.
    */
   private async refreshAccessToken(): Promise<string | null> {
-    if (Date.now() - this.lastRefreshFailedAt < 2000) {
+    // Hard cooldown: don't retry within 30 s of last failure.
+    if (Date.now() - this.lastRefreshFailedAt < ApiClient.REFRESH_COOLDOWN_MS) {
+      console.warn('[Auth] Refresh cooldown active — skipping refresh attempt.');
       return null;
     }
 
+    // Single-flight: all concurrent callers share one refresh promise.
     if (this.refreshPromise) {
+      console.warn('[Auth] Refresh already in progress — awaiting shared promise.');
       return this.refreshPromise;
     }
 
     this.refreshPromise = (async () => {
       try {
+        console.warn('[Auth] Starting single-flight session refresh.');
         const { data, error } = await supabase.auth.refreshSession();
-        if (error || !data.session?.access_token) {
+
+        if (error) {
+          const errMsg = (error.message || '').toLowerCase();
+          const isRateLimit = error.status === 429 || errMsg.includes('429') || errMsg.includes('rate limit') || errMsg.includes('too many');
+          if (isRateLimit) {
+            console.warn('[Auth] Session refresh failed: 429 Too Many Requests — marking session invalid.');
+          } else {
+            console.warn(`[Auth] Session refresh failed: ${error.message || 'unknown error'} — marking session invalid.`);
+          }
           this.lastRefreshFailedAt = Date.now();
+          _sessionInvalid = true;
+          this._scheduleSessionRecovery();
           return null;
         }
+
+        if (!data.session?.access_token) {
+          console.warn('[Auth] Session refresh returned no token — marking session invalid.');
+          this.lastRefreshFailedAt = Date.now();
+          _sessionInvalid = true;
+          this._scheduleSessionRecovery();
+          return null;
+        }
+
+        console.warn('[Auth] Session refresh succeeded.');
+        markSessionValid();
         return data.session.access_token;
-      } catch {
+      } catch (err: any) {
+        console.warn(`[Auth] Session refresh exception — marking session invalid.`);
         this.lastRefreshFailedAt = Date.now();
+        _sessionInvalid = true;
+        this._scheduleSessionRecovery();
         return null;
       } finally {
         this.refreshPromise = null;
@@ -143,12 +216,41 @@ class ApiClient {
   }
 
   /**
-   * Central authenticated request executor with single-flight 401 retry
+   * Schedules one clean authentication recovery (redirect to login).
+   * Idempotent — only fires once per dead-session cycle.
+   */
+  private _scheduleSessionRecovery(): void {
+    if (_sessionRecoveryScheduled) return;
+    _sessionRecoveryScheduled = true;
+    console.warn('[Auth] Scheduling authentication recovery (login redirect).');
+    // Use the global auth-invalid event so AuthContext / PairDevicePage can
+    // respond without this service layer importing React/router.
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('alpha:auth-invalid', {
+        detail: { code: 'SESSION_DEAD', message: 'Session could not be refreshed. Please sign in again.' }
+      }));
+    }
+  }
+
+  /**
+   * Central authenticated request executor with single-flight 401 retry.
+   * Does NOT retry on non-auth errors (5xx, 429, network failures).
+   * Only performs ONE refresh + ONE retry per request.
    */
   private async request<T = any>(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<T> {
     const baseUrl = API_BASE_URL || '';
     if (!baseUrl) {
       throw new Error('Custom backend API_BASE_URL is not configured.');
+    }
+
+    // If the session is known-dead, skip sending authenticated requests
+    // (prevents the /accounts 401 storm against a known-dead session).
+    if (_sessionInvalid && endpoint !== '/auth/session-check') {
+      throw new AppApiError({
+        message: 'Session is invalid. Please sign in again.',
+        code: 'SESSION_INVALID',
+        status: 401
+      });
     }
 
     // 1. Obtain current Supabase access token
@@ -168,12 +270,27 @@ class ApiClient {
       headers,
     });
 
-    // 2. If 401 Unauthorized, token was present in original request, not a retry, and not diagnostic check
-    if (response.status === 401 && token && !isRetry && endpoint !== '/auth/session-check') {
+    // 2. On 401: attempt a single refresh, then retry ONCE.
+    //    Only do this when:
+    //    - token was present in the original request
+    //    - this is NOT already a retry
+    //    - not a diagnostic endpoint
+    //    - session is not already known-dead
+    //    Do NOT refresh on 429, 5xx, or other non-auth errors.
+    if (
+      response.status === 401 &&
+      token &&
+      !isRetry &&
+      !_sessionInvalid &&
+      endpoint !== '/auth/session-check'
+    ) {
+      console.warn(`[Auth] 401 received for ${endpoint} — attempting single-flight refresh.`);
       const refreshedToken = await this.refreshAccessToken();
       if (refreshedToken) {
+        // Session recovered: retry the original request exactly once.
         return this.request<T>(endpoint, options, true);
       }
+      // Refresh failed. Session is now marked invalid. Fall through to throw.
     }
 
     let data: any = null;
