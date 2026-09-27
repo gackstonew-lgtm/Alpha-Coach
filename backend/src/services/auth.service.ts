@@ -109,6 +109,12 @@ export class AuthService {
    * Cryptographically verifies token against Supabase Auth (or JWT_SECRET for test suites) with detailed failure reporting.
    * Strictly rejects tampered, expired, or unverified tokens (HTTP 401).
    * Never trusts unverified decoded tokens.
+   *
+   * IMPORTANT: This method uses two separate try/catch blocks:
+   * 1. Supabase token verification  → auth failure   → 401 INVALID_AUTH_TOKEN
+   * 2. Database user sync           → database error → 503 DB_SYNC_FAILED
+   * Keeping them separate prevents a database outage from being reported as
+   * "invalid token" (a false 401) which would trigger client-side logout loops.
    */
   public static async verifyTokenDetailed(token: string): Promise<{
     valid: boolean;
@@ -130,35 +136,64 @@ export class AuthService {
       return { valid: false, failureReason: 'SUPABASE_TOKEN_MISSING' };
     }
 
-    // 1. Authoritative verification with Supabase Auth
+    // 1. Authoritative verification with Supabase Auth.
+    //    This block ONLY handles the network call to Supabase.
+    //    Database access is deliberately separated below.
+    let supabaseUser: any = null;
+    let supabaseFailureReason: string | undefined;
+
     try {
       const detailed = await verifySupabaseTokenDetailed(cleanToken);
       if (detailed.valid && detailed.user && detailed.user.id) {
-        const safeUser = await this.syncSupabaseUser(detailed.user);
-        const meta = detailed.user.user_metadata || {};
+        supabaseUser = detailed.user;
+      } else if (detailed.failureReason) {
+        supabaseFailureReason = detailed.failureReason;
+      }
+    } catch (err: any) {
+      // Network/configuration error contacting Supabase — not a token invalidity
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn(`[Auth] Supabase verification exception — treating as SUPABASE_VERIFICATION_FAILED`);
+      }
+      supabaseFailureReason = 'SUPABASE_VERIFICATION_FAILED';
+    }
+
+    // If Supabase confirmed the token is invalid, reject immediately (401).
+    // Do NOT proceed to the DB sync or JWT fallback.
+    if (!supabaseUser && supabaseFailureReason && process.env.NODE_ENV !== 'test') {
+      console.warn(`[Auth] Token verification failed: reason=${supabaseFailureReason}`);
+      return { valid: false, failureReason: supabaseFailureReason };
+    }
+
+    // 2. If Supabase verified the token, sync the user record to the application DB.
+    //    This block ONLY handles the database operation.
+    //    A database failure here is NOT an auth failure — it is a service availability issue.
+    if (supabaseUser) {
+      try {
+        const safeUser = await this.syncSupabaseUser(supabaseUser);
+        const meta = supabaseUser.user_metadata || {};
+        console.warn(`[Auth] Token verified: userId=${safeUser.id} project=rmnudqejyrrklltodiaf`);
         return {
           valid: true,
           user: {
             userId: safeUser.id,
-            supabaseUserId: detailed.user.id,
-            email: detailed.user.email || '',
+            supabaseUserId: supabaseUser.id,
+            email: supabaseUser.email || '',
             role: safeUser.role || (meta.role as string) || 'trader',
             tier: safeUser.subscription_tier || (meta.subscription_tier as string) || 'PRO'
           }
         };
-      } else if (detailed.failureReason && process.env.NODE_ENV !== 'test') {
-        const safeReason = detailed.failureReason;
-        console.warn(`[Auth] Token verification failed: reason=${safeReason}`);
-        return { valid: false, failureReason: safeReason };
-      }
-    } catch (err: any) {
-      if (process.env.NODE_ENV !== 'test') {
-        console.warn(`[Auth] Token verification failed: reason=SUPABASE_VERIFICATION_FAILED`);
-        return { valid: false, failureReason: 'SUPABASE_VERIFICATION_FAILED' };
+      } catch (dbErr: any) {
+        // The token IS valid (Supabase confirmed it), but the application DB is unavailable.
+        // Return DB_SYNC_FAILED so the middleware can respond with 503 (not 401).
+        // This prevents clients from logging out due to a transient DB connection issue.
+        console.error(`[Auth] Database sync failed for verified Supabase user ${supabaseUser.id}: ${dbErr?.message || 'unknown error'}`);
+        return { valid: false, failureReason: 'DB_SYNC_FAILED' };
       }
     }
 
-    // 2. Fallback: Verify signature with JWT_SECRET for test suites / internal service tokens
+    // 3. Fallback: Verify signature with JWT_SECRET for test suites / internal service tokens.
+    //    Only reached when Supabase verification produced no user and no explicit failure reason
+    //    (e.g. NODE_ENV=test with no network connection to Supabase).
     try {
       const payload = jwt.verify(cleanToken, JWT_SECRET) as any;
       if (payload && (payload.userId || payload.sub)) {

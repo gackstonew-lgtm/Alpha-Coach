@@ -51,6 +51,23 @@ export async function requireUserAuth(req: AuthenticatedRequest, res: Response, 
   const authResult = await AuthService.verifyTokenDetailed(token);
   if (!authResult.valid || !authResult.user) {
     const reason = authResult.failureReason || 'SUPABASE_TOKEN_INVALID';
+
+    // DB_SYNC_FAILED: Supabase verified the token but the application database
+    // is unavailable. Return 503 (not 401) so clients don't log out due to a
+    // transient database connection issue.
+    if (reason === 'DB_SYNC_FAILED') {
+      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Database unavailable for verified user`);
+      res.status(503).json({
+        success: false,
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Service temporarily unavailable. Your session is valid — please try again in a moment.'
+        },
+        requestId: reqId
+      });
+      return;
+    }
+
     console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${reason}`);
     res.status(401).json({
       success: false,
@@ -113,6 +130,18 @@ export async function requireBridgeOrUserAuth(req: AuthenticatedRequest, res: Re
       return;
     }
     const reason = authResult.failureReason || 'SUPABASE_TOKEN_INVALID';
+    if (reason === 'DB_SYNC_FAILED') {
+      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Database unavailable for verified user`);
+      res.status(503).json({
+        success: false,
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Service temporarily unavailable. Your session is valid — please try again in a moment.'
+        },
+        requestId: reqId
+      });
+      return;
+    }
     console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${reason}`);
   } else {
     console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: CREDENTIALS_MISSING`);

@@ -52085,6 +52085,12 @@ var AuthService = class {
    * Cryptographically verifies token against Supabase Auth (or JWT_SECRET for test suites) with detailed failure reporting.
    * Strictly rejects tampered, expired, or unverified tokens (HTTP 401).
    * Never trusts unverified decoded tokens.
+   *
+   * IMPORTANT: This method uses two separate try/catch blocks:
+   * 1. Supabase token verification  → auth failure   → 401 INVALID_AUTH_TOKEN
+   * 2. Database user sync           → database error → 503 DB_SYNC_FAILED
+   * Keeping them separate prevents a database outage from being reported as
+   * "invalid token" (a false 401) which would trigger client-side logout loops.
    */
   static async verifyTokenDetailed(token) {
     if (!token || typeof token !== "string") {
@@ -52094,30 +52100,43 @@ var AuthService = class {
     if (!cleanToken) {
       return { valid: false, failureReason: "SUPABASE_TOKEN_MISSING" };
     }
+    let supabaseUser = null;
+    let supabaseFailureReason;
     try {
       const detailed = await verifySupabaseTokenDetailed(cleanToken);
       if (detailed.valid && detailed.user && detailed.user.id) {
-        const safeUser = await this.syncSupabaseUser(detailed.user);
-        const meta = detailed.user.user_metadata || {};
+        supabaseUser = detailed.user;
+      } else if (detailed.failureReason) {
+        supabaseFailureReason = detailed.failureReason;
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV !== "test") {
+        console.warn(`[Auth] Supabase verification exception \u2014 treating as SUPABASE_VERIFICATION_FAILED`);
+      }
+      supabaseFailureReason = "SUPABASE_VERIFICATION_FAILED";
+    }
+    if (!supabaseUser && supabaseFailureReason && process.env.NODE_ENV !== "test") {
+      console.warn(`[Auth] Token verification failed: reason=${supabaseFailureReason}`);
+      return { valid: false, failureReason: supabaseFailureReason };
+    }
+    if (supabaseUser) {
+      try {
+        const safeUser = await this.syncSupabaseUser(supabaseUser);
+        const meta = supabaseUser.user_metadata || {};
+        console.warn(`[Auth] Token verified: userId=${safeUser.id} project=rmnudqejyrrklltodiaf`);
         return {
           valid: true,
           user: {
             userId: safeUser.id,
-            supabaseUserId: detailed.user.id,
-            email: detailed.user.email || "",
+            supabaseUserId: supabaseUser.id,
+            email: supabaseUser.email || "",
             role: safeUser.role || meta.role || "trader",
             tier: safeUser.subscription_tier || meta.subscription_tier || "PRO"
           }
         };
-      } else if (detailed.failureReason && process.env.NODE_ENV !== "test") {
-        const safeReason = detailed.failureReason;
-        console.warn(`[Auth] Token verification failed: reason=${safeReason}`);
-        return { valid: false, failureReason: safeReason };
-      }
-    } catch (err) {
-      if (process.env.NODE_ENV !== "test") {
-        console.warn(`[Auth] Token verification failed: reason=SUPABASE_VERIFICATION_FAILED`);
-        return { valid: false, failureReason: "SUPABASE_VERIFICATION_FAILED" };
+      } catch (dbErr) {
+        console.error(`[Auth] Database sync failed for verified Supabase user ${supabaseUser.id}: ${dbErr?.message || "unknown error"}`);
+        return { valid: false, failureReason: "DB_SYNC_FAILED" };
       }
     }
     try {
@@ -52620,6 +52639,18 @@ async function requireUserAuth(req, res, next) {
   const authResult = await AuthService.verifyTokenDetailed(token);
   if (!authResult.valid || !authResult.user) {
     const reason = authResult.failureReason || "SUPABASE_TOKEN_INVALID";
+    if (reason === "DB_SYNC_FAILED") {
+      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Database unavailable for verified user`);
+      res.status(503).json({
+        success: false,
+        error: {
+          code: "SERVICE_UNAVAILABLE",
+          message: "Service temporarily unavailable. Your session is valid \u2014 please try again in a moment."
+        },
+        requestId: reqId
+      });
+      return;
+    }
     console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${reason}`);
     res.status(401).json({
       success: false,
@@ -52672,6 +52703,18 @@ async function requireBridgeOrUserAuth(req, res, next) {
       return;
     }
     const reason = authResult.failureReason || "SUPABASE_TOKEN_INVALID";
+    if (reason === "DB_SYNC_FAILED") {
+      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Database unavailable for verified user`);
+      res.status(503).json({
+        success: false,
+        error: {
+          code: "SERVICE_UNAVAILABLE",
+          message: "Service temporarily unavailable. Your session is valid \u2014 please try again in a moment."
+        },
+        requestId: reqId
+      });
+      return;
+    }
     console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${reason}`);
   } else {
     console.warn(`[AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: CREDENTIALS_MISSING`);
@@ -53875,8 +53918,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "73afa19d38bc36f24968cbf4ca298771ed870377",
-  buildTimestamp: "2026-09-27T07:41:28.108Z",
+  gitCommit: "fecde27c921d3e515d65323db48dbcf12b8b24b6",
+  buildTimestamp: "2026-09-27T08:16:40.595Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
