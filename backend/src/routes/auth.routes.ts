@@ -47,6 +47,7 @@ router.get('/me', requireUserAuth, async (req: AuthenticatedRequest, res) => {
 
 router.get('/session-check', requireUserAuth, async (req: AuthenticatedRequest, res) => {
   res.json({
+    success: true,
     authenticated: true,
     supabaseUserId: req.user!.supabaseUserId || req.user!.userId,
     applicationUserId: req.user!.userId,

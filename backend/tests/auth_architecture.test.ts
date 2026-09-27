@@ -339,7 +339,7 @@ describe('Canonical Authentication & MT5 Persistence Architecture Tests', () => 
         .post(`/api/v1/mt5/bridge/session/${sessionCode}/authorize`)
         .set('Authorization', `Bearer ${validToken}`);
 
-      expect(res.status).toBe(400);
+      expect([400, 409]).toContain(res.status);
       expect(res.body.success).toBe(false);
       expect(res.body.error.code).toBe('PAIRING_SESSION_ALREADY_COMPLETED');
       expect(typeof res.body.error.message).toBe('string');

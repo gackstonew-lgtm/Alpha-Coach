@@ -52673,6 +52673,7 @@ router.get("/me", requireUserAuth, async (req, res) => {
 });
 router.get("/session-check", requireUserAuth, async (req, res) => {
   res.json({
+    success: true,
     authenticated: true,
     supabaseUserId: req.user.supabaseUserId || req.user.userId,
     applicationUserId: req.user.userId,
@@ -53820,8 +53821,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "d3197e4a1536232ef039d78bbc6aa9bcc4e940d4",
-  buildTimestamp: "2026-09-27T01:22:29.693Z",
+  gitCommit: "ac5eca9caad30491100d96123413334f597d5bdc",
+  buildTimestamp: "2026-09-27T01:40:38.518Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -53931,6 +53932,7 @@ router3.post("/bridge/session/:sessionCode/authorize", requireUserAuth, async (r
     if (code === "PAIRING_SESSION_NOT_FOUND") statusCode = 404;
     else if (code === "PAIRING_SESSION_EXPIRED") statusCode = 410;
     else if (code === "FORBIDDEN") statusCode = 403;
+    else if (code === "PAIRING_SESSION_ALREADY_COMPLETED" || code === "PAIRING_ALREADY_COMPLETED") statusCode = 409;
     res.status(statusCode).json({
       success: false,
       error: {

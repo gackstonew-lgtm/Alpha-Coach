@@ -121,6 +121,7 @@ router.post('/bridge/session/:sessionCode/authorize', requireUserAuth, async (re
     if (code === 'PAIRING_SESSION_NOT_FOUND') statusCode = 404;
     else if (code === 'PAIRING_SESSION_EXPIRED') statusCode = 410;
     else if (code === 'FORBIDDEN') statusCode = 403;
+    else if (code === 'PAIRING_SESSION_ALREADY_COMPLETED' || code === 'PAIRING_ALREADY_COMPLETED') statusCode = 409;
 
     res.status(statusCode).json({
       success: false,

@@ -84,18 +84,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initSession();
 
-    // 2. Continuous Listener for Supabase Auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    // 2. Continuous Listener for Supabase Auth state changes (Pure state updates, zero recursive API side-effects)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       if (!mounted) return;
       
       setSession(currentSession);
       setUser(buildUserFromSession(currentSession));
       setIsLoading(false);
-
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // Asynchronously synchronize session check with backend
-        api.sessionCheck().catch(() => {});
-      }
     });
 
     return () => {

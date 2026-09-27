@@ -189,9 +189,10 @@ class ApiClient {
     return data;
   }
 
-  // Diagnostic session verification endpoint
+  // Diagnostic session verification endpoint (pure check, never triggers token refresh or retry loops)
   async sessionCheck() {
     if (USE_CUSTOM_BACKEND) {
+      // Pass isRetry = true so sessionCheck is a one-shot verification with zero retry/refresh side-effects
       return this.request<{
         authenticated: boolean;
         supabaseUserId: string;
@@ -199,7 +200,7 @@ class ApiClient {
         email: string;
         tokenValid: boolean;
         requestId?: string;
-      }>('/auth/session-check');
+      }>('/auth/session-check', {}, true);
     }
     const { data: { session } } = await supabase.auth.getSession();
     return {
