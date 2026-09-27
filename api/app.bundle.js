@@ -49729,20 +49729,35 @@ var require_main4 = __commonJS({
 // backend/src/lib/supabase.ts
 var supabase_exports = {};
 __export(supabase_exports, {
+  createTokenVerificationClient: () => createTokenVerificationClient,
   default: () => supabase_default,
   getSupabaseAdmin: () => getSupabaseAdmin,
   getSupabaseAnon: () => getSupabaseAnon,
+  getSupabaseAnonKey: () => getSupabaseAnonKey,
   getSupabaseDiagnostics: () => getSupabaseDiagnostics,
+  getSupabaseServiceRoleKey: () => getSupabaseServiceRoleKey,
+  getSupabaseUrl: () => getSupabaseUrl,
   getSupabaseUserClient: () => getSupabaseUserClient,
   verifySupabaseToken: () => verifySupabaseToken,
   verifySupabaseTokenDetailed: () => verifySupabaseTokenDetailed
 });
+function getSupabaseUrl() {
+  return (process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
+}
+function getSupabaseAnonKey() {
+  return (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON).trim();
+}
+function getSupabaseServiceRoleKey() {
+  return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || DEFAULT_SUPABASE_SERVICE_ROLE).trim();
+}
 function getSupabaseAdmin() {
+  const url = getSupabaseUrl();
+  const serviceRoleKey = getSupabaseServiceRoleKey();
+  if (!url || !serviceRoleKey) {
+    throw new Error("Supabase credentials (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY) not configured in environment variables");
+  }
   if (!supabaseAdminInstance) {
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Supabase credentials (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY) not configured in environment variables");
-    }
-    supabaseAdminInstance = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    supabaseAdminInstance = createClient(url, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
@@ -49752,24 +49767,42 @@ function getSupabaseAdmin() {
   return supabaseAdminInstance;
 }
 function getSupabaseAnon() {
+  const url = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
+  if (!url || !anonKey) {
+    throw new Error("Supabase public credentials (SUPABASE_URL or SUPABASE_ANON_KEY) not configured in environment variables");
+  }
   if (!supabaseAnonInstance) {
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      throw new Error("Supabase public credentials (SUPABASE_URL or SUPABASE_ANON_KEY) not configured in environment variables");
-    }
-    supabaseAnonInstance = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    supabaseAnonInstance = createClient(url, anonKey, {
       auth: {
-        autoRefreshToken: true,
+        autoRefreshToken: false,
         persistSession: false
       }
     });
   }
   return supabaseAnonInstance;
 }
-function getSupabaseUserClient(accessToken) {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+function createTokenVerificationClient() {
+  const url = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
+  if (!url || !anonKey) {
     throw new Error("Supabase public credentials (SUPABASE_URL or SUPABASE_ANON_KEY) not configured in environment variables");
   }
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  return createClient(url, anonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false
+    }
+  });
+}
+function getSupabaseUserClient(accessToken) {
+  const url = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
+  if (!url || !anonKey) {
+    throw new Error("Supabase public credentials (SUPABASE_URL or SUPABASE_ANON_KEY) not configured in environment variables");
+  }
+  return createClient(url, anonKey, {
     global: {
       headers: {
         Authorization: `Bearer ${accessToken}`
@@ -49785,25 +49818,35 @@ async function verifySupabaseTokenDetailed(token) {
   if (!token || typeof token !== "string" || !token.trim()) {
     return { valid: false, failureReason: "SUPABASE_TOKEN_MISSING" };
   }
+  const cleanToken = token.trim();
+  const url = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
+  if (!url || !anonKey) {
+    return { valid: false, failureReason: "SUPABASE_CONFIGURATION_ERROR" };
+  }
   try {
-    const supabase = getSupabaseAnon();
-    const { data, error } = await supabase.auth.getUser(token);
+    const client = createTokenVerificationClient();
+    const { data, error } = await client.auth.getUser(cleanToken);
     if (error) {
       const msg = (error.message || "").toLowerCase();
+      const status = error.status;
       if (msg.includes("expired") || msg.includes("jwt expired")) {
         return { valid: false, failureReason: "SUPABASE_TOKEN_EXPIRED" };
       }
-      if (msg.includes("issuer") || msg.includes("invalid claim")) {
+      if (msg.includes("issuer") || msg.includes("claim") || msg.includes("audience")) {
         return { valid: false, failureReason: "SUPABASE_TOKEN_ISSUER_INVALID" };
       }
-      return { valid: false, failureReason: "SUPABASE_TOKEN_INVALID" };
+      if (msg.includes("invalid") || msg.includes("malformed") || msg.includes("signature") || msg.includes("bad") || status === 401 || status === 400) {
+        return { valid: false, failureReason: "SUPABASE_TOKEN_INVALID" };
+      }
+      return { valid: false, failureReason: "SUPABASE_VERIFICATION_FAILED" };
     }
-    if (!data.user) {
+    if (!data || !data.user) {
       return { valid: false, failureReason: "SUPABASE_USER_NOT_FOUND" };
     }
     return { valid: true, user: data.user };
   } catch {
-    return { valid: false, failureReason: "SUPABASE_VERIFICATION_EXCEPTION" };
+    return { valid: false, failureReason: "SUPABASE_VERIFICATION_FAILED" };
   }
 }
 async function verifySupabaseToken(token) {
@@ -49811,16 +49854,16 @@ async function verifySupabaseToken(token) {
   return result.valid ? result.user : null;
 }
 function getSupabaseDiagnostics() {
-  const hasUrl = Boolean(process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL);
-  const hasAnon = Boolean(process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON);
-  const hasServiceRole = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || DEFAULT_SUPABASE_SERVICE_ROLE);
+  const url = getSupabaseUrl();
+  const anon = getSupabaseAnonKey();
+  const serviceRole = getSupabaseServiceRoleKey();
   return {
-    supabaseConfigured: hasUrl && hasAnon,
-    supabaseServiceRoleConfigured: hasServiceRole,
-    supabaseUrlConfigured: hasUrl
+    supabaseConfigured: Boolean(url && anon),
+    supabaseServiceRoleConfigured: Boolean(serviceRole),
+    supabaseUrlConfigured: Boolean(url)
   };
 }
-var import_dotenv, import_path, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_SERVICE_ROLE, DEFAULT_SUPABASE_ANON, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, supabaseAdminInstance, supabaseAnonInstance, supabase_default;
+var import_dotenv, import_path, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_SERVICE_ROLE, DEFAULT_SUPABASE_ANON, supabaseAdminInstance, supabaseAnonInstance, supabase_default;
 var init_supabase = __esm({
   "backend/src/lib/supabase.ts"() {
     "use strict";
@@ -49832,18 +49875,19 @@ var init_supabase = __esm({
     DEFAULT_SUPABASE_URL = "https://rmnudqejyrrklltodiaf.supabase.co";
     DEFAULT_SUPABASE_SERVICE_ROLE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtbnVkcWVqeXJya2xsdG9kaWFmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDM1NDI5NiwiZXhwIjoyMTA1OTMwMjk2fQ.mrJWj1hVYNdSjCGR92WTuAUFLPE1E7wrqAALUkufcso";
     DEFAULT_SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtbnVkcWVqeXJya2xsdG9kaWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTQyOTYsImV4cCI6MjEwNTkzMDI5Nn0.2Tg6KzAFA7gnQ09tQPhz_lES4X5by09-n3G1PePXId8";
-    SUPABASE_URL = process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL;
-    SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || DEFAULT_SUPABASE_SERVICE_ROLE;
-    SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON;
     supabaseAdminInstance = null;
     supabaseAnonInstance = null;
     supabase_default = {
       getSupabaseAdmin,
       getSupabaseAnon,
+      createTokenVerificationClient,
       getSupabaseUserClient,
       verifySupabaseToken,
       verifySupabaseTokenDetailed,
-      getSupabaseDiagnostics
+      getSupabaseDiagnostics,
+      getSupabaseUrl,
+      getSupabaseAnonKey,
+      getSupabaseServiceRoleKey
     };
   }
 });
@@ -52043,11 +52087,15 @@ var AuthService = class {
    * Never trusts unverified decoded tokens.
    */
   static async verifyTokenDetailed(token) {
-    if (!token || typeof token !== "string" || token.trim() === "") {
+    if (!token || typeof token !== "string") {
+      return { valid: false, failureReason: "SUPABASE_TOKEN_MISSING" };
+    }
+    const cleanToken = token.replace(/^Bearer\s+/i, "").trim();
+    if (!cleanToken) {
       return { valid: false, failureReason: "SUPABASE_TOKEN_MISSING" };
     }
     try {
-      const detailed = await verifySupabaseTokenDetailed(token);
+      const detailed = await verifySupabaseTokenDetailed(cleanToken);
       if (detailed.valid && detailed.user && detailed.user.id) {
         const safeUser = await this.syncSupabaseUser(detailed.user);
         const meta = detailed.user.user_metadata || {};
@@ -52062,12 +52110,18 @@ var AuthService = class {
           }
         };
       } else if (detailed.failureReason && process.env.NODE_ENV !== "test") {
-        return { valid: false, failureReason: detailed.failureReason };
+        const safeReason = detailed.failureReason;
+        console.warn(`[Auth] Token verification failed: reason=${safeReason}`);
+        return { valid: false, failureReason: safeReason };
       }
-    } catch {
+    } catch (err) {
+      if (process.env.NODE_ENV !== "test") {
+        console.warn(`[Auth] Token verification failed: reason=SUPABASE_VERIFICATION_FAILED`);
+        return { valid: false, failureReason: "SUPABASE_VERIFICATION_FAILED" };
+      }
     }
     try {
-      const payload = import_jsonwebtoken.default.verify(token, JWT_SECRET);
+      const payload = import_jsonwebtoken.default.verify(cleanToken, JWT_SECRET);
       if (payload && (payload.userId || payload.sub)) {
         const uid = payload.userId || payload.sub;
         return {
@@ -52083,6 +52137,7 @@ var AuthService = class {
       }
     } catch {
     }
+    console.warn(`[Auth] Token verification failed: reason=SUPABASE_TOKEN_INVALID`);
     return { valid: false, failureReason: "SUPABASE_TOKEN_INVALID" };
   }
   /**
@@ -53820,8 +53875,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "b74b9b001feb30e4068c56f676ab800961e79e9a",
-  buildTimestamp: "2026-09-27T05:06:42.102Z",
+  gitCommit: "c8b13bf6a64383b6596bc1184d041817d230473d",
+  buildTimestamp: "2026-09-27T06:49:50.928Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };

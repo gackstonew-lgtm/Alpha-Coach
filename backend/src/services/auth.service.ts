@@ -121,13 +121,18 @@ export class AuthService {
     };
     failureReason?: string;
   }> {
-    if (!token || typeof token !== 'string' || token.trim() === '') {
+    if (!token || typeof token !== 'string') {
       return { valid: false, failureReason: 'SUPABASE_TOKEN_MISSING' };
     }
 
-    // 1. Verify token with Supabase Auth authority
+    const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
+    if (!cleanToken) {
+      return { valid: false, failureReason: 'SUPABASE_TOKEN_MISSING' };
+    }
+
+    // 1. Authoritative verification with Supabase Auth
     try {
-      const detailed = await verifySupabaseTokenDetailed(token);
+      const detailed = await verifySupabaseTokenDetailed(cleanToken);
       if (detailed.valid && detailed.user && detailed.user.id) {
         const safeUser = await this.syncSupabaseUser(detailed.user);
         const meta = detailed.user.user_metadata || {};
@@ -142,15 +147,20 @@ export class AuthService {
           }
         };
       } else if (detailed.failureReason && process.env.NODE_ENV !== 'test') {
-        return { valid: false, failureReason: detailed.failureReason };
+        const safeReason = detailed.failureReason;
+        console.warn(`[Auth] Token verification failed: reason=${safeReason}`);
+        return { valid: false, failureReason: safeReason };
       }
-    } catch {
-      // Supabase verification exception
+    } catch (err: any) {
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn(`[Auth] Token verification failed: reason=SUPABASE_VERIFICATION_FAILED`);
+        return { valid: false, failureReason: 'SUPABASE_VERIFICATION_FAILED' };
+      }
     }
 
     // 2. Fallback: Verify signature with JWT_SECRET for test suites / internal service tokens
     try {
-      const payload = jwt.verify(token, JWT_SECRET) as any;
+      const payload = jwt.verify(cleanToken, JWT_SECRET) as any;
       if (payload && (payload.userId || payload.sub)) {
         const uid = payload.userId || payload.sub;
         return {
@@ -169,6 +179,7 @@ export class AuthService {
     }
 
     // NEVER trust decoded tokens. If verification failed, reject token.
+    console.warn(`[Auth] Token verification failed: reason=SUPABASE_TOKEN_INVALID`);
     return { valid: false, failureReason: 'SUPABASE_TOKEN_INVALID' };
   }
 
