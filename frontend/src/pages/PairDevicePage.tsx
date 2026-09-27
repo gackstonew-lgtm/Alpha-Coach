@@ -77,15 +77,6 @@ export const PairDevicePage: React.FC = () => {
       setSuccess(true);
     } catch (err: any) {
       const norm = normalizeApiError(err);
-      if (
-        norm.code === 'INVALID_AUTH_TOKEN' ||
-        norm.code === 'AUTH_REQUIRED' ||
-        norm.code === 'UNAUTHORIZED' ||
-        norm.status === 401
-      ) {
-        navigate(`/login?redirect=${encodeURIComponent(`/pair?session=${sessionCode}`)}`);
-        return;
-      }
       setError(norm);
       console.error('[BridgePairing] Authorization failed:', {
         code: norm.code,
