@@ -161,6 +161,10 @@ class ApiClient {
       const refreshedToken = await this.refreshAccessToken();
       if (refreshedToken) {
         return this.request<T>(endpoint, options, true);
+      } else {
+        // Token refresh failed or session was revoked (e.g., password change in Supabase Auth)
+        // Clear cached session to prevent persistent INVALID_AUTH_TOKEN loops
+        await this.clearSession();
       }
     }
 
@@ -185,6 +189,11 @@ class ApiClient {
       const code = (typeof errObj === 'object' && errObj?.code) || data?.code || `HTTP_${response.status}`;
       const reqId = data?.requestId || response.headers.get('x-request-id') || undefined;
 
+      // If response is an invalid auth token error, ensure cached session is cleared
+      if (response.status === 401 || code === 'INVALID_AUTH_TOKEN' || code === 'AUTH_REQUIRED') {
+        this.clearSession().catch(() => {});
+      }
+
       throw new AppApiError({
         message: msg,
         code,
@@ -195,6 +204,27 @@ class ApiClient {
     }
 
     return data;
+  }
+
+  /**
+   * Explicitly clears local Supabase session, cached tokens, and broadcasts auth invalidation event.
+   */
+  public async clearSession(): Promise<void> {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // ignore
+    }
+    try {
+      localStorage.removeItem('alpha_coach_token');
+    } catch {
+      // ignore
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('alpha:auth-invalid', {
+        detail: { code: 'INVALID_AUTH_TOKEN', message: 'Session invalidated or expired.' }
+      }));
+    }
   }
 
   // Diagnostic session verification endpoint (pure check, never triggers token refresh or retry loops)

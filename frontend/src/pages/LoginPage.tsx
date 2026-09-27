@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldAlert } from 'lucide-react';
 import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
+  const isPairingRedirect = redirectUrl.includes('/pair');
+
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -18,7 +22,7 @@ export const LoginPage: React.FC = () => {
     setIsLoading(true);
     try {
       await login(email, password);
-      navigate('/dashboard');
+      navigate(redirectUrl, { replace: true });
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your email and password.');
     } finally {
@@ -38,6 +42,18 @@ export const LoginPage: React.FC = () => {
           </div>
           <p className="text-xs text-content-muted">Automated MT5 Trading Journal & Performance OS</p>
         </div>
+
+        {isPairingRedirect && (
+          <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/25 text-xs text-brand-400 space-y-1">
+            <div className="flex items-center space-x-1.5 font-bold">
+              <ShieldAlert className="w-4 h-4 shrink-0" />
+              <span>Sign In to Authorize MT5 Bridge</span>
+            </div>
+            <p className="text-content-secondary text-[11px] leading-relaxed">
+              Please enter your updated account credentials. After signing in, you will be returned directly to complete bridge pairing.
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 text-center font-medium">
