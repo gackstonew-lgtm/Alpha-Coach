@@ -83,6 +83,7 @@ const USE_CUSTOM_BACKEND = Boolean(API_BASE_URL && API_BASE_URL.trim() !== '');
 
 class ApiClient {
   private refreshPromise: Promise<string | null> | null = null;
+  private lastRefreshFailedAt = 0;
 
   /**
    * Retrieves the current Supabase session access token.
@@ -98,9 +99,14 @@ class ApiClient {
   }
 
   /**
-   * Single-flight recovery mechanism to refresh token exactly once on 401
+   * Single-flight recovery mechanism to refresh token exactly once on 401 with rate-limit cooldown
    */
   private async refreshAccessToken(): Promise<string | null> {
+    // Prevent storming refresh endpoint if last attempt failed within 5 seconds
+    if (Date.now() - this.lastRefreshFailedAt < 5000) {
+      return null;
+    }
+
     if (this.refreshPromise) {
       return this.refreshPromise;
     }
@@ -109,10 +115,12 @@ class ApiClient {
       try {
         const { data, error } = await supabase.auth.refreshSession();
         if (error || !data.session) {
+          this.lastRefreshFailedAt = Date.now();
           return null;
         }
         return data.session.access_token;
       } catch {
+        this.lastRefreshFailedAt = Date.now();
         return null;
       } finally {
         this.refreshPromise = null;
@@ -148,8 +156,8 @@ class ApiClient {
       headers,
     });
 
-    // 2. If 401 Unauthorized and not already a retry, attempt single-flight token refresh
-    if (response.status === 401 && !isRetry) {
+    // 2. If 401 Unauthorized, token was present in original request, not a retry, and not diagnostic check
+    if (response.status === 401 && token && !isRetry && endpoint !== '/auth/session-check') {
       const refreshedToken = await this.refreshAccessToken();
       if (refreshedToken) {
         return this.request<T>(endpoint, options, true);
