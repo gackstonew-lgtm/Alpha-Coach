@@ -49742,13 +49742,13 @@ __export(supabase_exports, {
   verifySupabaseTokenDetailed: () => verifySupabaseTokenDetailed
 });
 function getSupabaseUrl() {
-  return (process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
+  return (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
 }
 function getSupabaseAnonKey() {
-  return (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON).trim();
+  return (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON).trim();
 }
 function getSupabaseServiceRoleKey() {
-  return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || DEFAULT_SUPABASE_SERVICE_ROLE).trim();
+  return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_KEY || DEFAULT_SUPABASE_SERVICE_ROLE).trim();
 }
 function getSupabaseAdmin() {
   const url = getSupabaseUrl();
@@ -52126,7 +52126,8 @@ var AuthService = class {
       try {
         const safeUser = await this.syncSupabaseUser(supabaseUser);
         const meta = supabaseUser.user_metadata || {};
-        console.warn(`[Auth] Token verified: userId=${safeUser.id} project=rmnudqejyrrklltodiaf`);
+        const projectRef = getSupabaseUrl().replace("https://", "").split(".")[0];
+        console.warn(`[Auth] Token verified: userId=${safeUser.id} project=${projectRef}`);
         return {
           valid: true,
           user: {
@@ -53926,8 +53927,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "78fdbe89a0b58ff8b68edc8b286251042ddc48de",
-  buildTimestamp: "2026-09-27T16:26:40.839Z",
+  gitCommit: "abf6c7c5dde35cd1deba0abaee4efee38fde7cdd",
+  buildTimestamp: "2026-09-27T17:50:35.198Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };

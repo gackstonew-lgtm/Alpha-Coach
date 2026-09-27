@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { getDatabase, getDatabaseAsync } from '../db/db';
 import { User, TraderProgression } from '../models/types';
-import { getSupabaseAnon, verifySupabaseToken, verifySupabaseTokenDetailed } from '../lib/supabase';
+import { getSupabaseAnon, getSupabaseUrl, verifySupabaseToken, verifySupabaseTokenDetailed } from '../lib/supabase';
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET || 'alpha-coach-super-secure-production-secret-key-2026';
 
@@ -171,7 +171,8 @@ export class AuthService {
       try {
         const safeUser = await this.syncSupabaseUser(supabaseUser);
         const meta = supabaseUser.user_metadata || {};
-        console.warn(`[Auth] Token verified: userId=${safeUser.id} project=rmnudqejyrrklltodiaf`);
+        const projectRef = getSupabaseUrl().replace('https://', '').split('.')[0];
+        console.warn(`[Auth] Token verified: userId=${safeUser.id} project=${projectRef}`);
         return {
           valid: true,
           user: {

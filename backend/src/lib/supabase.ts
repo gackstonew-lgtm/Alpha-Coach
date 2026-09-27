@@ -14,21 +14,32 @@ const DEFAULT_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJz
  * Dynamically resolves the Supabase project URL preferring environment configuration.
  */
 export function getSupabaseUrl(): string {
-  return (process.env.SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
+  return (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
 }
 
 /**
  * Dynamically resolves the Supabase public/anon key with SUPABASE_ANON_KEY preferred and SUPABASE_PUBLISHABLE_KEY fallback.
  */
 export function getSupabaseAnonKey(): string {
-  return (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON).trim();
+  return (
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.VITE_SUPABASE_ANON_KEY ||
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    DEFAULT_SUPABASE_ANON
+  ).trim();
 }
 
 /**
  * Dynamically resolves the Supabase service role key for trusted administrative tasks.
  */
 export function getSupabaseServiceRoleKey(): string {
-  return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || DEFAULT_SUPABASE_SERVICE_ROLE).trim();
+  return (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SUPABASE_KEY ||
+    DEFAULT_SUPABASE_SERVICE_ROLE
+  ).trim();
 }
 
 let supabaseAdminInstance: SupabaseClient | null = null;
