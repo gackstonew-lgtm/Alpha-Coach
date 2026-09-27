@@ -87,23 +87,35 @@ class ApiClient {
 
   /**
    * Retrieves the current Supabase session access token.
-   * Supabase Auth manages persistence and auto-refreshes tokens.
+   * Proactively checks for expiration and refreshes token before making requests.
    */
   private async getAccessToken(): Promise<string | null> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      return session?.access_token || null;
+      if (!session?.access_token) {
+        return null;
+      }
+
+      // Proactively refresh if token expires within the next 60 seconds
+      const expiresAt = session.expires_at ? session.expires_at * 1000 : 0;
+      if (expiresAt && Date.now() > expiresAt - 60000) {
+        const refreshed = await this.refreshAccessToken();
+        if (refreshed) {
+          return refreshed;
+        }
+      }
+
+      return session.access_token;
     } catch {
       return null;
     }
   }
 
   /**
-   * Single-flight recovery mechanism to refresh token exactly once on 401 with rate-limit cooldown
+   * Single-flight recovery mechanism to refresh token on 401 with short rate-limit cooldown
    */
   private async refreshAccessToken(): Promise<string | null> {
-    // Prevent storming refresh endpoint if last attempt failed within 5 seconds
-    if (Date.now() - this.lastRefreshFailedAt < 5000) {
+    if (Date.now() - this.lastRefreshFailedAt < 2000) {
       return null;
     }
 
@@ -114,7 +126,7 @@ class ApiClient {
     this.refreshPromise = (async () => {
       try {
         const { data, error } = await supabase.auth.refreshSession();
-        if (error || !data.session) {
+        if (error || !data.session?.access_token) {
           this.lastRefreshFailedAt = Date.now();
           return null;
         }
@@ -161,10 +173,6 @@ class ApiClient {
       const refreshedToken = await this.refreshAccessToken();
       if (refreshedToken) {
         return this.request<T>(endpoint, options, true);
-      } else {
-        // Token refresh failed or session was revoked (e.g., password change in Supabase Auth)
-        // Clear cached session to prevent persistent INVALID_AUTH_TOKEN loops
-        await this.clearSession();
       }
     }
 
@@ -189,11 +197,6 @@ class ApiClient {
       const code = (typeof errObj === 'object' && errObj?.code) || data?.code || `HTTP_${response.status}`;
       const reqId = data?.requestId || response.headers.get('x-request-id') || undefined;
 
-      // If response is an invalid auth token error, ensure cached session is cleared
-      if (response.status === 401 || code === 'INVALID_AUTH_TOKEN' || code === 'AUTH_REQUIRED') {
-        this.clearSession().catch(() => {});
-      }
-
       throw new AppApiError({
         message: msg,
         code,
@@ -217,6 +220,7 @@ class ApiClient {
     }
     try {
       localStorage.removeItem('alpha_coach_token');
+      localStorage.removeItem('alpha_coach_supabase_auth_token');
     } catch {
       // ignore
     }

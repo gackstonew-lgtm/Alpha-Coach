@@ -38,25 +38,6 @@ export const PairDevicePage: React.FC = () => {
     }
   }, [sessionCode]);
 
-  // Proactively verify user session validity on mount (detects password changes)
-  useEffect(() => {
-    let active = true;
-    if (user) {
-      supabase.auth.getUser().then(({ data, error }) => {
-        if (!active) return;
-        if (error || !data?.user) {
-          console.warn('[BridgePairing] User token invalid or revoked on mount. Prompting re-authentication.');
-          api.clearSession();
-        }
-      }).catch(() => {
-        if (active) api.clearSession();
-      });
-    }
-    return () => {
-      active = false;
-    };
-  }, [user]);
-
   const loadSession = async () => {
     try {
       setIsLoading(true);

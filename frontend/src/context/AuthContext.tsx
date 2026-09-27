@@ -62,26 +62,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // 1. Initial Session Check directly from Supabase with verification
+    // 1. Initial Session Check directly from Supabase
     const initSession = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (initialSession?.access_token) {
-          // Validate token with Supabase Auth server to detect password invalidation/session revocation
-          const { data: userData, error: userError } = await supabase.auth.getUser();
-          if (userError || !userData?.user) {
-            console.warn('[AuthContext] Stale/invalid token detected on boot (password change or revoked session). Clearing session.');
-            await supabase.auth.signOut().catch(() => {});
-            try {
-              localStorage.removeItem('alpha_coach_token');
-            } catch {}
-            if (mounted) {
-              setSession(null);
-              setUser(null);
-            }
-            return;
-          }
-        }
         if (mounted) {
           setSession(initialSession);
           setUser(buildUserFromSession(initialSession));
