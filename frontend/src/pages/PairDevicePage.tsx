@@ -77,22 +77,7 @@ export const PairDevicePage: React.FC = () => {
       setSuccess(true);
     } catch (err: any) {
       const norm = normalizeApiError(err);
-      if (
-        norm.code === 'INVALID_AUTH_TOKEN' ||
-        norm.code === 'AUTH_REQUIRED' ||
-        norm.code === 'UNAUTHORIZED' ||
-        norm.status === 401
-      ) {
-        // Clear cached stale token/session from local storage and state
-        await api.clearSession();
-        setError({
-          message: 'Your session has expired or your password was recently changed. Please sign in with your new password to authorize the MT5 Bridge.',
-          code: 'INVALID_AUTH_TOKEN',
-          requestId: norm.requestId
-        });
-      } else {
-        setError(norm);
-      }
+      setError(norm);
       console.error('[BridgePairing] Authorization failed:', {
         code: norm.code,
         message: norm.message,
@@ -113,14 +98,6 @@ export const PairDevicePage: React.FC = () => {
       setRejected(true);
     } catch (err: any) {
       const norm = normalizeApiError(err);
-      if (
-        norm.code === 'INVALID_AUTH_TOKEN' ||
-        norm.code === 'AUTH_REQUIRED' ||
-        norm.code === 'UNAUTHORIZED' ||
-        norm.status === 401
-      ) {
-        await api.clearSession();
-      }
       setError(norm);
       console.error('[BridgePairing] Rejection failed:', {
         code: norm.code,
@@ -162,8 +139,8 @@ export const PairDevicePage: React.FC = () => {
           </p>
         </div>
 
-        {/* Not Logged In / Authentication Required State */}
-        {!user && !error && (
+        {/* Not Logged In Notice */}
+        {!user && (
           <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-xs text-brand-400 space-y-3">
             <div className="flex items-center space-x-2 font-bold">
               <Lock className="w-4 h-4" />
@@ -184,31 +161,17 @@ export const PairDevicePage: React.FC = () => {
 
         {/* Normalized Error Display */}
         {error && (
-          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-500 space-y-2.5 animate-in fade-in">
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-500 space-y-2 animate-in fade-in">
             <div className="flex items-center space-x-2 font-bold">
               <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>{error.code === 'INVALID_AUTH_TOKEN' || error.code === 'AUTH_REQUIRED' ? 'Authentication Required' : 'Pairing Request Error'}</span>
+              <span>Pairing Request Error</span>
             </div>
             <p className="text-content-secondary font-medium leading-relaxed">{error.message}</p>
-            
-            {error.code === 'INVALID_AUTH_TOKEN' || error.code === 'AUTH_REQUIRED' ? (
-              <div className="pt-2">
-                <Link
-                  to={`/login?redirect=${encodeURIComponent(`/pair?session=${sessionCode || ''}`)}`}
-                  className="inline-flex items-center justify-center w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl transition text-xs shadow-md shadow-brand-500/25"
-                >
-                  <Lock className="w-3.5 h-3.5 mr-1.5" />
-                  <span>Sign In with New Password</span>
-                  <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                </Link>
+            {(error.code || error.requestId) && (
+              <div className="pt-1.5 border-t border-rose-500/15 flex flex-col gap-0.5 text-[11px] font-mono text-content-muted">
+                {error.code && <div><span className="text-rose-400 font-semibold">Code:</span> {error.code}</div>}
+                {error.requestId && <div><span className="text-rose-400 font-semibold">Request ID:</span> {error.requestId}</div>}
               </div>
-            ) : (
-              (error.code || error.requestId) && (
-                <div className="pt-1.5 border-t border-rose-500/15 flex flex-col gap-0.5 text-[11px] font-mono text-content-muted">
-                  {error.code && <div><span className="text-rose-400 font-semibold">Code:</span> {error.code}</div>}
-                  {error.requestId && <div><span className="text-rose-400 font-semibold">Request ID:</span> {error.requestId}</div>}
-                </div>
-              )
             )}
           </div>
         )}
