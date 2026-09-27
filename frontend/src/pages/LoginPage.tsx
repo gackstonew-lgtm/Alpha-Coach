@@ -8,7 +8,25 @@ export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/dashboard';
+
+  // Safely resolve redirect target (guaranteeing safe relative paths and preserving session params)
+  const resolveRedirectUrl = (): string => {
+    const rawRedirect = searchParams.get('redirect');
+    if (!rawRedirect || !rawRedirect.startsWith('/') || rawRedirect.startsWith('//')) {
+      return '/dashboard';
+    }
+
+    let target = rawRedirect;
+    // In case session param was passed as sibling query param instead of encoded inside redirect
+    const sessionParam = searchParams.get('session');
+    if (sessionParam && target.includes('/pair') && !target.includes('session=')) {
+      const sep = target.includes('?') ? '&' : '?';
+      target = `${target}${sep}session=${encodeURIComponent(sessionParam)}`;
+    }
+    return target;
+  };
+
+  const redirectUrl = resolveRedirectUrl();
   const isPairingRedirect = redirectUrl.includes('/pair');
 
   const [email, setEmail] = useState<string>('');

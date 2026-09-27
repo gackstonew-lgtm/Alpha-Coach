@@ -162,8 +162,8 @@ export const PairDevicePage: React.FC = () => {
           </p>
         </div>
 
-        {/* Not Logged In Notice */}
-        {!user && (
+        {/* Not Logged In / Authentication Required State */}
+        {!user && !error && (
           <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-xs text-brand-400 space-y-3">
             <div className="flex items-center space-x-2 font-bold">
               <Lock className="w-4 h-4" />
@@ -173,8 +173,8 @@ export const PairDevicePage: React.FC = () => {
               Please sign in to your Alpha Coach account to authorize this MT5 Bridge device.
             </p>
             <Link
-              to={`/login?redirect=/pair?session=${encodeURIComponent(sessionCode || '')}`}
-              className="inline-flex items-center justify-center w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl transition text-xs"
+              to={`/login?redirect=${encodeURIComponent(`/pair?session=${sessionCode || ''}`)}`}
+              className="inline-flex items-center justify-center w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl transition text-xs shadow-md shadow-brand-500/25"
             >
               <span>Sign In to Continue</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
@@ -187,15 +187,15 @@ export const PairDevicePage: React.FC = () => {
           <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-500 space-y-2.5 animate-in fade-in">
             <div className="flex items-center space-x-2 font-bold">
               <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>{error.code === 'INVALID_AUTH_TOKEN' ? 'Authentication Expired' : 'Pairing Request Error'}</span>
+              <span>{error.code === 'INVALID_AUTH_TOKEN' || error.code === 'AUTH_REQUIRED' ? 'Authentication Required' : 'Pairing Request Error'}</span>
             </div>
             <p className="text-content-secondary font-medium leading-relaxed">{error.message}</p>
             
-            {error.code === 'INVALID_AUTH_TOKEN' ? (
+            {error.code === 'INVALID_AUTH_TOKEN' || error.code === 'AUTH_REQUIRED' ? (
               <div className="pt-2">
                 <Link
                   to={`/login?redirect=${encodeURIComponent(`/pair?session=${sessionCode || ''}`)}`}
-                  className="inline-flex items-center justify-center w-full py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl transition text-xs shadow-sm shadow-brand-500/20"
+                  className="inline-flex items-center justify-center w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl transition text-xs shadow-md shadow-brand-500/25"
                 >
                   <Lock className="w-3.5 h-3.5 mr-1.5" />
                   <span>Sign In with New Password</span>
