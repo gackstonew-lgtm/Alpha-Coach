@@ -397,9 +397,6 @@ export class SyncService {
       // 7. Award Gamification XP for synchronization
       await GamificationService.recordSyncActivity(userId, closedTradesCount);
 
-      // 7. Award Gamification XP for synchronization
-      await GamificationService.recordSyncActivity(userId, closedTradesCount);
-
       // 8. Calculate Ticket-Level Reconciliation Metrics
       const dbDeals = await db.query<{ deal_id: string }>(
         `SELECT deal_id FROM raw_deals WHERE account_id = ?`,

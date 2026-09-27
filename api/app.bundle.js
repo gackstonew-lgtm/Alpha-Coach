@@ -53660,7 +53660,6 @@ var SyncService = class {
       );
       await RiskGuardianService.evaluateRules(userId, account.id);
       await GamificationService.recordSyncActivity(userId, closedTradesCount);
-      await GamificationService.recordSyncActivity(userId, closedTradesCount);
       const dbDeals = await db.query(
         `SELECT deal_id FROM raw_deals WHERE account_id = ?`,
         [account.id]
@@ -53821,8 +53820,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "beb5d1405b9d70d6d71d571d3d991f8d4ca28c21",
-  buildTimestamp: "2026-09-27T03:02:24.269Z",
+  gitCommit: "0f4a00c7dbe5311f96ab051c8d79404edd746652",
+  buildTimestamp: "2026-09-27T03:22:20.439Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
