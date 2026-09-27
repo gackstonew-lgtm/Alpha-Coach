@@ -180,21 +180,23 @@ class ApiClient {
           const errMsg = (error.message || '').toLowerCase();
           const isRateLimit = error.status === 429 || errMsg.includes('429') || errMsg.includes('rate limit') || errMsg.includes('too many');
           if (isRateLimit) {
-            console.warn('[Auth] Session refresh failed: 429 Too Many Requests — marking session invalid.');
+            console.warn('[Auth] Session refresh failed: 429 Too Many Requests (preserving local session).');
           } else {
-            console.warn(`[Auth] Session refresh failed: ${error.message || 'unknown error'} — marking session invalid.`);
+            console.warn(`[Auth] Session refresh error: ${error.message || 'unknown error'}`);
           }
           this.lastRefreshFailedAt = Date.now();
-          _sessionInvalid = true;
-          this._scheduleSessionRecovery();
+          // Only invalidate session if Supabase explicitly indicates an invalid/expired grant or missing refresh token
+          const isDefinitiveRevocation = errMsg.includes('invalid_grant') || errMsg.includes('refresh_token_not_found') || errMsg.includes('token expired') || errMsg.includes('user not found');
+          if (isDefinitiveRevocation) {
+            _sessionInvalid = true;
+            this._scheduleSessionRecovery();
+          }
           return null;
         }
 
         if (!data.session?.access_token) {
-          console.warn('[Auth] Session refresh returned no token — marking session invalid.');
+          console.warn('[Auth] Session refresh returned no token.');
           this.lastRefreshFailedAt = Date.now();
-          _sessionInvalid = true;
-          this._scheduleSessionRecovery();
           return null;
         }
 
@@ -202,10 +204,8 @@ class ApiClient {
         markSessionValid();
         return data.session.access_token;
       } catch (err: any) {
-        console.warn(`[Auth] Session refresh exception — marking session invalid.`);
+        console.warn(`[Auth] Session refresh exception (transient network or client issue):`, err);
         this.lastRefreshFailedAt = Date.now();
-        _sessionInvalid = true;
-        this._scheduleSessionRecovery();
         return null;
       } finally {
         this.refreshPromise = null;
@@ -290,13 +290,11 @@ class ApiClient {
         // Session recovered: retry the original request exactly once.
         return this.request<T>(endpoint, options, true);
       }
-      // Refresh failed. Session is now marked invalid. Fall through to throw.
+      // Refresh failed or on cooldown. Fall through to throw.
     }
 
     if (response.status === 401 && isRetry) {
-      console.warn(`[Auth] Retry with refreshed token still returned 401 for ${endpoint} — marking session invalid.`);
-      _sessionInvalid = true;
-      this._scheduleSessionRecovery();
+      console.warn(`[Auth] Retry with refreshed token still returned 401 for ${endpoint}.`);
     }
 
     let data: any = null;

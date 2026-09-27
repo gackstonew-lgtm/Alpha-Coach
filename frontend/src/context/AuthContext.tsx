@@ -130,23 +130,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // 3. Handle session-dead events from ApiClient (refresh storm prevention).
-    //    Performs a single, clean login redirect with the current location
-    //    preserved so the user can return after re-authenticating.
-    const handleAuthInvalid = () => {
+    //    Performs client-side state cleanup only when Supabase session is confirmed absent.
+    //    Never triggers a full browser reload (window.location.replace).
+    const handleAuthInvalid = async () => {
       if (!mounted) return;
-      setSession(null);
-      setUser(null);
-      userIdRef.current = null;
-      // Redirect to login preserving the current path so the user returns
-      // to the right page (e.g. /pair?session=...) after re-authenticating.
-      if (typeof window !== 'undefined') {
-        const currentPath = window.location.pathname + window.location.search;
-        const isSafePath = currentPath.startsWith('/') && !currentPath.startsWith('//');
-        const loginPath = isSafePath && currentPath !== '/login'
-          ? `/login?redirect=${encodeURIComponent(currentPath)}`
-          : '/login';
-        // Use replace to avoid adding a dead-session page to browser history.
-        window.location.replace(loginPath);
+      try {
+        const { data: { session: currentSupabaseSession } } = await supabase.auth.getSession();
+        if (!currentSupabaseSession) {
+          setSession(null);
+          setUser(null);
+          userIdRef.current = null;
+        }
+      } catch {
+        setSession(null);
+        setUser(null);
+        userIdRef.current = null;
       }
     };
     window.addEventListener('alpha:auth-invalid', handleAuthInvalid);
