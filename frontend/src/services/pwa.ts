@@ -31,30 +31,30 @@ class PwaManager {
     }
   }
 
-  public registerServiceWorker(): void {
+  public async unregisterObsoleteServiceWorkers(): Promise<void> {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker
-          .register('/sw.js', { scope: '/' })
-          .then((registration) => {
-            // Check for updates periodically
-            registration.onupdatefound = () => {
-              const installingWorker = registration.installing;
-              if (installingWorker) {
-                installingWorker.onstatechange = () => {
-                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New update available
-                    console.log('[PWA] New update available. Will apply seamlessly.');
-                  }
-                };
-              }
-            };
-          })
-          .catch((error) => {
-            console.warn('[PWA] ServiceWorker registration skipped/failed:', error);
-          });
-      });
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+          console.log('[PWA] Obsolete ServiceWorker unregistered successfully.');
+        }
+        if ('caches' in window) {
+          const cacheKeys = await caches.keys();
+          for (const key of cacheKeys) {
+            await caches.delete(key);
+            console.log(`[PWA] Cleared obsolete cache: ${key}`);
+          }
+        }
+      } catch (err) {
+        console.warn('[PWA] ServiceWorker unregistration error:', err);
+      }
     }
+  }
+
+  public registerServiceWorker(): void {
+    // Unregister any stale service workers to prevent login/fetch event failures
+    this.unregisterObsoleteServiceWorkers();
   }
 
   public isStandalone(): boolean {

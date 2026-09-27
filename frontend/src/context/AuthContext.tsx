@@ -111,7 +111,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) {
-      throw new Error(error.message || 'Invalid email or password.');
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
+        throw new Error('Invalid email or password. Please verify your credentials and try again.');
+      } else if (msg.includes('api key')) {
+        throw new Error('Authentication Service Error: Invalid API key configuration.');
+      } else if (msg.includes('rate limit') || msg.includes('too many requests')) {
+        throw new Error('Too many sign-in attempts. Please wait a few minutes before trying again.');
+      }
+      throw new Error(error.message || 'Authentication failed. Please try again.');
     }
 
     if (!data.user || !data.session) {
