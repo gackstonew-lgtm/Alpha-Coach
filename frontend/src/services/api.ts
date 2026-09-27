@@ -293,6 +293,12 @@ class ApiClient {
       // Refresh failed. Session is now marked invalid. Fall through to throw.
     }
 
+    if (response.status === 401 && isRetry) {
+      console.warn(`[Auth] Retry with refreshed token still returned 401 for ${endpoint} — marking session invalid.`);
+      _sessionInvalid = true;
+      this._scheduleSessionRecovery();
+    }
+
     let data: any = null;
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
