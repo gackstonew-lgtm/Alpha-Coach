@@ -62,6 +62,30 @@ router.get('/bridge/session/:sessionCode/status', async (req, res) => {
   }
 });
 
+// Acknowledge receipt of device token and complete pairing session (called by Bridge App)
+router.post('/bridge/session/:sessionCode/ack', async (req, res) => {
+  const reqId = (req.headers['x-request-id'] as string) || uuidv4();
+  try {
+    const result = await BridgeService.completePairingSession(req.params.sessionCode);
+    res.json({
+      success: result.success,
+      message: result.success ? 'Pairing session completed.' : 'Pairing session already completed or expired.',
+      requestId: reqId
+    });
+  } catch (err: any) {
+    const code = err.code || 'SESSION_ACK_ERROR';
+    console.error(`[BridgePairing] Session ACK error [${code}]:`, err.message, `(reqId: ${reqId})`);
+    res.status(500).json({
+      success: false,
+      error: {
+        code,
+        message: err.message || 'Failed to acknowledge pairing session.'
+      },
+      requestId: reqId
+    });
+  }
+});
+
 // Get pairing session info (called by Web UI /pair page)
 router.get('/bridge/session/:sessionCode', async (req, res) => {
   const reqId = (req.headers['x-request-id'] as string) || uuidv4();
@@ -169,7 +193,8 @@ router.get('/bridge/device/status', async (req, res) => {
 
   const authCheck = await BridgeService.checkDeviceAuth(bridgeToken);
   if (!authCheck.authorized) {
-    res.status(401).json({
+    const isDbUnavailable = authCheck.error?.code === 'BRIDGE_AUTH_DATABASE_UNAVAILABLE';
+    res.status(isDbUnavailable ? 503 : 401).json({
       success: false,
       authorized: false,
       status: authCheck.status,

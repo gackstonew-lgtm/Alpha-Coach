@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
-import { getDatabaseAsync } from '../db/db';
+import { getDatabaseAsync, IDatabase } from '../db/db';
 
 export class BridgePairingError extends Error {
   public code: string;
@@ -38,11 +38,36 @@ export interface DeviceAuthCheckResult {
 }
 
 export class BridgeService {
+  private static getHmacSecret(): string {
+    return process.env.BRIDGE_TOKEN_HMAC_SECRET || process.env.JWT_SECRET || 'alpha-coach-hmac-salt-production-2026';
+  }
+
   /**
-   * Generates a SHA-256 hash of the device token for secure backend persistence
+   * Generates an HMAC-SHA256 hash of the device token for secure backend persistence
    */
   public static hashToken(token: string): string {
+    return crypto.createHmac('sha256', this.getHmacSecret()).update(token).digest('hex');
+  }
+
+  /**
+   * Generates a legacy SHA-256 hash for backward compatibility with existing stored device tokens
+   */
+  public static legacyHashToken(token: string): string {
     return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
+  /**
+   * Constant-time string/digest comparison to protect against timing attacks
+   */
+  public static constantTimeCompare(a: string, b: string): boolean {
+    if (!a || !b || a.length !== b.length) {
+      return false;
+    }
+    try {
+      return crypto.timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -107,14 +132,32 @@ export class BridgeService {
       };
     }
 
-    const db = await getDatabaseAsync();
-    const tokenHash = this.hashToken(deviceToken.trim());
+    const trimmedToken = deviceToken.trim();
+    const hmacHash = this.hashToken(trimmedToken);
+    const legacyHash = this.legacyHashToken(trimmedToken);
 
-    // Check by token_hash or raw token
-    let device = await db.get<{ id: string; user_id: string; device_name: string; is_active: number }>(
-      `SELECT id, user_id, device_name, is_active FROM bridge_devices WHERE token_hash = ? OR device_token = ?`,
-      [tokenHash, deviceToken.trim()]
-    );
+    let db: IDatabase | undefined;
+    let device: { id: string; user_id: string; device_name: string; is_active: number; token_hash?: string; device_token?: string } | undefined;
+
+    try {
+      db = await getDatabaseAsync();
+      // Check by token_hash (HMAC or legacy) or raw token
+      device = await db.get<{ id: string; user_id: string; device_name: string; is_active: number; token_hash?: string; device_token?: string }>(
+        `SELECT id, user_id, device_name, is_active, token_hash, device_token FROM bridge_devices WHERE token_hash IN (?, ?) OR device_token = ?`,
+        [hmacHash, legacyHash, trimmedToken]
+      );
+    } catch (dbErr: any) {
+      console.error('[BridgeAuth] Primary database query error:', dbErr?.message || dbErr);
+      return {
+        authorized: false,
+        status: 'INVALID',
+        serverTime,
+        error: {
+          code: 'BRIDGE_AUTH_DATABASE_UNAVAILABLE',
+          message: 'Database temporarily unavailable while verifying device token.'
+        }
+      };
+    }
 
     if (!device) {
       try {
@@ -123,28 +166,34 @@ export class BridgeService {
           ? getSupabaseAdmin()
           : getSupabaseAnon();
         if (supabase) {
-          const { data } = await supabase
+          const { data, error: supaErr } = await supabase
             .from('bridge_devices')
-            .select('id, user_id, device_name, is_active')
-            .or(`device_token.eq.${deviceToken.trim()},token_hash.eq.${tokenHash}`)
+            .select('id, user_id, device_name, is_active, token_hash, device_token')
+            .or(`device_token.eq.${trimmedToken},token_hash.eq.${hmacHash},token_hash.eq.${legacyHash}`)
             .maybeSingle();
-          if (data) {
+          if (supaErr) {
+            console.warn('[BridgeAuth] Supabase lookup error:', supaErr.message);
+          } else if (data) {
             device = {
               id: data.id,
               user_id: data.user_id,
               device_name: data.device_name,
-              is_active: data.is_active !== undefined ? Number(data.is_active) : 1
+              is_active: data.is_active !== undefined ? Number(data.is_active) : 1,
+              token_hash: data.token_hash || hmacHash,
+              device_token: data.device_token || trimmedToken
             };
             // Cache in primary DB
-            await db.run(
-              `INSERT OR IGNORE INTO bridge_devices (id, user_id, device_name, device_token, token_hash, is_active, last_seen_at)
-               VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-              [device.id, device.user_id, device.device_name, deviceToken.trim(), tokenHash, device.is_active]
-            );
+            if (db) {
+              await db.run(
+                `INSERT OR IGNORE INTO bridge_devices (id, user_id, device_name, device_token, token_hash, is_active, last_seen_at)
+                 VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+                [device.id, device.user_id, device.device_name, trimmedToken, hmacHash, device.is_active]
+              );
+            }
           }
         }
-      } catch (supaErr) {
-        // Non-fatal
+      } catch (supaErr: any) {
+        console.warn('[BridgeAuth] Supabase fallback exception:', supaErr?.message || supaErr);
       }
     }
 
@@ -158,6 +207,39 @@ export class BridgeService {
           message: 'Device authorization token is invalid or unassigned in the database.'
         }
       };
+    }
+
+    // Constant-time token verification
+    const matchesHmac = device.token_hash ? this.constantTimeCompare(device.token_hash, hmacHash) : false;
+    const matchesLegacy = device.token_hash ? this.constantTimeCompare(device.token_hash, legacyHash) : false;
+    const matchesRaw = device.device_token ? this.constantTimeCompare(device.device_token, trimmedToken) : false;
+
+    if (!matchesHmac && !matchesLegacy && !matchesRaw) {
+      return {
+        authorized: false,
+        status: 'INVALID',
+        serverTime,
+        error: {
+          code: 'INVALID_BRIDGE_TOKEN',
+          message: 'Device authorization token verification failed.'
+        }
+      };
+    }
+
+    // Lazy migration from legacy SHA-256 or raw token to HMAC-SHA256
+    if (!matchesHmac && (matchesLegacy || matchesRaw) && db) {
+      try {
+        await db.run(`UPDATE bridge_devices SET token_hash = ? WHERE id = ?`, [hmacHash, device.id]);
+        const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+        const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+          ? getSupabaseAdmin()
+          : getSupabaseAnon();
+        if (supabase) {
+          await supabase.from('bridge_devices').update({ token_hash: hmacHash }).eq('id', device.id);
+        }
+      } catch (migErr) {
+        // Non-fatal lazy migration
+      }
     }
 
     if (!device.is_active || Number(device.is_active) === 0) {
@@ -176,7 +258,9 @@ export class BridgeService {
     }
 
     // Update last seen timestamp
-    await db.run(`UPDATE bridge_devices SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?`, [device.id]);
+    if (db) {
+      await db.run(`UPDATE bridge_devices SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?`, [device.id]);
+    }
 
     return {
       authorized: true,
@@ -225,6 +309,23 @@ export class BridgeService {
        VALUES (?, ?, 'BRIDGE_DEVICE_REVOKED', 'bridge_device', ?, ?)`,
       [uuidv4(), userId, deviceId, JSON.stringify({ revokedAt: new Date().toISOString() })]
     );
+
+    // Synchronize revocation to Cloud Database (prevent split-brain resurrection)
+    try {
+      const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+      const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+        ? getSupabaseAdmin()
+        : getSupabaseAnon();
+      if (supabase) {
+        await supabase
+          .from('bridge_devices')
+          .update({ is_active: 0 })
+          .eq('id', deviceId)
+          .eq('user_id', userId);
+      }
+    } catch (supaErr: any) {
+      console.warn('[BridgeService] Failed to synchronize device revocation to Supabase:', supaErr?.message || supaErr);
+    }
   }
 
   // =========================================================================
@@ -393,7 +494,9 @@ export class BridgeService {
   }
 
   /**
-   * Bridge polls this to obtain the authorized device token (single-use atomic consumption)
+   * Bridge polls this to obtain the authorized device token.
+   * Does NOT prematurely erase the token on first read to avoid race conditions and network drops.
+   * The token remains available during the 10-minute validity lease until completed via ACK or expiry.
    */
   public static async pollAndConsumePairingToken(sessionCode: string): Promise<{ status: string; deviceToken?: string; deviceName?: string }> {
     const db = await getDatabaseAsync();
@@ -430,6 +533,35 @@ export class BridgeService {
     }
 
     return { status: session.status, deviceName: session.device_name };
+  }
+
+  /**
+   * Finalizes the pairing session once the companion has safely persisted the device token.
+   * Atomically transitions status to COMPLETED and purges raw device_token from session record.
+   */
+  public static async completePairingSession(sessionCode: string): Promise<{ success: boolean }> {
+    const db = await getDatabaseAsync();
+    const res = await db.run(
+      `UPDATE bridge_pairing_sessions SET status = 'COMPLETED', device_token = NULL WHERE session_code = ? AND status IN ('AUTHORIZED', 'COMPLETED')`,
+      [sessionCode]
+    );
+
+    try {
+      const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+      const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+        ? getSupabaseAdmin()
+        : getSupabaseAnon();
+      if (supabase) {
+        await supabase
+          .from('bridge_pairing_sessions')
+          .update({ status: 'COMPLETED', device_token: null })
+          .eq('session_code', sessionCode);
+      }
+    } catch (supaErr: any) {
+      // Non-fatal
+    }
+
+    return { success: true };
   }
 }
 

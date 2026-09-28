@@ -102,11 +102,12 @@ export async function requireBridgeOrUserAuth(req: AuthenticatedRequest, res: Re
     if (!authCheck.authorized || !authCheck.userId || !authCheck.deviceId) {
       const errCode = authCheck.error?.code || 'INVALID_BRIDGE_TOKEN';
       const errMsg = authCheck.error?.message || 'Invalid or inactive MT5 Bridge device token.';
-      console.warn(`[BRIDGE AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${errCode}`);
-      res.status(401).json({
+      const isDbUnavailable = errCode === 'BRIDGE_AUTH_DATABASE_UNAVAILABLE';
+      console.warn(`[BRIDGE AUTH ${isDbUnavailable ? 503 : 401}] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${errCode}`);
+      res.status(isDbUnavailable ? 503 : 401).json({
         success: false,
         error: {
-          code: errCode,
+          code: isDbUnavailable ? 'SERVICE_UNAVAILABLE' : errCode,
           message: errMsg
         },
         requestId: reqId

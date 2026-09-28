@@ -176,8 +176,12 @@ class AlphaCoachBridge:
                 "active_user_id": self.active_user_id,
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
-            with open(self.config_file, 'w', encoding='utf-8') as f:
+            tmp_file = f"{self.config_file}.tmp"
+            with open(tmp_file, 'w', encoding='utf-8') as f:
                 json.dump(payload, f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_file, self.config_file)
             companion_logger.info("Configuration saved successfully.")
         except Exception as e:
             companion_logger.error(f"Failed to save configuration: {e}")
@@ -429,12 +433,21 @@ class AlphaCoachBridge:
         while time.time() - start_time < timeout_seconds:
             time.sleep(2)
             try:
-                api_resp = requests.get(api_status_url, timeout=3)
+                api_resp = requests.get(api_status_url, timeout=10)
                 if api_resp.status_code == 200:
                     data = api_resp.json()
                     status = data.get("status")
                     if status == "AUTHORIZED" and data.get("deviceToken"):
                         self.device_token = data.get("deviceToken")
+                        self.save_config()
+                        # Send ACK to API so backend can finalize session state
+                        try:
+                            ack_url = f"{self.api_url}/mt5/bridge/session/{session_code}/ack"
+                            requests.post(ack_url, json={"deviceToken": self.device_token}, timeout=5)
+                        except Exception as ack_err:
+                            companion_logger.info(f"Pairing ACK notification skipped: {ack_err}")
+                        # Immediately populate active identity
+                        self.check_device_authorization()
                         self.save_config()
                         self.state = BridgeState.MT5_CONNECTED
                         self.log("PAIR_SUCCESS", "Device authorized via API! Companion is paired.", Fore.GREEN)
@@ -446,7 +459,7 @@ class AlphaCoachBridge:
                 pass
 
             try:
-                supa_resp = requests.get(supa_status_url, headers=self._get_supabase_headers(), timeout=4)
+                supa_resp = requests.get(supa_status_url, headers=self._get_supabase_headers(), timeout=10)
                 if supa_resp.status_code == 200:
                     rows = supa_resp.json()
                     if rows and len(rows) > 0:
@@ -454,6 +467,15 @@ class AlphaCoachBridge:
                         status = sess.get("status")
                         if status == "AUTHORIZED" and sess.get("device_token"):
                             self.device_token = sess.get("device_token")
+                            self.save_config()
+                            # Send ACK to API if reachable
+                            try:
+                                ack_url = f"{self.api_url}/mt5/bridge/session/{session_code}/ack"
+                                requests.post(ack_url, json={"deviceToken": self.device_token}, timeout=5)
+                            except Exception as ack_err:
+                                companion_logger.info(f"Pairing ACK notification skipped: {ack_err}")
+                            # Immediately populate active identity
+                            self.check_device_authorization()
                             self.save_config()
                             self.state = BridgeState.MT5_CONNECTED
                             self.log("PAIR_SUCCESS", "Device authorized via Supabase! Companion is paired.", Fore.GREEN)
@@ -649,6 +671,11 @@ class AlphaCoachBridge:
             err_code = data.get("error", {}).get("code", "")
             err_msg = data.get("error", {}).get("message", f"Authorization failed ({resp.status_code})")
 
+            if resp.status_code >= 500 or resp.status_code == 503 or err_code in ("BRIDGE_AUTH_DATABASE_UNAVAILABLE", "SERVICE_UNAVAILABLE"):
+                self.state = BridgeState.API_SERVER_ERROR
+                self.last_error_message = f"Alpha Coach API/Database temporarily unavailable ({resp.status_code}): {err_msg}"
+                return False, self.last_error_message
+
             if resp.status_code == 401:
                 if err_code == "BRIDGE_DEVICE_REVOKED":
                     self.state = BridgeState.BRIDGE_DEVICE_REVOKED
@@ -663,10 +690,6 @@ class AlphaCoachBridge:
             elif resp.status_code == 404:
                 self.state = BridgeState.API_ROUTE_NOT_FOUND
                 self.last_error_message = f"Device status endpoint not found (HTTP 404): {url}"
-                return False, self.last_error_message
-            elif resp.status_code >= 500:
-                self.state = BridgeState.API_SERVER_ERROR
-                self.last_error_message = f"API server error ({resp.status_code}): {err_msg}"
                 return False, self.last_error_message
 
             self.state = BridgeState.AUTH_CHECK_FAILED
@@ -816,6 +839,9 @@ class AlphaCoachBridge:
                 self.clear_device_token()
                 paired = self.start_browser_pairing()
                 if not paired:
+                    return False
+                auth_ok, auth_msg = self.check_device_authorization()
+                if not auth_ok:
                     return False
             else:
                 return False

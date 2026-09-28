@@ -49748,7 +49748,7 @@ function getSupabaseAnonKey() {
   return (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON).trim();
 }
 function getSupabaseServiceRoleKey() {
-  return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_KEY || DEFAULT_SUPABASE_SERVICE_ROLE).trim();
+  return (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_KEY || "").trim();
 }
 function getSupabaseAdmin() {
   const url = getSupabaseUrl();
@@ -49830,10 +49830,15 @@ async function verifySupabaseTokenDetailed(token) {
     if (error) {
       const msg = (error.message || "").toLowerCase();
       const status = error.status;
+      if (msg.includes("api key") || msg.includes("apikey") || msg.includes("no api key") || msg.includes("project not found") || msg.includes("unable to find project") || msg.includes("unauthorized to access project")) {
+        console.error(`[Supabase] Backend rejected by Supabase Auth API \u2014 check SUPABASE_URL / SUPABASE_ANON_KEY (or SUPABASE_PUBLISHABLE_KEY) in this deployment's environment variables. Raw error: ${error.message}`);
+        return { valid: false, failureReason: "SUPABASE_CONFIGURATION_ERROR" };
+      }
       if (msg.includes("expired") || msg.includes("jwt expired")) {
         return { valid: false, failureReason: "SUPABASE_TOKEN_EXPIRED" };
       }
       if (msg.includes("issuer") || msg.includes("claim") || msg.includes("audience")) {
+        console.error("[Supabase] Token issuer/audience mismatch \u2014 the frontend and backend are configured against DIFFERENT Supabase projects. Verify SUPABASE_URL matches VITE_SUPABASE_URL in this deployment.");
         return { valid: false, failureReason: "SUPABASE_TOKEN_ISSUER_INVALID" };
       }
       if (msg.includes("invalid") || msg.includes("malformed") || msg.includes("signature") || msg.includes("bad") || status === 401 || status === 400) {
@@ -49863,7 +49868,7 @@ function getSupabaseDiagnostics() {
     supabaseUrlConfigured: Boolean(url)
   };
 }
-var import_dotenv, import_path, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_SERVICE_ROLE, DEFAULT_SUPABASE_ANON, supabaseAdminInstance, supabaseAnonInstance, supabase_default;
+var import_dotenv, import_path, DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON, supabaseAdminInstance, supabaseAnonInstance, supabase_default;
 var init_supabase = __esm({
   "backend/src/lib/supabase.ts"() {
     "use strict";
@@ -49873,7 +49878,6 @@ var init_supabase = __esm({
     import_dotenv.default.config({ path: import_path.default.resolve(__dirname, "../../../.env") });
     import_dotenv.default.config({ path: import_path.default.resolve(__dirname, "../../.env") });
     DEFAULT_SUPABASE_URL = "https://rmnudqejyrrklltodiaf.supabase.co";
-    DEFAULT_SUPABASE_SERVICE_ROLE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtbnVkcWVqeXJya2xsdG9kaWFmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDM1NDI5NiwiZXhwIjoyMTA1OTMwMjk2fQ.mrJWj1hVYNdSjCGR92WTuAUFLPE1E7wrqAALUkufcso";
     DEFAULT_SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtbnVkcWVqeXJya2xsdG9kaWFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTQyOTYsImV4cCI6MjEwNTkzMDI5Nn0.2Tg6KzAFA7gnQ09tQPhz_lES4X5by09-n3G1PePXId8";
     supabaseAdminInstance = null;
     supabaseAnonInstance = null;
@@ -52007,6 +52011,19 @@ async function seedInitialData(db) {
 // backend/src/services/auth.service.ts
 init_supabase();
 var JWT_SECRET = process.env.JWT_SECRET || process.env.SUPABASE_JWT_SECRET || "alpha-coach-super-secure-production-secret-key-2026";
+var TRANSIENT_AUTH_FAILURE_REASONS = /* @__PURE__ */ new Set([
+  "SUPABASE_VERIFICATION_FAILED",
+  // network/timeout/exception while contacting Supabase Auth
+  "SUPABASE_CONFIGURATION_ERROR",
+  // backend missing/misconfigured SUPABASE_URL, anon key, or Supabase rejected the request itself (e.g. bad/rotated API key)
+  "SUPABASE_TOKEN_ISSUER_INVALID",
+  // frontend and backend point at two different Supabase projects
+  "DB_SYNC_FAILED"
+  // Supabase confirmed the token but the application DB is unavailable
+]);
+function isTransientAuthFailureReason(reason) {
+  return Boolean(reason && TRANSIENT_AUTH_FAILURE_REASONS.has(reason));
+}
 var AuthService = class {
   /**
    * Synchronizes and ensures an application user record exists for the canonical Supabase identity.
@@ -52311,11 +52328,33 @@ var BridgePairingError = class _BridgePairingError extends Error {
   }
 };
 var BridgeService = class {
+  static getHmacSecret() {
+    return process.env.BRIDGE_TOKEN_HMAC_SECRET || process.env.JWT_SECRET || "alpha-coach-hmac-salt-production-2026";
+  }
   /**
-   * Generates a SHA-256 hash of the device token for secure backend persistence
+   * Generates an HMAC-SHA256 hash of the device token for secure backend persistence
    */
   static hashToken(token) {
+    return import_crypto3.default.createHmac("sha256", this.getHmacSecret()).update(token).digest("hex");
+  }
+  /**
+   * Generates a legacy SHA-256 hash for backward compatibility with existing stored device tokens
+   */
+  static legacyHashToken(token) {
     return import_crypto3.default.createHash("sha256").update(token).digest("hex");
+  }
+  /**
+   * Constant-time string/digest comparison to protect against timing attacks
+   */
+  static constantTimeCompare(a, b) {
+    if (!a || !b || a.length !== b.length) {
+      return false;
+    }
+    try {
+      return import_crypto3.default.timingSafeEqual(Buffer.from(a, "utf8"), Buffer.from(b, "utf8"));
+    } catch {
+      return false;
+    }
   }
   /**
    * Generates a secure device token and stores both hash and token for the MT5 Local Bridge
@@ -52369,33 +52408,57 @@ var BridgeService = class {
         }
       };
     }
-    const db = await getDatabaseAsync();
-    const tokenHash = this.hashToken(deviceToken.trim());
-    let device = await db.get(
-      `SELECT id, user_id, device_name, is_active FROM bridge_devices WHERE token_hash = ? OR device_token = ?`,
-      [tokenHash, deviceToken.trim()]
-    );
+    const trimmedToken = deviceToken.trim();
+    const hmacHash = this.hashToken(trimmedToken);
+    const legacyHash = this.legacyHashToken(trimmedToken);
+    let db;
+    let device;
+    try {
+      db = await getDatabaseAsync();
+      device = await db.get(
+        `SELECT id, user_id, device_name, is_active, token_hash, device_token FROM bridge_devices WHERE token_hash IN (?, ?) OR device_token = ?`,
+        [hmacHash, legacyHash, trimmedToken]
+      );
+    } catch (dbErr) {
+      console.error("[BridgeAuth] Primary database query error:", dbErr?.message || dbErr);
+      return {
+        authorized: false,
+        status: "INVALID",
+        serverTime,
+        error: {
+          code: "BRIDGE_AUTH_DATABASE_UNAVAILABLE",
+          message: "Database temporarily unavailable while verifying device token."
+        }
+      };
+    }
     if (!device) {
       try {
         const { getSupabaseAdmin: getSupabaseAdmin2, getSupabaseAnon: getSupabaseAnon2 } = (init_supabase(), __toCommonJS(supabase_exports));
         const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY ? getSupabaseAdmin2() : getSupabaseAnon2();
         if (supabase) {
-          const { data } = await supabase.from("bridge_devices").select("id, user_id, device_name, is_active").or(`device_token.eq.${deviceToken.trim()},token_hash.eq.${tokenHash}`).maybeSingle();
-          if (data) {
+          const { data, error: supaErr } = await supabase.from("bridge_devices").select("id, user_id, device_name, is_active, token_hash, device_token").or(`device_token.eq.${trimmedToken},token_hash.eq.${hmacHash},token_hash.eq.${legacyHash}`).maybeSingle();
+          if (supaErr) {
+            console.warn("[BridgeAuth] Supabase lookup error:", supaErr.message);
+          } else if (data) {
             device = {
               id: data.id,
               user_id: data.user_id,
               device_name: data.device_name,
-              is_active: data.is_active !== void 0 ? Number(data.is_active) : 1
+              is_active: data.is_active !== void 0 ? Number(data.is_active) : 1,
+              token_hash: data.token_hash || hmacHash,
+              device_token: data.device_token || trimmedToken
             };
-            await db.run(
-              `INSERT OR IGNORE INTO bridge_devices (id, user_id, device_name, device_token, token_hash, is_active, last_seen_at)
-               VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-              [device.id, device.user_id, device.device_name, deviceToken.trim(), tokenHash, device.is_active]
-            );
+            if (db) {
+              await db.run(
+                `INSERT OR IGNORE INTO bridge_devices (id, user_id, device_name, device_token, token_hash, is_active, last_seen_at)
+                 VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+                [device.id, device.user_id, device.device_name, trimmedToken, hmacHash, device.is_active]
+              );
+            }
           }
         }
       } catch (supaErr) {
+        console.warn("[BridgeAuth] Supabase fallback exception:", supaErr?.message || supaErr);
       }
     }
     if (!device) {
@@ -52408,6 +52471,31 @@ var BridgeService = class {
           message: "Device authorization token is invalid or unassigned in the database."
         }
       };
+    }
+    const matchesHmac = device.token_hash ? this.constantTimeCompare(device.token_hash, hmacHash) : false;
+    const matchesLegacy = device.token_hash ? this.constantTimeCompare(device.token_hash, legacyHash) : false;
+    const matchesRaw = device.device_token ? this.constantTimeCompare(device.device_token, trimmedToken) : false;
+    if (!matchesHmac && !matchesLegacy && !matchesRaw) {
+      return {
+        authorized: false,
+        status: "INVALID",
+        serverTime,
+        error: {
+          code: "INVALID_BRIDGE_TOKEN",
+          message: "Device authorization token verification failed."
+        }
+      };
+    }
+    if (!matchesHmac && (matchesLegacy || matchesRaw) && db) {
+      try {
+        await db.run(`UPDATE bridge_devices SET token_hash = ? WHERE id = ?`, [hmacHash, device.id]);
+        const { getSupabaseAdmin: getSupabaseAdmin2, getSupabaseAnon: getSupabaseAnon2 } = (init_supabase(), __toCommonJS(supabase_exports));
+        const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY ? getSupabaseAdmin2() : getSupabaseAnon2();
+        if (supabase) {
+          await supabase.from("bridge_devices").update({ token_hash: hmacHash }).eq("id", device.id);
+        }
+      } catch (migErr) {
+      }
     }
     if (!device.is_active || Number(device.is_active) === 0) {
       return {
@@ -52423,7 +52511,9 @@ var BridgeService = class {
         }
       };
     }
-    await db.run(`UPDATE bridge_devices SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?`, [device.id]);
+    if (db) {
+      await db.run(`UPDATE bridge_devices SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?`, [device.id]);
+    }
     return {
       authorized: true,
       status: "ACTIVE",
@@ -52468,6 +52558,15 @@ var BridgeService = class {
        VALUES (?, ?, 'BRIDGE_DEVICE_REVOKED', 'bridge_device', ?, ?)`,
       [v4_default(), userId, deviceId, JSON.stringify({ revokedAt: (/* @__PURE__ */ new Date()).toISOString() })]
     );
+    try {
+      const { getSupabaseAdmin: getSupabaseAdmin2, getSupabaseAnon: getSupabaseAnon2 } = (init_supabase(), __toCommonJS(supabase_exports));
+      const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY ? getSupabaseAdmin2() : getSupabaseAnon2();
+      if (supabase) {
+        await supabase.from("bridge_devices").update({ is_active: 0 }).eq("id", deviceId).eq("user_id", userId);
+      }
+    } catch (supaErr) {
+      console.warn("[BridgeService] Failed to synchronize device revocation to Supabase:", supaErr?.message || supaErr);
+    }
   }
   // =========================================================================
   // Secure Browser-to-Bridge 1-Click Pairing Sessions
@@ -52593,7 +52692,9 @@ var BridgeService = class {
     return { success: true };
   }
   /**
-   * Bridge polls this to obtain the authorized device token (single-use atomic consumption)
+   * Bridge polls this to obtain the authorized device token.
+   * Does NOT prematurely erase the token on first read to avoid race conditions and network drops.
+   * The token remains available during the 10-minute validity lease until completed via ACK or expiry.
    */
   static async pollAndConsumePairingToken(sessionCode) {
     const db = await getDatabaseAsync();
@@ -52621,6 +52722,26 @@ var BridgeService = class {
     }
     return { status: session.status, deviceName: session.device_name };
   }
+  /**
+   * Finalizes the pairing session once the companion has safely persisted the device token.
+   * Atomically transitions status to COMPLETED and purges raw device_token from session record.
+   */
+  static async completePairingSession(sessionCode) {
+    const db = await getDatabaseAsync();
+    const res = await db.run(
+      `UPDATE bridge_pairing_sessions SET status = 'COMPLETED', device_token = NULL WHERE session_code = ? AND status IN ('AUTHORIZED', 'COMPLETED')`,
+      [sessionCode]
+    );
+    try {
+      const { getSupabaseAdmin: getSupabaseAdmin2, getSupabaseAnon: getSupabaseAnon2 } = (init_supabase(), __toCommonJS(supabase_exports));
+      const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY ? getSupabaseAdmin2() : getSupabaseAnon2();
+      if (supabase) {
+        await supabase.from("bridge_pairing_sessions").update({ status: "COMPLETED", device_token: null }).eq("session_code", sessionCode);
+      }
+    } catch (supaErr) {
+    }
+    return { success: true };
+  }
 };
 
 // backend/src/middlewares/auth.middleware.ts
@@ -52643,13 +52764,13 @@ async function requireUserAuth(req, res, next) {
   const authResult = await AuthService.verifyTokenDetailed(token);
   if (!authResult.valid || !authResult.user) {
     const reason = authResult.failureReason || "SUPABASE_TOKEN_INVALID";
-    if (reason === "DB_SYNC_FAILED") {
-      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Database unavailable for verified user`);
+    if (isTransientAuthFailureReason(reason)) {
+      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Transient auth verification failure: ${reason}`);
       res.status(503).json({
         success: false,
         error: {
           code: "SERVICE_UNAVAILABLE",
-          message: "Service temporarily unavailable. Your session is valid \u2014 please try again in a moment."
+          message: "Service temporarily unavailable while verifying your session. Your login is valid \u2014 please try again in a moment."
         },
         requestId: reqId
       });
@@ -52678,11 +52799,12 @@ async function requireBridgeOrUserAuth(req, res, next) {
     if (!authCheck.authorized || !authCheck.userId || !authCheck.deviceId) {
       const errCode = authCheck.error?.code || "INVALID_BRIDGE_TOKEN";
       const errMsg = authCheck.error?.message || "Invalid or inactive MT5 Bridge device token.";
-      console.warn(`[BRIDGE AUTH 401] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${errCode}`);
-      res.status(401).json({
+      const isDbUnavailable = errCode === "BRIDGE_AUTH_DATABASE_UNAVAILABLE";
+      console.warn(`[BRIDGE AUTH ${isDbUnavailable ? 503 : 401}] reqId=${reqId} ${req.method} ${req.originalUrl} - Reason: ${errCode}`);
+      res.status(isDbUnavailable ? 503 : 401).json({
         success: false,
         error: {
-          code: errCode,
+          code: isDbUnavailable ? "SERVICE_UNAVAILABLE" : errCode,
           message: errMsg
         },
         requestId: reqId
@@ -52707,8 +52829,8 @@ async function requireBridgeOrUserAuth(req, res, next) {
       return;
     }
     const reason = authResult.failureReason || "SUPABASE_TOKEN_INVALID";
-    if (reason === "DB_SYNC_FAILED") {
-      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Database unavailable for verified user`);
+    if (isTransientAuthFailureReason(reason)) {
+      console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Transient auth verification failure: ${reason}`);
       res.status(503).json({
         success: false,
         error: {
@@ -53927,8 +54049,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "abf6c7c5dde35cd1deba0abaee4efee38fde7cdd",
-  buildTimestamp: "2026-09-27T17:50:35.198Z",
+  gitCommit: "65f2393846f822c025f2e4fdaa9780287e7f75dd",
+  buildTimestamp: "2026-09-28T07:27:07.761Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -53977,6 +54099,28 @@ router3.get("/bridge/session/:sessionCode/status", async (req, res) => {
       error: {
         code,
         message: err.message || "Failed to poll pairing session."
+      },
+      requestId: reqId
+    });
+  }
+});
+router3.post("/bridge/session/:sessionCode/ack", async (req, res) => {
+  const reqId = req.headers["x-request-id"] || v4_default();
+  try {
+    const result = await BridgeService.completePairingSession(req.params.sessionCode);
+    res.json({
+      success: result.success,
+      message: result.success ? "Pairing session completed." : "Pairing session already completed or expired.",
+      requestId: reqId
+    });
+  } catch (err) {
+    const code = err.code || "SESSION_ACK_ERROR";
+    console.error(`[BridgePairing] Session ACK error [${code}]:`, err.message, `(reqId: ${reqId})`);
+    res.status(500).json({
+      success: false,
+      error: {
+        code,
+        message: err.message || "Failed to acknowledge pairing session."
       },
       requestId: reqId
     });
@@ -54077,7 +54221,8 @@ router3.get("/bridge/device/status", async (req, res) => {
   const bridgeToken = req.headers["x-bridge-token"] || "";
   const authCheck = await BridgeService.checkDeviceAuth(bridgeToken);
   if (!authCheck.authorized) {
-    res.status(401).json({
+    const isDbUnavailable = authCheck.error?.code === "BRIDGE_AUTH_DATABASE_UNAVAILABLE";
+    res.status(isDbUnavailable ? 503 : 401).json({
       success: false,
       authorized: false,
       status: authCheck.status,
