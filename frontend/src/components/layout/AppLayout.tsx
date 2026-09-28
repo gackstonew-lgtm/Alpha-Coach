@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
+import { MobileBottomNav } from './MobileBottomNav';
+import { InstallPrompt } from './InstallPrompt';
 
 export const AppLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
@@ -11,10 +13,16 @@ export const AppLayout: React.FC = () => {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="lg:pl-64 flex flex-col flex-1 min-w-0">
         <Navbar onToggleSidebar={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto animate-in fade-in duration-300">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8 max-w-7xl w-full mx-auto animate-in fade-in duration-300">
           <Outlet />
         </main>
       </div>
+
+      {/* Phones & tablets (below lg): bottom tab bar. "More" opens the existing Sidebar drawer. */}
+      <MobileBottomNav onMore={() => setSidebarOpen(true)} />
+
+      {/* Install card: native prompt on Android/Chrome, Add to Home Screen steps on iOS */}
+      <InstallPrompt />
     </div>
   );
 };
