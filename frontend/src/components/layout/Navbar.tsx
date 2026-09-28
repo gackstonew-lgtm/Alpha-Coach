@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useAccounts } from '../../context/AccountContext';
+import { useSettings } from '../../context/SettingsContext';
 import { api } from '../../services/api';
 import {
   Bell,
@@ -12,12 +13,16 @@ import {
   Layers,
   Radio,
   Menu,
-  Check
+  Check,
+  Eye,
+  EyeOff,
+  Settings
 } from 'lucide-react';
 
 export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
   const { accounts, selectedAccountId, setSelectedAccountId, refreshAccounts } = useAccounts();
+  const { settings, privacyMode, togglePrivacyMode } = useSettings();
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -99,7 +104,7 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
               <option value="ALL" className="bg-surface text-content-primary">All Accounts (Consolidated)</option>
               {accounts.map(acc => (
                 <option key={acc.id} value={acc.id} className="bg-surface text-content-primary">
-                  {acc.broker_name} ••••{acc.account_number.slice(-4)} (${acc.balance.toLocaleString()})
+                  {acc.broker_name} ••••{acc.account_number.slice(-4)} ({privacyMode ? '••••••' : `$${acc.balance.toLocaleString()}`})
                 </option>
               ))}
             </select>
@@ -127,6 +132,20 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
               <span className="text-brand-600 dark:text-brand-400 font-mono">{progression.currentXp || progression.current_xp || 0} XP</span>
             </NavLink>
           )}
+
+          {/* Privacy Mode Quick Toggle */}
+          <button
+            onClick={togglePrivacyMode}
+            className={`p-2 rounded-xl border transition-all duration-200 ${
+              privacyMode
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20'
+                : 'text-content-muted hover:text-content-primary hover:bg-surface-secondary border-border-subtle'
+            }`}
+            title={privacyMode ? 'Privacy Mode is ON (Balances hidden). Click to reveal.' : 'Turn on Privacy Mode (Hide balances & P/L)'}
+            aria-label="Toggle Privacy Mode"
+          >
+            {privacyMode ? <EyeOff className="w-4 h-4 text-amber-500" /> : <Eye className="w-4 h-4" />}
+          </button>
 
           {/* Quick Sync Button */}
           <button
@@ -190,9 +209,17 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
               className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-xl hover:bg-surface-secondary border border-border-subtle transition-all duration-200"
               aria-label="User account menu"
             >
-              <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center font-bold text-xs text-white shadow-sm">
-                {user?.first_name ? user.first_name[0] : 'T'}
-              </div>
+              {settings.profile.avatarUrl ? (
+                <img
+                  src={settings.profile.avatarUrl}
+                  alt="Profile"
+                  className="w-7 h-7 rounded-lg object-cover ring-1 ring-border-subtle shadow-sm"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center font-bold text-xs text-white shadow-sm">
+                  {user?.first_name ? user.first_name[0] : 'T'}
+                </div>
+              )}
               <ChevronDown className="w-3.5 h-3.5 text-content-muted" />
             </button>
 
@@ -223,7 +250,7 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
                       <option value="ALL" className="bg-surface text-content-primary">All Accounts (Consolidated)</option>
                       {accounts.map(acc => (
                         <option key={acc.id} value={acc.id} className="bg-surface text-content-primary">
-                          {acc.broker_name} ••••{acc.account_number.slice(-4)} (${acc.balance.toLocaleString()})
+                          {acc.broker_name} ••••{acc.account_number.slice(-4)} ({privacyMode ? '••••••' : `$${acc.balance.toLocaleString()}`})
                         </option>
                       ))}
                     </select>
@@ -255,6 +282,18 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
                       </NavLink>
                     )}
                   </div>
+                </div>
+
+                {/* Settings Link */}
+                <div className="py-1 border-b border-border-subtle">
+                  <NavLink
+                    to="/settings"
+                    onClick={() => setShowUserDropdown(false)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-content-primary hover:bg-surface-secondary rounded-xl transition font-medium text-left"
+                  >
+                    <Settings className="w-4 h-4 text-content-muted" />
+                    <span>Settings & Preferences</span>
+                  </NavLink>
                 </div>
 
                 {/* Logout Button */}

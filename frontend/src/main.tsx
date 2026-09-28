@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { App } from './App';
 import { AuthProvider } from './context/AuthContext';
+import { SettingsProvider } from './context/SettingsContext';
 import { AccountProvider } from './context/AccountContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { pwa } from './services/pwa';
@@ -16,9 +17,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <AccountProvider>
-            <App />
-          </AccountProvider>
+          <SettingsProvider>
+            <AccountProvider>
+              <App />
+            </AccountProvider>
+          </SettingsProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

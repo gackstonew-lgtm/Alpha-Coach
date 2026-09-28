@@ -168,3 +168,12 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
+/* Privacy Mode Blur / Masking */
+.privacy-masked {
+  filter: blur(6px);
+  user-select: none;
+  pointer-events: none;
+  transition: filter 0.2s ease-in-out;
+}
+
+

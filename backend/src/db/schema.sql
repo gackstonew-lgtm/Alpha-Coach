@@ -392,3 +392,12 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_user_action ON audit_logs(user_id, act
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
 CREATE INDEX IF NOT EXISTS idx_pairing_sessions_code ON bridge_pairing_sessions(session_code);
 CREATE INDEX IF NOT EXISTS idx_pairing_sessions_user ON bridge_pairing_sessions(user_id);
+
+CREATE TABLE IF NOT EXISTS user_settings (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  settings_json TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id);

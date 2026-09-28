@@ -22,6 +22,7 @@ import reportsRoutes from './routes/reports.routes';
 import adminRoutes from './routes/admin.routes';
 import notificationsRoutes from './routes/notifications.routes';
 import economicRoutes from './routes/economic.routes';
+import settingsRoutes from './routes/settings.routes';
 
 const app = express();
 
@@ -156,7 +157,8 @@ const routePairs = [
   ['/reports', reportsRoutes],
   ['/admin', adminRoutes],
   ['/notifications', notificationsRoutes],
-  ['/economic', economicRoutes]
+  ['/economic', economicRoutes],
+  ['/settings', settingsRoutes]
 ] as const;
 
 routePairs.forEach(([prefix, router]) => {

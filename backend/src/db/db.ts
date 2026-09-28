@@ -306,7 +306,9 @@ export async function initDatabase(): Promise<IDatabase | null> {
       'ALTER TABLE reconstructed_positions ADD COLUMN comment TEXT',
       'ALTER TABLE reconstructed_positions ADD COLUMN external_id TEXT',
       'ALTER TABLE reconstructed_positions ADD COLUMN fee_total REAL DEFAULT 0.0',
-      'ALTER TABLE reconstructed_positions ADD COLUMN is_hedged INTEGER DEFAULT 0'
+      'ALTER TABLE reconstructed_positions ADD COLUMN is_hedged INTEGER DEFAULT 0',
+      'CREATE TABLE IF NOT EXISTS user_settings (id TEXT PRIMARY KEY, user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE, settings_json TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)',
+      'CREATE INDEX IF NOT EXISTS idx_user_settings_user_id ON user_settings(user_id)'
     ];
     for (const sql of safeMigrations) {
       try {

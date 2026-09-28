@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { User, TradingAccount, ReconstructedTrade, RiskRule, PerformanceOverview } from '../types';
+import { UserSettings } from '../types/settings';
 
 export interface NormalizedApiError {
   message: string;
@@ -1705,6 +1706,52 @@ class ApiClient {
         started_at: s.started_at || s.created_at
       }))
     };
+  }
+
+  // ==========================================
+  // User Settings
+  // ==========================================
+  async getSettings(): Promise<{ success: boolean; settings: UserSettings }> {
+    return this.request('/settings');
+  }
+
+  async updateSettings(updates: Partial<UserSettings>): Promise<{ success: boolean; settings: UserSettings }> {
+    return this.request('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    });
+  }
+
+  async resetSettingsSection(section: string): Promise<{ success: boolean; settings: UserSettings; message: string }> {
+    return this.request('/settings/reset', {
+      method: 'POST',
+      body: JSON.stringify({ section })
+    });
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    return this.request('/settings/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+  }
+
+  async updateAvatar(avatarUrl: string | null): Promise<{ success: boolean; avatarUrl: string | null; settings: UserSettings }> {
+    return this.request('/settings/avatar', {
+      method: 'POST',
+      body: JSON.stringify({ avatarUrl })
+    });
+  }
+
+  async exportUserData(): Promise<any> {
+    return this.request('/settings/export');
+  }
+
+  async deleteUserAccount(confirmation: string): Promise<{ success: boolean; message: string }> {
+    return this.request('/settings/account', {
+      method: 'DELETE',
+      body: JSON.stringify({ confirmation })
+    });
   }
 }
 
