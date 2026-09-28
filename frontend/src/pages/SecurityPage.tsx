@@ -20,7 +20,7 @@ export const SecurityPage: React.FC = () => {
       icon: Lock,
       title: 'Zero-Password Security Model',
       description:
-        'Alpha Coach strictly never requests, receives, transmits, or stores your broker login passwords or MT5 trading credentials.',
+        'Meta Coach strictly never requests, receives, transmits, or stores your broker login passwords or MT5 trading credentials.',
       points: [
         'No broker login or investor passwords stored on any server',
         'Direct local Inter-Process Communication (IPC) via desktop MT5 API',
@@ -96,12 +96,12 @@ export const SecurityPage: React.FC = () => {
                 Important Security Guarantee
               </h3>
               <p className="text-xs text-content-muted">
-                How Alpha Coach differs fundamentally from other trading platforms
+                How Meta Coach differs fundamentally from other trading platforms
               </p>
             </div>
           </div>
           <p className="text-xs sm:text-sm text-content-secondary leading-relaxed">
-            Traditional online trading software often asks for your broker login ID and master password to fetch trade data on their remote servers. <strong>Alpha Coach never does this.</strong> All connection to MetaTrader 5 happens locally on your own computer using the official MetaQuotes API. The Alpha Coach bridge only reads historical closed deal tickets and pushes the mathematical reconstruction to your private cloud journal.
+            Traditional online trading software often asks for your broker login ID and master password to fetch trade data on their remote servers. <strong>Meta Coach never does this.</strong> All connection to MetaTrader 5 happens locally on your own computer using the official MetaQuotes API. The Meta Coach bridge only reads historical closed deal tickets and pushes the mathematical reconstruction to your private cloud journal.
           </p>
         </div>
 
@@ -149,7 +149,7 @@ export const SecurityPage: React.FC = () => {
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-content-secondary">
             <li className="p-3 rounded-xl bg-surface-secondary border border-border-subtle flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
-              <span>Use strong, unique passwords for your Alpha Coach account.</span>
+              <span>Use strong, unique passwords for your Meta Coach account.</span>
             </li>
             <li className="p-3 rounded-xl bg-surface-secondary border border-border-subtle flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />

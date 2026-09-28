@@ -82,7 +82,7 @@ export const LoginPage: React.FC = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div className="space-y-1.5">
-            <label className="block text-content-secondary font-medium">Email Address</label>
+            <label className="block text-slate-200 dark:text-slate-200 font-medium">Email Address</label>
             <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
               <Mail className="w-4 h-4 text-content-muted" />
               <input
@@ -92,13 +92,13 @@ export const LoginPage: React.FC = () => {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="bg-transparent text-content-primary placeholder-content-subtle focus:outline-none w-full"
+                className="bg-transparent text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-white"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-content-secondary font-medium">Password</label>
+            <label className="block text-slate-200 dark:text-slate-200 font-medium">Password</label>
             <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
               <Lock className="w-4 h-4 text-content-muted" />
               <input
@@ -108,7 +108,7 @@ export const LoginPage: React.FC = () => {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="bg-transparent text-content-primary placeholder-content-subtle focus:outline-none w-full"
+                className="bg-transparent text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-white"
               />
             </div>
           </div>
@@ -126,14 +126,14 @@ export const LoginPage: React.FC = () => {
         {/* Register link */}
         <div className="space-y-2 text-center text-xs text-content-muted">
           <div>
-            New to Alpha Coach?{' '}
+            New to Meta Coach?{' '}
             <Link to="/register" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
               Create an Account
             </Link>
           </div>
           <div>
             <Link to="/" className="text-content-subtle hover:text-content-secondary transition">
-              ← Return to Alpha Coach Overview
+              ← Return to Meta Coach Overview
             </Link>
           </div>
         </div>

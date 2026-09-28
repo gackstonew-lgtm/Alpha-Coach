@@ -1,8 +1,8 @@
 """
-Alpha Coach - Windows System Tray Companion Application
+Meta Coach - Windows System Tray Companion Application
 Authoritative Version: 1.0.4
 Runs quietly in the Windows notification area, monitors MetaTrader 5,
-and keeps your Alpha Coach trade journal synchronized in the background.
+and keeps your Meta Coach trade journal synchronized in the background.
 """
 
 import sys
@@ -173,7 +173,7 @@ class AlphaCoachTrayApp:
                 lambda *args: self.controller.toggle_pause()
             ),
             pystray.MenuItem(
-                "Re-pair with Alpha Coach...",
+                "Re-pair with Meta Coach...",
                 lambda *args: self.controller.repair_pairing()
             ),
             pystray.MenuItem(

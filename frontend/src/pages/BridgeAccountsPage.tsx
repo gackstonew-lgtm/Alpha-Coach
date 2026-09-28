@@ -3,19 +3,12 @@ import { useAccounts } from '../context/AccountContext';
 import { api } from '../services/api';
 import {
   Cpu,
-  Key,
-  Copy,
-  Check,
   RefreshCw,
   Trash2,
   Layers,
-  ShieldCheck,
   Download,
   Laptop,
   CheckCircle2,
-  Terminal,
-  ChevronDown,
-  ChevronUp,
   Activity,
   ArrowUpRight
 } from 'lucide-react';
@@ -23,14 +16,10 @@ import {
 export const BridgeAccountsPage: React.FC = () => {
   const { accounts, refreshAccounts } = useAccounts();
   const [devices, setDevices] = useState<any[]>([]);
-  const [newDeviceName, setNewDeviceName] = useState<string>('Local Windows Terminal');
-  const [generatedToken, setGeneratedToken] = useState<string | null>(null);
-  const [copied, setCopied] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isFullSyncing, setIsFullSyncing] = useState<boolean>(false);
   const [fullSyncMessage, setFullSyncMessage] = useState<string | null>(null);
   const [reconciliations, setReconciliations] = useState<Record<string, any>>({});
-  const [showDevMode, setShowDevMode] = useState<boolean>(false);
   const [apiStatus, setApiStatus] = useState<any>(null);
 
   // Derive stable dependency values to avoid re-triggering on every array
@@ -99,16 +88,6 @@ export const BridgeAccountsPage: React.FC = () => {
     }
   };
 
-  const handlePairDevice = async () => {
-    try {
-      const res = await api.pairBridgeDevice(newDeviceName || 'Windows MT5 Bridge');
-      setGeneratedToken(res.deviceToken);
-      await loadDevices();
-    } catch (err: any) {
-      alert(err.message || 'Failed to generate token');
-    }
-  };
-
   const handleRevokeDevice = async (id: string, deviceName: string) => {
     if (!confirm(`Are you sure you want to revoke authorization for "${deviceName}"? The local MT5 bridge will stop synchronizing.`)) return;
     try {
@@ -116,14 +95,6 @@ export const BridgeAccountsPage: React.FC = () => {
       await loadDevices();
     } catch (err: any) {
       alert(err.message || 'Failed to revoke device');
-    }
-  };
-
-  const copyToken = () => {
-    if (generatedToken) {
-      navigator.clipboard.writeText(generatedToken);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -186,24 +157,13 @@ export const BridgeAccountsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Zero Password Security Banner */}
-      <div className="p-5 rounded-3xl bg-surface-secondary border border-border-subtle space-y-2 text-xs">
-        <div className="flex items-center space-x-2 text-emerald-400 font-bold uppercase tracking-wider">
-          <ShieldCheck className="w-4 h-4" />
-          <span>Zero-Password Security Architecture</span>
-        </div>
-        <p className="text-content-secondary">
-          Alpha Coach <strong>never asks for, receives, or stores your broker login password</strong>. The Alpha Coach MT5 Bridge runs locally on your Windows PC, connects to your active desktop MT5 terminal via the official MetaTrader API, and securely transmits read-only orders and deal histories.
-        </p>
-      </div>
-
-      {/* 3-Step Seamless Onboarding Card */}
+      {/* 4-Step Seamless Onboarding Card */}
       <div className="framer-card p-6 space-y-5">
         <div className="flex items-center justify-between border-b border-border-subtle pb-4">
           <div className="space-y-1">
             <h2 className="text-base font-bold text-content-primary flex items-center gap-2">
               <span>Connect MetaTrader 5</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+              <span className="hidden lg:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
                 Official Windows App
               </span>
             </h2>
@@ -222,8 +182,8 @@ export const BridgeAccountsPage: React.FC = () => {
           </a>
         </div>
 
-        {/* 3 Step Process */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        {/* 4 Step Process */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
           <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
             <div className="flex items-center justify-between">
               <span className="w-6 h-6 rounded-full bg-brand-primary/15 text-brand-primary flex items-center justify-center font-bold text-[11px]">
@@ -231,9 +191,9 @@ export const BridgeAccountsPage: React.FC = () => {
               </span>
               <Laptop className="w-4 h-4 text-content-muted" />
             </div>
-            <h3 className="font-bold text-content-primary">Install Companion App</h3>
+            <h3 className="font-bold text-content-primary">Install MetaTrader 5</h3>
             <p className="text-content-secondary text-[11px] leading-relaxed">
-              Download and run <strong>Alpha Coach MT5 Companion</strong> on the Windows machine where MetaTrader 5 is installed.
+              Install MetaTrader 5 for Windows/MacBook, log in to your broker account, and keep it running.
             </p>
           </div>
 
@@ -242,9 +202,22 @@ export const BridgeAccountsPage: React.FC = () => {
               <span className="w-6 h-6 rounded-full bg-brand-primary/15 text-brand-primary flex items-center justify-center font-bold text-[11px]">
                 2
               </span>
+              <Download className="w-4 h-4 text-content-muted" />
+            </div>
+            <h3 className="font-bold text-content-primary">Install Companion App</h3>
+            <p className="text-content-secondary text-[11px] leading-relaxed">
+              Download and run the Meta Coach MT5 Companion on the Windows machine where MetaTrader 5 is installed.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="w-6 h-6 rounded-full bg-brand-primary/15 text-brand-primary flex items-center justify-center font-bold text-[11px]">
+                3
+              </span>
               <CheckCircle2 className="w-4 h-4 text-content-muted" />
             </div>
-            <h3 className="font-bold text-content-primary">1-Click Authorization</h3>
+            <h3 className="font-bold text-content-primary">Click Authorization</h3>
             <p className="text-content-secondary text-[11px] leading-relaxed">
               Launching the Bridge automatically opens your browser to authorize your device. No manual token copying required.
             </p>
@@ -253,7 +226,7 @@ export const BridgeAccountsPage: React.FC = () => {
           <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
             <div className="flex items-center justify-between">
               <span className="w-6 h-6 rounded-full bg-brand-primary/15 text-brand-primary flex items-center justify-center font-bold text-[11px]">
-                3
+                4
               </span>
               <Activity className="w-4 h-4 text-content-muted" />
             </div>
@@ -268,7 +241,7 @@ export const BridgeAccountsPage: React.FC = () => {
         <div className="p-4 rounded-2xl bg-surface border border-border-subtle flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-content-secondary font-sans">Alpha Coach Cloud:</span>
+            <span className="text-content-secondary font-sans">Meta Coach Cloud:</span>
             <span className="text-emerald-400 font-bold">ONLINE</span>
           </div>
 
@@ -429,62 +402,6 @@ export const BridgeAccountsPage: React.FC = () => {
             })
           )}
         </div>
-      </div>
-
-      {/* Developer & Diagnostics Collapsible Drawer */}
-      <div className="framer-card p-5 space-y-4">
-        <button
-          onClick={() => setShowDevMode(!showDevMode)}
-          className="w-full flex items-center justify-between text-xs font-bold text-content-secondary hover:text-content-primary transition"
-        >
-          <span className="flex items-center gap-2">
-            <Terminal className="w-4 h-4 text-brand-primary" />
-            <span>Developer & Diagnostics Mode</span>
-          </span>
-          {showDevMode ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-
-        {showDevMode && (
-          <div className="space-y-4 pt-3 border-t border-border-subtle text-xs animate-in fade-in">
-            <p className="text-content-muted text-[11px]">
-              Advanced pairing tools for headless server environments, CLI scripts, and developer troubleshooting.
-            </p>
-
-            <div className="space-y-2">
-              <label className="block text-content-secondary font-medium">Manual Device Token Generator</label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  value={newDeviceName}
-                  onChange={e => setNewDeviceName(e.target.value)}
-                  placeholder="Device Name (e.g. My Custom VPS)"
-                  className="bg-surface-secondary border border-border-subtle rounded-xl px-4 py-2 text-xs text-content-primary flex-1 focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
-                />
-                <button
-                  onClick={handlePairDevice}
-                  className="framer-btn-primary px-4 py-2 shrink-0"
-                >
-                  Generate Manual Token
-                </button>
-              </div>
-            </div>
-
-            {generatedToken && (
-              <div className="p-4 rounded-2xl bg-surface-secondary border border-emerald-500/30 space-y-2">
-                <div className="text-[11px] font-bold text-emerald-400">Manual Device Pairing Token:</div>
-                <div className="flex items-center space-x-2 bg-surface p-2.5 rounded-xl font-mono text-xs text-content-primary border border-border-subtle">
-                  <span className="truncate flex-1 select-all">{generatedToken}</span>
-                  <button
-                    onClick={copyToken}
-                    className="p-1.5 bg-surface-secondary hover:bg-surface text-content-primary rounded-lg border border-border-subtle transition"
-                  >
-                    {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-content-muted" />}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

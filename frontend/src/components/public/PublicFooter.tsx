@@ -16,7 +16,7 @@ export const PublicFooter: React.FC = () => {
             <div>
               <h4 className="font-bold text-content-primary mb-1">Zero-Password Architecture</h4>
               <p className="text-content-muted leading-relaxed">
-                Alpha Coach never asks for, receives, or stores your MT5 or broker login credentials.
+                Meta Coach never asks for, receives, or stores your MT5 or broker login credentials.
               </p>
             </div>
           </div>
@@ -111,14 +111,14 @@ export const PublicFooter: React.FC = () => {
               Important Financial & Analytical Disclaimer
             </p>
             <p>
-              Alpha Coach is a software tool developed solely for trade recording, historical analysis, mathematical performance metrics, risk awareness, and personal journaling. Alpha Coach does not provide personalized investment advice, trading recommendations, or financial brokerage services. Trading foreign exchange, commodities, indices, cryptocurrencies, and equities on margin carries high risk and may not be suitable for all investors. Past performance recorded in historical journals does not guarantee future results.
+              Meta Coach is a software tool developed solely for trade recording, historical analysis, mathematical performance metrics, risk awareness, and personal journaling. Meta Coach does not provide personalized investment advice, trading recommendations, or financial brokerage services. Trading foreign exchange, commodities, indices, cryptocurrencies, and equities on margin carries high risk and may not be suitable for all investors. Past performance recorded in historical journals does not guarantee future results.
             </p>
           </div>
 
           {/* Copyright & Entity Notice */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-content-muted pt-4">
             <div>
-              &copy; {new Date().getFullYear()} [COMPANY LEGAL NAME] (Alpha Coach). All rights reserved.
+              &copy; 2026 Meta Coach. All rights reserved.
             </div>
             <div className="flex items-center gap-4 text-[11px]">
               <span>Jurisdiction: [GOVERNING JURISDICTION]</span>

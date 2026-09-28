@@ -1,5 +1,5 @@
-/* Alpha Coach — Service Worker Migration & Safe Bypass */
-const CACHE_NAME = 'alpha-coach-v1.0.6-cleanup';
+/* Meta Coach — Service Worker Migration & Safe Bypass */
+const CACHE_NAME = 'meta-coach-v1.0.6-cleanup';
 
 // Install: Skip waiting immediately
 self.addEventListener('install', (event) => {

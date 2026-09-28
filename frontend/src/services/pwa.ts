@@ -1,5 +1,5 @@
 /**
- * Alpha Coach PWA Service
+ * Meta Coach PWA Service
  * Handles Service Worker registration, installation prompts, and device detection
  */
 

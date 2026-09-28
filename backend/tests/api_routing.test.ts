@@ -8,7 +8,7 @@ describe('Phase 27: Production API Routing & JSON Regression Tests', () => {
     expect(res.text).not.toContain('<!doctype html>');
     expect(res.text).not.toContain('<html');
     expect(res.body.success).toBe(true);
-    expect(res.body.service).toMatch(/Alpha Coach/);
+    expect(res.body.service).toMatch(/Meta Coach/);
     expect(res.body.version).toBeDefined();
   });
 

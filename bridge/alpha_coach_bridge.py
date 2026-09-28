@@ -1,7 +1,7 @@
 """
-Alpha Coach - Production MT5 Journal Bridge
+Meta Coach - Production MT5 Journal Bridge
 Authoritative Version: 1.0.5
-Seamlessly connects local MetaTrader 5 desktop terminal to Alpha Coach Performance OS.
+Seamlessly connects local MetaTrader 5 desktop terminal to Meta Coach Performance OS.
 Features distinct MT5 state management, exhaustive terminal scanning, 1-click browser pairing,
 authoritative historical deals/orders collection, live open positions sync, and reconciliation telemetry.
 """
@@ -52,7 +52,7 @@ except ImportError:
 from companion_logger import companion_logger
 
 __version__ = "1.0.5"
-APP_NAME = "Alpha Coach MT5 Companion"
+APP_NAME = "Meta Coach MT5 Companion"
 GITHUB_REPO = "gackstonew-lgtm/Alpha-Coach"
 
 # Production Endpoints
@@ -637,7 +637,7 @@ class AlphaCoachBridge:
 
         if not self.device_token:
             self.state = BridgeState.UNPAIRED
-            return False, "Device is not paired with Alpha Coach."
+            return False, "Device is not paired with Meta Coach."
 
         url = f"{self.api_url}/mt5/bridge/device/status"
         headers = {
@@ -673,19 +673,19 @@ class AlphaCoachBridge:
 
             if resp.status_code >= 500 or resp.status_code == 503 or err_code in ("BRIDGE_AUTH_DATABASE_UNAVAILABLE", "SERVICE_UNAVAILABLE"):
                 self.state = BridgeState.API_SERVER_ERROR
-                self.last_error_message = f"Alpha Coach API/Database temporarily unavailable ({resp.status_code}): {err_msg}"
+                self.last_error_message = f"Meta Coach API/Database temporarily unavailable ({resp.status_code}): {err_msg}"
                 return False, self.last_error_message
 
             if resp.status_code == 401:
                 if err_code == "BRIDGE_DEVICE_REVOKED":
                     self.state = BridgeState.BRIDGE_DEVICE_REVOKED
-                    self.last_error_message = "This companion device was revoked from the Alpha Coach Account Hub."
+                    self.last_error_message = "This companion device was revoked from the Meta Coach Account Hub."
                 elif err_code == "BRIDGE_DEVICE_EXPIRED":
                     self.state = BridgeState.BRIDGE_DEVICE_EXPIRED
                     self.last_error_message = "This companion device authorization has expired."
                 else:
                     self.state = BridgeState.BRIDGE_TOKEN_INVALID
-                    self.last_error_message = err_msg or "Alpha Coach authorization needs to be renewed. Device token is invalid."
+                    self.last_error_message = err_msg or "Meta Coach authorization needs to be renewed. Device token is invalid."
                 return False, self.last_error_message
             elif resp.status_code == 404:
                 self.state = BridgeState.API_ROUTE_NOT_FOUND
@@ -703,7 +703,7 @@ class AlphaCoachBridge:
         except requests.exceptions.RequestException as e:
             companion_logger.warning(f"Could not reach API authorization endpoint: {e}")
             self.state = BridgeState.API_UNAVAILABLE
-            self.last_error_message = f"Alpha Coach API is temporarily unreachable ({e})"
+            self.last_error_message = f"Meta Coach API is temporarily unreachable ({e})"
             return False, self.last_error_message
 
     def print_reconciliation_report(self, reconcil: Dict[str, Any]):
@@ -713,7 +713,7 @@ class AlphaCoachBridge:
         color = Fore.GREEN if status == "SYNCHRONIZED" else Fore.YELLOW
 
         print(f"\n{Style.BRIGHT}{'='*58}")
-        print(f"  ALPHA COACH — MT5 SYNCHRONIZATION RECONCILIATION")
+        print(f"  META COACH — MT5 SYNCHRONIZATION RECONCILIATION")
         print(f"{'='*58}{Style.RESET_ALL}")
         print(f"  Historical Deals Received:   {r.get('mt5DealsCount', reconcil.get('dealsProcessed', 0))}")
         print(f"  Historical Orders Received:  {r.get('mt5OrdersCount', reconcil.get('ordersProcessed', 0))}")
@@ -727,13 +727,13 @@ class AlphaCoachBridge:
         print(f"{'='*58}\n")
 
     def sync_payload_to_server(self, payload: Dict[str, Any], is_full_sync: bool = False) -> bool:
-        """Sends payload to Alpha Coach via authenticated backend HTTPS API."""
+        """Sends payload to Meta Coach via authenticated backend HTTPS API."""
         self.state = BridgeState.SYNCING
         deals_cnt = len(payload.get('deals', []))
         orders_cnt = len(payload.get('orders', []))
         open_cnt = len(payload.get('openPositions', []))
         sync_label = "Full History" if is_full_sync else "Incremental"
-        self.log("SYNC", f"Transmitting {sync_label} payload: {deals_cnt} deals, {orders_cnt} orders, {open_cnt} open positions to Alpha Coach OS...", Fore.CYAN)
+        self.log("SYNC", f"Transmitting {sync_label} payload: {deals_cnt} deals, {orders_cnt} orders, {open_cnt} open positions to Meta Coach OS...", Fore.CYAN)
 
         api_url = f"{self.api_url}/mt5/sync/full" if is_full_sync else f"{self.api_url}/mt5/sync"
         headers = {
@@ -814,7 +814,7 @@ class AlphaCoachBridge:
             return False
         except requests.exceptions.RequestException as e:
             self.state = BridgeState.API_UNAVAILABLE
-            self.last_error_message = f"Alpha Coach API unreachable: {e}"
+            self.last_error_message = f"Meta Coach API unreachable: {e}"
             self.consecutive_failures += 1
             companion_logger.warning(f"Sync API network exception: {e}")
             self.log("SYNC_NETWORK_FAIL", self.last_error_message, Fore.YELLOW)
@@ -878,7 +878,7 @@ class AlphaCoachBridge:
         return self.run_sync_cycle(full_history=True)
 
     def run_daemon(self, interval_seconds: int = 30):
-        self.log("DAEMON", f"Alpha Coach MT5 Companion daemon active ({interval_seconds}s interval).", Fore.MAGENTA)
+        self.log("DAEMON", f"Meta Coach MT5 Companion daemon active ({interval_seconds}s interval).", Fore.MAGENTA)
         self.run_sync_cycle(days_back=90)
 
         while True:
@@ -893,9 +893,9 @@ class AlphaCoachBridge:
                 time.sleep(10)
 
 def main():
-    parser = argparse.ArgumentParser(description="Alpha Coach MT5 Companion CLI")
-    parser.add_argument("--api", default=None, help="Alpha Coach API URL")
-    parser.add_argument("--web", default=None, help="Alpha Coach Web URL")
+    parser = argparse.ArgumentParser(description="Meta Coach MT5 Companion CLI")
+    parser.add_argument("--api", default=None, help="Meta Coach API URL")
+    parser.add_argument("--web", default=None, help="Meta Coach Web URL")
     parser.add_argument("--token", default=None, help="Device Token")
     parser.add_argument("--daemon", action="store_true", help="Daemon mode")
     parser.add_argument("--days", type=int, default=90, help="Days back to sync")

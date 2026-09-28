@@ -52,7 +52,7 @@ export const RegisterPage: React.FC = () => {
               <AlphaCoachLogo size="lg" showWordmark={true} />
             </Link>
           </div>
-          <h1 className="text-xl font-extrabold text-content-primary tracking-tight">Create Alpha Coach Account</h1>
+          <h1 className="text-xl font-extrabold text-content-primary tracking-tight">Create Meta Coach Account</h1>
           <p className="text-xs text-content-muted">Automate your MT5 trade journaling and trading psychology</p>
         </div>
 
@@ -83,7 +83,7 @@ export const RegisterPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="block text-content-secondary font-medium">First Name</label>
+                <label className="block text-slate-200 dark:text-slate-200 font-medium">First Name</label>
                 <input
                   type="text"
                   required
@@ -91,11 +91,11 @@ export const RegisterPage: React.FC = () => {
                   value={firstName}
                   onChange={e => setFirstName(e.target.value)}
                   placeholder="Alex"
-                  className="w-full bg-surface-secondary border border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-content-primary placeholder-content-subtle focus:outline-none transition"
+                  className="w-full bg-surface-secondary border border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition caret-white"
                 />
               </div>
               <div className="space-y-1">
-                <label className="block text-content-secondary font-medium">Last Name</label>
+                <label className="block text-slate-200 dark:text-slate-200 font-medium">Last Name</label>
                 <input
                   type="text"
                   required
@@ -103,13 +103,13 @@ export const RegisterPage: React.FC = () => {
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
                   placeholder="Vance"
-                  className="w-full bg-surface-secondary border border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-content-primary placeholder-content-subtle focus:outline-none transition"
+                  className="w-full bg-surface-secondary border border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition caret-white"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="block text-content-secondary font-medium">Email Address</label>
+              <label className="block text-slate-200 dark:text-slate-200 font-medium">Email Address</label>
               <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
                 <Mail className="w-4 h-4 text-content-muted" />
                 <input
@@ -119,13 +119,13 @@ export const RegisterPage: React.FC = () => {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="bg-transparent text-content-primary placeholder-content-subtle focus:outline-none w-full"
+                  className="bg-transparent text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-white"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="block text-content-secondary font-medium">Password</label>
+              <label className="block text-slate-200 dark:text-slate-200 font-medium">Password</label>
               <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
                 <Lock className="w-4 h-4 text-content-muted" />
                 <input
@@ -135,7 +135,7 @@ export const RegisterPage: React.FC = () => {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="bg-transparent text-content-primary placeholder-content-subtle focus:outline-none w-full"
+                  className="bg-transparent text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-white"
                 />
               </div>
             </div>
@@ -145,7 +145,7 @@ export const RegisterPage: React.FC = () => {
               disabled={isLoading}
               className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-brand-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
             >
-              <span>{isLoading ? 'Creating Account...' : 'Get Started with Alpha Coach'}</span>
+              <span>{isLoading ? 'Creating Account...' : 'Get Started with Meta Coach'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
@@ -160,7 +160,7 @@ export const RegisterPage: React.FC = () => {
           </div>
           <div>
             <Link to="/" className="text-content-subtle hover:text-content-secondary transition">
-              ← Return to Alpha Coach Overview
+              ← Return to Meta Coach Overview
             </Link>
           </div>
         </div>

@@ -1,5 +1,5 @@
 """
-Alpha Coach - Companion Controller Layer
+Meta Coach - Companion Controller Layer
 Authoritative Version: 1.0.5
 Orchestrates Tray Actions, Real GUI Diagnostics Dialog, MT5 Terminal File Browser,
 Desktop Toast Notifications, Background Sync, Full History Sync, and End-to-End Pairing Lifecycles.
@@ -51,7 +51,7 @@ class CompanionController:
     # =========================================================================
 
     def open_dashboard(self, *args):
-        """Opens the Alpha Coach web dashboard."""
+        """Opens the Meta Coach web dashboard."""
         try:
             url = f"{self.bridge.web_url}/dashboard"
             companion_logger.info(f"Opening dashboard: {url}")
@@ -84,7 +84,7 @@ class CompanionController:
                 success = self.bridge.run_sync_cycle(days_back=90)
                 if success:
                     last_time = self.bridge.last_sync_time.strftime('%H:%M:%S') if self.bridge.last_sync_time else 'Just now'
-                    self.notify("Sync Complete", f"Successfully synchronized with Alpha Coach at {last_time}.")
+                    self.notify("Sync Complete", f"Successfully synchronized with Meta Coach at {last_time}.")
                 else:
                     err = self.bridge.last_error_message or "Unknown error"
                     self.notify("Sync Failed", f"Synchronization could not complete: {err}")
@@ -142,7 +142,7 @@ class CompanionController:
             self.is_pairing = True
             try:
                 companion_logger.info("Re-pairing initiated by user...")
-                self.notify("Pairing Initiated", "Opening browser for 1-click Alpha Coach authorization...")
+                self.notify("Pairing Initiated", "Opening browser for 1-click Meta Coach authorization...")
                 self.bridge.device_token = ""
                 self.bridge.save_config()
                 self.bridge.state = BridgeState.UNPAIRED
@@ -172,7 +172,7 @@ class CompanionController:
                     self.notify("Update Available", msg)
                     webbrowser.open(download_url)
                 else:
-                    self.notify("Alpha Coach Companion", msg)
+                    self.notify("Meta Coach Companion", msg)
             except Exception as e:
                 companion_logger.error(f"Update check failed: {e}")
                 self.notify("Update Check", f"Could not verify updates: {e}")
@@ -291,7 +291,7 @@ class CompanionController:
                 
                 diag_lines = [
                     f"==================================================",
-                    f"  ALPHA COACH MT5 COMPANION — DIAGNOSTICS REPORT",
+                    f"  META COACH MT5 COMPANION — DIAGNOSTICS REPORT",
                     f"  Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
                     f"==================================================",
                     f"",

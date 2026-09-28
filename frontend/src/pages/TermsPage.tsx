@@ -37,7 +37,7 @@ export const TermsPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="text-base sm:text-lg font-bold text-content-primary">1. Acceptance of Terms</h2>
             <p>
-              By accessing, registering for, or using the Alpha Coach software application, website, local MT5 bridge, or related services (collectively, the "Platform"), provided by [COMPANY LEGAL NAME] ("we", "us", or "our"), you agree to be bound by these Terms of Service and Conditions ("Terms"). If you do not agree with any part of these Terms, you must immediately cease all use of the Platform.
+              By accessing, registering for, or using the Meta Coach software application, website, local MT5 bridge, or related services (collectively, the "Platform"), provided by [COMPANY LEGAL NAME] ("we", "us", or "our"), you agree to be bound by these Terms of Service and Conditions ("Terms"). If you do not agree with any part of these Terms, you must immediately cease all use of the Platform.
             </p>
           </section>
 
@@ -50,7 +50,7 @@ export const TermsPage: React.FC = () => {
                 <span>Non-Advisory & Analytical Scope</span>
               </div>
               <p className="text-xs text-content-muted">
-                Alpha Coach is strictly a personal software application designed for trade journaling, statistical performance analysis, position reconstruction, and behavioral self-reflection. Alpha Coach is NOT a registered financial advisor, broker-dealer, commodity trading advisor, or investment manager. Nothing on the Platform constitutes personalized financial, investment, legal, or tax advice.
+                Meta Coach is strictly a personal software application designed for trade journaling, statistical performance analysis, position reconstruction, and behavioral self-reflection. Meta Coach is NOT a registered financial advisor, broker-dealer, commodity trading advisor, or investment manager. Nothing on the Platform constitutes personalized financial, investment, legal, or tax advice.
               </p>
             </div>
             <p>
@@ -70,7 +70,7 @@ export const TermsPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="text-base sm:text-lg font-bold text-content-primary">4. MT5 Connection & Zero-Password Model</h2>
             <p>
-              Alpha Coach utilizes a local desktop bridge script that interacts with your locally installed MetaTrader 5 client via official IPC APIs. Alpha Coach does not request, receive, or store your MT5 or broker login passwords. You are solely responsible for:
+              Meta Coach utilizes a local desktop bridge script that interacts with your locally installed MetaTrader 5 client via official IPC APIs. Meta Coach does not request, receive, or store your MT5 or broker login passwords. You are solely responsible for:
             </p>
             <ul className="list-disc pl-5 space-y-1 text-content-muted text-xs">
               <li>Maintaining the security of your local desktop machine and MT5 terminal installation.</li>

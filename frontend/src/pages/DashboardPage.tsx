@@ -11,9 +11,7 @@ import {
   Target,
   BarChart3,
   Layers,
-  ChevronRight,
-  Zap,
-  ArrowUpRight
+  ChevronRight
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -138,43 +136,6 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Top Banner / Welcome & Quick Stats */}
-      <div className="framer-card p-6 sm:p-8 rounded-3xl relative overflow-hidden bg-surface">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider">
-              <Zap className="w-3.5 h-3.5 text-brand-500" />
-              <span>Alpha Coach Performance OS</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-content-primary tracking-tight">
-              Trading Terminal & Performance Hub
-            </h1>
-            <p className="text-xs sm:text-sm text-content-muted max-w-2xl">
-              {selectedAccount
-                ? `Connected to ${selectedAccount.broker_name} (Account ••••${selectedAccount.account_number.slice(-4)})`
-                : `Consolidated multi-asset analysis across all synchronized MT5 trading accounts`}
-            </p>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <Link
-              to="/journal"
-              className="px-4 py-2.5 bg-surface-secondary hover:bg-surface-elevated text-content-primary rounded-xl text-xs font-bold border border-border-subtle hover:border-border-strong transition-all shadow-sm active:scale-95"
-            >
-              Open Journal
-            </Link>
-            <Link
-              to="/ai-coach"
-              className="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-500/25 transition-all active:scale-95 flex items-center gap-1.5"
-            >
-              <span>Ask AI Coach</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Account Metric Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Net P/L */}

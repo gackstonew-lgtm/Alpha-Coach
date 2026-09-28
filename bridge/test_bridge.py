@@ -1,5 +1,5 @@
 """
-Automated Verification Suite for Alpha Coach MT5 Bridge
+Automated Verification Suite for Meta Coach MT5 Bridge
 Tests payload formatting, 3-month date range generation, open positions collection,
 full history generation, reconciliation telemetry, 1-click pairing flow, and readiness state machine.
 """

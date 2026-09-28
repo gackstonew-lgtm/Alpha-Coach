@@ -114,12 +114,12 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
 
         {/* Right Controls */}
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          {/* Gamification Level & XP Badge (Desktop Only) */}
+          {/* Rewards Level & XP Badge (Desktop Only) */}
           {progression && (
             <NavLink
-              to="/gamification"
+              to="/rewards"
               className="hidden lg:inline-flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold text-amber-600 dark:text-amber-400 shadow-sm transition"
-              title="View Trader Progression & XP Achievements"
+              title="View Rewards, Trader Progression & XP Achievements"
             >
               <Trophy className="w-3.5 h-3.5 text-amber-500" />
               <span>Lv.{progression.currentLevel || progression.current_level || 1} Trader</span>
@@ -241,7 +241,7 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
 
                     {progression && (
                       <NavLink
-                        to="/gamification"
+                        to="/rewards"
                         onClick={() => setShowUserDropdown(false)}
                         className="flex items-center justify-between hover:bg-surface-secondary/80 p-1.5 rounded-xl transition"
                       >

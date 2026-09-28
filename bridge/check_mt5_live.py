@@ -9,7 +9,7 @@ from alpha_coach_bridge import AlphaCoachBridge
 
 bridge = AlphaCoachBridge(api_url='https://alpha-coach-pi.vercel.app/api/v1')
 print("=" * 60)
-print("  ALPHA COACH — MT5 TERMINAL & CLOUD CONNECTIVITY TEST")
+print("  META COACH — MT5 TERMINAL & CLOUD CONNECTIVITY TEST")
 print("=" * 60)
 
 # 1. Local MT5 terminal check
@@ -31,15 +31,15 @@ if acc:
 else:
     print("2. MT5 Account:           None")
 
-# 3. Alpha Coach Cloud Health
+# 3. Meta Coach Cloud Health
 try:
     health_resp = requests.get('https://alpha-coach-pi.vercel.app/api/health', timeout=10)
     data = health_resp.json()
-    print(f"3. Alpha Coach API:       HTTP {health_resp.status_code} ({data.get('status')})")
+    print(f"3. Meta Coach API:       HTTP {health_resp.status_code} ({data.get('status')})")
     print(f"   Database Status:       {data.get('database', {}).get('status')}")
     print(f"   Authentication:        {data.get('authentication', {}).get('authority')}")
 except Exception as e:
-    print(f"3. Alpha Coach API:       Error ({e})")
+    print(f"3. Meta Coach API:       Error ({e})")
 
 # 4. Fetch Real MT5 Deals, Orders, and Positions
 history = bridge.fetch_history(days_back=90)

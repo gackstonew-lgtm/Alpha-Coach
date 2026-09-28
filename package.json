@@ -1,7 +1,7 @@
 {
   "name": "alpha-coach",
   "version": "1.0.4",
-  "description": "Alpha Coach - Professional Automated MT5 Trading Journal & Trading Performance OS",
+  "description": "Meta Coach - Professional Automated MT5 Trading Journal & Trading Performance OS",
   "scripts": {
     "dev": "cd frontend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",

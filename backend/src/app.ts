@@ -107,7 +107,7 @@ app.get(['/', '/api', '/api/health', '/health'], async (req, res) => {
   res.status(statusCode).json({
     success: isHealthy,
     status: isHealthy ? 'ONLINE' : 'UNAVAILABLE',
-    service: 'Alpha Coach Performance API',
+    service: 'Meta Coach Performance API',
     version: BUILD_INFO.version,
     buildVersion: BUILD_INFO.version,
     databaseProvider: diag.databaseProvider,
@@ -178,7 +178,7 @@ app.use((req, res) => {
 
 // Global Error Handler (Standardized Phase 16 JSON)
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('[Alpha Coach API Error]:', err);
+  console.error('[Meta Coach API Error]:', err);
   res.status(err.status || 500).json({
     success: false,
     error: {

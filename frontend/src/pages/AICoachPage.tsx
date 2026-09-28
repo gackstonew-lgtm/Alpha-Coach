@@ -29,7 +29,7 @@ export const AICoachPage: React.FC = () => {
     {
       id: 'msg-welcome',
       sender: 'coach',
-      text: "👋 Welcome to your **Alpha Coach AI Performance Advisor**.\n\nI analyze your synchronized MT5 journal data to extract objective performance patterns, losing trade friction points, session expectancy, and risk rule compliance.",
+      text: "👋 Welcome to your **Meta Coach AI Performance Advisor**.\n\nI analyze your synchronized MT5 journal data to extract objective performance patterns, losing trade friction points, session expectancy, and risk rule compliance.",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -164,7 +164,7 @@ export const AICoachPage: React.FC = () => {
         {isLoading && (
           <div className="flex items-center space-x-2 text-xs text-content-muted p-4 bg-surface-secondary rounded-2xl w-fit border border-border-subtle">
             <div className="w-2 h-2 rounded-full bg-brand-primary animate-ping" />
-            <span>Alpha Coach is analyzing your trading records...</span>
+            <span>Meta Coach is analyzing your trading records...</span>
           </div>
         )}
       </div>
@@ -176,7 +176,7 @@ export const AICoachPage: React.FC = () => {
           value={inputText}
           onChange={e => setInputText(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
-          placeholder="Ask Alpha Coach anything about your trades, sessions, win rates, or risk habits..."
+          placeholder="Ask Meta Coach anything about your trades, sessions, win rates, or risk habits..."
           className="bg-transparent text-xs text-content-primary placeholder-content-muted px-3 py-2 focus:outline-none flex-1"
         />
         <button

@@ -42,7 +42,7 @@ export const PairDevicePage: React.FC = () => {
     } else {
       setIsLoading(false);
       setError({
-        message: 'No pairing session provided in URL. Please initiate pairing from the Alpha Coach MT5 Bridge application.',
+        message: 'No pairing session provided in URL. Please initiate pairing from the Meta Coach MT5 Bridge application.',
         code: 'MISSING_SESSION_PARAM'
       });
     }
@@ -60,7 +60,7 @@ export const PairDevicePage: React.FC = () => {
         setRejected(true);
       } else if (data.status === 'EXPIRED') {
         setError({
-          message: 'This pairing session has expired (10-minute limit). Please restart the Alpha Coach MT5 Bridge to generate a fresh pairing link.',
+          message: 'This pairing session has expired (10-minute limit). Please restart the Meta Coach MT5 Bridge to generate a fresh pairing link.',
           code: 'PAIRING_SESSION_EXPIRED'
         });
       }
@@ -154,7 +154,7 @@ export const PairDevicePage: React.FC = () => {
             Authorize MT5 Desktop Bridge
           </h1>
           <p className="text-xs text-content-muted">
-            Connect your local MetaTrader 5 terminal to your Alpha Coach account
+            Connect your local MetaTrader 5 terminal to your Meta Coach account
           </p>
         </div>
 
@@ -166,7 +166,7 @@ export const PairDevicePage: React.FC = () => {
               <span>Authentication Required</span>
             </div>
             <p className="text-content-secondary">
-              Please sign in to your Alpha Coach account to authorize this MT5 Bridge device.
+              Please sign in to your Meta Coach account to authorize this MT5 Bridge device.
             </p>
             <Link
               to={`/login?redirect=${encodeURIComponent(`/pair?session=${sessionCode || ''}`)}`}
@@ -237,7 +237,7 @@ export const PairDevicePage: React.FC = () => {
             <div className="space-y-1">
               <h3 className="font-extrabold text-sm text-emerald-400">Device Successfully Connected!</h3>
               <p className="text-content-secondary">
-                Your Alpha Coach MT5 Bridge is now paired and authorized. You can switch back to the desktop application to begin synchronizing your trading activity.
+                Your Meta Coach MT5 Bridge is now paired and authorized. You can switch back to the desktop application to begin synchronizing your trading activity.
               </p>
             </div>
             <div className="pt-2 flex flex-col gap-2">
@@ -295,7 +295,7 @@ export const PairDevicePage: React.FC = () => {
                 <span>Zero Broker Password Exposure</span>
               </div>
               <p className="text-[11px] text-content-secondary leading-relaxed">
-                Authorizing gives the local MT5 Bridge permission to send your read-only orders and deal histories to your private Alpha Coach journal.
+                Authorizing gives the local MT5 Bridge permission to send your read-only orders and deal histories to your private Meta Coach journal.
               </p>
             </div>
 

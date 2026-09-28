@@ -1,7 +1,7 @@
 @echo off
-title Alpha Coach MT5 Terminal Bridge
+title Meta Coach MT5 Terminal Bridge
 echo =========================================================================
-echo    ALPHA COACH - LOCAL MT5 DESKTOP TERMINAL SYNCHRONIZATION BRIDGE
+echo    META COACH - LOCAL MT5 DESKTOP TERMINAL SYNCHRONIZATION BRIDGE
 echo =========================================================================
 echo.
 echo Launching Interactive MT5 Bridge CLI...

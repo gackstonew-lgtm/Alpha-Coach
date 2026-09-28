@@ -8,16 +8,16 @@ const PORT = process.env.PORT || 4000;
 async function bootstrap() {
   try {
     await initDatabase();
-    console.log('[Alpha Coach] Relational Database Initialized & Seeded.');
+    console.log('[Meta Coach] Relational Database Initialized & Seeded.');
 
     server.listen(PORT, () => {
       console.log(`=======================================================`);
-      console.log(`🚀 Alpha Coach Backend API running on port ${PORT}`);
+      console.log(`🚀 Meta Coach Backend API running on port ${PORT}`);
       console.log(`📡 MT5 Synchronization Bridge Endpoint: http://localhost:${PORT}/api/v1/mt5/sync`);
       console.log(`=======================================================`);
     });
   } catch (err) {
-    console.error('[Alpha Coach Bootstrap Failed]:', err);
+    console.error('[Meta Coach Bootstrap Failed]:', err);
     process.exit(1);
   }
 }

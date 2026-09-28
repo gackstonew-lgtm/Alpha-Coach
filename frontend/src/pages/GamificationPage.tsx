@@ -45,7 +45,7 @@ export const GamificationPage: React.FC = () => {
             <Trophy className="w-5 h-5" />
           </span>
           <h1 className="text-2xl font-bold tracking-tight text-content-primary">
-            Gamification & Discipline Master
+            Rewards & Discipline Master
           </h1>
         </div>
         <p className="text-xs text-content-secondary mt-1">

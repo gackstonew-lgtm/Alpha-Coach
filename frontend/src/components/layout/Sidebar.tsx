@@ -39,7 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { id: 'strategy-lab', name: 'Strategy Lab', to: '/strategy-lab', icon: FlaskConical },
     { id: 'risk-guardian', name: 'Risk Guardian', to: '/risk-guardian', icon: ShieldAlert },
     { id: 'ai-coach', name: 'AI Coach', to: '/ai-coach', icon: Bot },
-    { id: 'gamification', name: 'Gamification', to: '/gamification', icon: Trophy },
+    { id: 'rewards', name: 'Rewards', to: '/rewards', icon: Trophy },
     { id: 'bridge', name: 'Bridge', to: '/bridge', icon: Cpu },
     { id: 'settings', name: 'Settings', to: '/settings', icon: Settings },
     ...(user?.role === 'admin'
@@ -109,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Footer Meta */}
         <div className="p-3.5 border-t border-border-subtle bg-surface-secondary/40 text-[11px] text-content-muted flex items-center justify-between">
-          <span className="font-medium">Alpha Coach v1.0</span>
+          <span className="font-medium">Meta Coach v1.0</span>
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-semibold border border-emerald-500/20">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
             MT5 Ready

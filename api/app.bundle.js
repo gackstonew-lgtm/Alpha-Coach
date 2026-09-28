@@ -51976,7 +51976,7 @@ async function seedInitialData(db) {
       { id: "ach-2", code: "JOURNAL_STREAK_7", title: "7-Day Discipline", description: "Maintained a 7-day continuous trade journaling streak.", category: "DISCIPLINE", xp: 150, icon: "Flame" },
       { id: "ach-3", code: "REVIEW_25_LOSSES", title: "Loss Master", description: "Reviewed 25 losing trades to extract key lessons without revenge trading.", category: "ANALYSIS", xp: 200, icon: "ShieldCheck" },
       { id: "ach-4", code: "RULE_COMPLIANT_50", title: "Risk Guardian", description: "Completed 50 trades strictly within configured risk limits.", category: "RISK_MANAGEMENT", xp: 250, icon: "Award" },
-      { id: "ach-5", code: "TRADES_100", title: "Century Club", description: "Analyzed over 100 reconstructed positions on Alpha Coach.", category: "CONSISTENCY", xp: 300, icon: "Trophy" }
+      { id: "ach-5", code: "TRADES_100", title: "Century Club", description: "Analyzed over 100 reconstructed positions on Meta Coach.", category: "CONSISTENCY", xp: 300, icon: "Trophy" }
     ];
     for (const ach of initialAchievements) {
       await db.run(
@@ -54049,8 +54049,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "957661a3622499068421670fcb76f9d786d687d7",
-  buildTimestamp: "2026-09-28T08:52:32.920Z",
+  gitCommit: "10f9ae6c01bfc4bbfbf5a4b64c411e0ab701cbfc",
+  buildTimestamp: "2026-09-28T16:22:44.873Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -56116,7 +56116,7 @@ Based on your synchronized journal data (${overview.totalTrades} positions):
 - **Primary Symbol:** ${dna.mostTradedSymbol?.symbol || "N/A"}
 - **Primary Session:** ${dna.mostActiveSession?.session || "N/A"}
 
-*Disclaimer: Alpha Coach AI provides strictly descriptive analytics on your historical journal logs and does not provide financial or trading advice.*`;
+*Disclaimer: Meta Coach AI provides strictly descriptive analytics on your historical journal logs and does not provide financial or trading advice.*`;
     }
     return {
       answer,
@@ -56494,7 +56494,7 @@ app.get(["/", "/api", "/api/health", "/health"], async (req, res) => {
   res.status(statusCode).json({
     success: isHealthy,
     status: isHealthy ? "ONLINE" : "UNAVAILABLE",
-    service: "Alpha Coach Performance API",
+    service: "Meta Coach Performance API",
     version: BUILD_INFO.version,
     buildVersion: BUILD_INFO.version,
     databaseProvider: diag.databaseProvider,
@@ -56558,7 +56558,7 @@ app.use((req, res) => {
   });
 });
 app.use((err, req, res, next) => {
-  console.error("[Alpha Coach API Error]:", err);
+  console.error("[Meta Coach API Error]:", err);
   res.status(err.status || 500).json({
     success: false,
     error: {

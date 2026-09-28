@@ -48,7 +48,7 @@ export const PwaInstallPrompt: React.FC = () => {
 
   return (
     <aside
-      aria-label="Install Alpha Coach application prompt"
+      aria-label="Install Meta Coach application prompt"
       className="fixed z-50 bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 max-w-sm w-full framer-card p-4 rounded-2xl bg-surface border border-border-strong shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300 text-xs"
       style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
     >
@@ -59,7 +59,7 @@ export const PwaInstallPrompt: React.FC = () => {
             <AlphaCoachLogo size="sm" showWordmark={false} />
           </div>
           <div>
-            <h3 className="font-bold text-content-primary text-xs">Install Alpha Coach</h3>
+            <h3 className="font-bold text-content-primary text-xs">Install Meta Coach</h3>
             <p className="text-[11px] text-content-muted">Fast standalone desktop & mobile app</p>
           </div>
         </div>

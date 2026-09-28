@@ -1,5 +1,5 @@
 """
-Alpha Coach - Interactive Terminal CLI Bridge
+Meta Coach - Interactive Terminal CLI Bridge
 Allows traders to test connectivity, view detected MT5 accounts, trigger instant 3-month sync,
 run 1-click browser pairing, or run background live synchronization.
 """
@@ -29,12 +29,12 @@ except ImportError:
 
 def print_banner():
     print(Fore.CYAN + Style.BRIGHT + r"""
-   _____  .__          .__               _________                     .__     
-  /  _  \ |  | ______ |  |__ _____      \_   ___ \  _________    ____ |  |__  
- /  /_\  \|  | \____ \|  |  \\__  \     /    \  \/ /  _ \__  \ _/ ___\|  |  \ 
-/    |    \  |_|  |_> >   Y  \/ __ \_   \     \___(  <_> ) __ \\  \___|   Y  \
-\____|__  /____/   __/|___|  (____  /    \______  /\____(____  /\___  >___|  /
-        \/     |__|        \/     \/            \/           \/     \/     \/ 
+   _____ _________________________     _________                     .__     
+  /     \\_   _____/\__    ___/  _  \   \_   ___ \  _________    ____ |  |__  
+ /  \ /  \|    __)_   |    | /  /_\  \  /    \  \/ /  _ \__  \ _/ ___\|  |  \ 
+/    Y    \        \  |    |/    |    \ \     \___(  <_> ) __ \\  \___|   Y  \
+\____|__  /_______  /  |____|\____|__  /  \______  /\____(____  /\___  >___|  /
+        \/        \/                 \/          \/           \/     \/     \/ 
     """ + Style.RESET_ALL)
     print(Fore.GREEN + "       AUTOMATED MT5 TRADING JOURNAL & PERFORMANCE OS BRIDGE" + Style.RESET_ALL)
     print(Fore.BLUE + "=================================================================" + Style.RESET_ALL)
@@ -53,7 +53,7 @@ def main_menu():
         print(f"  MT5 Readiness:  {Fore.GREEN + msg if ready else Fore.YELLOW + msg}{Style.RESET_ALL}")
 
         print(f"\n{Style.BRIGHT}Available Actions:{Style.RESET_ALL}")
-        print(f"  [1] 🚀 {Fore.GREEN}1-Click Browser Authorization (Connect to Alpha Coach Account){Style.RESET_ALL}")
+        print(f"  [1] 🚀 {Fore.GREEN}1-Click Browser Authorization (Connect to Meta Coach Account){Style.RESET_ALL}")
         print(f"  [2] ⚡ {Fore.CYAN}Sync Real MT5 Terminal (Previous 3 Months + Open Positions){Style.RESET_ALL}")
         print(f"  [3] 🔄 {Fore.MAGENTA}Start Background Auto-Sync Daemon (30s interval){Style.RESET_ALL}")
         print(f"  [4] 🧪 {Fore.YELLOW}Seed Authentic 3-Month Multi-Asset Dataset (Verification Mode){Style.RESET_ALL}")
@@ -82,7 +82,7 @@ def main_menu():
         elif choice == '4':
             print(f"\n{Fore.YELLOW}[Action] Generating 3-Month Realistic MT5 Data (184 positions, scale-ins, partials, commissions)...{Style.RESET_ALL}")
             mock_data = generate_mock_3month_data()
-            print(f"{Fore.CYAN}Connecting and synchronizing payload to Alpha Coach...{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}Connecting and synchronizing payload to Meta Coach...{Style.RESET_ALL}")
             payload = {
                 "accountInfo": mock_data["accountInfo"],
                 "deals": mock_data["deals"],
@@ -127,7 +127,7 @@ def main_menu():
             time.sleep(1)
 
         elif choice == '0':
-            print(f"\n{Fore.GREEN}Thank you for using Alpha Coach! Exiting...{Style.RESET_ALL}\n")
+            print(f"\n{Fore.GREEN}Thank you for using Meta Coach! Exiting...{Style.RESET_ALL}\n")
             sys.exit(0)
 
 if __name__ == "__main__":

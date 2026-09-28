@@ -331,7 +331,7 @@ async function seedInitialData(db: IDatabase) {
       { id: 'ach-2', code: 'JOURNAL_STREAK_7', title: '7-Day Discipline', description: 'Maintained a 7-day continuous trade journaling streak.', category: 'DISCIPLINE', xp: 150, icon: 'Flame' },
       { id: 'ach-3', code: 'REVIEW_25_LOSSES', title: 'Loss Master', description: 'Reviewed 25 losing trades to extract key lessons without revenge trading.', category: 'ANALYSIS', xp: 200, icon: 'ShieldCheck' },
       { id: 'ach-4', code: 'RULE_COMPLIANT_50', title: 'Risk Guardian', description: 'Completed 50 trades strictly within configured risk limits.', category: 'RISK_MANAGEMENT', xp: 250, icon: 'Award' },
-      { id: 'ach-5', code: 'TRADES_100', title: 'Century Club', description: 'Analyzed over 100 reconstructed positions on Alpha Coach.', category: 'CONSISTENCY', xp: 300, icon: 'Trophy' }
+      { id: 'ach-5', code: 'TRADES_100', title: 'Century Club', description: 'Analyzed over 100 reconstructed positions on Meta Coach.', category: 'CONSISTENCY', xp: 300, icon: 'Trophy' }
     ];
 
     for (const ach of initialAchievements) {

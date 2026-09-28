@@ -37,7 +37,7 @@ export const CookiePolicyPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="text-base sm:text-lg font-bold text-content-primary">1. Overview</h2>
             <p>
-              This Cookie Policy explains how [COMPANY LEGAL NAME] ("Alpha Coach", "we", "us") utilizes browser cookies and local client-side storage technologies when you access our web application.
+              This Cookie Policy explains how [COMPANY LEGAL NAME] ("Meta Coach", "we", "us") utilizes browser cookies and local client-side storage technologies when you access our web application.
             </p>
           </section>
 
@@ -50,7 +50,7 @@ export const CookiePolicyPage: React.FC = () => {
                 <span>Strictly Essential Storage Only</span>
               </div>
               <p className="text-xs text-content-muted">
-                Alpha Coach does <strong>NOT</strong> use third-party advertising cookies, cross-site trackers, or behavioral profiling pixels. We only utilize essential browser storage mechanisms required for authentication and interface rendering.
+                Meta Coach does <strong>NOT</strong> use third-party advertising cookies, cross-site trackers, or behavioral profiling pixels. We only utilize essential browser storage mechanisms required for authentication and interface rendering.
               </p>
             </div>
           </section>

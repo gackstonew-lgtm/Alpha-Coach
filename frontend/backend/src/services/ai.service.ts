@@ -297,7 +297,7 @@ export class AICoachService {
     } else if (q.includes('review') || q.includes('which trade')) {
       answer = `### Recommended Trades For Review\n1. Trades with largest drawdown impact (e.g. largest loss of -$${overview.largestLoss}).\n2. Trades where stop loss was widened or removed.\n3. Trades executed outside your primary session (${dna.mostActiveSession?.session || 'Main Session'}).\n4. Reviewing unreviewed losing trades directly in the Journal tab grants +50 XP toward your Discipline Streak.`;
     } else {
-      answer = `### Historical Data Analysis\nBased on your synchronized journal data (${overview.totalTrades} positions):\n\n- **Net P/L:** $${overview.netProfit.toFixed(2)}\n- **Win Rate:** ${overview.winRate}%\n- **Average R-Multiple:** ${overview.averageR}R\n- **Primary Symbol:** ${dna.mostTradedSymbol?.symbol || 'N/A'}\n- **Primary Session:** ${dna.mostActiveSession?.session || 'N/A'}\n\n*Disclaimer: Alpha Coach AI provides strictly descriptive analytics on your historical journal logs and does not provide financial or trading advice.*`;
+      answer = `### Historical Data Analysis\nBased on your synchronized journal data (${overview.totalTrades} positions):\n\n- **Net P/L:** $${overview.netProfit.toFixed(2)}\n- **Win Rate:** ${overview.winRate}%\n- **Average R-Multiple:** ${overview.averageR}R\n- **Primary Symbol:** ${dna.mostTradedSymbol?.symbol || 'N/A'}\n- **Primary Session:** ${dna.mostActiveSession?.session || 'N/A'}\n\n*Disclaimer: Meta Coach AI provides strictly descriptive analytics on your historical journal logs and does not provide financial or trading advice.*`;
     }
 
     return {

@@ -13,7 +13,6 @@ import {
 } from '../components/landing/LandingDemoComponents';
 import {
   ArrowRight,
-  ShieldCheck,
   Zap,
   LineChart,
   BookOpen,
@@ -79,7 +78,7 @@ export const LandingPage: React.FC = () => {
     },
     {
       icon: Trophy,
-      title: 'Discipline Master / Gamification',
+      title: 'Discipline Master / Rewards',
       description: 'XP and progression rewards for journaling consistency, risk limit adherence, and reviewing losing trades (+50 XP).',
       badge: 'Discipline'
     },
@@ -106,16 +105,6 @@ export const LandingPage: React.FC = () => {
         {/* 1. HERO SECTION                                                           */}
         {/* ========================================================================= */}
         <section className="pt-12 sm:pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-8">
-          {/* Trust Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-secondary border border-border-strong text-xs font-semibold text-content-secondary shadow-sm animate-in fade-in duration-300">
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>Zero-Password Architecture</span>
-            <span className="text-content-subtle">•</span>
-            <span>Local MT5 Python Bridge</span>
-            <span className="text-content-subtle">•</span>
-            <span>Read-Only Sync</span>
-          </div>
-
           {/* Headline */}
           <div className="max-w-4xl mx-auto space-y-4">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-content-primary leading-[1.1] animate-in fade-in slide-in-from-bottom-2 duration-400">
@@ -125,7 +114,7 @@ export const LandingPage: React.FC = () => {
               </span>
             </h1>
             <p className="text-sm sm:text-base lg:text-lg text-content-secondary max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-3 duration-500">
-              Alpha Coach transforms raw MetaTrader 5 trading activity into structured journals, mathematical performance metrics, disciplined risk awareness, and data-grounded AI coaching.
+              Meta Coach transforms raw MetaTrader 5 trading activity into structured journals, mathematical performance metrics, disciplined risk awareness, and data-grounded AI coaching.
             </p>
           </div>
 
@@ -198,7 +187,7 @@ export const LandingPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
             <div>
               <h2 className="text-xs font-bold uppercase tracking-widest text-content-muted">Interactive Preview</h2>
-              <p className="text-lg font-bold text-content-primary">Alpha Coach Performance Hub</p>
+              <p className="text-lg font-bold text-content-primary">Meta Coach Performance Hub</p>
             </div>
 
             {/* Tab Switcher */}
@@ -228,7 +217,7 @@ export const LandingPage: React.FC = () => {
                 <div className="w-3 h-3 rounded-full bg-amber-500/80" />
                 <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
                 <span className="ml-2 font-mono text-xs font-semibold text-content-muted">
-                  ALPHA_COACH_TERMINAL // MT5 BRIDGE: CONNECTED
+                  META_COACH_TERMINAL // MT5 BRIDGE: CONNECTED
                 </span>
               </div>
               <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-content-muted">
@@ -256,7 +245,7 @@ export const LandingPage: React.FC = () => {
         </section>
 
         {/* ========================================================================= */}
-        {/* 3. WHY ALPHA COACH / PROGRESSION PIPELINE                                  */}
+        {/* 3. WHY META COACH / PROGRESSION PIPELINE                                  */}
         {/* ========================================================================= */}
         <section
           ref={pipelineRef}
@@ -264,9 +253,9 @@ export const LandingPage: React.FC = () => {
         >
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <h2 className="text-xs font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">The Problem & Solution</h2>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">Why Traders Need Alpha Coach</h3>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">Why Traders Need Meta Coach</h3>
             <p className="text-xs sm:text-sm text-content-secondary leading-relaxed">
-              MetaTrader 5 stores raw financial deal tickets — not trading context. Alpha Coach bridges the gap between raw execution and disciplined performance mastery.
+              MetaTrader 5 stores raw financial deal tickets — not trading context. Meta Coach bridges the gap between raw execution and disciplined performance mastery.
             </p>
           </div>
 
@@ -297,7 +286,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <h4 className="text-base font-bold text-content-primary">Automated Lifecycle Math</h4>
               <p className="text-xs text-content-muted leading-relaxed">
-                Alpha Coach automatically groups tickets into unified lifecycles, accurately computing volume-weighted prices, total commissions, swaps, net P/L, and holding durations.
+                Meta Coach automatically groups tickets into unified lifecycles, accurately computing volume-weighted prices, total commissions, swaps, net P/L, and holding durations.
               </p>
             </div>
 
@@ -333,10 +322,10 @@ export const LandingPage: React.FC = () => {
                   <span>The Quantitative Engine</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">
-                  7-Stage Lifecycle Methodology
+                  Setup & Synchronization Methodology
                 </h3>
                 <p className="text-xs sm:text-sm text-content-muted max-w-xl">
-                  Every trade passes through our deterministic mathematical framework before entering your journal.
+                  Connect your local MetaTrader 5 execution to your private journal in four seamless steps.
                 </p>
               </div>
 
@@ -349,26 +338,39 @@ export const LandingPage: React.FC = () => {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
               {[
-                { step: '01', name: 'Connect', desc: 'Official MT5 API' },
-                { step: '02', name: 'Sync', desc: '3-Mo Deal Depth' },
-                { step: '03', name: 'Reconstruct', desc: 'Position Lifecycle' },
-                { step: '04', name: 'Analyze', desc: 'Expectancy & R-Math' },
-                { step: '05', name: 'Journal', desc: 'Facts + Psychology' },
-                { step: '06', name: 'Protect', desc: 'Smart Risk Guardian' },
-                { step: '07', name: 'Review', desc: 'Grounded AI Coach' }
+                {
+                  step: '01',
+                  name: 'Install MetaTrader 5',
+                  desc: 'Install MetaTrader 5 for Windows/MacBook, log in to your broker account, and keep it running.'
+                },
+                {
+                  step: '02',
+                  name: 'Install Companion App',
+                  desc: 'Download and run the Meta Coach MT5 Companion on the Windows machine where MetaTrader 5 is installed.'
+                },
+                {
+                  step: '03',
+                  name: 'Click Authorization',
+                  desc: 'Launching the Bridge automatically opens your browser to authorize your device. No manual token copying required.'
+                },
+                {
+                  step: '04',
+                  name: 'Automatic Background Sync',
+                  desc: 'The bridge imports complete untruncated trade history and tracks live open positions in real time.'
+                }
               ].map((s, idx) => (
                 <div
                   key={idx}
-                  style={{ transitionDelay: `${idx * 40}ms` }}
-                  className={`p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-1 transition-all duration-400 ${
+                  style={{ transitionDelay: `${idx * 60}ms` }}
+                  className={`p-5 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2 transition-all duration-400 ${
                     isMethodVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
                   }`}
                 >
                   <div className="text-xs font-mono font-bold text-brand-500">{s.step}</div>
-                  <div className="text-xs font-bold text-content-primary">{s.name}</div>
-                  <div className="text-[10px] text-content-muted">{s.desc}</div>
+                  <div className="text-sm font-bold text-content-primary">{s.name}</div>
+                  <div className="text-xs text-content-muted leading-relaxed">{s.desc}</div>
                 </div>
               ))}
             </div>
@@ -434,7 +436,7 @@ export const LandingPage: React.FC = () => {
                   Zero-Password Security Model
                 </h3>
                 <p className="text-xs sm:text-sm text-content-muted max-w-xl">
-                  We engineered Alpha Coach so you never have to trust any remote server with your broker password.
+                  We engineered Meta Coach so you never have to trust any remote server with your broker password.
                 </p>
               </div>
 
@@ -451,7 +453,7 @@ export const LandingPage: React.FC = () => {
               <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
                 <h5 className="font-bold text-content-primary">0 Broker Passwords</h5>
                 <p className="text-content-muted text-[11px] leading-relaxed">
-                  Alpha Coach never requests or stores MT5 passwords. Connection runs locally on your desktop.
+                  Meta Coach never requests or stores MT5 passwords. Connection runs locally on your desktop.
                 </p>
               </div>
               <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
@@ -533,7 +535,7 @@ export const LandingPage: React.FC = () => {
                 to="/register"
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-xs shadow-lg shadow-brand-500/25 transition active:scale-95"
               >
-                <span>Create Your Alpha Coach Account</span>
+                <span>Create Your Meta Coach Account</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
