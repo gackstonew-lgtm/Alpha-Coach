@@ -12,7 +12,11 @@
       "destination": "/api/index.js"
     },
     {
+<<<<<<< HEAD
       "source": "/((?!api|health|assets|manifest\\.webmanifest|manifest\\.json|sw\\.js|registerSW\\.js|workbox-[^/]+\\.js|offline\\.html|robots\\.txt|sitemap\\.xml|.*\\.(?:png|jpg|jpeg|svg|ico|webp|webmanifest|json|js|css|woff2)).*)",
+=======
+      "source": "/((?!api|health|.*\\..*).*)",
+>>>>>>> origin/main
       "destination": "/index.html"
     }
   ],
