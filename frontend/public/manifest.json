@@ -6,7 +6,8 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
   "background_color": "#050608",
   "theme_color": "#050608",
   "categories": ["finance", "productivity", "utilities"],
@@ -32,7 +33,7 @@
     {
       "src": "/logo.svg",
       "type": "image/svg+xml",
-      "sizes": "192x192 512x512",
+      "sizes": "any",
       "purpose": "any"
     }
   ],
