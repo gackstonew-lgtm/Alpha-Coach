@@ -55878,8 +55878,8 @@ var SyncService = class {
 // src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.6",
-  gitCommit: "eb323d4ce990e07e0d42988ba47e346f0a0b0b89",
-  buildTimestamp: "2026-09-28T19:46:02.425Z",
+  gitCommit: "7279956c5b65d335df9a0f84aa005e02908204f0",
+  buildTimestamp: "2026-09-28T20:18:42.692Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
