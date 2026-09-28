@@ -34,6 +34,7 @@ app.use(helmet({
 
 // Dynamic CORS configuration for production and local development
 const allowedOrigins = [
+  'https://alpha-coach-nine.vercel.app',
   'https://alpha-coach-pi.vercel.app',
   'https://alpha-coach.vercel.app',
   process.env.FRONTEND_URL,

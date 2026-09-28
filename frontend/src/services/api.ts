@@ -79,7 +79,7 @@ export function normalizeApiError(err: any): NormalizedApiError {
   };
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.origin.includes('localhost') ? 'http://localhost:4000/api/v1' : '/api/v1');
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 const USE_CUSTOM_BACKEND = Boolean(API_BASE_URL && API_BASE_URL.trim() !== '');
 
 // ─── Session-Invalid State Machine ────────────────────────────────────────────
