@@ -98,6 +98,16 @@ jobs:
         run: |
           npm ci || npm install
 
+      - name: Install Frontend Dependencies (provides esbuild)
+        run: |
+          cd frontend
+          npm ci || npm install
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci || npm install
+
       - name: Execute Serverless Bundler
         run: |
           node scripts/build-api-bundle.js
