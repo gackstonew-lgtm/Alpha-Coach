@@ -53,7 +53,8 @@ htmlcov/
 secrets/
 
 # --- Local Databases & Storage ---
-data/
+/data/
+/data/*.sqlite
 *.sqlite
 *.sqlite3
 *.db
