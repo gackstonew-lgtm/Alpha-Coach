@@ -26799,7 +26799,7 @@ var require_lodash = __commonJS({
       if (!value) {
         return value === 0 ? value : 0;
       }
-      value = toNumber(value);
+      value = toNumber2(value);
       if (value === INFINITY || value === -INFINITY) {
         var sign = value < 0 ? -1 : 1;
         return sign * MAX_INTEGER;
@@ -26810,7 +26810,7 @@ var require_lodash = __commonJS({
       var result = toFinite(value), remainder = result % 1;
       return result === result ? remainder ? result - remainder : result : 0;
     }
-    function toNumber(value) {
+    function toNumber2(value) {
       if (typeof value == "number") {
         return value;
       }
@@ -26885,7 +26885,7 @@ var require_lodash3 = __commonJS({
       if (!value) {
         return value === 0 ? value : 0;
       }
-      value = toNumber(value);
+      value = toNumber2(value);
       if (value === INFINITY || value === -INFINITY) {
         var sign = value < 0 ? -1 : 1;
         return sign * MAX_INTEGER;
@@ -26896,7 +26896,7 @@ var require_lodash3 = __commonJS({
       var result = toFinite(value), remainder = result % 1;
       return result === result ? remainder ? result - remainder : result : 0;
     }
-    function toNumber(value) {
+    function toNumber2(value) {
       if (typeof value == "number") {
         return value;
       }
@@ -27043,7 +27043,7 @@ var require_lodash7 = __commonJS({
       if (!value) {
         return value === 0 ? value : 0;
       }
-      value = toNumber(value);
+      value = toNumber2(value);
       if (value === INFINITY || value === -INFINITY) {
         var sign = value < 0 ? -1 : 1;
         return sign * MAX_INTEGER;
@@ -27054,7 +27054,7 @@ var require_lodash7 = __commonJS({
       var result = toFinite(value), remainder = result % 1;
       return result === result ? remainder ? result - remainder : result : 0;
     }
-    function toNumber(value) {
+    function toNumber2(value) {
       if (typeof value == "number") {
         return value;
       }
@@ -32586,7 +32586,7 @@ var require_transformers = __commonJS({
       }
     };
     exports2.toBoolean = toBoolean;
-    var toNumber = (value) => {
+    var toNumber2 = (value) => {
       if (typeof value === "string") {
         const parsedValue = parseFloat(value);
         if (!Number.isNaN(parsedValue)) {
@@ -32595,7 +32595,7 @@ var require_transformers = __commonJS({
       }
       return value;
     };
-    exports2.toNumber = toNumber;
+    exports2.toNumber = toNumber2;
     var toJson = (value) => {
       if (typeof value === "string") {
         try {
@@ -54049,8 +54049,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.5",
-  gitCommit: "65f2393846f822c025f2e4fdaa9780287e7f75dd",
-  buildTimestamp: "2026-09-28T07:27:07.761Z",
+  gitCommit: "957661a3622499068421670fcb76f9d786d687d7",
+  buildTimestamp: "2026-09-28T08:52:32.920Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -54753,6 +54753,33 @@ var trades_routes_default = router4;
 var import_express5 = __toESM(require_express2());
 
 // backend/src/services/analytics.service.ts
+function toNumber(val, fallback = 0) {
+  if (val === null || val === void 0 || val === "") {
+    return fallback;
+  }
+  if (typeof val === "number") {
+    return Number.isFinite(val) ? val : fallback;
+  }
+  const parsed = Number(val);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+function toIsoDateString(val) {
+  if (val === null || val === void 0) {
+    return "";
+  }
+  if (val instanceof Date || Object.prototype.toString.call(val) === "[object Date]") {
+    const d = val;
+    return isNaN(d.getTime()) ? "" : d.toISOString();
+  }
+  if (typeof val === "string") {
+    return val;
+  }
+  if (typeof val === "number") {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? "" : d.toISOString();
+  }
+  return "";
+}
 var AnalyticsService = class {
   static async getAccountPerformance(userId, accountId, filters) {
     const db = getDatabase();
@@ -54797,19 +54824,28 @@ var AnalyticsService = class {
     let currentBalance = 0;
     if (accountId && accountId !== "ALL") {
       const acc = await db.get(`SELECT balance FROM trading_accounts WHERE id = ?`, [accountId]);
-      if (acc) currentBalance = Number(acc.balance || 0);
+      if (acc) currentBalance = toNumber(acc.balance);
     } else {
       const accs = await db.query(`SELECT balance FROM trading_accounts WHERE user_id = ?`, [userId]);
-      currentBalance = accs.reduce((sum, a) => sum + Number(a.balance || 0), 0);
+      currentBalance = accs.reduce((sum, a) => sum + toNumber(a.balance), 0);
     }
-    const closedPositions = positions.filter((p) => p.status === "CLOSED");
-    closedPositions.sort((a, b) => new Date(a.close_time || a.open_time).getTime() - new Date(b.close_time || b.open_time).getTime());
-    const openTrades = positions.filter((p) => p.status === "OPEN").length;
+    const closedPositions = positions.filter((p) => (p.status || "").toUpperCase() === "CLOSED");
+    closedPositions.sort((a, b) => {
+      const dateA = toIsoDateString(a.close_time) || toIsoDateString(a.open_time);
+      const dateB = toIsoDateString(b.close_time) || toIsoDateString(b.open_time);
+      const timeA = dateA ? new Date(dateA).getTime() : 0;
+      const timeB = dateB ? new Date(dateB).getTime() : 0;
+      const safeTimeA = Number.isFinite(timeA) ? timeA : 0;
+      const safeTimeB = Number.isFinite(timeB) ? timeB : 0;
+      return safeTimeA - safeTimeB;
+    });
+    const openTrades = positions.filter((p) => (p.status || "").toUpperCase() === "OPEN").length;
     const totalTrades = closedPositions.length;
-    const totalRealizedProfit = closedPositions.reduce((sum, p) => sum + Number(p.net_profit || 0), 0);
+    const totalRealizedProfit = closedPositions.reduce((sum, p) => sum + toNumber(p.net_profit), 0);
     const startingBalance = currentBalance > 0 ? Math.max(0, currentBalance - totalRealizedProfit) : 0;
     if (totalTrades === 0) {
       return {
+        initialBalance: startingBalance,
         totalTrades: 0,
         openTrades,
         winningTrades: 0,
@@ -54877,9 +54913,9 @@ var AnalyticsService = class {
     const equityCurve = [];
     const dailyMap = /* @__PURE__ */ new Map();
     closedPositions.forEach((pos, idx) => {
-      const net = pos.net_profit;
-      totalCommissions += pos.commission_total || 0;
-      totalSwaps += pos.swap_total || 0;
+      const net = toNumber(pos.net_profit);
+      totalCommissions += toNumber(pos.commission_total);
+      totalSwaps += toNumber(pos.swap_total);
       cumulativeProfit += net;
       runningEquity += net;
       if (runningEquity > peakEquity) {
@@ -54889,8 +54925,9 @@ var AnalyticsService = class {
       const ddPct = peakEquity > 0 ? ddAmount / peakEquity * 100 : 0;
       if (ddAmount > maxDrawdownAmount) maxDrawdownAmount = ddAmount;
       if (ddPct > maxDrawdownPct) maxDrawdownPct = ddPct;
+      const posDate = toIsoDateString(pos.close_time) || toIsoDateString(pos.open_time);
       equityCurve.push({
-        date: pos.close_time || pos.open_time,
+        date: posDate,
         tradeIndex: idx + 1,
         symbol: pos.symbol,
         netProfit: parseFloat(net.toFixed(2)),
@@ -54899,7 +54936,7 @@ var AnalyticsService = class {
         drawdown: parseFloat(ddAmount.toFixed(2)),
         drawdownPct: parseFloat(ddPct.toFixed(2))
       });
-      const dateKey = (pos.close_time || pos.open_time).substring(0, 10);
+      const dateKey = posDate.substring(0, 10);
       if (!dailyMap.has(dateKey)) {
         dailyMap.set(dateKey, { netProfit: 0, tradesCount: 0, winCount: 0, lossCount: 0 });
       }
@@ -54908,7 +54945,7 @@ var AnalyticsService = class {
       dayData.tradesCount += 1;
       if (net > 0) dayData.winCount += 1;
       else if (net < 0) dayData.lossCount += 1;
-      const gross = pos.gross_profit !== void 0 && pos.gross_profit !== null ? pos.gross_profit : net;
+      const gross = pos.gross_profit !== void 0 && pos.gross_profit !== null ? toNumber(pos.gross_profit) : net;
       if (net > 0) {
         winningTrades++;
         grossProfit += gross > 0 ? gross : net;
@@ -54929,11 +54966,12 @@ var AnalyticsService = class {
         currentConsecutiveLosses = 0;
       }
       if (pos.r_multiple !== null && pos.r_multiple !== void 0) {
-        totalR += pos.r_multiple;
+        totalR += toNumber(pos.r_multiple);
         countWithR++;
       }
-      if (pos.holding_seconds > 0) {
-        holdingTimes.push(pos.holding_seconds);
+      const holdingSecs = toNumber(pos.holding_seconds);
+      if (holdingSecs > 0) {
+        holdingTimes.push(holdingSecs);
       }
       if (pos.position_type === "BUY") {
         longCount++;
@@ -54966,7 +55004,7 @@ var AnalyticsService = class {
     const averageR = countWithR > 0 ? parseFloat((totalR / countWithR).toFixed(2)) : 0;
     const recoveryFactor = maxDrawdownAmount > 0 ? parseFloat((netProfit / maxDrawdownAmount).toFixed(2)) : 0;
     const avgHoldingSeconds = holdingTimes.length > 0 ? Math.round(holdingTimes.reduce((a, b) => a + b, 0) / holdingTimes.length) : 0;
-    holdingTimes.sort((a, b) => a - b);
+    holdingTimes.sort((a, b) => toNumber(a) - toNumber(b));
     const medianHoldingSeconds = holdingTimes.length > 0 ? holdingTimes[Math.floor(holdingTimes.length / 2)] : 0;
     const longWinRate = longCount > 0 ? parseFloat((longWins / longCount * 100).toFixed(2)) : 0;
     const longPF = longGrossLoss > 0 ? parseFloat((longGrossWin / longGrossLoss).toFixed(2)) : longGrossWin > 0 ? 99.9 : 0;
@@ -54980,6 +55018,7 @@ var AnalyticsService = class {
       lossCount: d.lossCount
     }));
     return {
+      initialBalance: startingBalance,
       totalTrades,
       openTrades,
       winningTrades,
@@ -55047,7 +55086,11 @@ router5.get("/overview", requireUserAuth, async (req, res) => {
     });
     res.json({ overview });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("[Analytics] Failed to get account performance overview:", err?.stack || err);
+    res.status(500).json({
+      code: "ANALYTICS_OVERVIEW_FAILED",
+      error: err?.message || "Failed to retrieve analytics overview"
+    });
   }
 });
 var analytics_routes_default = router5;

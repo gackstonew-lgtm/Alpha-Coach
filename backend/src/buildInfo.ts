@@ -12,8 +12,8 @@ export interface BuildInfo {
 
 export const BUILD_INFO: BuildInfo = {
   version: "1.0.5",
-  gitCommit: "65f2393846f822c025f2e4fdaa9780287e7f75dd",
-  buildTimestamp: "2026-09-28T07:27:07.761Z",
+  gitCommit: "957661a3622499068421670fcb76f9d786d687d7",
+  buildTimestamp: "2026-09-28T08:52:32.920Z",
   environment: process.env.NODE_ENV || 'production',
   sourceOrigin: 'backend/src'
 };
