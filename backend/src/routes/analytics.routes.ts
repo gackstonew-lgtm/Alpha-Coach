@@ -26,7 +26,11 @@ router.get('/overview', requireUserAuth, async (req: AuthenticatedRequest, res) 
 
     res.json({ overview });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('[Analytics] Failed to get account performance overview:', err?.stack || err);
+    res.status(500).json({
+      code: 'ANALYTICS_OVERVIEW_FAILED',
+      error: err?.message || 'Failed to retrieve analytics overview'
+    });
   }
 });
 

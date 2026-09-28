@@ -1,7 +1,37 @@
 import { getDatabase } from '../db/db';
 import { ReconstructedPosition } from '../models/types';
 
+function toNumber(val: unknown, fallback: number = 0): number {
+  if (val === null || val === undefined || val === '') {
+    return fallback;
+  }
+  if (typeof val === 'number') {
+    return Number.isFinite(val) ? val : fallback;
+  }
+  const parsed = Number(val);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function toIsoDateString(val: unknown): string {
+  if (val === null || val === undefined) {
+    return '';
+  }
+  if (val instanceof Date || Object.prototype.toString.call(val) === '[object Date]') {
+    const d = val as Date;
+    return isNaN(d.getTime()) ? '' : d.toISOString();
+  }
+  if (typeof val === 'string') {
+    return val;
+  }
+  if (typeof val === 'number') {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? '' : d.toISOString();
+  }
+  return '';
+}
+
 export interface PerformanceOverview {
+  initialBalance?: number;
   totalTrades: number;
   openTrades: number;
   winningTrades: number;
@@ -122,22 +152,31 @@ export class AnalyticsService {
     let currentBalance = 0;
     if (accountId && accountId !== 'ALL') {
       const acc = await db.get<{ balance: number }>(`SELECT balance FROM trading_accounts WHERE id = ?`, [accountId]);
-      if (acc) currentBalance = Number(acc.balance || 0);
+      if (acc) currentBalance = toNumber(acc.balance);
     } else {
       const accs = await db.query<{ balance: number }>(`SELECT balance FROM trading_accounts WHERE user_id = ?`, [userId]);
-      currentBalance = accs.reduce((sum, a) => sum + Number(a.balance || 0), 0);
+      currentBalance = accs.reduce((sum, a) => sum + toNumber(a.balance), 0);
     }
 
-    const closedPositions = positions.filter(p => p.status === 'CLOSED');
-    closedPositions.sort((a, b) => new Date(a.close_time || a.open_time).getTime() - new Date(b.close_time || b.open_time).getTime());
-    const openTrades = positions.filter(p => p.status === 'OPEN').length;
+    const closedPositions = positions.filter(p => (p.status || '').toUpperCase() === 'CLOSED');
+    closedPositions.sort((a, b) => {
+      const dateA = toIsoDateString(a.close_time) || toIsoDateString(a.open_time);
+      const dateB = toIsoDateString(b.close_time) || toIsoDateString(b.open_time);
+      const timeA = dateA ? new Date(dateA).getTime() : 0;
+      const timeB = dateB ? new Date(dateB).getTime() : 0;
+      const safeTimeA = Number.isFinite(timeA) ? timeA : 0;
+      const safeTimeB = Number.isFinite(timeB) ? timeB : 0;
+      return safeTimeA - safeTimeB;
+    });
+    const openTrades = positions.filter(p => (p.status || '').toUpperCase() === 'OPEN').length;
     const totalTrades = closedPositions.length;
 
-    const totalRealizedProfit = closedPositions.reduce((sum, p) => sum + Number(p.net_profit || 0), 0);
+    const totalRealizedProfit = closedPositions.reduce((sum, p) => sum + toNumber(p.net_profit), 0);
     const startingBalance = currentBalance > 0 ? Math.max(0, currentBalance - totalRealizedProfit) : 0;
 
     if (totalTrades === 0) {
       return {
+        initialBalance: startingBalance,
         totalTrades: 0,
         openTrades,
         winningTrades: 0,
@@ -213,9 +252,9 @@ export class AnalyticsService {
     const dailyMap = new Map<string, { netProfit: number; tradesCount: number; winCount: number; lossCount: number }>();
 
     closedPositions.forEach((pos, idx) => {
-      const net = pos.net_profit;
-      totalCommissions += pos.commission_total || 0;
-      totalSwaps += pos.swap_total || 0;
+      const net = toNumber(pos.net_profit);
+      totalCommissions += toNumber(pos.commission_total);
+      totalSwaps += toNumber(pos.swap_total);
       cumulativeProfit += net;
       runningEquity += net;
 
@@ -227,8 +266,10 @@ export class AnalyticsService {
       if (ddAmount > maxDrawdownAmount) maxDrawdownAmount = ddAmount;
       if (ddPct > maxDrawdownPct) maxDrawdownPct = ddPct;
 
+      const posDate = toIsoDateString(pos.close_time) || toIsoDateString(pos.open_time);
+
       equityCurve.push({
-        date: pos.close_time || pos.open_time,
+        date: posDate,
         tradeIndex: idx + 1,
         symbol: pos.symbol,
         netProfit: parseFloat(net.toFixed(2)),
@@ -239,7 +280,7 @@ export class AnalyticsService {
       });
 
       // Daily grouping
-      const dateKey = (pos.close_time || pos.open_time).substring(0, 10);
+      const dateKey = posDate.substring(0, 10);
       if (!dailyMap.has(dateKey)) {
         dailyMap.set(dateKey, { netProfit: 0, tradesCount: 0, winCount: 0, lossCount: 0 });
       }
@@ -250,7 +291,7 @@ export class AnalyticsService {
       else if (net < 0) dayData.lossCount += 1;
 
       // Win / Loss classification
-      const gross = pos.gross_profit !== undefined && pos.gross_profit !== null ? pos.gross_profit : net;
+      const gross = pos.gross_profit !== undefined && pos.gross_profit !== null ? toNumber(pos.gross_profit) : net;
       if (net > 0) {
         winningTrades++;
         grossProfit += gross > 0 ? gross : net;
@@ -274,12 +315,13 @@ export class AnalyticsService {
       }
 
       if (pos.r_multiple !== null && pos.r_multiple !== undefined) {
-        totalR += pos.r_multiple;
+        totalR += toNumber(pos.r_multiple);
         countWithR++;
       }
 
-      if (pos.holding_seconds > 0) {
-        holdingTimes.push(pos.holding_seconds);
+      const holdingSecs = toNumber(pos.holding_seconds);
+      if (holdingSecs > 0) {
+        holdingTimes.push(holdingSecs);
       }
 
       // Long / Short stats
@@ -318,7 +360,7 @@ export class AnalyticsService {
 
     // Holding time metrics
     const avgHoldingSeconds = holdingTimes.length > 0 ? Math.round(holdingTimes.reduce((a, b) => a + b, 0) / holdingTimes.length) : 0;
-    holdingTimes.sort((a, b) => a - b);
+    holdingTimes.sort((a, b) => toNumber(a) - toNumber(b));
     const medianHoldingSeconds = holdingTimes.length > 0 ? holdingTimes[Math.floor(holdingTimes.length / 2)] : 0;
 
     // Long vs Short breakdowns
@@ -337,6 +379,7 @@ export class AnalyticsService {
     }));
 
     return {
+      initialBalance: startingBalance,
       totalTrades,
       openTrades,
       winningTrades,
