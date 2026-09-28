@@ -1,13 +1,14 @@
 /**
- * Meta Coach — Production Progressive Web App Service Worker (v1.0.6)
+ * Meta Coach — Production Progressive Web App Service Worker (v1.0.7)
  * Features:
  * 1. Safe app shell precaching & offline fallback page (/offline.html)
  * 2. Absolute bypass of all /api/ and Supabase authenticated network traffic
  * 3. Stale-while-revalidate caching for static CSS/JS/images
  * 4. Zero stale-cache bugs via immediate activation & SKIP_WAITING message listener
+ * 5. Fault-tolerant precache: one missing file no longer breaks installation
  */
 
-const CACHE_NAME = 'meta-coach-v1.0.6-core';
+const CACHE_NAME = 'meta-coach-v1.0.7-core';
 const PRECACHE_ASSETS = [
   '/',
   '/offline.html',
@@ -22,27 +23,39 @@ const PRECACHE_ASSETS = [
   '/favicon.png'
 ];
 
-// Install: Precache vital offline shell assets
+// Install: Precache vital offline shell assets (each file cached independently)
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS);
-    }).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      .then((cache) =>
+        Promise.allSettled(
+          PRECACHE_ASSETS.map((asset) =>
+            fetch(asset, { cache: 'reload' }).then((response) => {
+              // Only cache real files, never an HTML fallback served for a missing asset
+              const type = response.headers.get('content-type') || '';
+              const isHtmlAsset = asset.endsWith('.html') || asset === '/';
+              if (!response.ok || (!isHtmlAsset && type.includes('text/html'))) {
+                throw new Error('Skipped ' + asset);
+              }
+              return cache.put(asset, response);
+            })
+          )
+        )
+      )
+      .then(() => self.skipWaiting())
   );
 });
 
 // Activate: Prune stale caches from previous versions and claim clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.map((key) => (key !== CACHE_NAME ? caches.delete(key) : undefined)))
+      )
+      .then(() => self.clients.claim())
   );
 });
 
@@ -71,7 +84,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // If valid response, clone into cache
           if (response && response.status === 200) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -81,17 +93,19 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(async () => {
-          // Fall back to cached page, or offline.html
           const cachedResponse = await caches.match(request);
           if (cachedResponse) {
             return cachedResponse;
           }
           const offlinePage = await caches.match('/offline.html');
-          return offlinePage || new Response('Offline mode active.', {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: { 'Content-Type': 'text/plain' }
-          });
+          return (
+            offlinePage ||
+            new Response('Offline mode active.', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'text/plain' }
+            })
+          );
         })
     );
     return;
@@ -110,13 +124,15 @@ self.addEventListener('fetch', (event) => {
   if (isStaticAsset) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
-        const fetchPromise = fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return networkResponse;
-        }).catch(() => cachedResponse);
+        const fetchPromise = fetch(request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              const clone = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
+            return networkResponse;
+          })
+          .catch(() => cachedResponse);
 
         return cachedResponse || fetchPromise;
       })
