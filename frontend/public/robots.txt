@@ -1,0 +1,29 @@
+User-agent: *
+Allow: /$
+Allow: /methodology
+Allow: /security
+Allow: /terms
+Allow: /privacy
+Allow: /cookies
+Allow: /disclaimer
+Allow: /faq
+
+# Protected and authentication routes
+Disallow: /dashboard
+Disallow: /journal
+Disallow: /performance
+Disallow: /strategy-lab
+Disallow: /risk-guardian
+Disallow: /ai-coach
+Disallow: /rewards
+Disallow: /gamification
+Disallow: /bridge
+Disallow: /settings
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /pair
+Disallow: /welcome
+Disallow: /api/
+
+Sitemap: https://alpha-coach-pi.vercel.app/sitemap.xml

@@ -24,6 +24,7 @@ import {
   ReferenceLine
 } from 'recharts';
 import { Link } from 'react-router-dom';
+import { DataIntegrityPanel } from '../components/common/DataIntegrityPanel';
 
 export const DashboardPage: React.FC = () => {
   const { selectedAccountId, selectedAccount, accounts } = useAccounts();
@@ -199,6 +200,14 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Data Integrity & Provenance Guarantee */}
+      <DataIntegrityPanel
+        lastSyncTime={(selectedAccount as any)?.last_sync_time || (selectedAccount as any)?.updated_at || null}
+        reconstructedTrades={overview?.totalTrades || recentTrades.length}
+        accountNumber={selectedAccount?.account_number}
+        broker={selectedAccount?.broker_name}
+      />
 
       {/* Real MT5 User Profitability & Equity Trend Graph */}
       <div className="framer-card p-6 sm:p-7 rounded-3xl space-y-4 relative overflow-hidden bg-surface border border-border-subtle shadow-sm w-full">

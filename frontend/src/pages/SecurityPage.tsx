@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { MetaHead } from '../components/common/MetaHead';
 import { PublicNavbar } from '../components/public/PublicNavbar';
 import { PublicFooter } from '../components/public/PublicFooter';
 import {
@@ -68,6 +69,11 @@ export const SecurityPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
+      <MetaHead
+        title="Security & Zero-Password Architecture | Meta Coach"
+        description="Comprehensive technical overview of Meta Coach Zero-Password security architecture, local Python IPC bridge, TLS encryption, and Row-Level Security isolation."
+        canonicalPath="/security"
+      />
       <PublicNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">

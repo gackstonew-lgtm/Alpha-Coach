@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MetaHead } from '../components/common/MetaHead';
 import { PublicNavbar } from '../components/public/PublicNavbar';
 import { PublicFooter } from '../components/public/PublicFooter';
 import { useAuth } from '../context/AuthContext';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { AnimatedNumber } from '../components/common/AnimatedNumber';
+import { FAQ_ITEMS, getFAQSchema } from '../data/faqData';
 import {
   DemoExecutiveOverview,
   DemoStrategyLab,
@@ -25,12 +27,34 @@ import {
   Lock,
   Mic,
   TrendingUp,
-  Activity
+  Activity,
+  ChevronDown,
+  HelpCircle,
+  Mail,
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
+
+const SOFTWARE_APPLICATION_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Meta Coach',
+  operatingSystem: 'Windows, macOS, Linux, iOS, Android, Web',
+  applicationCategory: 'FinanceApplication',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD'
+  },
+  description:
+    'Automated MT5 Trading Journal & Quantitative Performance Operating System for modern discretionary and systematic traders.',
+  softwareVersion: '1.0.6'
+};
 
 export const LandingPage: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'strategy' | 'risk' | 'coach'>('overview');
+  const [openFaqId, setOpenFaqId] = useState<string | null>(FAQ_ITEMS[0].id);
 
   // Viewport Intersection Observers for Smooth Scroll Triggers
   const [statsRef, isStatsVisible] = useIntersectionObserver<HTMLDivElement>({ threshold: 0.2 });
@@ -98,6 +122,12 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
+      <MetaHead
+        title="Meta Coach — Automated MT5 Trading Journal & Performance OS"
+        description="Automated MetaTrader 5 trading journal, mathematical trade reconstruction, disciplined risk parameters, and grounded AI coaching. Zero broker passwords required."
+        canonicalPath="/"
+        structuredData={[SOFTWARE_APPLICATION_SCHEMA, getFAQSchema()]}
+      />
       <PublicNavbar />
 
       <main className="flex-1 space-y-20 sm:space-y-28 pb-20">
@@ -118,7 +148,7 @@ export const LandingPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Action CTAs */}
+          {/* Action CTAs (Above the fold: Get Started & Instant Demo Access) */}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             {user ? (
               <Link
@@ -126,7 +156,7 @@ export const LandingPage: React.FC = () => {
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-brand-500/25 transition-all duration-150 active:scale-95"
               >
                 <span>Enter Trading Terminal</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </Link>
             ) : (
               <>
@@ -134,14 +164,15 @@ export const LandingPage: React.FC = () => {
                   to="/register"
                   className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-brand-500/25 transition-all duration-150 active:scale-95"
                 >
-                  <span>Start Your Trading Journal</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Get Started</span>
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
                 </Link>
                 <Link
-                  to="/methodology"
+                  to="/dashboard"
                   className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-surface-secondary hover:bg-surface-hover text-content-primary font-bold text-sm border border-border-subtle transition-all duration-150 active:scale-95"
                 >
-                  <span>Explore Methodology</span>
+                  <Sparkles className="w-4 h-4 text-brand-500" aria-hidden="true" />
+                  <span>Instant Demo Access</span>
                 </Link>
               </>
             )}
@@ -186,8 +217,13 @@ export const LandingPage: React.FC = () => {
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-widest text-content-muted">Interactive Preview</h2>
-              <p className="text-lg font-bold text-content-primary">Meta Coach Performance Hub</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xs font-bold uppercase tracking-widest text-content-muted">Sample Insights & Reconstructed Analytics</h2>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                  Demo Data
+                </span>
+              </div>
+              <p className="text-lg font-bold text-content-primary">Interactive Meta Coach Terminal</p>
             </div>
 
             {/* Tab Switcher */}
@@ -516,12 +552,74 @@ export const LandingPage: React.FC = () => {
         </section>
 
         {/* ========================================================================= */}
-        {/* 8. FINAL CONVERSION CALL TO ACTION                                        */}
+        {/* 8. FREQUENTLY ASKED QUESTIONS (Part A.5)                                  */}
+        {/* ========================================================================= */}
+        <section className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider">
+              <HelpCircle className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Got Questions?</span>
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">
+              Frequently Asked Questions
+            </h3>
+            <p className="text-xs sm:text-sm text-content-secondary leading-relaxed">
+              Transparent answers regarding MT5 compatibility, Zero-Password architecture, pricing, and automated synchronization.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {FAQ_ITEMS.map((item) => {
+              const isOpen = openFaqId === item.id;
+              return (
+                <div
+                  key={item.id}
+                  className="framer-card rounded-2xl border border-border-subtle bg-surface overflow-hidden transition-all duration-200"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaqId(prev => (prev === item.id ? null : item.id))}
+                    aria-expanded={isOpen}
+                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 hover:bg-surface-secondary/50 transition cursor-pointer"
+                  >
+                    <span className="font-bold text-xs sm:text-sm text-content-primary">
+                      {item.question}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-content-muted flex-shrink-0 transition-transform duration-200 ${
+                        isOpen ? 'transform rotate-180 text-brand-500' : ''
+                      }`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="px-4 sm:px-5 pb-5 text-xs text-content-muted leading-relaxed border-t border-border-subtle/50 pt-3">
+                      {item.answer}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="text-center pt-2">
+            <Link
+              to="/faq"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-500 hover:underline"
+            >
+              <span>View full knowledge base & architectural FAQ</span>
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </Link>
+          </div>
+        </section>
+
+        {/* ========================================================================= */}
+        {/* 9. FINAL CONVERSION CALL TO ACTION                                        */}
         {/* ========================================================================= */}
         <section className="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
           <div className="p-8 sm:p-12 rounded-3xl bg-surface-secondary border border-border-strong text-center space-y-6 framer-card">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase">
-              <Zap className="w-3.5 h-3.5" />
+              <Zap className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Get Started Today</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-content-primary tracking-tight">
@@ -536,7 +634,7 @@ export const LandingPage: React.FC = () => {
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-xs shadow-lg shadow-brand-500/25 transition active:scale-95"
               >
                 <span>Create Your Meta Coach Account</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </Link>
               <Link
                 to="/login"
@@ -550,6 +648,26 @@ export const LandingPage: React.FC = () => {
       </main>
 
       <PublicFooter />
+
+      {/* Sticky Mobile CTA (Part A.2) - Mobile Only, PWA Safe Area Aware */}
+      <div
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-md border-t border-border-strong px-4 py-2.5 flex items-center gap-2 shadow-2xl"
+        style={{ paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom, 0.6rem))' }}
+      >
+        <Link
+          to="/register"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-brand-600 active:bg-brand-700 text-white font-bold text-xs shadow-md active:scale-95"
+        >
+          <span>Get Started</span>
+          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+        </Link>
+        <Link
+          to="/dashboard"
+          className="flex-1 inline-flex items-center justify-center py-2.5 rounded-xl bg-surface-secondary text-content-primary border border-border-subtle font-semibold text-xs active:scale-95"
+        >
+          Instant Demo Access
+        </Link>
+      </div>
     </div>
   );
 };

@@ -23257,7 +23257,7 @@ var require_morgan = __commonJS({
         var interval = typeof buffer !== "number" ? DEFAULT_BUFFER_DURATION : buffer;
         stream = createBufferStream(stream, interval);
       }
-      return function logger(req, res, next) {
+      return function logger2(req, res, next) {
         req._startAt = void 0;
         req._startTime = void 0;
         req._remoteAddress = getip(req);
@@ -55877,9 +55877,9 @@ var SyncService = class {
 
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
-  version: "1.0.5",
-  gitCommit: "ae49d14e914fbc31fdc59ad088ef34aa62b36a51",
-  buildTimestamp: "2026-09-28T16:49:00.571Z",
+  version: "1.0.6",
+  gitCommit: "42862a61f98038ecd0185c86d3dd978e5f97ab20",
+  buildTimestamp: "2026-09-28T18:04:30.379Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -62980,6 +62980,65 @@ router18.delete("/account", requireUserAuth, async (req, res) => {
 });
 var settings_routes_default = router18;
 
+// backend/src/services/logger.service.ts
+var LoggerService = class {
+  isSentryConfigured = false;
+  constructor() {
+    this.isSentryConfigured = Boolean(process.env.SENTRY_DSN);
+    if (this.isSentryConfigured) {
+      this.info("Sentry backend monitoring initialized");
+    }
+  }
+  emit(level, message, meta) {
+    const payload = {
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      level,
+      service: "meta-coach-api",
+      message,
+      ...meta ? { meta } : {}
+    };
+    if (process.env.NODE_ENV === "test") {
+      return;
+    }
+    const formatted = JSON.stringify(payload);
+    if (level === "error") {
+      console.error(formatted);
+    } else if (level === "warn") {
+      console.warn(formatted);
+    } else {
+      console.log(formatted);
+    }
+  }
+  info(message, meta) {
+    this.emit("info", message, meta);
+  }
+  warn(message, meta) {
+    this.emit("warn", message, meta);
+  }
+  debug(message, meta) {
+    if (process.env.NODE_ENV !== "production") {
+      this.emit("debug", message, meta);
+    }
+  }
+  error(message, error, meta) {
+    const errorDetails = error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error;
+    this.emit("error", message, {
+      ...meta,
+      error: errorDetails
+    });
+    if (this.isSentryConfigured && error) {
+      try {
+        const sentryPkg = global.Sentry;
+        if (sentryPkg?.captureException) {
+          sentryPkg.captureException(error, { extra: { message, ...meta } });
+        }
+      } catch {
+      }
+    }
+  }
+};
+var logger = new LoggerService();
+
 // backend/src/app.ts
 var app = (0, import_express19.default)();
 app.use(helmet({
@@ -63035,7 +63094,7 @@ var apiLimiter = lib_default({
   legacyHeaders: false
 });
 app.use("/api", apiLimiter);
-app.get(["/", "/api", "/api/health", "/health"], async (req, res) => {
+app.get(["/", "/api", "/api/health", "/health", "/api/v1/health", "/v1/health"], async (req, res) => {
   const diag = await getDatabaseDiagnostics();
   const isHealthy = diag.databaseConnection === "healthy" && diag.realQueryVerified;
   const statusCode = isHealthy ? 200 : 503;
@@ -63107,7 +63166,11 @@ app.use((req, res) => {
   });
 });
 app.use((err, req, res, next) => {
-  console.error("[Meta Coach API Error]:", err);
+  logger.error("Unhandled API Exception", err, {
+    method: req.method,
+    url: req.originalUrl || req.url,
+    ip: req.ip
+  });
   res.status(err.status || 500).json({
     success: false,
     error: {

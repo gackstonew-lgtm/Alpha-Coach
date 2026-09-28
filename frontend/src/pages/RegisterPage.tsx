@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
+import { MetaHead } from '../components/common/MetaHead';
+import { trackEvent } from '../services/analytics';
 
 export const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -26,14 +28,16 @@ export const RegisterPage: React.FC = () => {
         password,
         firstName,
         lastName,
-        timezone: 'UTC',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         currency: 'USD'
       });
 
+      trackEvent('register');
+
       if (res.requiresEmailConfirmation) {
-        setSuccessMsg('Account created successfully! Please check your email for a confirmation link before logging in.');
+        navigate('/welcome?emailPending=true');
       } else {
-        navigate('/dashboard');
+        navigate('/welcome');
       }
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
@@ -44,6 +48,11 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col justify-center items-center p-4 relative overflow-hidden ambient-glow-bg">
+      <MetaHead
+        title="Create Account — Meta Coach Trading Journal"
+        description="Join Meta Coach to automate your MetaTrader 5 trade journaling, analyze setup expectancies, and maintain psychological discipline."
+        canonicalPath="/register"
+      />
       <div className="max-w-md w-full framer-card p-8 rounded-3xl shadow-xl space-y-6 z-10 animate-in fade-in zoom-in-95 duration-300 border border-border-subtle">
         {/* Brand Header */}
         <div className="text-center space-y-3">
@@ -138,6 +147,13 @@ export const RegisterPage: React.FC = () => {
                   className="bg-transparent text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-white"
                 />
               </div>
+            </div>
+
+            <div className="text-[11px] text-content-muted leading-relaxed text-center px-1">
+              By creating an account, you agree to our{' '}
+              <Link to="/terms" className="text-brand-500 hover:underline">Terms of Service</Link>,{' '}
+              <Link to="/privacy" className="text-brand-500 hover:underline">Privacy Policy</Link>, and acknowledge our{' '}
+              <Link to="/disclaimer" className="text-brand-500 hover:underline">Risk Disclaimer</Link>.
             </div>
 
             <button

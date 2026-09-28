@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { MetaHead } from '../components/common/MetaHead';
 import { PublicNavbar } from '../components/public/PublicNavbar';
 import { PublicFooter } from '../components/public/PublicFooter';
 import {
@@ -125,6 +126,11 @@ export const MethodologyPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
+      <MetaHead
+        title="Methodology — 7-Stage Quantitative Engine | Meta Coach"
+        description="Discover the 7-stage quantitative pipeline behind Meta Coach: local IPC connection, deal synchronization, lifecycle trade reconstruction, and psychological journaling."
+        canonicalPath="/methodology"
+      />
       <PublicNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">

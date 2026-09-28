@@ -283,7 +283,58 @@ def generate_raster_assets():
     pwa512.save(os.path.join(pub_dir, 'logo.png'), 'PNG')
     pwa512.save(os.path.join(pub_dir, 'alpha_coach_logo.png'), 'PNG')
 
+    # 8. OG Image 1200x630
+    generate_og_image(pub_dir)
+
     print('[OK] Generated all raster icon assets.')
+
+def generate_og_image(pub_dir):
+    from PIL import ImageFont
+    width, height = 1200, 630
+    img = Image.new('RGBA', (width, height), (5, 6, 8, 255))
+    draw = ImageDraw.Draw(img)
+
+    for r in range(400, 0, -5):
+        alpha = int(18 * (1 - r/400))
+        draw.ellipse([(150 - r, 315 - r), (150 + r, 315 + r)], fill=(37, 99, 235, alpha))
+
+    draw.rounded_rectangle([(16, 16), (width - 16, height - 16)], radius=24, outline=(23, 29, 41, 255), width=2)
+
+    pwa512_path = os.path.join(pub_dir, 'pwa-512x512.png')
+    if os.path.exists(pwa512_path):
+        icon = Image.open(pwa512_path).convert('RGBA')
+        icon_resized = icon.resize((270, 270), Image.Resampling.LANCZOS)
+        img.paste(icon_resized, (90, int((height - 270) / 2)), icon_resized)
+
+    try:
+        font_title = ImageFont.truetype('C:\\Windows\\Fonts\\arialbd.ttf', 60)
+        font_sub = ImageFont.truetype('C:\\Windows\\Fonts\\segoeui.ttf', 24)
+        font_pill = ImageFont.truetype('C:\\Windows\\Fonts\\arialbd.ttf', 16)
+    except Exception:
+        font_title = ImageFont.load_default()
+        font_sub = ImageFont.load_default()
+        font_pill = ImageFont.load_default()
+
+    text_x = 400
+    draw.text((text_x, 180), 'META COACH', fill=(255, 255, 255, 255), font=font_title)
+    draw.text((text_x, 260), 'Automated MT5 Trading Journal & Performance OS', fill=(148, 163, 184, 255), font=font_sub)
+    draw.text((text_x, 305), 'Empirical analytics, rule discipline, and zero broker passwords.', fill=(100, 116, 139, 255), font=font_sub)
+
+    pills = ['0 Passwords Stored', 'Official MT5 API', 'Mathematical Expectancy', 'Institutional OLED']
+    pill_x = text_x
+    pill_y = 380
+    for p in pills:
+        try:
+            bbox = font_pill.getbbox(p)
+            pw = bbox[2] - bbox[0] + 28
+        except Exception:
+            pw = 140
+        draw.rounded_rectangle([(pill_x, pill_y), (pill_x + pw, pill_y + 36)], radius=12, fill=(16, 20, 28, 255), outline=(35, 44, 61, 255), width=1)
+        draw.text((pill_x + 14, pill_y + 8), p, fill=(213, 171, 90, 255), font=font_pill)
+        pill_x += pw + 12
+
+    og_path = os.path.join(pub_dir, 'meta-coach-og.png')
+    img.save(og_path, 'PNG')
 
 if __name__ == '__main__':
     generate_svgs()

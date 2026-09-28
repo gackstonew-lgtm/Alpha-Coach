@@ -100,7 +100,7 @@ const apiLimiter = rateLimit({
 app.use('/api', apiLimiter);
 
 // API Health (Production Health Contract with Truthful Status & 503 on Database Failure)
-app.get(['/', '/api', '/api/health', '/health'], async (req, res) => {
+app.get(['/', '/api', '/api/health', '/health', '/api/v1/health', '/v1/health'], async (req, res) => {
   const diag = await getDatabaseDiagnostics();
   const isHealthy = diag.databaseConnection === 'healthy' && diag.realQueryVerified;
   const statusCode = isHealthy ? 200 : 503;
@@ -178,9 +178,15 @@ app.use((req, res) => {
   });
 });
 
+import { logger } from './services/logger.service';
+
 // Global Error Handler (Standardized Phase 16 JSON)
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('[Meta Coach API Error]:', err);
+  logger.error('Unhandled API Exception', err, {
+    method: req.method,
+    url: req.originalUrl || req.url,
+    ip: req.ip
+  });
   res.status(err.status || 500).json({
     success: false,
     error: {

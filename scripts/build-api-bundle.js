@@ -23,7 +23,7 @@ if (!gitCommit) {
   }
 }
 
-const buildVersion = '1.0.5';
+const buildVersion = '1.0.6';
 const buildTimestamp = new Date().toISOString();
 
 const manifest = {

@@ -31,30 +31,73 @@ class PwaManager {
     }
   }
 
+  private registration: ServiceWorkerRegistration | null = null;
+  private hasUpdate: boolean = false;
+
+  public isUpdateReady(): boolean {
+    return this.hasUpdate;
+  }
+
+  public async registerServiceWorker(): Promise<void> {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+      return;
+    }
+
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      this.registration = reg;
+
+      // Check if a worker is already waiting
+      if (reg.waiting) {
+        this.hasUpdate = true;
+        this.notifyListeners();
+      }
+
+      // Check for updates periodically
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            this.hasUpdate = true;
+            this.notifyListeners();
+          }
+        });
+      });
+
+      // Reload when the new service worker takes over
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    } catch (err) {
+      console.warn('[PWA] ServiceWorker registration failed:', err);
+    }
+  }
+
+  public activateUpdate(): void {
+    if (this.registration?.waiting) {
+      this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      window.location.reload();
+    }
+  }
+
   public async unregisterObsoleteServiceWorkers(): Promise<void> {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       try {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const registration of registrations) {
           await registration.unregister();
-          console.log('[PWA] Obsolete ServiceWorker unregistered successfully.');
-        }
-        if ('caches' in window) {
-          const cacheKeys = await caches.keys();
-          for (const key of cacheKeys) {
-            await caches.delete(key);
-            console.log(`[PWA] Cleared obsolete cache: ${key}`);
-          }
         }
       } catch (err) {
-        console.warn('[PWA] ServiceWorker unregistration error:', err);
+        console.warn('[PWA] ServiceWorker unregister error:', err);
       }
     }
-  }
-
-  public registerServiceWorker(): void {
-    // Unregister any stale service workers to prevent login/fetch event failures
-    this.unregisterObsoleteServiceWorkers();
   }
 
   public isStandalone(): boolean {

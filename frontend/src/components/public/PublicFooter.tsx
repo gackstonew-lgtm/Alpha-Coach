@@ -87,7 +87,7 @@ export const PublicFooter: React.FC = () => {
               <li><Link to="/methodology#sessions" className="hover:text-content-primary transition">Session Heatmaps</Link></li>
               <li><Link to="/methodology#psychology" className="hover:text-content-primary transition">Mistake Taxonomy</Link></li>
               <li><Link to="/security" className="hover:text-content-primary transition">Security Architecture</Link></li>
-              <li><Link to="/security#bridge" className="hover:text-content-primary transition">Local MT5 Bridge</Link></li>
+              <li><Link to="/faq" className="hover:text-content-primary transition">Frequently Asked Questions (FAQ)</Link></li>
             </ul>
           </div>
 
@@ -95,12 +95,17 @@ export const PublicFooter: React.FC = () => {
           <div className="space-y-3">
             <h5 className="text-xs font-bold text-content-primary uppercase tracking-wider">Legal & Compliance</h5>
             <ul className="space-y-2 text-xs text-content-muted">
-              <li><Link to="/terms" className="hover:text-content-primary transition">Terms & Conditions</Link></li>
-              <li><Link to="/terms-of-service" className="hover:text-content-primary transition">Terms of Service</Link></li>
+              <li><Link to="/terms" className="hover:text-content-primary transition">Terms of Service</Link></li>
               <li><Link to="/privacy" className="hover:text-content-primary transition">Privacy Policy</Link></li>
               <li><Link to="/cookies" className="hover:text-content-primary transition">Cookie Policy</Link></li>
-              <li><a href="#disclaimer" className="hover:text-content-primary transition">Financial Disclaimer</a></li>
+              <li><Link to="/disclaimer" className="hover:text-content-primary transition">Financial Risk Disclaimer</Link></li>
             </ul>
+
+            <div className="pt-2 text-[11px] text-content-muted space-y-1">
+              <div className="font-semibold text-content-primary">Trader Support:</div>
+              <a href="mailto:support@metacoach.io" className="text-brand-500 hover:underline font-mono">support@metacoach.io</a>
+              <div className="text-[10px] text-content-subtle">We reply within 24 hours.</div>
+            </div>
           </div>
         </div>
 
@@ -117,8 +122,9 @@ export const PublicFooter: React.FC = () => {
 
           {/* Copyright & Entity Notice */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-content-muted pt-4">
-            <div>
-              &copy; 2026 Meta Coach. All rights reserved.
+            <div className="flex items-center gap-2">
+              <span>&copy; 2026 Meta Coach. All rights reserved.</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-surface-secondary border border-border-subtle">v1.0.6</span>
             </div>
             <div className="flex items-center gap-4 text-[11px]">
               <span>Jurisdiction: [GOVERNING JURISDICTION]</span>
@@ -126,6 +132,8 @@ export const PublicFooter: React.FC = () => {
               <Link to="/privacy" className="hover:text-content-primary transition">Privacy</Link>
               <span>•</span>
               <Link to="/terms" className="hover:text-content-primary transition">Terms</Link>
+              <span>•</span>
+              <Link to="/disclaimer" className="hover:text-content-primary transition">Risk Disclaimer</Link>
               <span>•</span>
               <Link to="/security" className="hover:text-content-primary transition">Security</Link>
             </div>

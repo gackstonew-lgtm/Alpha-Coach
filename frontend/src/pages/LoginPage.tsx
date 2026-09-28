@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, ArrowRight, ShieldAlert } from 'lucide-react';
 import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
+import { MetaHead } from '../components/common/MetaHead';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -50,6 +51,11 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col justify-center items-center p-4 relative overflow-hidden ambient-glow-bg">
+      <MetaHead
+        title="Sign In — Meta Coach Trading Terminal"
+        description="Sign in to your Meta Coach trading account to review automated MT5 trade journals, edge metrics, and AI Coach analysis."
+        canonicalPath="/login"
+      />
       <div className="max-w-md w-full framer-card p-8 rounded-3xl shadow-xl space-y-6 z-10 animate-in fade-in zoom-in-95 duration-300 border border-border-subtle">
         {/* Official Brand Identity */}
         <div className="text-center space-y-3">

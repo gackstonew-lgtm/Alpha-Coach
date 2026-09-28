@@ -98,16 +98,28 @@ AI Performance Coach, Trader DNA & Risk Guardian
 
 ---
 
-## 🔧 Running Tests
+## 🔧 Running Tests & Validation
 
-Run the full automated test suites across backend and bridge:
+Run the full automated test suites across backend, bridge, and production bundles:
 
 ```bash
-# Run backend Jest tests (Trade reconstruction, Analytics math, Sync idempotency)
-cd backend
-npm test
+# Run backend Jest tests (Trade reconstruction, Analytics math, Sync idempotency, Settings)
+npm run test:backend
 
 # Run Python MT5 Bridge test suite
-cd ..
-python bridge/test_bridge.py
+npm run test:bridge
+
+# Run full test suite
+npm test
+
+# Build production API bundle and frontend
+npm run build:api
+npm run build:frontend
 ```
+
+---
+
+## 📚 Technical Documentation & Specifications
+- **[System Architecture & Security Model](file:///c:/Users/Gackstone_Baraka/Downloads/Alpha%20Coach/ARCHITECTURE.md)**: Details on the zero-password pairing lifecycle, MT5 deal reconstruction engine, and math formulas.
+- **[REST API Reference](file:///c:/Users/Gackstone_Baraka/Downloads/Alpha%20Coach/API.md)**: Specification for all public, dashboard, and bridge endpoints including `/health`.
+- **[Changelog](file:///c:/Users/Gackstone_Baraka/Downloads/Alpha%20Coach/CHANGELOG.md)**: Release progression and hardening history.

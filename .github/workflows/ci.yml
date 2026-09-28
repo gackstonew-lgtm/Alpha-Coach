@@ -1,0 +1,103 @@
+name: Meta Coach Continuous Integration
+
+on:
+  push:
+    branches: [main, master, release/*]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-test:
+    name: Backend Test & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: backend/package.json
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci || npm install
+
+      - name: Run Backend Unit & Integration Tests
+        run: |
+          cd backend
+          npm test
+
+  bridge-test:
+    name: MT5 Python Bridge Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Bridge Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f bridge/requirements.txt ]; then pip install -r bridge/requirements.txt; fi
+          pip install requests python-dotenv
+
+      - name: Run Bridge Automated Tests
+        run: |
+          python bridge/test_bridge.py
+
+  frontend-build:
+    name: Frontend Build & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci || npm install
+
+      - name: Typecheck & Build Frontend
+        run: |
+          cd frontend
+          npm run build
+
+  api-bundle:
+    name: Production Serverless Bundle Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Root Dependencies
+        run: |
+          npm ci || npm install
+
+      - name: Execute Serverless Bundler
+        run: |
+          node scripts/build-api-bundle.js

@@ -26,6 +26,7 @@ export const PublicNavbar: React.FC = () => {
     { name: 'Features', href: '/#features', icon: Sparkles },
     { name: 'Methodology', href: '/methodology', icon: Layers },
     { name: 'Security', href: '/security', icon: Shield },
+    { name: 'FAQ', href: '/faq', icon: BookOpen },
     { name: 'Legal', href: '/terms', icon: BookOpen }
   ];
 

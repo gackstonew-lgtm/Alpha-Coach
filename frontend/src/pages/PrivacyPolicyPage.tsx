@@ -1,24 +1,40 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { MetaHead } from '../components/common/MetaHead';
 import { PublicNavbar } from '../components/public/PublicNavbar';
 import { PublicFooter } from '../components/public/PublicFooter';
-import { Shield, Lock, ArrowLeft, CheckCircle2, Database, Key } from 'lucide-react';
+import { Breadcrumbs } from '../components/public/Breadcrumbs';
+import { Shield, Lock, AlertTriangle, CheckCircle2, Database, Key } from 'lucide-react';
 
 export const PrivacyPolicyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
+      <MetaHead
+        title="Privacy Policy & Trader Data Sovereignty | Meta Coach"
+        description="Meta Coach privacy policy: Zero-Password architecture, local read-only MT5 integration, data encryption, and GDPR compliance."
+        canonicalPath="/privacy"
+      />
       <PublicNavbar />
 
-      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-12">
+      <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 w-full space-y-8">
+        <Breadcrumbs items={[{ name: 'Legal', path: '/privacy' }, { name: 'Privacy Policy', path: '/privacy' }]} />
+
+        {/* Legal Review Draft Banner */}
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-start gap-3 text-xs leading-relaxed">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <span className="font-bold uppercase tracking-wider block mb-0.5">Notice to Users & Compliance Reviewers</span>
+            <span>
+              This document represents our preliminary privacy disclosure draft and is currently pending formal legal review. The policies below define our strict Zero-Password and encryption standards.
+            </span>
+          </div>
+        </div>
+
         {/* Header */}
-        <div className="space-y-4">
-          <Link to="/" className="inline-flex items-center gap-1.5 text-xs text-brand-600 dark:text-brand-400 hover:underline">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Home</span>
-          </Link>
+        <div className="space-y-3">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <Shield className="w-6 h-6" />
+              <Shield className="w-6 h-6" aria-hidden="true" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-content-primary tracking-tight">
