@@ -9,7 +9,7 @@
       "destination": "/api/index.js"
     },
     {
-      "source": "/((?!api|health).*)",
+      "source": "/((?!api|health|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
@@ -24,6 +24,10 @@
         {
           "key": "Content-Type",
           "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
         }
       ]
     },
