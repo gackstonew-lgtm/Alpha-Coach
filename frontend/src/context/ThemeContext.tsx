@@ -1,41 +1,149 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Lock, Mail, ArrowRight, ShieldAlert } from 'lucide-react';
+import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
+import { MetaHead } from '../components/common/MetaHead';
 
-type Theme = 'dark' | 'light';
+export const LoginPage: React.FC = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem('alpha_coach_theme') as Theme) || 'dark'
-  );
-
-  useEffect(() => {
-    localStorage.setItem('alpha_coach_theme', theme);
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+  // Safely resolve redirect target (guaranteeing safe relative paths and preserving session params)
+  const resolveRedirectUrl = (): string => {
+    const rawRedirect = searchParams.get('redirect');
+    if (!rawRedirect || !rawRedirect.startsWith('/') || rawRedirect.startsWith('//')) {
+      return '/dashboard';
     }
-  }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+    let target = rawRedirect;
+    // In case session param was passed as sibling query param instead of encoded inside redirect
+    const sessionParam = searchParams.get('session');
+    if (sessionParam && target.includes('/pair') && !target.includes('session=')) {
+      const sep = target.includes('?') ? '&' : '?';
+      target = `${target}${sep}session=${encodeURIComponent(sessionParam)}`;
+    }
+    return target;
+  };
+
+  const redirectUrl = resolveRedirectUrl();
+  const isPairingRedirect = redirectUrl.includes('/pair');
+
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+    try {
+      await login(email, password);
+      navigate(redirectUrl, { replace: true });
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your email and password.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
+    <div className="min-h-screen bg-canvas text-content-primary flex flex-col justify-center items-center p-4 relative overflow-hidden ambient-glow-bg">
+      <MetaHead
+        title="Sign In — Meta Coach Trading Terminal"
+        description="Sign in to your Meta Coach trading account to review automated MT5 trade journals, edge metrics, and AI Coach analysis."
+        canonicalPath="/login"
+      />
+      <div className="max-w-md w-full framer-card p-8 rounded-3xl shadow-xl space-y-6 z-10 animate-in fade-in zoom-in-95 duration-300 border border-border-subtle">
+        {/* Official Brand Identity */}
+        <div className="text-center space-y-3">
+          <div className="flex justify-center">
+            <Link to="/">
+              <AlphaCoachLogo size="lg" showWordmark={true} />
+            </Link>
+          </div>
+          <p className="text-xs text-content-muted">Automated MT5 Trading Journal & Performance OS</p>
+        </div>
 
-export const useTheme = () => {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
-  return ctx;
+        {isPairingRedirect && (
+          <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/25 text-xs text-brand-400 space-y-1">
+            <div className="flex items-center space-x-1.5 font-bold">
+              <ShieldAlert className="w-4 h-4 shrink-0" />
+              <span>Sign In to Authorize MT5 Bridge</span>
+            </div>
+            <p className="text-content-secondary text-[11px] leading-relaxed">
+              Please enter your updated account credentials. After signing in, you will be returned directly to complete bridge pairing.
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 text-center font-medium">
+            {error}
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div className="space-y-1.5">
+            <label className="block text-slate-900 dark:text-slate-200 font-medium">Email Address</label>
+            <div className="flex items-center gap-2 bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
+              <Mail className="w-4 h-4 text-content-muted" />
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                className="auth-input bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-slate-900 dark:caret-white"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-slate-900 dark:text-slate-200 font-medium">Password</label>
+            <div className="flex items-center gap-2 bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
+              <Lock className="w-4 h-4 text-content-muted" />
+              <input
+                type="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="auth-input bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-slate-900 dark:caret-white"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-brand-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
+          >
+            <span>{isLoading ? 'Signing In...' : 'Sign In to Performance OS'}</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </form>
+
+        {/* Register link */}
+        <div className="space-y-2 text-center text-xs text-content-muted">
+          <div>
+            New to Meta Coach?{' '}
+            <Link to="/register" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
+              Create an Account
+            </Link>
+          </div>
+          <div>
+            <Link to="/" className="text-content-subtle hover:text-content-secondary transition">
+              ← Return to Meta Coach Overview
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
