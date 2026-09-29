@@ -31,17 +31,18 @@ export const MetaCoachLogo: React.FC<LogoProps> = ({
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           className="w-full h-full drop-shadow-sm"
+          aria-hidden="true"
         >
           <defs>
             <linearGradient id="mcGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#F7D89C" />
-              <stop offset="50%" stop-color="#D5AB5A" />
-              <stop offset="100%" stop-color="#B28532" />
+              <stop offset="0%" stopColor="#F7D89C" />
+              <stop offset="50%" stopColor="#D5AB5A" />
+              <stop offset="100%" stopColor="#B28532" />
             </linearGradient>
             <linearGradient id="mcSwooshGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#B28532" />
-              <stop offset="50%" stop-color="#E2B766" />
-              <stop offset="100%" stop-color="#FCE1A8" />
+              <stop offset="0%" stopColor="#B28532" />
+              <stop offset="50%" stopColor="#E2B766" />
+              <stop offset="100%" stopColor="#FCE1A8" />
             </linearGradient>
           </defs>
 
