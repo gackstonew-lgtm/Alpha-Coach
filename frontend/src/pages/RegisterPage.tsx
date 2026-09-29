@@ -92,7 +92,7 @@ export const RegisterPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="block text-slate-200 dark:text-slate-200 font-medium">First Name</label>
+                <label className="block text-slate-900 dark:text-slate-200 font-medium">First Name</label>
                 <input
                   type="text"
                   required
@@ -100,11 +100,11 @@ export const RegisterPage: React.FC = () => {
                   value={firstName}
                   onChange={e => setFirstName(e.target.value)}
                   placeholder="Alex"
-                  className="w-full bg-surface-secondary border border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition caret-white"
+                  className="auth-input w-full bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition caret-slate-900 dark:caret-white"
                 />
               </div>
               <div className="space-y-1">
-                <label className="block text-slate-200 dark:text-slate-200 font-medium">Last Name</label>
+                <label className="block text-slate-900 dark:text-slate-200 font-medium">Last Name</label>
                 <input
                   type="text"
                   required
@@ -112,14 +112,14 @@ export const RegisterPage: React.FC = () => {
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
                   placeholder="Vance"
-                  className="w-full bg-surface-secondary border border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition caret-white"
+                  className="auth-input w-full bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition caret-slate-900 dark:caret-white"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="block text-slate-200 dark:text-slate-200 font-medium">Email Address</label>
-              <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
+              <label className="block text-slate-900 dark:text-slate-200 font-medium">Email Address</label>
+              <div className="flex items-center gap-2 bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
                 <Mail className="w-4 h-4 text-content-muted" />
                 <input
                   type="email"
@@ -128,14 +128,14 @@ export const RegisterPage: React.FC = () => {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="bg-transparent text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-white"
+                  className="auth-input bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-slate-900 dark:caret-white"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="block text-slate-200 dark:text-slate-200 font-medium">Password</label>
-              <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
+              <label className="block text-slate-900 dark:text-slate-200 font-medium">Password</label>
+              <div className="flex items-center gap-2 bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
                 <Lock className="w-4 h-4 text-content-muted" />
                 <input
                   type="password"
@@ -144,7 +144,7 @@ export const RegisterPage: React.FC = () => {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="bg-transparent text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-white"
+                  className="auth-input bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-slate-900 dark:caret-white"
                 />
               </div>
             </div>
