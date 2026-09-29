@@ -88,8 +88,8 @@ export const LoginPage: React.FC = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div className="space-y-1.5">
-            <label className="block text-slate-200 dark:text-slate-200 font-medium">Email Address</label>
-            <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
+            <label className="block text-slate-900 dark:text-slate-200 font-medium">Email Address</label>
+            <div className="flex items-center gap-2 bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
               <Mail className="w-4 h-4 text-content-muted" />
               <input
                 type="email"
@@ -98,14 +98,14 @@ export const LoginPage: React.FC = () => {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="name@example.com"
-                className="bg-transparent text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-white"
+                className="auth-input bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-slate-900 dark:caret-white"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-slate-200 dark:text-slate-200 font-medium">Password</label>
-            <div className="flex items-center gap-2 bg-surface-secondary border border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
+            <label className="block text-slate-900 dark:text-slate-200 font-medium">Password</label>
+            <div className="flex items-center gap-2 bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
               <Lock className="w-4 h-4 text-content-muted" />
               <input
                 type="password"
@@ -114,7 +114,7 @@ export const LoginPage: React.FC = () => {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="bg-transparent text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-white"
+                className="auth-input bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-slate-900 dark:caret-white"
               />
             </div>
           </div>
