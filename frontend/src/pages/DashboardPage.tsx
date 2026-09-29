@@ -26,13 +26,66 @@ import {
 import { Link } from 'react-router-dom';
 
 export const DashboardPage: React.FC = () => {
-  const { selectedAccountId, selectedAccount, accounts } = useAccounts();
+  const { selectedAccountId, selectedAccount, accounts, isLoadingAccounts } = useAccounts();
   const { theme } = useTheme();
   const [overview, setOverview] = useState<PerformanceOverview | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
   const [riskMonitor, setRiskMonitor] = useState<any>(null);
   const [chartMode, setChartMode] = useState<'cumulative' | 'equity'>('cumulative');
+
+  // Account Balance & Equity computations (derived from connected MT5 accounts)
+  const hasAccounts = accounts.length > 0;
+  const isAccountDataReady = !isLoadingAccounts && (selectedAccountId === 'ALL' ? hasAccounts : !!selectedAccount);
+
+  const { displayBalance, displayEquity, balanceSubtext, equitySubtext } = useMemo(() => {
+    if (!isAccountDataReady) {
+      return {
+        displayBalance: null,
+        displayEquity: null,
+        balanceSubtext: isLoadingAccounts ? 'Loading account...' : 'No accounts connected',
+        equitySubtext: isLoadingAccounts ? 'Loading trades...' : 'Closed / Open: — / —',
+      };
+    }
+
+    if (selectedAccountId !== 'ALL' && selectedAccount) {
+      const bal = Number(selectedAccount.balance) || 0;
+      const eq = Number(selectedAccount.equity ?? selectedAccount.balance) || 0;
+      const maskedAcct = selectedAccount.account_number
+        ? (selectedAccount.account_number.length > 4 ? `····${selectedAccount.account_number.slice(-4)}` : selectedAccount.account_number)
+        : '····';
+      const broker = selectedAccount.broker_name || 'MT5';
+      const closed = selectedAccount.total_closed_trades ?? 0;
+      const open = selectedAccount.total_open_trades ?? 0;
+
+      return {
+        displayBalance: `$${bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        displayEquity: `$${eq.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        balanceSubtext: `${broker} • Acct ${maskedAcct}`,
+        equitySubtext: `Closed / Open: ${closed} / ${open}`,
+      };
+    }
+
+    // Consolidated view across all connected accounts
+    const totalBal = accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+    const totalEq = accounts.reduce((sum, a) => sum + (Number(a.equity ?? a.balance) || 0), 0);
+    const totalClosed = accounts.reduce((sum, a) => sum + (Number(a.total_closed_trades) || 0), 0);
+    const totalOpen = accounts.reduce((sum, a) => sum + (Number(a.total_open_trades) || 0), 0);
+
+    const consolidatedSubtext =
+      accounts.length > 1
+        ? `${accounts.length} accounts`
+        : accounts.length === 1
+        ? `${accounts[0].broker_name || 'MT5'} • Acct ${accounts[0].account_number ? (accounts[0].account_number.length > 4 ? `····${accounts[0].account_number.slice(-4)}` : accounts[0].account_number) : '····'}`
+        : 'No accounts connected';
+
+    return {
+      displayBalance: `$${totalBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      displayEquity: `$${totalEq.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      balanceSubtext: consolidatedSubtext,
+      equitySubtext: `Closed / Open: ${totalClosed} / ${totalOpen}`,
+    };
+  }, [isAccountDataReady, isLoadingAccounts, selectedAccountId, selectedAccount, accounts]);
 
   // Derive stable dependency values from accounts to avoid re-triggering
   // this effect every time AccountContext produces a new array reference
@@ -171,31 +224,31 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Profit Factor */}
+        {/* Account Balance */}
         <div className="framer-card-interactive p-5 rounded-2xl">
           <div className="flex items-center justify-between text-xs font-semibold text-content-muted">
-            <span>Profit Factor</span>
+            <span>Account Balance</span>
             <span className="p-1 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400"><Award className="w-4 h-4" /></span>
           </div>
-          <div className="text-xl sm:text-2xl font-extrabold font-mono text-content-primary mt-2">
-            {overview?.profitFactor || 0}
+          <div className="text-xl sm:text-2xl font-extrabold font-mono text-content-primary mt-2 truncate">
+            {displayBalance ?? '—'}
           </div>
-          <div className="text-[11px] text-content-muted mt-1.5">
-            Expectancy: +${overview?.expectancy || 0} / trade
+          <div className="text-[11px] text-content-muted mt-1.5 truncate" title={balanceSubtext}>
+            {balanceSubtext}
           </div>
         </div>
 
-        {/* Max Drawdown */}
+        {/* Account Equity */}
         <div className="framer-card-interactive p-5 rounded-2xl">
           <div className="flex items-center justify-between text-xs font-semibold text-content-muted">
-            <span>Max Drawdown</span>
+            <span>Account Equity</span>
             <span className="p-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400"><ShieldCheck className="w-4 h-4" /></span>
           </div>
-          <div className="text-xl sm:text-2xl font-extrabold font-mono text-amber-600 dark:text-amber-400 mt-2">
-            ${(overview?.maxDrawdownAmount || 0).toLocaleString()}
+          <div className="text-xl sm:text-2xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400 mt-2 truncate">
+            {displayEquity ?? '—'}
           </div>
-          <div className="text-[11px] text-content-muted mt-1.5">
-            {overview?.maxDrawdownPct || 0}% Peak-to-Trough
+          <div className="text-[11px] text-content-muted mt-1.5 truncate" title={equitySubtext}>
+            {equitySubtext}
           </div>
         </div>
       </div>
