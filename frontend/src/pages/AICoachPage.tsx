@@ -438,13 +438,15 @@ export const AICoachPage: React.FC = () => {
                 </p>
               </div>
 
-              {/* Suggestion cards */}
+              {/* Suggestion cards (Top 3 on mobile/tablet, all 6 on desktop) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {SUGGESTION_CARDS.map(card => (
+                {SUGGESTION_CARDS.map((card, idx) => (
                   <button
                     key={card.title}
                     onClick={() => handleSend(card.prompt)}
-                    className="group text-left p-4 rounded-2xl bg-surface border border-border-subtle hover:border-brand-primary/40 hover:bg-surface-secondary transition flex items-start gap-3"
+                    className={`group text-left p-4 rounded-2xl bg-surface border border-border-subtle hover:border-brand-primary/40 hover:bg-surface-secondary transition items-start gap-3 ${
+                      idx >= 3 ? 'hidden lg:flex' : 'flex'
+                    } ${idx === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}
                   >
                     <span className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary shrink-0">
                       <card.icon className="w-4 h-4" />

@@ -12,10 +12,10 @@ import {
   LogOut,
   Layers,
   Radio,
-  Menu,
   Check,
   Settings
 } from 'lucide-react';
+import { AlphaCoachLogo } from '../common/AlphaCoachLogo';
 
 export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
@@ -80,15 +80,16 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
   return (
     <header className="sticky top-0 z-40 framer-glass border-b border-border-subtle px-4 sm:px-6 lg:px-8 py-3 transition-colors duration-200">
       <div className="flex items-center justify-between gap-3">
-        {/* Left: Mobile Toggle & Account Selector */}
+        {/* Left: Mobile Brand Lockup & Desktop Account Selector */}
         <div className="flex items-center gap-3 min-w-0">
-          <button
-            onClick={onToggleSidebar}
-            className="lg:hidden p-2 rounded-xl text-content-muted hover:text-content-primary hover:bg-surface-secondary transition"
-            aria-label="Toggle navigation sidebar"
+          {/* Mobile/Tablet Brand Lockup (Replaces Hamburger below lg) */}
+          <NavLink
+            to="/dashboard"
+            className="lg:hidden flex items-center flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-xl"
+            aria-label="Meta Coach home"
           >
-            <Menu className="w-5 h-5" />
-          </button>
+            <AlphaCoachLogo size="md" showWordmark={true} />
+          </NavLink>
 
           {/* Account Selector Pill (Desktop Only) */}
           <div className="hidden lg:flex items-center gap-2 bg-surface border border-border-subtle rounded-xl px-3 py-1.5 shadow-sm">
