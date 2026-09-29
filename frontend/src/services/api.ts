@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { User, TradingAccount, ReconstructedTrade, RiskRule, PerformanceOverview } from '../types';
 import { UserSettings } from '../types/settings';
+import { answerForexQuestion, detectJournalIntent, smallTalk } from './forexKnowledge';
 
 export interface NormalizedApiError {
   message: string;
@@ -1344,39 +1345,60 @@ class ApiClient {
     };
   }
 
-  async askAICoach(question: string, accountId?: string) {
+  async askAICoach(question: string, accountId?: string, firstName?: string) {
     if (USE_CUSTOM_BACKEND) {
-      return this.request('/ai/chat', { method: 'POST', body: JSON.stringify({ question, accountId }) });
+      return this.request('/ai/chat', { method: 'POST', body: JSON.stringify({ question, accountId, firstName }) });
     }
 
-    const analyticsRes = await this.getAnalytics({ accountId });
-    const ov = analyticsRes.overview;
+    // 1. Small talk (hi / thanks)
+    const chat = smallTalk(question, firstName);
+    if (chat) {
+      return { answer: chat.answer, followUps: chat.followUps };
+    }
 
-    if (ov.totalTrades === 0) {
+    // 2. General forex knowledge (works with or without trade history)
+    const journalIntent = detectJournalIntent(question);
+    const knowledge = answerForexQuestion(question);
+    if (knowledge && !journalIntent) {
+      return { answer: knowledge.answer, followUps: knowledge.followUps };
+    }
+
+    // 3. Journal-grounded analysis
+    const analyticsRes = await this.getAnalytics({ accountId });
+    const ov: any = analyticsRes.overview;
+
+    if (!ov || ov.totalTrades === 0) {
       return {
-        answer: "I do not see any synchronized trade history yet for your account. Please connect your MT5 terminal bridge to import your trades.",
-        observedData: {},
-        patterns: [],
+        answer: knowledge
+          ? knowledge.answer
+          : "I don't see any synchronized trade history for this account yet. Once your MT5 bridge imports trades I can analyze your performance. Meanwhile, ask me anything about forex: risk, sessions, strategies, news, or psychology.",
+        followUps: knowledge
+          ? knowledge.followUps
+          : ['How do I calculate position size?', 'What are the trading sessions?', 'How do I stop revenge trading?'],
         recommendations: ['Pair your local MT5 bridge terminal in the Bridge Hub to import historical trades.']
       };
     }
+
+    const money = (n: number) => `${n < 0 ? '-' : ''}$${Math.abs(Number(n) || 0).toFixed(2)}`;
 
     const observedData: Record<string, any> = {
       'Total Closed Trades': ov.totalTrades,
       'Win Rate': `${ov.winRate}%`,
       'Profit Factor': ov.profitFactor,
-      'Net Profit': `$${ov.netProfit.toFixed(2)}`,
-      'Expectancy': `+$${ov.expectancy.toFixed(2)}`,
+      'Net Profit': money(ov.netProfit),
+      'Expectancy': `${money(ov.expectancy)} / trade`,
       'Avg Reward/Risk (R)': `${ov.averageR}R`
     };
 
     const patterns: string[] = [];
     const recommendations: string[] = [];
 
-    if (ov.longTrades.winRate > ov.shortTrades.winRate) {
-      patterns.push(`Higher long-side edge: BUY positions achieved a ${ov.longTrades.winRate}% win rate vs ${ov.shortTrades.winRate}% on SELL positions.`);
-    } else if (ov.shortTrades.winRate > ov.longTrades.winRate) {
-      patterns.push(`Higher short-side edge: SELL positions achieved a ${ov.shortTrades.winRate}% win rate vs ${ov.longTrades.winRate}% on BUY positions.`);
+    if (ov.longTrades && ov.shortTrades) {
+      if (ov.longTrades.winRate > ov.shortTrades.winRate) {
+        patterns.push(`Higher long-side edge: BUY positions achieved a ${ov.longTrades.winRate}% win rate vs ${ov.shortTrades.winRate}% on SELL positions.`);
+      } else if (ov.shortTrades.winRate > ov.longTrades.winRate) {
+        patterns.push(`Higher short-side edge: SELL positions achieved a ${ov.shortTrades.winRate}% win rate vs ${ov.longTrades.winRate}% on BUY positions.`);
+      }
     }
 
     if (ov.maxConsecutiveLosses >= 3) {
@@ -1386,13 +1408,27 @@ class ApiClient {
 
     recommendations.push(`Maintain risk sizing at 1% per trade to keep maximum historical drawdown (${ov.maxDrawdownPct}%) strictly contained.`);
 
-    const answer = `Analysis of ${ov.totalTrades} closed trades reveals an overall Win Rate of ${ov.winRate}% with a Profit Factor of ${ov.profitFactor} and Net P/L of $${ov.netProfit.toFixed(2)}.`;
+    let answer: string;
+    if (journalIntent === 'losing') {
+      answer = `### Losing Trade Analysis\n- **Max consecutive losses:** ${ov.maxConsecutiveLosses ?? 'n/a'}\n- **Win rate:** ${ov.winRate}% (so roughly ${(100 - Number(ov.winRate)).toFixed(1)}% of trades close at a loss)\n- **Max drawdown:** ${money(ov.maxDrawdownAmount)} (${ov.maxDrawdownPct}%)\n\nLosses inside your plan are the cost of an edge. Tag your losing trades in the Journal (e.g. revenge, early exit, no setup) so patterns become measurable.`;
+    } else if (journalIntent === 'review') {
+      answer = `### Trades Worth Reviewing\n1. Your **largest losing trades**, which are where most drawdown came from.\n2. Trades taken **right after a loss**, checking for revenge entries.\n3. Trades **outside your usual session or pair**.\n4. Trades where the stop was moved or removed.\n\nOpen the Journal tab to tag and review them.`;
+    } else if (journalIntent === 'session') {
+      answer = `### Session Performance\nSession-level breakdown lives in your Analytics tab. Across all sessions your overall win rate is **${ov.winRate}%** with a profit factor of **${ov.profitFactor}**.\n\nAs a rule of thumb, the London–New York overlap (13:00–17:00 GMT) has the best liquidity. Compare your P/L per session in Analytics and consider trading only the session where your expectancy is positive.`;
+    } else {
+      answer = `### Performance Summary\nAcross **${ov.totalTrades}** closed trades your net P/L is **${money(ov.netProfit)}** with a **${ov.winRate}%** win rate and a profit factor of **${ov.profitFactor}**.\n\n- **Expectancy:** ${money(ov.expectancy)} per trade\n- **Average R:** ${ov.averageR}R\n- **Max drawdown:** ${money(ov.maxDrawdownAmount)} (${ov.maxDrawdownPct}%)`;
+    }
 
     return {
       answer,
       observedData,
       patterns,
-      recommendations
+      recommendations,
+      followUps: [
+        'What is my max drawdown and how do I reduce it?',
+        'How do I stop revenge trading?',
+        'What is a good risk-to-reward ratio?'
+      ]
     };
   }
 
