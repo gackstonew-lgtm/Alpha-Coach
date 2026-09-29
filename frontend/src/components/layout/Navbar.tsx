@@ -14,15 +14,13 @@ import {
   Radio,
   Menu,
   Check,
-  Eye,
-  EyeOff,
   Settings
 } from 'lucide-react';
 
 export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
   const { accounts, selectedAccountId, setSelectedAccountId, refreshAccounts } = useAccounts();
-  const { settings, privacyMode, togglePrivacyMode } = useSettings();
+  const { settings, privacyMode } = useSettings();
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -132,20 +130,6 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
               <span className="text-brand-600 dark:text-brand-400 font-mono">{progression.currentXp || progression.current_xp || 0} XP</span>
             </NavLink>
           )}
-
-          {/* Privacy Mode Quick Toggle */}
-          <button
-            onClick={togglePrivacyMode}
-            className={`p-2 rounded-xl border transition-all duration-200 ${
-              privacyMode
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20'
-                : 'text-content-muted hover:text-content-primary hover:bg-surface-secondary border-border-subtle'
-            }`}
-            title={privacyMode ? 'Privacy Mode is ON (Balances hidden). Click to reveal.' : 'Turn on Privacy Mode (Hide balances & P/L)'}
-            aria-label="Toggle Privacy Mode"
-          >
-            {privacyMode ? <EyeOff className="w-4 h-4 text-amber-500" /> : <Eye className="w-4 h-4" />}
-          </button>
 
           {/* Quick Sync Button */}
           <button
