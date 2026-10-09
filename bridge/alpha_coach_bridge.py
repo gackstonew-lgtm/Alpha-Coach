@@ -52,7 +52,7 @@ except ImportError:
 from companion_logger import companion_logger
 
 __version__ = "1.0.5"
-APP_NAME = "Meta Coach MT5 Companion"
+APP_NAME = "Alpha Coach MT5 Companion"
 GITHUB_REPO = "gackstonew-lgtm/Alpha-Coach"
 
 # Production Endpoints

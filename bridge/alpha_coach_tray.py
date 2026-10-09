@@ -197,6 +197,11 @@ class AlphaCoachTrayApp:
         self.icon.run()
 
 def main():
+    if len(sys.argv) > 1 and any(arg in sys.argv for arg in ("--help", "-h", "--version", "-v", "--diagnostics", "--daemon", "--mock", "--full-history")):
+        from alpha_coach_bridge import main as bridge_cli_main
+        bridge_cli_main()
+        return
+
     bridge = AlphaCoachBridge()
     app = AlphaCoachTrayApp(bridge)
     app.run()
