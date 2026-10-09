@@ -1,0 +1,232 @@
+name: Release Alpha Coach MT5 Companion
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      require_signing:
+        description: 'Fail pipeline if Authenticode signing is not valid (true/false)'
+        required: false
+        default: 'false'
+        type: boolean
+      draft:
+        description: 'Publish release as draft (true/false)'
+        required: false
+        default: false
+        type: boolean
+      prerelease:
+        description: 'Mark release as pre-release (true/false)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build, Verify & Release Windows Companion
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Inno Setup 6
+        shell: powershell
+        run: |
+          choco install innosetup --no-progress -y
+          $innoPath = "C:\Program Files (x86)\Inno Setup 6"
+          if (Test-Path "$innoPath\ISCC.exe") {
+            echo "$innoPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+            Write-Host "[SUCCESS] Added Inno Setup to PATH: $innoPath"
+          } else {
+            Write-Error "ISCC.exe not found after chocolatey install"
+            exit 1
+          }
+
+      - name: Install Python Dependencies
+        shell: powershell
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r bridge/requirements.txt
+
+      - name: Run Bridge Automated Test Suite
+        shell: powershell
+        run: |
+          python bridge/test_bridge.py
+
+      - name: Compile and Package Windows Distributables
+        shell: powershell
+        env:
+          WINDOWS_CERTIFICATE_PFX: ${{ secrets.WINDOWS_CERTIFICATE_PFX }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          REQUIRE_CODE_SIGNING: ${{ inputs.require_signing || 'false' }}
+        run: |
+          $certTempPath = ""
+          try {
+            if ($env:WINDOWS_CERTIFICATE_PFX) {
+              Write-Host "[SIGN] Extracting PFX certificate from GitHub Secret..."
+              $certBytes = [System.Convert]::FromBase64String($env:WINDOWS_CERTIFICATE_PFX.Trim())
+              $certTempPath = Join-Path $env:RUNNER_TEMP "authenticode_signing.pfx"
+              [System.IO.File]::WriteAllBytes($certTempPath, $certBytes)
+            }
+
+            $buildParams = @("bridge/build_windows_bridge.py", "--clean")
+
+            if ($certTempPath -and (Test-Path $certTempPath)) {
+              $buildParams += @("--cert-file", $certTempPath)
+              if ($env:WINDOWS_CERTIFICATE_PASSWORD) {
+                $buildParams += @("--cert-pass", $env:WINDOWS_CERTIFICATE_PASSWORD)
+              }
+            }
+
+            if ($env:REQUIRE_CODE_SIGNING -eq "true") {
+              $buildParams += @("--require-signing")
+            }
+
+            python @buildParams
+            if ($LASTEXITCODE -ne 0) {
+              throw "build_windows_bridge.py exited with error code $LASTEXITCODE"
+            }
+          }
+          finally {
+            if ($certTempPath -and (Test-Path $certTempPath)) {
+              Remove-Item $certTempPath -Force -ErrorAction SilentlyContinue
+            }
+          }
+
+      - name: Validate Release Distributables & Integrity
+        id: validate
+        shell: powershell
+        run: |
+          $setupExe = "bridge/dist/AlphaCoach-MT5-Companion-Setup.exe"
+          $portableExe = "bridge/dist/AlphaCoach-MT5-Companion.exe"
+          $checksumsTxt = "bridge/dist/checksums.txt"
+          $singleSha = "bridge/dist/AlphaCoach-MT5-Companion-Setup.exe.sha256"
+
+          if (!(Test-Path $setupExe)) {
+            Write-Error "Missing critical installer artifact: $setupExe"
+            exit 1
+          }
+          if (!(Test-Path $portableExe)) {
+            Write-Error "Missing critical portable artifact: $portableExe"
+            exit 1
+          }
+          if (!(Test-Path $checksumsTxt)) {
+            Write-Error "Missing checksums file: $checksumsTxt"
+            exit 1
+          }
+          if (!(Test-Path $singleSha)) {
+            Write-Error "Missing sha256 single file: $singleSha"
+            exit 1
+          }
+
+          $setupSize = (Get-Item $setupExe).Length
+          $portableSize = (Get-Item $portableExe).Length
+
+          if ($setupSize -lt 5000000) {
+            Write-Error "Installer file size ($setupSize bytes) is suspiciously small!"
+            exit 1
+          }
+          if ($portableSize -lt 5000000) {
+            Write-Error "Portable binary file size ($portableSize bytes) is suspiciously small!"
+            exit 1
+          }
+
+          $actualSetupHash = (Get-FileHash -Path $setupExe -Algorithm SHA256).Hash.ToLower()
+          $actualPortableHash = (Get-FileHash -Path $portableExe -Algorithm SHA256).Hash.ToLower()
+          $checksumContent = Get-Content $checksumsTxt -Raw
+
+          if (!$checksumContent.Contains($actualSetupHash)) {
+            Write-Error "checksums.txt does not match actual installer hash: $actualSetupHash"
+            exit 1
+          }
+
+          $sigSetup = Get-AuthenticodeSignature -LiteralPath $setupExe
+          $sigPortable = Get-AuthenticodeSignature -LiteralPath $portableExe
+
+          Write-Host "============================================="
+          Write-Host "Artifact Verification Results:"
+          Write-Host "Installer:   $setupExe ($setupSize bytes)"
+          Write-Host "Installer Hash: $actualSetupHash"
+          Write-Host "Installer Sig:  $($sigSetup.Status)"
+          Write-Host "Portable:    $portableExe ($portableSize bytes)"
+          Write-Host "Portable Hash:  $actualPortableHash"
+          Write-Host "Portable Sig:   $($sigPortable.Status)"
+          Write-Host "============================================="
+
+          # Summary for GitHub Step Summary
+          "# Release Verification Summary" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "| Artifact | Size | SHA-256 Checksum | Signature Status |" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "| :--- | :--- | :--- | :--- |" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "| `AlphaCoach-MT5-Companion-Setup.exe` | $($setupSize.ToString('N0')) B | `$actualSetupHash` | $($sigSetup.Status) |" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "| `AlphaCoach-MT5-Companion.exe` | $($portableSize.ToString('N0')) B | `$actualPortableHash` | $($sigPortable.Status) |" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+
+          echo "setup_hash=$actualSetupHash" >> $env:GITHUB_OUTPUT
+          echo "portable_hash=$actualPortableHash" >> $env:GITHUB_OUTPUT
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Alpha Coach MT5 Companion ${{ github.ref_name || 'v1.0.5' }}"
+          draft: ${{ inputs.draft || false }}
+          prerelease: ${{ inputs.prerelease || false }}
+          generate_release_notes: true
+          files: |
+            bridge/dist/AlphaCoach-MT5-Companion-Setup.exe
+            bridge/dist/AlphaCoach-MT5-Companion.exe
+            bridge/dist/AlphaCoach-MT5-Companion-Setup.exe.sha256
+            bridge/dist/checksums.txt
+          body: |
+            ## Alpha Coach MT5 Companion Release ${{ github.ref_name || 'v1.0.5' }}
+
+            Alpha Coach MT5 Companion is a secure Windows desktop companion application that synchronizes your local MetaTrader 5 trading accounts, deals, orders, and open positions with the [Alpha Coach Web Platform](https://alpha-coach-nine.vercel.app/).
+
+            ### 🚀 Highlights & Features
+            - **Standard Windows Installer:** Clean per-user installation with Desktop and Start Menu shortcuts, standard uninstaller in Windows Programs & Features, and seamless update support.
+            - **Pre-Bundled MetaTrader 5 Engine:** Native MetaTrader 5 C-extensions bundled; zero Python installation required on the target machine.
+            - **No UPX Compression:** Eliminates heuristic false-positive antivirus triggers and ensures reliable Authenticode verification.
+            - **Enterprise Security & Privacy:** Operates with standard user permissions (`PrivilegesRequired=lowest`); never requests, handles, or stores broker passwords.
+            - **Token Redaction & Diagnostic Logging:** Sensitive device tokens and credentials are automatically masked in all logs (`%LOCALAPPDATA%\AlphaCoach\logs\companion.log`).
+            - **1-Click Browser Pairing:** Instant OAuth-style pairing with your Alpha Coach account.
+            - **Silent System Tray & Diagnostics:** Runs quietly in the notification area with live sync status, diagnostic popups, and pause/resume controls.
+
+            ---
+
+            ### 📦 Release Assets & Checksums
+            | File | Description | SHA-256 Checksum |
+            | :--- | :--- | :--- |
+            | **`AlphaCoach-MT5-Companion-Setup.exe`** | Windows Inno Setup Installer | `${{ steps.validate.outputs.setup_hash }}` |
+            | **`AlphaCoach-MT5-Companion.exe`** | Standalone Portable Runner | `${{ steps.validate.outputs.portable_hash }}` |
+            | **`checksums.txt`** | Full SHA-256 Checksum Manifest | See file |
+            | **`AlphaCoach-MT5-Companion-Setup.exe.sha256`** | Installer Hash Verification | See file |
+
+            ---
+
+            ### 🛡️ Windows Defender SmartScreen & Reputation Notice
+            For newly published releases or builds signed with newly issued certificates, Windows Defender SmartScreen may display:
+            > *"Windows protected your PC — Microsoft Defender SmartScreen prevented an unrecognized app from starting."*
+
+            **Why this occurs:**
+            SmartScreen uses a cloud-based application reputation database. New executable releases inherently start with zero reputation until an install threshold is reached across legitimate Windows users.
+
+            **Verification & Safe Installation:**
+            1. Open PowerShell and verify the SHA-256 hash against the published checksum above:
+               ```powershell
+               Get-FileHash -Algorithm SHA256 .\AlphaCoach-MT5-Companion-Setup.exe
+               ```
+            2. If the hash matches the release table, click **"More info"** on the SmartScreen dialog, followed by **"Run anyway"**.
+            3. The installer runs under standard user permissions and installs to your user profile directory without requiring administrator privileges.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

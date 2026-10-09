@@ -6,6 +6,7 @@ full history generation, reconciliation telemetry, 1-click pairing flow, and rea
 
 import unittest
 import os
+import sys
 import json
 from datetime import datetime, timedelta, timezone
 from mock_mt5_adapter import generate_mock_3month_data, generate_mock_open_positions, generate_mock_full_history
@@ -115,6 +116,43 @@ class TestMT5Bridge(unittest.TestCase):
         bridge = AlphaCoachBridge(mock_mode=True, device_token="test_tok")
         ok, msg = bridge.check_device_authorization()
         self.assertTrue(ok)
+
+    def test_signature_verification_missing_file(self):
+        from sign_binaries import verify_signature
+        res = verify_signature("non_existent_file_path.exe")
+        self.assertFalse(res["exists"])
+        self.assertFalse(res["is_signed"])
+        self.assertEqual(res["status"], "FileNotFound")
+
+    def test_signature_verification_python_executable(self):
+        from sign_binaries import verify_signature
+        res = verify_signature(sys.executable)
+        self.assertTrue(res["exists"])
+        self.assertIn("is_signed", res)
+        self.assertIn("status", res)
+        if sys.platform == "win32":
+            self.assertTrue(res["is_signed"])
+            self.assertEqual(res["status"], "Valid")
+
+    def test_inno_setup_script_properties(self):
+        iss_path = os.path.join(os.path.dirname(__file__), "installer", "alpha_coach_installer.iss")
+        self.assertTrue(os.path.isfile(iss_path))
+        with open(iss_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn('MyAppExeName "AlphaCoach-MT5-Companion.exe"', content)
+        self.assertIn('OutputBaseFilename=AlphaCoach-MT5-Companion-Setup', content)
+        self.assertIn('PrivilegesRequired=lowest', content)
+        self.assertIn('{autopf}\\Alpha Coach\\MT5 Companion', content)
+
+    def test_checksum_calculation(self):
+        from build_windows_bridge import calculate_sha256
+        import hashlib
+        this_file = os.path.abspath(__file__)
+        calculated = calculate_sha256(this_file)
+        with open(this_file, "rb") as f:
+            expected = hashlib.sha256(f.read()).hexdigest()
+        self.assertEqual(calculated, expected)
+        self.assertEqual(len(calculated), 64)
 
 if __name__ == "__main__":
     unittest.main()
