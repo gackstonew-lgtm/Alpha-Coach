@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Meta Coach are documented in this file.
+All notable changes to Trader's Edge are documented in this file.
 
 ## [1.0.6] - 2026-09-28
 ### Added
@@ -29,7 +29,7 @@ All notable changes to Meta Coach are documented in this file.
   - 5-question FAQ with `FAQPage` JSON-LD structured data and `/faq` page.
   - Dedicated `/disclaimer` risk disclaimer page flagged for formal legal review.
   - Post-registration onboarding thank-you page (`/welcome`).
-  - Support contact promise (`support@metacoach.io` with guaranteed 24h response time).
+  - Support contact promise (`support@tradersedge.io` with guaranteed 24h response time).
   - Privacy-preserving Google Analytics 4 integration with cookie consent banner (`CookieConsentBanner.tsx`).
   - Custom on-brand 404 page (`NotFoundPage.tsx`).
   - Offline fallback page (`/offline.html`) and production service worker (`sw.js`).

@@ -1,8 +1,8 @@
-# Meta Coach System Architecture
+# Trader's Edge System Architecture
 
 ## 1. System Overview & Topology
 
-Meta Coach is an institutional-grade, zero-password automated trading journal and quantitative performance platform designed for MetaTrader 5 (MT5) traders.
+Trader's Edge is an institutional-grade, zero-password automated trading journal and quantitative performance platform designed for MetaTrader 5 (MT5) traders.
 
 ```mermaid
 flowchart TD
@@ -14,7 +14,7 @@ flowchart TD
 
     subgraph Edge & API Layer
         VercelEdge[Vercel Serverless / Edge Gateway]
-        ExpressAPI[Meta Coach Express Engine (Node.js)]
+        ExpressAPI[Trader's Edge Express Engine (Node.js)]
         HealthMonitor[/health Health Contract]
     end
 
@@ -38,10 +38,10 @@ flowchart TD
 
 ## 2. Zero-Password Device Pairing Protocol
 
-Meta Coach eliminates credential theft risks by enforcing a zero-password pairing architecture for MT5 terminals:
+Trader's Edge eliminates credential theft risks by enforcing a zero-password pairing architecture for MT5 terminals:
 
 1. **Pairing Handshake**: The desktop bridge requests a 6-digit numeric pairing session code from `/api/v1/mt5/bridge/session`.
-2. **User Authorization**: The trader opens `metacoach.io/pair` on their authenticated mobile or desktop browser and enters or approves the pairing token.
+2. **User Authorization**: The trader opens the pairing portal on their authenticated mobile or desktop browser and enters or approves the pairing token.
 3. **Token Issuance**: The server generates a unique, cryptographically random permanent device token (`ac_bridge_...`) tied to the user ID and device fingerprint.
 4. **Immediate Revocation**: The trader can instantly revoke any paired device from the Settings Hub or Bridge Accounts page, immediately terminating terminal access.
 
@@ -49,7 +49,7 @@ Meta Coach eliminates credential theft risks by enforcing a zero-password pairin
 
 ## 3. MT5 Deal Reconstruction Engine
 
-MT5 emits non-atomic execution deals rather than aggregated trades. Meta Coach's deterministic reconstruction pipeline processes these deals with strict idempotency:
+MT5 emits non-atomic execution deals rather than aggregated trades. Trader's Edge's deterministic reconstruction pipeline processes these deals with strict idempotency:
 
 1. **Deal Ingestion**: Raw deal tickets (`ticket`, `order`, `position_id`, `volume`, `price`, `type`, `entry`) are recorded with a unique constraint on `(account_id, ticket)`. Duplicate sync payloads are automatically skipped.
 2. **Position Aggregation**: Deals sharing the same `position_id` are grouped.
@@ -61,7 +61,7 @@ MT5 emits non-atomic execution deals rather than aggregated trades. Meta Coach's
 
 ## 4. Quantitative Analytics & Calculation Provenance
 
-All metrics in Meta Coach adhere to mathematical standards:
+All metrics in Trader's Edge adhere to mathematical standards:
 
 | Metric | Formula | Provenance Classification |
 |---|---|---|

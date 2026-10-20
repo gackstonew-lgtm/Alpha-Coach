@@ -1,6 +1,6 @@
-# Alpha Coach - Supabase Database Architecture & Migrations
+# Trader's Edge - Supabase Database Architecture & Migrations
 
-This directory contains the production-grade PostgreSQL migrations, Row Level Security (RLS) policies, authentication triggers, and storage configurations for the **Alpha Coach MT5 Trading Journal & Performance OS**.
+This directory contains the production-grade PostgreSQL migrations, Row Level Security (RLS) policies, authentication triggers, and storage configurations for the **Trader's Edge MT5 Trading Journal & Performance OS**.
 
 ---
 
