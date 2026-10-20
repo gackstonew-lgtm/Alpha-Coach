@@ -30,7 +30,6 @@ import { GamificationPage } from './pages/GamificationPage';
 import { BridgeAccountsPage } from './pages/BridgeAccountsPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { MarketIntelligencePage } from './pages/MarketIntelligencePage';
 
 // PWA & Consent Components
 import { PwaInstallPrompt } from './components/pwa/PwaInstallPrompt';
@@ -93,7 +92,6 @@ export const App: React.FC = () => {
           {/* Core Product Pillars */}
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/journal" element={<JournalPage />} />
-          <Route path="/intelligence" element={<MarketIntelligencePage />} />
           <Route path="/performance" element={<PerformancePage />} />
           <Route path="/strategy-lab" element={<StrategyLabPage />} />
           <Route path="/risk-guardian" element={<RiskGuardianPage />} />
