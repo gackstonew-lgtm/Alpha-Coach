@@ -38,7 +38,7 @@ import {
 const SOFTWARE_APPLICATION_SCHEMA = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: 'Meta Coach',
+  name: "Trader's Edge",
   operatingSystem: 'Windows, macOS, Linux, iOS, Android, Web',
   applicationCategory: 'FinanceApplication',
   offers: {
@@ -123,7 +123,7 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="Meta Coach — Automated MT5 Trading Journal & Performance OS"
+        title="Trader's Edge — Automated MT5 Trading Journal & Performance OS"
         description="Automated MetaTrader 5 trading journal, mathematical trade reconstruction, disciplined risk parameters, and grounded AI coaching. Zero broker passwords required."
         canonicalPath="/"
         structuredData={[SOFTWARE_APPLICATION_SCHEMA, getFAQSchema()]}
@@ -144,7 +144,7 @@ export const LandingPage: React.FC = () => {
               </span>
             </h1>
             <p className="text-sm sm:text-base lg:text-lg text-content-secondary max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-3 duration-500">
-              Meta Coach transforms raw MetaTrader 5 trading activity into structured journals, mathematical performance metrics, disciplined risk awareness, and data-grounded AI coaching.
+              Trader&apos;s Edge transforms raw MetaTrader 5 trading activity into structured journals, mathematical performance metrics, disciplined risk awareness, and data-grounded AI coaching.
             </p>
           </div>
 
@@ -223,7 +223,7 @@ export const LandingPage: React.FC = () => {
                   Demo Data
                 </span>
               </div>
-              <p className="text-lg font-bold text-content-primary">Interactive Meta Coach Terminal</p>
+              <p className="text-lg font-bold text-content-primary">Interactive Trader&apos;s Edge Terminal</p>
             </div>
 
             {/* Tab Switcher */}
@@ -253,7 +253,7 @@ export const LandingPage: React.FC = () => {
                 <div className="w-3 h-3 rounded-full bg-amber-500/80" />
                 <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
                 <span className="ml-2 font-mono text-xs font-semibold text-content-muted">
-                  META_COACH_TERMINAL // MT5 BRIDGE: CONNECTED
+                  TRADERS_EDGE_TERMINAL // MT5 BRIDGE: CONNECTED
                 </span>
               </div>
               <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-content-muted">
@@ -281,7 +281,7 @@ export const LandingPage: React.FC = () => {
         </section>
 
         {/* ========================================================================= */}
-        {/* 3. WHY META COACH / PROGRESSION PIPELINE                                  */}
+        {/* 3. WHY TRADER'S EDGE / PROGRESSION PIPELINE                               */}
         {/* ========================================================================= */}
         <section
           ref={pipelineRef}
@@ -289,9 +289,9 @@ export const LandingPage: React.FC = () => {
         >
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <h2 className="text-xs font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">The Problem & Solution</h2>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">Why Traders Need Meta Coach</h3>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">Why Traders Need Trader&apos;s Edge</h3>
             <p className="text-xs sm:text-sm text-content-secondary leading-relaxed">
-              MetaTrader 5 stores raw financial deal tickets — not trading context. Meta Coach bridges the gap between raw execution and disciplined performance mastery.
+              MetaTrader 5 stores raw financial deal tickets — not trading context. Trader&apos;s Edge bridges the gap between raw execution and disciplined performance mastery.
             </p>
           </div>
 
@@ -322,7 +322,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <h4 className="text-base font-bold text-content-primary">Automated Lifecycle Math</h4>
               <p className="text-xs text-content-muted leading-relaxed">
-                Meta Coach automatically groups tickets into unified lifecycles, accurately computing volume-weighted prices, total commissions, swaps, net P/L, and holding durations.
+                Trader&apos;s Edge automatically groups tickets into unified lifecycles, accurately computing volume-weighted prices, total commissions, swaps, net P/L, and holding durations.
               </p>
             </div>
 
@@ -384,7 +384,7 @@ export const LandingPage: React.FC = () => {
                 {
                   step: '02',
                   name: 'Install Companion App',
-                  desc: 'Download and run the Meta Coach MT5 Companion on the Windows machine where MetaTrader 5 is installed.'
+                  desc: 'Download and run the Trader\'s Edge MT5 Companion on the Windows machine where MetaTrader 5 is installed.'
                 },
                 {
                   step: '03',
@@ -472,7 +472,7 @@ export const LandingPage: React.FC = () => {
                   Zero-Password Security Model
                 </h3>
                 <p className="text-xs sm:text-sm text-content-muted max-w-xl">
-                  We engineered Meta Coach so you never have to trust any remote server with your broker password.
+                  We engineered Trader&apos;s Edge so you never have to trust any remote server with your broker password.
                 </p>
               </div>
 
@@ -489,7 +489,7 @@ export const LandingPage: React.FC = () => {
               <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
                 <h5 className="font-bold text-content-primary">0 Broker Passwords</h5>
                 <p className="text-content-muted text-[11px] leading-relaxed">
-                  Meta Coach never requests or stores MT5 passwords. Connection runs locally on your desktop.
+                  Trader&apos;s Edge never requests or stores MT5 passwords. Connection runs locally on your desktop.
                 </p>
               </div>
               <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
@@ -633,7 +633,7 @@ export const LandingPage: React.FC = () => {
                 to="/register"
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-xs shadow-lg shadow-brand-500/25 transition active:scale-95"
               >
-                <span>Create Your Meta Coach Account</span>
+                <span>Create Your Trader&apos;s Edge Account</span>
                 <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </Link>
               <Link

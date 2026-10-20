@@ -382,7 +382,7 @@ export const AICoachPage: React.FC = () => {
         </button>
       </div>
       <p className="text-[10px] text-content-muted text-center mt-2">
-        Meta Coach analyzes your journal and explains forex concepts. It is educational, not financial advice.
+        Trader&apos;s Edge analyzes your journal and explains forex concepts. It is educational, not financial advice.
       </p>
     </div>
   );

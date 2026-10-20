@@ -10,7 +10,7 @@ export const DisclaimerPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="Financial Risk & Analytical Disclaimer | Meta Coach"
+        title="Financial Risk & Analytical Disclaimer | Trader's Edge"
         description="Important legal disclaimer regarding trading risk, margin leverage, lack of personalized financial advice, and empirical software utility."
         canonicalPath="/disclaimer"
       />
@@ -25,7 +25,7 @@ export const DisclaimerPage: React.FC = () => {
           <div>
             <span className="font-bold uppercase tracking-wider block mb-0.5">Notice to Users & Compliance Reviewers</span>
             <span>
-              This document represents our preliminary disclosure draft and is currently pending formal legal review. The terms below reflect Meta Coach's software-only operational boundaries.
+              This document represents our preliminary disclosure draft and is currently pending formal legal review. The terms below reflect Trader&apos;s Edge&apos;s software-only operational boundaries.
             </span>
           </div>
         </div>
@@ -50,7 +50,7 @@ export const DisclaimerPage: React.FC = () => {
               1. Not Financial or Investment Advice
             </h2>
             <p className="text-xs text-content-muted leading-relaxed">
-              Meta Coach (the "Software", "Platform", or "Service") is strictly an analytical and journaling software application. Meta Coach is NOT a registered investment advisor, broker-dealer, commodity trading advisor (CTA), or financial intermediary. Nothing on the Meta Coach website, companion application, automated trade reconstruction summaries, or AI Coach prompts constitutes personalized investment advice, trading recommendations, solicitation, or endorsement to buy or sell any financial asset.
+              Trader&apos;s Edge (the &quot;Software&quot;, &quot;Platform&quot;, or &quot;Service&quot;) is strictly an analytical and journaling software application. Trader&apos;s Edge is NOT a registered investment advisor, broker-dealer, commodity trading advisor (CTA), or financial intermediary. Nothing on the Trader&apos;s Edge website, companion application, automated trade reconstruction summaries, or AI Coach prompts constitutes personalized investment advice, trading recommendations, solicitation, or endorsement to buy or sell any financial asset.
             </p>
           </div>
 
@@ -91,8 +91,8 @@ export const DisclaimerPage: React.FC = () => {
             </h2>
             <p className="text-xs text-content-muted leading-relaxed">
               For regulatory inquiries, compliance audits, or data rights regarding these disclosures, please contact{' '}
-              <a href="mailto:support@metacoach.io" className="text-brand-500 hover:underline font-mono font-semibold">
-                support@metacoach.io
+              <a href="mailto:support@tradersedge.io" className="text-brand-500 hover:underline font-mono font-semibold">
+                support@tradersedge.io
               </a>
               . We reply to all inquiries within 24 hours.
             </p>

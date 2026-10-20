@@ -1,5 +1,5 @@
 /**
- * Meta Coach - General Forex Knowledge Engine
+ * Trader's Edge - General Forex Knowledge Engine
  * Pure TypeScript, zero dependencies. Shared verbatim by the frontend
  * (Supabase mode) and the backend (custom backend mode).
  */
@@ -390,7 +390,7 @@ If your drawdown exceeds your plan's limit, **reduce size** and review rather th
 4. Review your **best and worst trades** for process, not just outcome.
 5. Set **one** improvement goal for next week.
 
-Your synchronized MT5 trades in Meta Coach already give the data; tagging setups and mistakes turns it into insight.`,
+Your synchronized MT5 trades in Trader's Edge already give the data; tagging setups and mistakes turns it into insight.`,
     followUps: ['Which trades should I manually review to improve discipline?', 'How did I perform overall across my trading history?']
   },
   {

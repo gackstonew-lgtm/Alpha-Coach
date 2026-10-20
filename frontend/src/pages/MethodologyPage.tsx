@@ -24,7 +24,7 @@ export const MethodologyPage: React.FC = () => {
       icon: Cpu,
       color: 'text-blue-500',
       description:
-        'The Meta Coach Local Bridge establishes an official IPC link directly to your locally installed MetaTrader 5 desktop client using `mt5.initialize()`. It verifies terminal communication without requiring or handling broker passwords.',
+        "The Trader's Edge Local Bridge establishes an official IPC link directly to your locally installed MetaTrader 5 desktop client using `mt5.initialize()`. It verifies terminal communication without requiring or handling broker passwords.",
       details: [
         'Deterministic local socket communication',
         'Direct connection to MT5 terminal deal database',
@@ -54,7 +54,7 @@ export const MethodologyPage: React.FC = () => {
       icon: Layers,
       color: 'text-purple-500',
       description:
-        'Raw MT5 deals do not reflect true trading intent. The Meta Coach Reconstruction Engine groups multiple tickets into complete position lifecycles: tracking entry deals, scale-in additions, partial closes, final exits, commissions, and overnight swaps.',
+        "Raw MT5 deals do not reflect true trading intent. The Trader's Edge Reconstruction Engine groups multiple tickets into complete position lifecycles: tracking entry deals, scale-in additions, partial closes, final exits, commissions, and overnight swaps.",
       details: [
         'Weighted average entry and exit price calculations',
         'Accurate gross P/L, commissions, and swap fee accounting',
@@ -127,8 +127,8 @@ export const MethodologyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="Methodology — 7-Stage Quantitative Engine | Meta Coach"
-        description="Discover the 7-stage quantitative pipeline behind Meta Coach: local IPC connection, deal synchronization, lifecycle trade reconstruction, and psychological journaling."
+        title="Methodology — 7-Stage Quantitative Engine | Trader's Edge"
+        description="Discover the 7-stage quantitative pipeline behind Trader's Edge: local IPC connection, deal synchronization, lifecycle trade reconstruction, and psychological journaling."
         canonicalPath="/methodology"
       />
       <PublicNavbar />
@@ -141,7 +141,7 @@ export const MethodologyPage: React.FC = () => {
             <span>The Quantitative Framework</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-content-primary tracking-tight">
-            How Meta Coach Works
+            How Trader&apos;s Edge Works
           </h1>
           <p className="text-sm sm:text-base text-content-secondary leading-relaxed">
             A deterministic 7-stage pipeline that transforms raw MetaTrader 5 deal tickets into structured trade lifecycles, rigorous mathematical analytics, and data-grounded performance insights.

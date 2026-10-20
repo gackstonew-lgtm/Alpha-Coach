@@ -23,6 +23,7 @@ import adminRoutes from './routes/admin.routes';
 import notificationsRoutes from './routes/notifications.routes';
 import economicRoutes from './routes/economic.routes';
 import settingsRoutes from './routes/settings.routes';
+import intelligenceRoutes from './routes/intelligence.routes';
 
 const app = express();
 
@@ -109,7 +110,7 @@ app.get(['/', '/api', '/api/health', '/health', '/api/v1/health', '/v1/health'],
   res.status(statusCode).json({
     success: isHealthy,
     status: isHealthy ? 'ONLINE' : 'UNAVAILABLE',
-    service: 'Meta Coach Performance API',
+    service: "Trader's Edge Performance API",
     version: BUILD_INFO.version,
     buildVersion: BUILD_INFO.version,
     databaseProvider: diag.databaseProvider,
@@ -159,7 +160,8 @@ const routePairs = [
   ['/admin', adminRoutes],
   ['/notifications', notificationsRoutes],
   ['/economic', economicRoutes],
-  ['/settings', settingsRoutes]
+  ['/settings', settingsRoutes],
+  ['/intelligence', intelligenceRoutes]
 ] as const;
 
 routePairs.forEach(([prefix, router]) => {

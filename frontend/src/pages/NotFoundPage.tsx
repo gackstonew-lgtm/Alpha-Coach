@@ -9,8 +9,8 @@ export const NotFoundPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="404 — Page Not Found | Meta Coach"
-        description="The requested page could not be found on Meta Coach. Return to the trading terminal or homepage."
+        title="404 — Page Not Found | Trader's Edge"
+        description="The requested page could not be found on Trader's Edge. Return to the trading terminal or homepage."
         noIndex={true}
       />
       <PublicNavbar />
@@ -29,7 +29,7 @@ export const NotFoundPage: React.FC = () => {
               Page Not Found
             </h1>
             <p className="text-xs sm:text-sm text-content-muted leading-relaxed">
-              The page you are looking for has been moved, deleted, or does not exist on the Meta Coach network.
+              The page you are looking for has been moved, deleted, or does not exist on the Trader&apos;s Edge network.
             </p>
           </div>
 
