@@ -86,7 +86,7 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
           <NavLink
             to="/dashboard"
             className="lg:hidden flex items-center flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-xl"
-            aria-label="Meta Coach home"
+            aria-label="Trader's Edge home"
           >
             <AlphaCoachLogo size="md" showWordmark={true} />
           </NavLink>

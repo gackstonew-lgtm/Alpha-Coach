@@ -28,7 +28,7 @@ export const PwaUpdateBanner: React.FC = () => {
         </span>
         <div>
           <p className="font-bold text-xs">Update Available</p>
-          <p className="text-[11px] text-content-muted">A newer version of Meta Coach is ready.</p>
+          <p className="text-[11px] text-content-muted">A newer version of Trader&apos;s Edge is ready.</p>
         </div>
       </div>
 
