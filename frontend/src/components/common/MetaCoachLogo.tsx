@@ -1,1 +1,1 @@
-export { MetaCoachLogo, AlphaCoachLogo, default } from './AlphaCoachLogo';
+export { TradersEdgeLogo, MetaCoachLogo, AlphaCoachLogo, default } from './AlphaCoachLogo';
