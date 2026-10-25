@@ -38,6 +38,8 @@ const allowedOrigins = [
   'https://alpha-coach-nine.vercel.app',
   'https://alpha-coach-pi.vercel.app',
   'https://alpha-coach.vercel.app',
+  'https://www.arcadefx.live',
+  'https://arcadefx.live',
   process.env.FRONTEND_URL,
   'http://localhost:5173',
   'http://localhost:3000',

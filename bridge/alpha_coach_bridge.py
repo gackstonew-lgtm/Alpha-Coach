@@ -56,8 +56,8 @@ APP_NAME = "Arcade Fx MT5 Companion"
 GITHUB_REPO = "gackstonew-lgtm/Alpha-Coach"
 
 # Production Endpoints
-DEFAULT_PROD_WEB = "https://alpha-coach-pi.vercel.app"
-DEFAULT_PROD_API = "https://alpha-coach-pi.vercel.app/api/v1"
+DEFAULT_PROD_WEB = os.getenv("ARCADE_FX_WEB_URL", os.getenv("ALPHA_COACH_WEB_URL", "https://www.arcadefx.live"))
+DEFAULT_PROD_API = os.getenv("ARCADE_FX_API_URL", os.getenv("ALPHA_COACH_API_URL", f"{DEFAULT_PROD_WEB}/api/v1"))
 DEFAULT_LOCAL_API = "http://localhost:4000/api/v1"
 
 # Production Supabase Credentials (Public / Anon Client)

@@ -309,7 +309,21 @@ class ApiClient {
       }
     } else {
       const text = await response.text();
-      data = { error: { message: text || response.statusText, code: 'NON_JSON_RESPONSE' } };
+      const isHtml = text.includes('<html') || text.includes('<!DOCTYPE') || text.includes('DEPLOYMENT_NOT_FOUND');
+      const isDeploymentNotFound = text.includes('DEPLOYMENT_NOT_FOUND');
+      const cleanMessage = isDeploymentNotFound
+        ? 'The Arcade Fx backend service is temporarily deploying or updating. Please try again shortly.'
+        : isHtml
+          ? 'Unable to reach the Arcade Fx backend service. Please check your connection or try again shortly.'
+          : (text || response.statusText || 'Unable to communicate with the server.');
+
+      data = {
+        error: {
+          message: cleanMessage,
+          code: isDeploymentNotFound ? 'DEPLOYMENT_NOT_FOUND' : 'NON_JSON_RESPONSE',
+          details: { originalStatus: response.status }
+        }
+      };
     }
 
     if (!response.ok) {

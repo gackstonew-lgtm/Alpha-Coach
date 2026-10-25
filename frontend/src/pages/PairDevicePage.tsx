@@ -13,7 +13,15 @@ import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
  * offer an in-place retry instead of routing them back through /login.
  */
 function isRetryableServiceError(error: NormalizedApiError): boolean {
-  return error.status === 503 || error.code === 'SERVICE_UNAVAILABLE';
+  return (
+    error.status === 502 ||
+    error.status === 503 ||
+    error.status === 504 ||
+    error.code === 'SERVICE_UNAVAILABLE' ||
+    error.code === 'SERVICE_UNREACHABLE' ||
+    error.code === 'DEPLOYMENT_NOT_FOUND' ||
+    error.code === 'NON_JSON_RESPONSE'
+  );
 }
 
 export const PairDevicePage: React.FC = () => {
@@ -199,11 +207,11 @@ export const PairDevicePage: React.FC = () => {
             {isRetryableServiceError(error) && (
               <button
                 type="button"
-                onClick={handleAuthorize}
-                disabled={isSubmitting}
+                onClick={sessionData ? handleAuthorize : loadSession}
+                disabled={isSubmitting || isLoading}
                 className="mt-1 w-full py-2 bg-surface hover:bg-surface-secondary border border-rose-500/20 text-rose-400 hover:text-rose-300 font-bold rounded-xl transition text-xs disabled:opacity-50"
               >
-                {isSubmitting ? 'Retrying…' : 'Try Again'}
+                {isSubmitting || isLoading ? 'Retrying…' : 'Try Again'}
               </button>
             )}
           </div>
