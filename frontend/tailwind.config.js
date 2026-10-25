@@ -27,42 +27,55 @@ export default {
           subtle: 'var(--text-subtle)'
         },
         brand: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#0f172a'
+          50: '#f5f3ff',
+          100: '#ede9fe',
+          200: '#ddd6fe',
+          300: '#c4b5fd',
+          400: '#a78bfa',
+          500: '#673de6', // Hostinger Primary Purple
+          600: '#5530c4', // Hover
+          700: '#4827af', // Active
+          800: '#3c1e95',
+          900: '#2e1477',
+          950: '#170845'
+        },
+        hostinger: {
+          purple: '#673de6',
+          purpleHover: '#5530c4',
+          purpleActive: '#4827af',
+          darkBg: '#09090b',
+          darkCard: '#121217',
+          darkCardHover: '#181820',
+          darkElevated: '#1f1f2a',
+          coral: '#fc5a5a',
+          green: '#00b090',
         },
         trade: {
-          win: '#10b981',
-          loss: '#f43f5e',
-          breakeven: '#64748b',
-          gold: '#f59e0b',
-          blue: '#3b82f6',
+          win: '#00b090',      // Hostinger vibrant green (Profit / Bullish)
+          loss: '#fc5a5a',     // Hostinger vibrant coral-red (Loss / Bearish)
+          breakeven: '#71717a',
+          gold: '#eab308',
+          blue: '#673de6',
           purple: '#8b5cf6',
-          cyan: '#06b6d4'
+          cyan: '#38bdf8'
         }
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['DM Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace']
       },
       borderRadius: {
-        '2xl': '1rem',
-        '3xl': '1.25rem',
-        '4xl': '1.5rem'
+        '2xl': '1.25rem', // 20px
+        '3xl': '1.5rem',  // 24px (Hostinger feature card radius)
+        '4xl': '2rem'
       },
       boxShadow: {
         'framer': 'var(--card-shadow)',
         'framer-hover': 'var(--card-shadow-hover)',
-        'glow-blue': '0 0 24px -4px rgba(59, 130, 246, 0.25)',
-        'glow-emerald': '0 0 24px -4px rgba(16, 185, 129, 0.25)'
+        'hostinger': '0 4px 20px -2px rgba(0, 0, 0, 0.4), 0 1px 3px 0 rgba(0, 0, 0, 0.3)',
+        'hostinger-glow': '0 12px 40px -8px rgba(103, 61, 230, 0.28)',
+        'glow-purple': '0 0 24px -4px rgba(103, 61, 230, 0.35)',
+        'glow-green': '0 0 24px -4px rgba(0, 176, 144, 0.35)'
       }
     },
   },
