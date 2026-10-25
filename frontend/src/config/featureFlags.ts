@@ -6,7 +6,8 @@
 export interface FeatureFlags {
   enableAiCoach: boolean;
   enableVoiceJournal: boolean;
-  enableStrategyLab: boolean;
+  enableInteractiveCharts: boolean;
+  enableMarketScanner: boolean;
   enableGamification: boolean;
   enableEconomicCalendar: boolean;
   enableRiskGuardian: boolean;
@@ -25,7 +26,8 @@ const getEnvFlag = (envKey: string, defaultValue: boolean): boolean => {
 export const FEATURE_FLAGS: FeatureFlags = {
   enableAiCoach: getEnvFlag('VITE_FF_AI_COACH', true),
   enableVoiceJournal: getEnvFlag('VITE_FF_VOICE_JOURNAL', true),
-  enableStrategyLab: getEnvFlag('VITE_FF_STRATEGY_LAB', true),
+  enableInteractiveCharts: getEnvFlag('VITE_FF_CHARTS', true),
+  enableMarketScanner: getEnvFlag('VITE_FF_SCANNER', true),
   enableGamification: getEnvFlag('VITE_FF_GAMIFICATION', true),
   enableEconomicCalendar: getEnvFlag('VITE_FF_ECONOMIC_CALENDAR', true),
   enableRiskGuardian: getEnvFlag('VITE_FF_RISK_GUARDIAN', true),

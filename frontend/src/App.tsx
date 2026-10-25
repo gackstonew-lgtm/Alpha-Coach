@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { trackPageView } from './services/analytics';
@@ -23,14 +23,12 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { JournalPage } from './pages/JournalPage';
 import { PerformancePage } from './pages/PerformancePage';
-import { StrategyLabPage } from './pages/StrategyLabPage';
 import { RiskGuardianPage } from './pages/RiskGuardianPage';
 import { AICoachPage } from './pages/AICoachPage';
 import { GamificationPage } from './pages/GamificationPage';
 import { BridgeAccountsPage } from './pages/BridgeAccountsPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { MarketIntelligencePage } from './pages/MarketIntelligencePage';
 import { ChartsPage } from './pages/ChartsPage';
 import { MarketScannerPage } from './pages/MarketScannerPage';
 import { MacroCalendarPage } from './pages/MacroCalendarPage';
@@ -62,6 +60,16 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
+};
+
+// Smart redirect for legacy /intelligence links (preserves symbol queries into /charts)
+const IntelligenceRedirect: React.FC = () => {
+  const [params] = useSearchParams();
+  const symbol = params.get('symbol');
+  if (symbol) {
+    return <Navigate to={`/charts?symbol=${encodeURIComponent(symbol)}`} replace />;
+  }
+  return <Navigate to="/dashboard" replace />;
 };
 
 export const App: React.FC = () => {
@@ -102,14 +110,14 @@ export const App: React.FC = () => {
           {/* Core Product Pillars */}
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/journal" element={<JournalPage />} />
-          <Route path="/intelligence" element={<MarketIntelligencePage />} />
+          <Route path="/intelligence" element={<IntelligenceRedirect />} />
           <Route path="/charts" element={<ChartsPage />} />
           <Route path="/scanner" element={<MarketScannerPage />} />
           <Route path="/macro-calendar" element={<MacroCalendarPage />} />
           <Route path="/currency-strength" element={<CurrencyStrengthPage />} />
           <Route path="/sec-tracker" element={<SecTrackerPage />} />
           <Route path="/performance" element={<PerformancePage />} />
-          <Route path="/strategy-lab" element={<StrategyLabPage />} />
+          <Route path="/strategy-lab" element={<Navigate to="/dashboard" replace />} />
           <Route path="/risk-guardian" element={<RiskGuardianPage />} />
           <Route path="/ai-coach" element={<AICoachPage />} />
           <Route path="/rewards" element={<GamificationPage />} />
@@ -128,7 +136,7 @@ export const App: React.FC = () => {
           <Route path="/symbols" element={<Navigate to="/performance" replace />} />
           <Route path="/trader-dna" element={<Navigate to="/performance" replace />} />
           <Route path="/reports" element={<Navigate to="/performance" replace />} />
-          <Route path="/replay" element={<Navigate to="/strategy-lab" replace />} />
+          <Route path="/replay" element={<Navigate to="/dashboard" replace />} />
         </Route>
 
         {/* Custom On-Brand 404 Fallback */}

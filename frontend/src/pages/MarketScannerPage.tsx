@@ -172,11 +172,11 @@ export const MarketScannerPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => {
-                      navigate(`/intelligence?symbol=${hit.symbol}&tab=workspace`);
+                      navigate(`/charts?symbol=${hit.symbol}&timeframe=${hit.timeframe || 'H1'}`);
                     }}
                     className="px-3 py-1.5 bg-surface-secondary hover:bg-surface border border-border-subtle rounded text-xs text-content-primary transition font-medium"
                   >
-                    Inspect in Workspace
+                    Open Chart
                   </button>
                 </div>
               </div>

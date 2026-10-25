@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   TrendingUp,
   Activity,
@@ -33,8 +34,16 @@ const WATCHLIST_SYMBOLS = [
 ];
 
 export const ChartsPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const paramSymbol = searchParams.get('symbol');
   const { selectedAccountId } = useAccounts();
-  const [activeSymbol, setActiveSymbol] = useState<string>('EURUSD');
+  const [activeSymbol, setActiveSymbol] = useState<string>(paramSymbol || 'EURUSD');
+
+  useEffect(() => {
+    if (paramSymbol && paramSymbol !== activeSymbol) {
+      setActiveSymbol(paramSymbol);
+    }
+  }, [paramSymbol]);
   const [layoutMode, setLayoutMode] = useState<'single' | 'dual' | 'quad'>('single');
   const [dualSymbol, setDualSymbol] = useState<string>('GBPUSD');
   const [trades, setTrades] = useState<TradeOverlayData[]>([]);

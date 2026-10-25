@@ -167,112 +167,87 @@ export const DemoExecutiveOverview: React.FC<{ isVisible: boolean }> = ({ isVisi
 };
 
 /* ========================================================================= */
-/* 2. STRATEGY LAB DEMO WITH LIVE BOUNDED DATA FLUCTUATION                  */
+/* 2. REAL-TIME MARKET SCANNER & CONFLUENCE ENGINE DEMO                     */
 /* ========================================================================= */
-export const DemoStrategyLab: React.FC<{ isActive: boolean; isVisible: boolean }> = ({
+export const DemoMarketScanner: React.FC<{ isActive: boolean; isVisible: boolean }> = ({
   isActive,
   isVisible
 }) => {
-  const [strategies, setStrategies] = useState([
+  const [scanHits, setScanHits] = useState([
     {
-      name: 'Liquidity Sweep + MSS + FVG',
-      baseWr: 72.4,
-      basePnl: 8420.0,
-      baseFactor: 2.84,
-      wr: 72.4,
-      pnl: 8420.0,
-      factor: 2.84,
-      trades: 38
+      symbol: 'EURUSD',
+      timeframe: 'H4',
+      bias: 'BULLISH',
+      setup: 'CRT Liquidity Sweep + Re-entry',
+      confluence: 'Asia Low Purge + M15 MSS + FVG Fill',
+      confidence: 94,
+      pips: '+38.5 pips'
     },
     {
-      name: 'Order Block Mitigation',
-      baseWr: 61.1,
-      basePnl: 4210.5,
-      baseFactor: 1.92,
-      wr: 61.1,
-      pnl: 4210.5,
-      factor: 1.92,
-      trades: 42
+      symbol: 'GBPUSD',
+      timeframe: 'H1',
+      bias: 'BEARISH',
+      setup: 'London Open Breaker Block Retest',
+      confluence: 'Previous Day High Sweep + Bearish OB',
+      confidence: 89,
+      pips: '+42.0 pips'
     },
     {
-      name: 'Breaker Block Retest',
-      baseWr: 58.3,
-      basePnl: 2190.0,
-      baseFactor: 1.65,
-      wr: 58.3,
-      pnl: 2190.0,
-      factor: 1.65,
-      trades: 24
+      symbol: 'XAUUSD',
+      timeframe: 'M15',
+      bias: 'BULLISH',
+      setup: 'NY Session Order Block Reaction',
+      confluence: 'Discount Zone Equilibrium + Volume Spike',
+      confidence: 91,
+      pips: '+65.0 pips'
     }
   ]);
-
-  useEffect(() => {
-    if (!isActive || !isVisible) return;
-
-    // Check for prefers-reduced-motion
-    if (
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    ) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setStrategies((prev) =>
-        prev.map((strat) => {
-          // Bounded subtle fluctuations around base values
-          const wrDelta = (Math.sin(Date.now() / 2000 + strat.trades) * 0.7);
-          const pnlDelta = (Math.cos(Date.now() / 2500 + strat.trades) * 45.0);
-          const factorDelta = (Math.sin(Date.now() / 3000 + strat.trades) * 0.04);
-
-          return {
-            ...strat,
-            wr: Number((strat.baseWr + wrDelta).toFixed(1)),
-            pnl: Number((strat.basePnl + pnlDelta).toFixed(2)),
-            factor: Number((strat.baseFactor + factorDelta).toFixed(2))
-          };
-        })
-      );
-    }, 2400);
-
-    return () => clearInterval(interval);
-  }, [isActive, isVisible]);
 
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
       <div className="flex items-center justify-between text-xs text-content-muted">
-        <span>Strategy Edge Breakdown per Confluence Setup:</span>
+        <span>Active Multi-Timeframe Structure Detection (ICT / SMC / CRT):</span>
         <span className="flex items-center gap-1.5 text-[11px] text-brand-500 font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-ping" />
-          <span>Live Demonstration Stream</span>
+          <span>Live Scanning Stream</span>
         </span>
       </div>
 
-      <div className="space-y-2">
-        {strategies.map((strat, idx) => (
+      <div className="space-y-2.5">
+        {scanHits.map((hit, idx) => (
           <div
             key={idx}
-            className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:border-border-strong transition duration-200"
+            className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-border-strong transition duration-200"
           >
-            <div className="space-y-0.5">
-              <div className="font-bold text-xs text-content-primary">{strat.name}</div>
-              <div className="text-[11px] text-content-muted">{strat.trades} Reconstructed Trades</div>
+            <div className="flex items-center gap-3">
+              <span className="font-mono font-bold text-sm text-content-primary">{hit.symbol}</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-surface border border-border-subtle text-content-muted">
+                {hit.timeframe}
+              </span>
+              <span
+                className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                  hit.bias === 'BULLISH'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                }`}
+              >
+                {hit.bias}
+              </span>
             </div>
-            <div className="flex items-center gap-6 font-mono text-xs">
-              <div>
-                <span className="text-content-subtle">WR:</span>{' '}
-                <span className="font-bold text-content-primary transition-all duration-500">
-                  {strat.wr}%
-                </span>
+
+            <div className="flex-1 sm:px-3 text-xs">
+              <div className="font-semibold text-content-primary">{hit.setup}</div>
+              <div className="text-[11px] text-content-muted">{hit.confluence}</div>
+            </div>
+
+            <div className="flex items-center gap-4 font-mono text-xs">
+              <div className="text-right">
+                <span className="text-[10px] text-content-muted block">Confidence</span>
+                <span className="font-bold text-brand-500">{hit.confidence}%</span>
               </div>
-              <div>
-                <span className="text-content-subtle">PF:</span>{' '}
-                <span className="font-bold text-content-primary transition-all duration-500">
-                  {strat.factor}
-                </span>
-              </div>
-              <div className="font-extrabold text-emerald-600 dark:text-emerald-400 transition-all duration-500">
-                +${strat.pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div className="text-right">
+                <span className="text-[10px] text-content-muted block">Yield</span>
+                <span className="font-extrabold text-emerald-500">{hit.pips}</span>
               </div>
             </div>
           </div>
@@ -281,6 +256,8 @@ export const DemoStrategyLab: React.FC<{ isActive: boolean; isVisible: boolean }
     </div>
   );
 };
+
+export const DemoStrategyLab = DemoMarketScanner;
 
 /* ========================================================================= */
 /* 3. RISK GUARDIAN DEMO WITH LIVE METRIC SHUFFLE                           */

@@ -167,7 +167,7 @@ export const CurrencyStrengthPage: React.FC = () => {
           {currencyStrengthData?.topRankedPairs?.map((pair: any) => (
             <div
               key={pair.symbol}
-              onClick={() => navigate(`/intelligence?symbol=${pair.symbol}&tab=workspace`)}
+              onClick={() => navigate(`/charts?symbol=${pair.symbol}`)}
               className="p-3.5 bg-surface-secondary/70 border border-border-subtle rounded-xl hover:border-accent-primary hover:bg-surface cursor-pointer transition space-y-2 shadow-xs group"
             >
               <div className="flex items-center justify-between font-bold">
@@ -203,7 +203,7 @@ export const CurrencyStrengthPage: React.FC = () => {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/intelligence?symbol=${pair.symbol}&tab=workspace`);
+                    navigate(`/charts?symbol=${pair.symbol}`);
                   }}
                   className="flex-1 py-1 px-2 text-[11px] font-semibold text-content-muted hover:text-content-primary hover:bg-surface-secondary rounded transition text-center"
                 >

@@ -9,7 +9,7 @@ import { AnimatedNumber } from '../components/common/AnimatedNumber';
 import { FAQ_ITEMS, getFAQSchema } from '../data/faqData';
 import {
   DemoExecutiveOverview,
-  DemoStrategyLab,
+  DemoMarketScanner, DemoStrategyLab,
   DemoRiskGuardian,
   DemoAICoach
 } from '../components/landing/LandingDemoComponents';
@@ -18,7 +18,7 @@ import {
   Zap,
   LineChart,
   BookOpen,
-  FlaskConical,
+  Scan,
   ShieldAlert,
   Bot,
   Trophy,
@@ -53,7 +53,7 @@ const SOFTWARE_APPLICATION_SCHEMA = {
 
 export const LandingPage: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'strategy' | 'risk' | 'coach'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'scanner' | 'risk' | 'coach'>('overview');
   const [openFaqId, setOpenFaqId] = useState<string | null>(FAQ_ITEMS[0].id);
 
   // Viewport Intersection Observers for Smooth Scroll Triggers
@@ -95,10 +95,10 @@ export const LandingPage: React.FC = () => {
       badge: 'Risk Control'
     },
     {
-      icon: FlaskConical,
-      title: 'Strategy Lab & Confluences',
-      description: 'Isolate win rates and expectancy across setups like Liquidity Sweeps, FVGs, Order Blocks, and Breakers.',
-      badge: 'Edge Analysis'
+      icon: Scan,
+      title: 'Market Scanner & Interactive Charts',
+      description: 'Isolate high-probability setups like Liquidity Sweeps, FVGs, and Order Blocks with TradingView charts.',
+      badge: 'Market Radar'
     },
     {
       icon: Trophy,
@@ -228,7 +228,7 @@ export const LandingPage: React.FC = () => {
 
             {/* Tab Switcher */}
             <div className="flex items-center gap-1.5 p-1 bg-surface-secondary border border-border-subtle rounded-xl self-start">
-              {(['overview', 'strategy', 'risk', 'coach'] as const).map(tab => (
+              {(['overview', 'scanner', 'risk', 'coach'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -238,7 +238,7 @@ export const LandingPage: React.FC = () => {
                       : 'text-content-muted hover:text-content-primary'
                   }`}
                 >
-                  {tab === 'overview' ? 'Executive Overview' : tab === 'strategy' ? 'Strategy Lab' : tab === 'risk' ? 'Risk Guardian' : 'AI Coach'}
+                  {tab === 'overview' ? 'Executive Overview' : tab === 'scanner' ? 'Market Scanner' : tab === 'risk' ? 'Risk Guardian' : 'AI Coach'}
                 </button>
               ))}
             </div>
@@ -253,7 +253,7 @@ export const LandingPage: React.FC = () => {
                 <div className="w-3 h-3 rounded-full bg-amber-500/80" />
                 <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
                 <span className="ml-2 font-mono text-xs font-semibold text-content-muted">
-                  TRADERS_EDGE_TERMINAL // MT5 BRIDGE: CONNECTED
+                  ARCADE_FX_TERMINAL // MT5 BRIDGE: CONNECTED
                 </span>
               </div>
               <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-content-muted">
@@ -267,8 +267,8 @@ export const LandingPage: React.FC = () => {
               {activeTab === 'overview' && (
                 <DemoExecutiveOverview isVisible={isPreviewVisible} />
               )}
-              {activeTab === 'strategy' && (
-                <DemoStrategyLab isActive={activeTab === 'strategy'} isVisible={isPreviewVisible} />
+              {activeTab === 'scanner' && (
+                <DemoMarketScanner isActive={activeTab === 'scanner'} isVisible={isPreviewVisible} />
               )}
               {activeTab === 'risk' && (
                 <DemoRiskGuardian isActive={activeTab === 'risk'} isVisible={isPreviewVisible} />
