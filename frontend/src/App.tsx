@@ -31,6 +31,11 @@ import { BridgeAccountsPage } from './pages/BridgeAccountsPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MarketIntelligencePage } from './pages/MarketIntelligencePage';
+import { MarketScannerPage } from './pages/MarketScannerPage';
+import { MacroCalendarPage } from './pages/MacroCalendarPage';
+import { CurrencyStrengthPage } from './pages/CurrencyStrengthPage';
+import { SecTrackerPage } from './pages/SecTrackerPage';
+import { AlphaCoachLogo } from './components/common/AlphaCoachLogo';
 
 // PWA & Consent Components
 import { PwaInstallPrompt } from './components/pwa/PwaInstallPrompt';
@@ -43,6 +48,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return (
       <div className="min-h-screen bg-canvas flex items-center justify-center text-content-muted text-xs font-mono">
         <div className="flex flex-col items-center space-y-3">
+          <div className="mb-2">
+            <AlphaCoachLogo size="lg" showWordmark={true} />
+          </div>
           <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
           <span>INITIALIZING TRADER&apos;S EDGE OS...</span>
         </div>
@@ -94,6 +102,10 @@ export const App: React.FC = () => {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/journal" element={<JournalPage />} />
           <Route path="/intelligence" element={<MarketIntelligencePage />} />
+          <Route path="/scanner" element={<MarketScannerPage />} />
+          <Route path="/macro-calendar" element={<MacroCalendarPage />} />
+          <Route path="/currency-strength" element={<CurrencyStrengthPage />} />
+          <Route path="/sec-tracker" element={<SecTrackerPage />} />
           <Route path="/performance" element={<PerformancePage />} />
           <Route path="/strategy-lab" element={<StrategyLabPage />} />
           <Route path="/risk-guardian" element={<RiskGuardianPage />} />
@@ -105,6 +117,9 @@ export const App: React.FC = () => {
           <Route path="/settings" element={<SettingsPage />} />
 
           {/* Legacy Clean Redirects (Prevent Broken Bookmarks) */}
+          <Route path="/market-scanner" element={<Navigate to="/scanner" replace />} />
+          <Route path="/disclosures" element={<Navigate to="/sec-tracker" replace />} />
+          <Route path="/economic-calendar" element={<Navigate to="/macro-calendar" replace />} />
           <Route path="/analytics" element={<Navigate to="/performance" replace />} />
           <Route path="/calendar" element={<Navigate to="/journal" replace />} />
           <Route path="/sessions" element={<Navigate to="/performance" replace />} />

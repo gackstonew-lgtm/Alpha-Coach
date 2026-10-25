@@ -14,7 +14,11 @@ import {
   LogOut,
   ChevronLeft,
   X,
-  Compass
+  Compass,
+  Scan,
+  Calendar,
+  Scale,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { AlphaCoachLogo } from '../common/AlphaCoachLogo';
@@ -24,6 +28,12 @@ interface NavItem {
   name: string;
   to: string;
   icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+}
+
+interface NavSection {
+  title?: string;
+  items: NavItem[];
 }
 
 interface SidebarProps {
@@ -40,7 +50,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   collapsed = false,
   onToggleCollapse
 }) => {
-  // Cast keeps the build safe whether your AuthContext names it `logout` or `signOut`
   const auth = useAuth() as ReturnType<typeof useAuth> & {
     logout?: () => unknown;
     signOut?: () => unknown;
@@ -62,20 +71,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const navigationItems: NavItem[] = [
-    { id: 'dashboard', name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
-    { id: 'journal', name: 'Trading Journal', to: '/journal', icon: BookOpen },
-    { id: 'intelligence', name: 'Market Intelligence', to: '/intelligence', icon: Compass },
-    { id: 'performance', name: 'Performance', to: '/performance', icon: LineChart },
-    { id: 'strategy-lab', name: 'Strategy Lab', to: '/strategy-lab', icon: FlaskConical },
-    { id: 'risk-guardian', name: 'Risk Guardian', to: '/risk-guardian', icon: ShieldAlert },
-    { id: 'ai-coach', name: 'AI Coach', to: '/ai-coach', icon: Bot },
-    { id: 'rewards', name: 'Rewards', to: '/rewards', icon: Trophy },
-    { id: 'bridge', name: 'Bridge', to: '/bridge', icon: Cpu },
-    { id: 'settings', name: 'Settings', to: '/settings', icon: Settings },
-    ...(user?.role === 'admin'
-      ? [{ id: 'admin', name: 'Admin', to: '/admin', icon: ShieldCheck }]
-      : [])
+  const navSections: NavSection[] = [
+    {
+      title: 'Platform',
+      items: [
+        { id: 'dashboard', name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
+        { id: 'journal', name: 'Trading Journal', to: '/journal', icon: BookOpen },
+        { id: 'performance', name: 'Performance', to: '/performance', icon: LineChart },
+        { id: 'ai-coach', name: 'AI Coach', to: '/ai-coach', icon: Bot }
+      ]
+    },
+    {
+      title: 'Market Intelligence',
+      items: [
+        { id: 'scanner', name: 'Market Scanner', to: '/scanner', icon: Scan },
+        { id: 'macro-calendar', name: 'Macro & Calendar', to: '/macro-calendar', icon: Calendar },
+        { id: 'currency-strength', name: 'Currency Strength', to: '/currency-strength', icon: Scale },
+        { id: 'sec-tracker', name: 'SEC & Politician Tracker', to: '/sec-tracker', icon: FileText },
+        { id: 'intelligence', name: 'Analysis Hub', to: '/intelligence', icon: Compass }
+      ]
+    },
+    {
+      title: 'Quantitative & Risk',
+      items: [
+        { id: 'strategy-lab', name: 'Strategy Lab', to: '/strategy-lab', icon: FlaskConical },
+        { id: 'risk-guardian', name: 'Risk Guardian', to: '/risk-guardian', icon: ShieldAlert }
+      ]
+    },
+    {
+      title: 'System & Terminal',
+      items: [
+        { id: 'rewards', name: 'Rewards', to: '/rewards', icon: Trophy },
+        { id: 'bridge', name: 'Bridge', to: '/bridge', icon: Cpu },
+        { id: 'settings', name: 'Settings', to: '/settings', icon: Settings },
+        ...(user?.role === 'admin'
+          ? [{ id: 'admin', name: 'Admin', to: '/admin', icon: ShieldCheck }]
+          : [])
+      ]
+    }
   ];
 
   return (
@@ -136,46 +169,67 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-          {navigationItems.map(item => {
-            const Icon = item.icon;
-            const isActive =
-              location.pathname === item.to ||
-              (item.to === '/performance' && location.pathname === '/analytics');
+        {/* Navigation Items (Grouped with Scroll) */}
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+          {navSections.map((section, sIdx) => (
+            <div key={sIdx} className="space-y-1">
+              {section.title && (
+                <div
+                  className={`px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-content-muted/70 ${hideWhenCollapsed}`}
+                >
+                  {section.title}
+                </div>
+              )}
+              {collapsed && section.title && sIdx > 0 && (
+                <div className="hidden lg:block my-2 border-t border-border-subtle/50 mx-2" />
+              )}
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  location.pathname === item.to ||
+                  (item.to !== '/dashboard' && location.pathname.startsWith(item.to + '/')) ||
+                  (item.to === '/performance' && location.pathname === '/analytics') ||
+                  (item.to === '/sec-tracker' && location.pathname === '/disclosures') ||
+                  (item.to === '/scanner' && location.pathname === '/market-scanner') ||
+                  (item.to === '/macro-calendar' && location.pathname === '/economic-calendar');
 
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={() => onClose()}
-                title={collapsed ? item.name : undefined}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group relative ${
-                  collapsed ? 'lg:justify-center lg:px-0' : ''
-                } ${
-                  isActive
-                    ? 'bg-brand-600 text-white font-semibold shadow-md shadow-brand-500/20'
-                    : 'text-content-secondary hover:text-content-primary hover:bg-surface-secondary'
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
-                    isActive ? 'text-white scale-105' : 'text-content-muted group-hover:text-brand-500'
-                  }`}
-                />
-                <span className={`truncate ${hideWhenCollapsed}`}>{item.name}</span>
-                {isActive && (
-                  <span
-                    className={`ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse ${hideWhenCollapsed}`}
-                  />
-                )}
-              </NavLink>
-            );
-          })}
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => onClose()}
+                    title={collapsed ? item.name : undefined}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group relative ${
+                      collapsed ? 'lg:justify-center lg:px-0' : ''
+                    } ${
+                      isActive
+                        ? 'bg-brand-600 text-white font-semibold shadow-md shadow-brand-500/20'
+                        : 'text-content-secondary hover:text-content-primary hover:bg-surface-secondary'
+                    }`}
+                  >
+                    <Icon
+                      className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
+                        isActive
+                          ? 'text-white scale-105'
+                          : 'text-content-muted group-hover:text-brand-500'
+                      }`}
+                    />
+                    <span className={`truncate ${hideWhenCollapsed}`}>{item.name}</span>
+                    {isActive && (
+                      <span
+                        className={`ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse ${hideWhenCollapsed}`}
+                      />
+                    )}
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Logout, pinned below the navigation list */}
-        <div className="px-3 pb-3">
+        <div className="px-3 pb-3 border-t border-border-subtle/50 pt-2">
           <button
             type="button"
             onClick={handleLogout}

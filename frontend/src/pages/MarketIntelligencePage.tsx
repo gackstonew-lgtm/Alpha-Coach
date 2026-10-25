@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Compass,
   Activity,
@@ -514,18 +515,14 @@ export const MarketIntelligencePage: React.FC = () => {
       <div className="flex items-center gap-1 overflow-x-auto border-b border-border-subtle pb-px">
         {[
           { id: 'workspace', label: 'Analysis Workspace', icon: Activity },
-          { id: 'scanner', label: 'Market Scanner', icon: Scan },
-          { id: 'crt', label: 'CRT Engine', icon: Layers },
+                    { id: 'crt', label: 'CRT Engine', icon: Layers },
           { id: 'smc', label: 'SMC & ICT Suite', icon: Compass },
-          { id: 'fundamentals', label: 'Macro & Calendar', icon: Calendar },
-          { id: 'currency_strength', label: 'Currency Strength', icon: Scale },
-          { id: 'ai_confluence', label: 'AI Analyst & Confluence', icon: Bot },
+                              { id: 'ai_confluence', label: 'AI Analyst & Confluence', icon: Bot },
           { id: 'backtester', label: 'Strategy Backtester', icon: History },
           { id: 'monte_carlo', label: 'Monte Carlo Replays', icon: Dice5 },
           { id: 'trade_plans', label: 'Trade Plans & Alerts', icon: Bell },
           { id: 'broker_approval', label: 'Order Execution & Approval', icon: CheckCheck },
-          { id: 'disclosures', label: 'SEC & Politician Tracker', icon: FileText }
-        ].map((tab) => {
+                  ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
