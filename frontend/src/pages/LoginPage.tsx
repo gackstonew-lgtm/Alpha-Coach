@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, ShieldAlert } from 'lucide-react';
-import { ArcadeFxLogo } from '../components/common/AlphaCoachLogo';
+import { Logo } from '../components/common/Logo';
 import { MetaHead } from '../components/common/MetaHead';
 
 export const LoginPage: React.FC = () => {
@@ -72,12 +72,10 @@ export const LoginPage: React.FC = () => {
         {/* Left Inset White Card with Reference A Torn Right Edge */}
         <div className="w-full max-w-[480px] lg:w-[42%] lg:max-w-[460px] my-auto">
           <div className="torn-paper-card torn-edge-right torn-edge-bottom bg-white dark:bg-[#151922] p-8 sm:p-10 lg:pr-14 shadow-2xl rounded-2xl lg:rounded-r-none transition-all duration-300">
-            {/* Logo in Sleek Dark Navy Container (Protects Gold Contrast on White) */}
+            {/* Brand Logo */}
             <div className="mb-6 flex items-center justify-between">
-              <Link to="/" className="inline-block group focus:outline-none">
-                <div className="bg-[#0A0F1D] px-3.5 py-1.5 rounded-xl border border-white/10 shadow-sm transition group-hover:scale-105">
-                  <ArcadeFxLogo size="sm" showWordmark={true} />
-                </div>
+              <Link to="/" className="inline-block group focus:outline-none" aria-label="ArcadeFx Home">
+                <Logo size="md" />
               </Link>
             </div>
 

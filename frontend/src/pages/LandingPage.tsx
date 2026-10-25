@@ -22,7 +22,7 @@ import {
   TrendingUp,
   FileText
 } from 'lucide-react';
-import { ArcadeFxLogo } from '../components/common/AlphaCoachLogo';
+import { Logo } from '../components/common/Logo';
 
 const SOFTWARE_APPLICATION_SCHEMA = {
   '@context': 'https://schema.org',
@@ -148,11 +148,9 @@ export const LandingPage: React.FC = () => {
             {/* Left Inset White Card with Torn-Paper Right Edge (Reference A) */}
             <div className="w-full max-w-[500px] lg:w-[45%] lg:max-w-[480px]">
               <div className="torn-paper-card torn-edge-right torn-edge-bottom bg-white dark:bg-[#151922] p-8 sm:p-10 lg:pr-14 shadow-2xl rounded-2xl lg:rounded-r-none transition-all duration-300">
-                {/* Logo in Sleek Dark Navy Container */}
+                {/* Brand Logo */}
                 <div className="mb-5 flex items-center">
-                  <div className="bg-[#0A0F1D] px-3.5 py-1.5 rounded-xl border border-white/10 shadow-sm">
-                    <ArcadeFxLogo size="sm" showWordmark={true} />
-                  </div>
+                  <Logo size="md" />
                 </div>
 
                 {/* Hero Title */}

@@ -1,36 +1,34 @@
-#!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const sidebarPath = path.resolve(__dirname, '../src/components/layout/Sidebar.tsx');
-const appLayoutPath = path.resolve(__dirname, '../src/components/layout/AppLayout.tsx');
-const dashboardPath = path.resolve(__dirname, '../src/pages/DashboardPage.tsx');
-const cssPath = path.resolve(__dirname, '../src/index.css');
-
-console.log('='.repeat(70));
-console.log('RUNNING GLASS CAPSULE SIDEBAR, FULL-BLEED & CARD HOVER TEST SUITE');
-console.log('='.repeat(70));
-
-let failures = 0;
 function assert(condition, message) {
-  if (condition) {
-    console.log(`  ✓ PASS: ${message}`);
-  } else {
+  if (!condition) {
     console.error(`  ❌ FAIL: ${message}`);
     failures++;
+  } else {
+    console.log(`  ✓ PASS: ${message}`);
   }
 }
 
+let failures = 0;
+
+console.log('='.repeat(70));
+console.log('RUNNING ARCADE FX TRANSPARENT SIDEBAR & SVG LOGO TEST SUITE');
+console.log('='.repeat(70));
+
+const sidebarPath = path.resolve('frontend/src/components/layout/Sidebar.tsx');
 const sidebarCode = fs.readFileSync(sidebarPath, 'utf8');
+
+const appLayoutPath = path.resolve('frontend/src/components/layout/AppLayout.tsx');
 const appLayoutCode = fs.readFileSync(appLayoutPath, 'utf8');
+
+const dashboardPath = path.resolve('frontend/src/pages/DashboardPage.tsx');
 const dashboardCode = fs.readFileSync(dashboardPath, 'utf8');
+
+const cssPath = path.resolve('frontend/src/index.css');
 const cssCode = fs.readFileSync(cssPath, 'utf8');
 
-// Test 1: Floating Glass Capsule Rail Geometry
+// Test 1: Floating Glass Capsule Sidebar Base
 console.log('\n[Suite 1: Floating Glass Capsule Sidebar]');
 assert(sidebarCode.includes('sidebar-glass-capsule'), 'Sidebar uses sidebar-glass-capsule class');
 assert(sidebarCode.includes('top-3 bottom-3 left-3'), 'Capsule is inset by 12px margins from viewport edges');
@@ -38,16 +36,17 @@ assert(sidebarCode.includes('w-[72px]'), 'Collapsed rail width is 72px');
 assert(sidebarCode.includes('w-[248px]'), 'Expanded rail width is 248px');
 assert(sidebarCode.includes('w-[92px] shrink-0'), 'Stationary 92px placeholder prevents content reflow');
 
-// Test 2: Collapsed Circular Icon Buttons & Solid White Active Circle
+// Test 2: Collapsed Circular Icon Buttons on Transparent Background
 console.log('\n[Suite 2: Collapsed Icon-Only Circular Buttons]');
 assert(sidebarCode.includes('rounded-full') && sidebarCode.includes('w-11 h-11'), 'Collapsed items are circular buttons (44x44px)');
-assert(sidebarCode.includes('active') && sidebarCode.includes('bg-white text-[#062A24]'), 'Active item is a solid white circle with dark icon');
-assert(sidebarCode.includes('hover:bg-white') && sidebarCode.includes('hover:text-[#062A24]'), 'Hover implements "white touch" highlight');
+assert(sidebarCode.includes('text-[#FFD700]') || sidebarCode.includes('text-[#E5B869]'), 'Active collapsed icon is bright gold');
+assert(sidebarCode.includes('focus-visible:ring-amber-400/80'), 'Focus visible ring uses warm amber/gold token');
 
-// Test 3: Expanded Translucent Pills & Solid White Active Pill
-console.log('\n[Suite 3: Expanded Translucent Pills]');
-assert(sidebarCode.includes('bg-white/[0.08]') || sidebarCode.includes('bg-white/10'), 'Inactive rows use translucent glass styling');
-assert(sidebarCode.includes('bg-white text-[#062A24]') && sidebarCode.includes('font-extrabold'), 'Active expanded row is a solid white pill with bold dark text');
+// Test 3: Expanded Clean Transparent Items (No borders or pill backgrounds)
+console.log('\n[Suite 3: Expanded Clean Transparent Items]');
+assert(sidebarCode.includes('bg-transparent border-0'), 'Expanded items sit on transparent background with zero borders');
+assert((sidebarCode.includes('text-[#FFD700]') || sidebarCode.includes('text-[#E5B869]')) && sidebarCode.includes('font-extrabold'), 'Active expanded row uses bright gold text');
+assert(sidebarCode.includes('rounded-r-full bg-[#FFD700]') || sidebarCode.includes('shadow-[0_0_8px_rgba(229,184,105,0.7)]'), 'Active item features sleek left indicator bar');
 
 // Test 4: Gradient Tokens & Styling
 console.log('\n[Suite 4: Accent-to-Black Gradient Tokens]');
@@ -88,14 +87,19 @@ const ratioGradTop = contrastRatio('#044D40', '#FFFFFF');
 console.log(`  Measured Contrast (White on Gradient Top #044D40): ${ratioGradTop.toFixed(2)}:1`);
 assert(ratioGradTop >= 4.5, `Contrast on gradient top (${ratioGradTop.toFixed(2)}:1) meets WCAG AA (≥ 4.5:1)`);
 
-// Contrast of dark ink icon/text on solid white active button (#062A24 on #FFFFFF)
-const ratioActiveInk = contrastRatio('#062A24', '#FFFFFF');
-console.log(`  Measured Contrast (Dark Ink #062A24 on White #FFFFFF): ${ratioActiveInk.toFixed(2)}:1`);
-assert(ratioActiveInk >= 7.0, `Contrast of active dark ink on white (${ratioActiveInk.toFixed(2)}:1) meets WCAG AAA (≥ 7.0:1)`);
+// Contrast of gold active text on gradient top (#FFD700 on #044D40)
+const ratioGoldGradTop = contrastRatio('#044D40', '#FFD700');
+console.log(`  Measured Contrast (Gold #FFD700 on Gradient Top #044D40): ${ratioGoldGradTop.toFixed(2)}:1`);
+assert(ratioGoldGradTop >= 4.5, `Contrast of gold on gradient top (${ratioGoldGradTop.toFixed(2)}:1) meets WCAG AA (≥ 4.5:1)`);
+
+// Contrast of gold active text on gradient bottom (#FFD700 on #030706)
+const ratioGoldGradBot = contrastRatio('#030706', '#FFD700');
+console.log(`  Measured Contrast (Gold #FFD700 on Gradient Bottom #030706): ${ratioGoldGradBot.toFixed(2)}:1`);
+assert(ratioGoldGradBot >= 7.0, `Contrast of gold on gradient bottom (${ratioGoldGradBot.toFixed(2)}:1) meets WCAG AAA (≥ 7.0:1)`);
 
 console.log('\n' + '='.repeat(70));
 if (failures === 0) {
-  console.log('✓ ALL 16 VERIFICATION ASSERTIONS PASSED (0 FAILURES)');
+  console.log('✓ ALL 18 VERIFICATION ASSERTIONS PASSED (0 FAILURES)');
   console.log('='.repeat(70));
   process.exit(0);
 } else {

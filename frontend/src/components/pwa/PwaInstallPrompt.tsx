@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { pwa } from '../../services/pwa';
-import { AlphaCoachLogo } from '../common/AlphaCoachLogo';
+import { Logo } from '../common/Logo';
 import { Download, Share, X, PlusSquare } from 'lucide-react';
 
 export const PwaInstallPrompt: React.FC = () => {
@@ -56,7 +56,7 @@ export const PwaInstallPrompt: React.FC = () => {
         {/* Brand Icon */}
         <div className="flex items-center gap-3">
           <div className="p-1 rounded-xl bg-surface-secondary border border-border-subtle shrink-0">
-            <AlphaCoachLogo size="sm" showWordmark={false} />
+            <Logo size="sm" variant="mark" />
           </div>
           <div>
             <h3 className="font-bold text-content-primary text-xs">Install Arcade Fx</h3>

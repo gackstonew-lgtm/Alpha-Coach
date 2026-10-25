@@ -130,7 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     const active = location.pathname === item.to || (item.to !== '/dashboard' && location.pathname.startsWith(item.to + '/'));
 
     if (!isExpanded) {
-      // COLLAPSED: Circular icon button (Reference Image Left)
+      // COLLAPSED: Circular icon button on transparent background
       return (
         <div key={item.id} className="flex justify-center py-1">
           <NavLink
@@ -142,15 +142,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             aria-label={item.name}
             aria-current={active ? 'page' : undefined}
             title={item.name}
-            className={`group relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 ${
+            className={`group relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 active:scale-95 ${
               active
-                ? 'bg-white text-[#062A24] dark:text-[#041F1A] shadow-[0_4px_16px_rgba(255,255,255,0.4)] border border-white scale-105'
-                : 'bg-white/[0.08] hover:bg-white text-white/90 hover:text-[#062A24] border border-white/10 hover:border-white hover:shadow-[0_0_14px_rgba(255,255,255,0.4)]'
+                ? 'bg-transparent text-[#FFD700] dark:text-[#E5B869] ring-2 ring-[#FFD700] dark:ring-[#E5B869] scale-105 shadow-[0_0_12px_rgba(229,184,105,0.4)]'
+                : 'bg-transparent hover:bg-white/10 text-white/85 hover:text-white'
             }`}
           >
             <Icon
               className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                active ? 'text-[#062A24] dark:text-[#041F1A] stroke-[2.5]' : 'text-white'
+                active ? 'text-[#FFD700] dark:text-[#E5B869] stroke-[2.5]' : 'text-white'
               }`}
             />
 
@@ -166,9 +166,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       );
     }
 
-    // EXPANDED: Translucent glass pill row with solid white active state (Reference Image Right)
+    // EXPANDED: Transparent row sitting on transparent sidebar background without borders or pills
     return (
-      <div key={item.id} className="py-0.5">
+      <div key={item.id} className="py-0.5 relative">
         <NavLink
           to={item.to}
           onClick={() => {
@@ -177,19 +177,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           }}
           aria-label={item.name}
           aria-current={active ? 'page' : undefined}
-          className={`group flex items-center justify-between min-h-[44px] rounded-full px-3.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-[0.98] ${
+          className={`group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 bg-transparent border-0 shadow-none outline-none transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 active:scale-[0.98] ${
             isSubItem ? 'text-[11px] py-2' : 'text-xs py-2.5'
           } ${
             active
-              ? 'bg-white text-[#062A24] dark:text-[#041F1A] font-extrabold shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-white'
-              : 'bg-white/[0.08] hover:bg-white text-white/95 hover:text-[#062A24] border border-white/10 hover:border-white font-bold hover:shadow-[0_0_14px_rgba(255,255,255,0.35)]'
+              ? 'text-[#FFD700] dark:text-[#E5B869] font-extrabold'
+              : 'text-white/80 hover:text-white font-medium'
           }`}
         >
+          {/* Sleek left accent indicator bar for active item */}
+          {active && (
+            <span
+              className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#FFD700] dark:bg-[#E5B869] shadow-[0_0_8px_rgba(229,184,105,0.7)]"
+              aria-hidden="true"
+            />
+          )}
+
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-5 h-5 flex items-center justify-center shrink-0">
               <Icon
-                className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                  active ? 'text-[#062A24] dark:text-[#041F1A] stroke-[2.5]' : 'text-white'
+                className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
+                  active ? 'text-[#FFD700] dark:text-[#E5B869] stroke-[2.5]' : 'text-white/80 group-hover:text-white'
                 }`}
               />
             </div>
@@ -286,15 +294,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 aria-expanded={isIntelOpen}
                 aria-label="Market Intelligence Navigation Group"
                 title="Market Intelligence"
-                className={`group w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-95 ${
+                className={`group w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 active:scale-95 ${
                   isMarketIntelActive
-                    ? 'bg-white text-[#062A24] dark:text-[#041F1A] shadow-[0_4px_16px_rgba(255,255,255,0.4)] border border-white scale-105'
-                    : 'bg-white/[0.08] hover:bg-white text-white/90 hover:text-[#062A24] border border-white/10 hover:border-white hover:shadow-[0_0_14px_rgba(255,255,255,0.4)]'
+                    ? 'bg-transparent text-[#FFD700] dark:text-[#E5B869] ring-2 ring-[#FFD700] dark:ring-[#E5B869] scale-105 shadow-[0_0_12px_rgba(229,184,105,0.4)]'
+                    : 'bg-transparent hover:bg-white/10 text-white/85 hover:text-white'
                 }`}
               >
                 <Layers
                   className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                    isMarketIntelActive ? 'text-[#062A24] dark:text-[#041F1A] stroke-[2.5]' : 'text-white'
+                    isMarketIntelActive ? 'text-[#FFD700] dark:text-[#E5B869] stroke-[2.5]' : 'text-white'
                   }`}
                 />
               </button>
@@ -306,17 +314,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 onClick={() => setIsIntelOpen(!isIntelOpen)}
                 aria-expanded={isIntelOpen}
                 aria-label="Market Intelligence Navigation Group"
-                className={`w-full group flex items-center justify-between min-h-[44px] rounded-full px-3.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:scale-[0.98] ${
+                className={`w-full group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 bg-transparent border-0 shadow-none outline-none transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 active:scale-[0.98] ${
                   isMarketIntelActive
-                    ? 'bg-white text-[#062A24] dark:text-[#041F1A] font-extrabold shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-white'
-                    : 'bg-white/[0.08] hover:bg-white text-white/95 hover:text-[#062A24] border border-white/10 hover:border-white font-bold hover:shadow-[0_0_14px_rgba(255,255,255,0.35)]'
+                    ? 'text-[#FFD700] dark:text-[#E5B869] font-extrabold'
+                    : 'text-white/80 hover:text-white font-medium'
                 }`}
               >
+                {/* Sleek left accent indicator bar if active */}
+                {isMarketIntelActive && (
+                  <span
+                    className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#FFD700] dark:bg-[#E5B869] shadow-[0_0_8px_rgba(229,184,105,0.7)]"
+                    aria-hidden="true"
+                  />
+                )}
+
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-5 h-5 flex items-center justify-center shrink-0">
                     <Layers
-                      className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                        isMarketIntelActive ? 'text-[#062A24] dark:text-[#041F1A] stroke-[2.5]' : 'text-white'
+                      className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
+                        isMarketIntelActive ? 'text-[#FFD700] dark:text-[#E5B869] stroke-[2.5]' : 'text-white/80 group-hover:text-white'
                       }`}
                     />
                   </div>
@@ -327,7 +343,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
                     isIntelOpen ? 'rotate-180' : ''
-                  }`}
+                  } ${isMarketIntelActive ? 'text-[#FFD700] dark:text-[#E5B869]' : 'text-white/70 group-hover:text-white'}`}
                 />
               </button>
 

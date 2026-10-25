@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { AlphaCoachLogo } from '../common/AlphaCoachLogo';
+import { Logo } from '../common/Logo';
 import { ShieldCheck, Lock, Activity, ArrowUpRight } from 'lucide-react';
 
 export const PublicFooter: React.FC = () => {
@@ -53,7 +53,7 @@ export const PublicFooter: React.FC = () => {
           {/* Brand Column */}
           <div className="lg:col-span-2 space-y-4">
             <Link to="/">
-              <AlphaCoachLogo size="lg" showWordmark={true} />
+              <Logo size="lg" />
             </Link>
             <p className="text-xs text-content-muted max-w-sm leading-relaxed">
               Automated MT5 Trading Journal & Quantitative Performance Operating System for modern discretionary and systematic traders.

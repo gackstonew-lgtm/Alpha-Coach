@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArcadeFxLogo } from '../common/AlphaCoachLogo';
+import { Logo } from '../common/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import {
@@ -45,7 +45,7 @@ export const PublicNavbar: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-3 group focus:outline-none" aria-label="Arcade Fx home">
-            <ArcadeFxLogo size="md" showWordmark={true} />
+            <Logo size="md" />
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -169,7 +169,7 @@ export const PublicNavbar: React.FC = () => {
         {/* Sheet Header: Logo & Close */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle bg-surface">
           <Link to="/" onClick={() => setMobileMenuOpen(false)}>
-            <ArcadeFxLogo size="sm" showWordmark={true} />
+            <Logo size="sm" />
           </Link>
           <button
             type="button"

@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { api, normalizeApiError, NormalizedApiError } from '../services/api';
 import { ShieldCheck, Cpu, CheckCircle2, XCircle, ArrowRight, AlertTriangle, Laptop, Lock } from 'lucide-react';
-import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
+import { Logo } from '../components/common/Logo';
 
 /**
  * True when the error is a transient service problem (backend momentarily unable to verify
@@ -155,7 +155,7 @@ export const PairDevicePage: React.FC = () => {
         <div className="text-center space-y-3">
           <div className="flex justify-center">
             <Link to="/">
-              <AlphaCoachLogo size="lg" showWordmark={true} />
+              <Logo size="lg" />
             </Link>
           </div>
           <h1 className="text-xl font-extrabold text-content-primary tracking-tight">

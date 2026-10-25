@@ -34,7 +34,7 @@ import { MarketScannerPage } from './pages/MarketScannerPage';
 import { MacroCalendarPage } from './pages/MacroCalendarPage';
 import { CurrencyStrengthPage } from './pages/CurrencyStrengthPage';
 import { SecTrackerPage } from './pages/SecTrackerPage';
-import { AlphaCoachLogo } from './components/common/AlphaCoachLogo';
+import { Logo } from './components/common/Logo';
 
 // PWA & Consent Components
 import { PwaInstallPrompt } from './components/pwa/PwaInstallPrompt';
@@ -48,7 +48,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
       <div className="min-h-screen bg-canvas flex items-center justify-center text-content-muted text-xs font-mono">
         <div className="flex flex-col items-center space-y-3">
           <div className="mb-2">
-            <AlphaCoachLogo size="lg" showWordmark={true} />
+            <Logo size="lg" />
           </div>
           <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
           <span>INITIALIZING TRADER&apos;S EDGE OS...</span>
