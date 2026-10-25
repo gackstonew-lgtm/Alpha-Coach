@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
+import { HeroVideo } from '../components/common/HeroVideo';
 import { MetaHead } from '../components/common/MetaHead';
 
 export const LoginPage: React.FC = () => {
@@ -66,20 +67,7 @@ export const LoginPage: React.FC = () => {
       {/* 1. DESKTOP & WIDE TABLET BACKGROUND (Full Artwork: White Panel + Wave + Ocean) */}
       {/* ========================================================================= */}
       <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none">
-        <picture>
-          <source
-            srcSet="/assets/auth-bg-full-2400.webp 2400w, /assets/auth-bg-full-1600.webp 1600w, /assets/auth-bg-full-1024.webp 1024w"
-            sizes="100vw"
-            type="image/webp"
-          />
-          <img
-            src="/assets/auth-bg-full.jpg"
-            alt=""
-            className="w-full h-full object-cover object-[center_left]"
-            loading="eager"
-            decoding="async"
-          />
-        </picture>
+        <HeroVideo objectPosition="object-[right_center]" />
       </div>
 
       {/* ========================================================================= */}
@@ -110,20 +98,7 @@ export const LoginPage: React.FC = () => {
       {/* 3. MOBILE & TABLET PORTRAIT HERO BANNER (< 1024px)                        */}
       {/* ========================================================================= */}
       <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] lg:hidden overflow-hidden shrink-0 select-none bg-[#032630]">
-        <picture>
-          <source
-            srcSet="/assets/auth-photo-1024.webp 1024w, /assets/auth-photo-640.webp 640w"
-            sizes="100vw"
-            type="image/webp"
-          />
-          <img
-            src="/assets/auth-photo.jpg"
-            alt="Arcade Fx Kayak on Turquoise Ocean"
-            className="w-full h-full object-cover object-[center_32%]"
-            loading="eager"
-            decoding="async"
-          />
-        </picture>
+        <HeroVideo objectPosition="object-[65%_center]" />
 
         {/* Ambient Top & Bottom Scrim for contrast */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/30 pointer-events-none" />
