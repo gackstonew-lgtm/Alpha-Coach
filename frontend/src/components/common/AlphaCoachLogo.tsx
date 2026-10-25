@@ -13,12 +13,12 @@ export const TradersEdgeLogo: React.FC<LogoProps> = ({
   showWordmark = true,
   variant = 'auto'
 }) => {
-  // Height classes aligned with previous dimension tiers
+  // Height and dimensions scaled +20% for enhanced visual presence and legibility across devices
   const sizeClasses = {
-    sm: showWordmark ? 'h-7 w-auto' : 'h-7 w-7 rounded-md object-cover',
-    md: showWordmark ? 'h-9 w-auto' : 'h-9 w-9 rounded-lg object-cover',
-    lg: showWordmark ? 'h-12 w-auto' : 'h-12 w-12 rounded-xl object-cover',
-    xl: showWordmark ? 'h-16 w-auto' : 'h-16 w-16 rounded-2xl object-cover'
+    sm: showWordmark ? 'h-[34px] w-auto max-w-[160px]' : 'h-[34px] w-[34px] rounded-lg object-contain',
+    md: showWordmark ? 'h-11 w-auto max-w-[200px]' : 'h-11 w-11 rounded-xl object-contain',
+    lg: showWordmark ? 'h-[58px] w-auto max-w-[260px]' : 'h-[58px] w-[58px] rounded-2xl object-contain',
+    xl: showWordmark ? 'h-[78px] w-auto max-w-[340px]' : 'h-[78px] w-[78px] rounded-2xl object-contain'
   }[size];
 
   // Zero-flash CSS-driven theme swapping classes
@@ -43,7 +43,7 @@ export const TradersEdgeLogo: React.FC<LogoProps> = ({
       <img
         src="/brand/traders-edge-logo-light.png"
         alt="Trader's Edge"
-        className={`transition-opacity duration-200 object-contain ${sizeClasses} ${lightImgClass}`}
+        className={`transition-opacity duration-200 object-contain aspect-square ${sizeClasses} ${lightImgClass}`}
         loading="eager"
         decoding="async"
       />
@@ -52,7 +52,7 @@ export const TradersEdgeLogo: React.FC<LogoProps> = ({
       <img
         src="/brand/traders-edge-logo-dark.png"
         alt="Trader's Edge"
-        className={`transition-opacity duration-200 object-contain ${sizeClasses} ${darkImgClass}`}
+        className={`transition-opacity duration-200 object-contain aspect-square ${sizeClasses} ${darkImgClass}`}
         loading="eager"
         decoding="async"
       />
