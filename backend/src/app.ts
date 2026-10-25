@@ -110,7 +110,7 @@ app.get(['/', '/api', '/api/health', '/health', '/api/v1/health', '/v1/health'],
   res.status(statusCode).json({
     success: isHealthy,
     status: isHealthy ? 'ONLINE' : 'UNAVAILABLE',
-    service: "Trader's Edge Performance API",
+    service: "Arcade Fx Performance API",
     version: BUILD_INFO.version,
     buildVersion: BUILD_INFO.version,
     databaseProvider: diag.databaseProvider,

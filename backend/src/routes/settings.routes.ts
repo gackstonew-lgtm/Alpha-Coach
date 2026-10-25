@@ -189,7 +189,7 @@ router.delete('/account', requireUserAuth, async (req: AuthenticatedRequest, res
     await SettingsService.deleteAccount(req.user!.userId);
     res.json({
       success: true,
-      message: 'Your Meta Coach account and all associated trading data have been permanently deleted.',
+      message: 'Your Arcade Fx account and all associated trading data have been permanently deleted.',
       requestId: req.requestId
     });
   } catch (err: any) {

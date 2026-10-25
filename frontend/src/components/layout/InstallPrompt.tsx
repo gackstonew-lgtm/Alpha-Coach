@@ -101,7 +101,7 @@ export const InstallPrompt: React.FC = () => {
   return (
     <div
       role="dialog"
-      aria-label="Install Trader's Edge"
+      aria-label="Install Arcade Fx"
       className="fixed z-40 inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-96 rounded-2xl bg-surface border border-border-subtle shadow-2xl shadow-black/40 p-4 animate-in slide-in-from-bottom-4 fade-in duration-300"
     >
       <button
@@ -119,7 +119,7 @@ export const InstallPrompt: React.FC = () => {
           className="w-12 h-12 rounded-xl flex-shrink-0"
         />
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-content-primary">Install Trader&apos;s Edge</p>
+          <p className="text-sm font-semibold text-content-primary">Install Arcade Fx</p>
           <p className="text-xs text-content-secondary mt-0.5">
             Open your journal from your home screen, full screen, with faster loading.
           </p>

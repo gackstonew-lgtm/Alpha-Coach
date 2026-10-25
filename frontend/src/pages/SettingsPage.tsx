@@ -337,7 +337,7 @@ export const SettingsPage: React.FC = () => {
     const perm = await Notification.requestPermission();
     if (perm === 'granted') {
       updateSettings({ notifications: { browserPushEnabled: true } });
-      new Notification("Trader's Edge Alerts Enabled", {
+      new Notification("Arcade Fx Alerts Enabled", {
         body: 'You will now receive high-priority risk and journaling notifications.',
         icon: '/pwa-192x192.png'
       });
@@ -571,7 +571,7 @@ export const SettingsPage: React.FC = () => {
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-content-secondary mb-1">Email Address</label>
                     <div className="flex items-center justify-between bg-surface-secondary border border-border-subtle rounded-xl px-3 py-2 opacity-80">
-                      <span className="text-xs text-content-muted font-mono">{user?.email || 'trader@tradersedge.io'}</span>
+                      <span className="text-xs text-content-muted font-mono">{user?.email || 'trader@arcadefx.io'}</span>
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                         Active & Verified
                       </span>
@@ -1694,7 +1694,7 @@ export const SettingsPage: React.FC = () => {
                   <div>
                     <div className="font-bold text-xs text-brand-600 dark:text-brand-400">Desktop Web Push Notifications</div>
                     <div className="text-[11px] text-content-muted mt-0.5">
-                      Receive immediate alerts on desktop even when Trader&apos;s Edge tab is running in the background.
+                      Receive immediate alerts on desktop even when Arcade Fx tab is running in the background.
                     </div>
                   </div>
                   <button
@@ -2195,7 +2195,7 @@ export const SettingsPage: React.FC = () => {
           <div className="bg-surface border border-rose-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center gap-2.5 text-rose-500 font-bold text-sm">
               <AlertTriangle className="w-5 h-5" />
-              <span>Permanently Delete Trader&apos;s Edge Account</span>
+              <span>Permanently Delete Arcade Fx Account</span>
             </div>
 
             <p className="text-xs text-content-muted leading-relaxed">

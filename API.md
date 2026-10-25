@@ -1,6 +1,6 @@
-# Trader's Edge REST API Reference
+# Arcade Fx REST API Reference
 
-The Trader's Edge REST API serves both the web PWA frontend and local MT5 Python bridge clients.
+The Arcade Fx REST API serves both the web PWA frontend and local MT5 Python bridge clients.
 All endpoints are mounted under `/api/v1` and `/v1`.
 
 ## Base URLs
@@ -18,7 +18,7 @@ Returns system health, database latency, and build provenance.
 {
   "success": true,
   "status": "ONLINE",
-  "service": "Trader's Edge Performance API",
+  "service": "Arcade Fx Performance API",
   "version": "1.0.6",
   "databaseProvider": "supabase",
   "databaseConnection": "healthy",

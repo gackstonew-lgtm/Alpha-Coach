@@ -1,7 +1,7 @@
 {
   "name": "alpha-coach",
   "version": "1.0.4",
-  "description": "Trader's Edge - Professional Automated MT5 Trading Journal & Trading Performance OS",
+  "description": "Arcade Fx - Professional Forex Intelligence & Trading OS",
   "scripts": {
     "dev": "cd frontend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",

@@ -17,7 +17,7 @@ export const FAQPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="Frequently Asked Questions (FAQ) | Trader's Edge"
+        title="Frequently Asked Questions (FAQ) | Arcade Fx"
         description="Clear answers about MetaTrader 5 integration, Windows/Mac support, Zero-Password security architecture, pricing, and automated synchronization."
         canonicalPath="/faq"
         structuredData={getFAQSchema()}
@@ -85,8 +85,8 @@ export const FAQPage: React.FC = () => {
             </div>
             <p className="text-xs text-content-muted">
               Contact our engineering and trader support team at{' '}
-              <a href="mailto:support@tradersedge.io" className="text-brand-500 hover:underline font-semibold font-mono">
-                support@tradersedge.io
+              <a href="mailto:support@arcadefx.io" className="text-brand-500 hover:underline font-semibold font-mono">
+                support@arcadefx.io
               </a>
               . We reply within 24 hours.
             </p>

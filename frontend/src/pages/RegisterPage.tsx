@@ -49,8 +49,8 @@ export const RegisterPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col justify-center items-center p-4 relative overflow-hidden ambient-glow-bg">
       <MetaHead
-        title="Create Account — Trader's Edge Trading Journal"
-        description="Join Trader's Edge to automate your MetaTrader 5 trade journaling, analyze setup expectancies, and maintain psychological discipline."
+        title="Create Account — Arcade Fx Trading Journal"
+        description="Join Arcade Fx to automate your MetaTrader 5 trade journaling, analyze setup expectancies, and maintain psychological discipline."
         canonicalPath="/register"
       />
       <div className="max-w-md w-full framer-card p-8 rounded-3xl shadow-xl space-y-6 z-10 animate-in fade-in zoom-in-95 duration-300 border border-border-subtle">
@@ -61,7 +61,7 @@ export const RegisterPage: React.FC = () => {
               <AlphaCoachLogo size="lg" showWordmark={true} />
             </Link>
           </div>
-          <h1 className="text-xl font-extrabold text-content-primary tracking-tight">Create Trader&apos;s Edge Account</h1>
+          <h1 className="text-xl font-extrabold text-content-primary tracking-tight">Create Arcade Fx Account</h1>
           <p className="text-xs text-content-muted">Automate your MT5 trade journaling and trading psychology</p>
         </div>
 
@@ -161,7 +161,7 @@ export const RegisterPage: React.FC = () => {
               disabled={isLoading}
               className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-brand-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
             >
-              <span>{isLoading ? 'Creating Account...' : "Get Started with Trader's Edge"}</span>
+              <span>{isLoading ? 'Creating Account...' : "Get Started with Arcade Fx"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
@@ -176,7 +176,7 @@ export const RegisterPage: React.FC = () => {
           </div>
           <div>
             <Link to="/" className="text-content-subtle hover:text-content-secondary transition">
-              ← Return to Trader&apos;s Edge Overview
+              ← Return to Arcade Fx Overview
             </Link>
           </div>
         </div>

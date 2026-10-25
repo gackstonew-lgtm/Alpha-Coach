@@ -1,5 +1,5 @@
 /**
- * Trader's Edge PWA Service
+ * Arcade Fx PWA Service
  * Handles Service Worker registration, installation prompts, and device detection
  */
 

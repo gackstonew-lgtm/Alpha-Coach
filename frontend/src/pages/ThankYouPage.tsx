@@ -9,8 +9,8 @@ export const ThankYouPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="Welcome to Trader's Edge — Next Steps"
-        description="Your Trader's Edge account has been successfully initialized. Follow these 3 steps to pair your MT5 terminal and reconstruct your trading history."
+        title="Welcome to Arcade Fx — Next Steps"
+        description="Your Arcade Fx account has been successfully initialized. Follow these 3 steps to pair your MT5 terminal and reconstruct your trading history."
         noIndex={true}
       />
       <PublicNavbar />
@@ -25,7 +25,7 @@ export const ThankYouPage: React.FC = () => {
             Account Created Successfully!
           </h1>
           <p className="text-sm sm:text-base text-content-secondary max-w-xl mx-auto leading-relaxed">
-            Welcome to the Trader&apos;s Edge institutional trading operating system. Complete the 3 quick steps below to start journaling with mathematical precision.
+            Welcome to the Arcade Fx institutional trading operating system. Complete the 3 quick steps below to start journaling with mathematical precision.
           </p>
         </div>
 
@@ -42,7 +42,7 @@ export const ThankYouPage: React.FC = () => {
                 <h2 className="text-sm font-bold text-content-primary">Verify Your Email Address</h2>
               </div>
               <p className="text-xs text-content-muted leading-relaxed">
-                Check your inbox for a verification email from Trader&apos;s Edge. Clicking the confirmation link ensures you receive daily performance digests, risk breach warnings, and weekly playbooks.
+                Check your inbox for a verification email from Arcade Fx. Clicking the confirmation link ensures you receive daily performance digests, risk breach warnings, and weekly playbooks.
               </p>
             </div>
           </div>
@@ -83,7 +83,7 @@ export const ThankYouPage: React.FC = () => {
                 <h2 className="text-sm font-bold text-content-primary">First Sync & Journal Review</h2>
               </div>
               <p className="text-xs text-content-muted leading-relaxed">
-                Once paired, Trader&apos;s Edge imports your historical deal tickets and groups multi-order executions into full position lifecycles. Review your first trade and tag entry confluences!
+                Once paired, Arcade Fx imports your historical deal tickets and groups multi-order executions into full position lifecycles. Review your first trade and tag entry confluences!
               </p>
             </div>
           </div>

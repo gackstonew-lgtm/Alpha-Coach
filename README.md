@@ -1,8 +1,8 @@
-# Trader's Edge - Automated MT5 Trading Journal & Trading Performance OS
+# Arcade Fx - Automated MT5 Trading Journal & Trading Performance OS
 
-**Trader's Edge** is a professional, secure, automated trading journaling and quantitative performance operating system designed for modern discretionary and systematic MetaTrader 5 (MT5) traders.
+**Arcade Fx** is a professional, secure, automated trading journaling and quantitative performance operating system designed for modern discretionary and systematic MetaTrader 5 (MT5) traders.
 
-Trader's Edge connects securely to your local MT5 desktop terminal, imports up to **3 months of historical data**, incrementally tracks new trades without duplicate ingestion, reconstructs complex position lifecycles (scale-ins, partial closes, stop loss hits, take profits, commissions, and swaps), and powers an advanced performance dashboard, Strategy Lab, Session & Symbol Intelligence, Risk Guardian, Trader DNA, Rewards Discipline Engine, and grounded AI Trading Coach.
+Arcade Fx connects securely to your local MT5 desktop terminal, imports up to **3 months of historical data**, incrementally tracks new trades without duplicate ingestion, reconstructs complex position lifecycles (scale-ins, partial closes, stop loss hits, take profits, commissions, and swaps), and powers an advanced performance dashboard, Strategy Lab, Session & Symbol Intelligence, Risk Guardian, Trader DNA, Rewards Discipline Engine, and grounded AI Trading Coach.
 
 ---
 
@@ -13,19 +13,19 @@ MT5 Desktop Terminal
        ↓ (Official MetaTrader5 Python API)
 Local MT5 Journal Bridge (`bridge/alpha_coach_bridge.py`)
        ↓ (Encrypted TLS HTTPS with Device Authentication Tokens)
-Trader's Edge Backend API (`backend/src/server.ts`)
+Arcade Fx Backend API (`backend/src/server.ts`)
        ↓
 Relational Database (`data/alphacoach.sqlite` / PostgreSQL DDL)
        ↓
 Position Reconstruction & Analytics Math Engine
        ↓
-Trader's Edge React PWA Dashboard (`http://localhost:5173`)
+Arcade Fx React PWA Dashboard (`http://localhost:5173`)
        ↓
 AI Performance Coach, Trader DNA & Risk Guardian
 ```
 
 ### 🔒 Zero-Password Security Model
-- **Trader's Edge NEVER asks for, receives, or stores your MT5/broker password.**
+- **Arcade Fx NEVER asks for, receives, or stores your MT5/broker password.**
 - The Local MT5 Bridge runs locally on your machine, communicates with the locally running MT5 terminal via official MT5 API calls (`mt5.initialize()`, `mt5.history_deals_get()`, `mt5.history_orders_get()`), and transmits only read-only trading orders and deal histories.
 - All bridge synchronization is authorized via rotating Device Pairing Tokens (`x-bridge-token`).
 

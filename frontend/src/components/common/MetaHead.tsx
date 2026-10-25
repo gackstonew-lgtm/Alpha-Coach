@@ -13,7 +13,7 @@ interface MetaHeadProps {
 }
 
 const SITE_URL = 'https://alpha-coach-pi.vercel.app';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/meta-coach-og.png`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/arcade-fx-og.png`;
 
 export const MetaHead: React.FC<MetaHeadProps> = ({
   title,
@@ -27,9 +27,9 @@ export const MetaHead: React.FC<MetaHeadProps> = ({
   const location = useLocation();
   const currentPath = canonicalPath || location.pathname;
   const canonicalUrl = `${SITE_URL}${currentPath === '/' ? '' : currentPath}`;
-  const fullTitle = title.includes("Trader's Edge") || title.includes('Meta Coach')
-    ? (title.includes('Meta Coach') ? title.replace(/Meta Coach/g, "Trader's Edge") : title)
-    : `${title} | Trader's Edge`;
+  const fullTitle = title.includes("Arcade Fx") || title.includes('Meta Coach')
+    ? (title.includes('Meta Coach') ? title.replace(/Meta Coach/g, "Arcade Fx") : title)
+    : `${title} | Arcade Fx`;
 
   return (
     <Helmet>
@@ -47,7 +47,7 @@ export const MetaHead: React.FC<MetaHeadProps> = ({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage.startsWith('http') ? ogImage : `${SITE_URL}${ogImage}`} />
-      <meta property="og:site_name" content="Trader's Edge" />
+      <meta property="og:site_name" content="Arcade Fx" />
 
       {/* Twitter Cards */}
       <meta name="twitter:card" content="summary_large_image" />

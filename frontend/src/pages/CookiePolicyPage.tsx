@@ -10,8 +10,8 @@ export const CookiePolicyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="Cookie & Local Storage Policy | Trader's Edge"
-        description="Trader's Edge transparent storage policy: essential session authentication and anonymous telemetry without third-party tracking pixels."
+        title="Cookie & Local Storage Policy | Arcade Fx"
+        description="Arcade Fx transparent storage policy: essential session authentication and anonymous telemetry without third-party tracking pixels."
         canonicalPath="/cookies"
       />
       <PublicNavbar />
@@ -25,7 +25,7 @@ export const CookiePolicyPage: React.FC = () => {
           <div>
             <span className="font-bold uppercase tracking-wider block mb-0.5">Notice to Users & Compliance Reviewers</span>
             <span>
-              This document represents our preliminary cookie and storage disclosure draft and is currently pending formal legal review. The disclosures below enumerate all local browser keys utilized by Trader&apos;s Edge.
+              This document represents our preliminary cookie and storage disclosure draft and is currently pending formal legal review. The disclosures below enumerate all local browser keys utilized by Arcade Fx.
             </span>
           </div>
         </div>
@@ -53,7 +53,7 @@ export const CookiePolicyPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="text-base sm:text-lg font-bold text-content-primary">1. Overview</h2>
             <p>
-              This Cookie Policy explains how [COMPANY LEGAL NAME] ("Trader&apos;s Edge", "we", "us") utilizes browser cookies and local client-side storage technologies when you access our web application.
+              This Cookie Policy explains how [COMPANY LEGAL NAME] ("Arcade Fx", "we", "us") utilizes browser cookies and local client-side storage technologies when you access our web application.
             </p>
           </section>
 
@@ -66,7 +66,7 @@ export const CookiePolicyPage: React.FC = () => {
                 <span>Strictly Essential Storage Only</span>
               </div>
               <p className="text-xs text-content-muted">
-                Trader&apos;s Edge does <strong>NOT</strong> use third-party advertising cookies, cross-site trackers, or behavioral profiling pixels. We only utilize essential browser storage mechanisms required for authentication and interface rendering.
+                Arcade Fx does <strong>NOT</strong> use third-party advertising cookies, cross-site trackers, or behavioral profiling pixels. We only utilize essential browser storage mechanisms required for authentication and interface rendering.
               </p>
             </div>
           </section>

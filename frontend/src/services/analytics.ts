@@ -1,5 +1,5 @@
 /**
- * Trader's Edge — Privacy-Preserving Analytics Service
+ * Arcade Fx — Privacy-Preserving Analytics Service
  * Only initializes Google Analytics (GA4) upon explicit user cookie consent.
  * Strictly avoids logging trade tickets, financial balances, passwords, or bridge tokens.
  */

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Canonical Trader's Edge API Bundler
+ * Canonical Arcade Fx API Bundler
  * Automatically generates production-ready api/app.bundle.js from backend/src/app.ts
  * Embeds Git commit SHA, version, build timestamp, and validates bundle integrity.
  */

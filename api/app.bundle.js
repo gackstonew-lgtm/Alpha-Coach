@@ -54053,7 +54053,7 @@ async function seedInitialData(db) {
       { id: "ach-2", code: "JOURNAL_STREAK_7", title: "7-Day Discipline", description: "Maintained a 7-day continuous trade journaling streak.", category: "DISCIPLINE", xp: 150, icon: "Flame" },
       { id: "ach-3", code: "REVIEW_25_LOSSES", title: "Loss Master", description: "Reviewed 25 losing trades to extract key lessons without revenge trading.", category: "ANALYSIS", xp: 200, icon: "ShieldCheck" },
       { id: "ach-4", code: "RULE_COMPLIANT_50", title: "Risk Guardian", description: "Completed 50 trades strictly within configured risk limits.", category: "RISK_MANAGEMENT", xp: 250, icon: "Award" },
-      { id: "ach-5", code: "TRADES_100", title: "Century Club", description: "Analyzed over 100 reconstructed positions on Meta Coach.", category: "CONSISTENCY", xp: 300, icon: "Trophy" }
+      { id: "ach-5", code: "TRADES_100", title: "Century Club", description: "Analyzed over 100 reconstructed positions on Arcade Fx.", category: "CONSISTENCY", xp: 300, icon: "Trophy" }
     ];
     for (const ach of initialAchievements) {
       await db.run(
@@ -56998,8 +56998,8 @@ var SyncService = class {
 // src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.6",
-  gitCommit: "bfd5ad5e96ec0798059bcf26ac020043de9b68a3",
-  buildTimestamp: "2026-10-25T07:26:59.112Z",
+  gitCommit: "77a8bc4c1fdac4a0e58b102d0c4362b1095adfc7",
+  buildTimestamp: "2026-10-25T08:39:15.327Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -59636,7 +59636,7 @@ Based on your synchronized journal data (${overview.totalTrades} positions):
 - **Primary Symbol:** ${dna.mostTradedSymbol?.symbol || "N/A"}
 - **Primary Session:** ${dna.mostActiveSession?.session || "N/A"}
 
-*Disclaimer: Trader's Edge AI provides strictly descriptive analytics on your historical journal logs and does not provide financial or trading advice.*`;
+*Disclaimer: Arcade Fx AI provides strictly descriptive analytics on your historical journal logs and does not provide financial or trading advice.*`;
     }
     return {
       answer,
@@ -65452,7 +65452,7 @@ router18.delete("/account", requireUserAuth, async (req, res) => {
     await SettingsService.deleteAccount(req.user.userId);
     res.json({
       success: true,
-      message: "Your Meta Coach account and all associated trading data have been permanently deleted.",
+      message: "Your Arcade Fx account and all associated trading data have been permanently deleted.",
       requestId: req.requestId
     });
   } catch (err) {
@@ -71254,7 +71254,7 @@ app.get(["/", "/api", "/api/health", "/health", "/api/v1/health", "/v1/health"],
   res.status(statusCode).json({
     success: isHealthy,
     status: isHealthy ? "ONLINE" : "UNAVAILABLE",
-    service: "Trader's Edge Performance API",
+    service: "Arcade Fx Performance API",
     version: BUILD_INFO.version,
     buildVersion: BUILD_INFO.version,
     databaseProvider: diag.databaseProvider,

@@ -52,8 +52,8 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col justify-center items-center p-4 relative overflow-hidden ambient-glow-bg">
       <MetaHead
-        title="Sign In — Trader's Edge Trading Terminal"
-        description="Sign in to your Trader's Edge trading account to review automated MT5 trade journals, edge metrics, and AI Coach analysis."
+        title="Sign In — Arcade Fx Trading Terminal"
+        description="Sign in to your Arcade Fx trading account to review automated MT5 trade journals, edge metrics, and AI Coach analysis."
         canonicalPath="/login"
       />
       <div className="max-w-md w-full framer-card p-8 rounded-3xl shadow-xl space-y-6 z-10 animate-in fade-in zoom-in-95 duration-300 border border-border-subtle">
@@ -132,14 +132,14 @@ export const LoginPage: React.FC = () => {
         {/* Register link */}
         <div className="space-y-2 text-center text-xs text-content-muted">
           <div>
-            New to Trader&apos;s Edge?{' '}
+            New to Arcade Fx?{' '}
             <Link to="/register" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
               Create an Account
             </Link>
           </div>
           <div>
             <Link to="/" className="text-content-subtle hover:text-content-secondary transition">
-              ← Return to Trader&apos;s Edge Overview
+              ← Return to Arcade Fx Overview
             </Link>
           </div>
         </div>

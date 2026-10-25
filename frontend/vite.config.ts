@@ -21,8 +21,8 @@ export default defineConfig({
       ],
       manifest: {
         id: '/',
-        name: "Trader's Edge — Automated MT5 Trading Journal & Performance OS",
-        short_name: "Trader's Edge",
+        name: "Arcade Fx — Automated MT5 Trading Journal & Performance OS",
+        short_name: "Arcade Fx",
         description: 'Automated MT5 Trading Journal & Quantitative Performance Operating System for modern discretionary and systematic traders.',
         theme_color: '#050608',
         background_color: '#050608',

@@ -21,7 +21,7 @@ export const SecurityPage: React.FC = () => {
       icon: Lock,
       title: 'Zero-Password Security Model',
       description:
-        "Trader's Edge strictly never requests, receives, transmits, or stores your broker login passwords or MT5 trading credentials.",
+        "Arcade Fx strictly never requests, receives, transmits, or stores your broker login passwords or MT5 trading credentials.",
       points: [
         'No broker login or investor passwords stored on any server',
         'Direct local Inter-Process Communication (IPC) via desktop MT5 API',
@@ -70,8 +70,8 @@ export const SecurityPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="Security & Zero-Password Architecture | Trader's Edge"
-        description="Comprehensive technical overview of Trader's Edge Zero-Password security architecture, local Python IPC bridge, TLS encryption, and Row-Level Security isolation."
+        title="Security & Zero-Password Architecture | Arcade Fx"
+        description="Comprehensive technical overview of Arcade Fx Zero-Password security architecture, local Python IPC bridge, TLS encryption, and Row-Level Security isolation."
         canonicalPath="/security"
       />
       <PublicNavbar />
@@ -102,12 +102,12 @@ export const SecurityPage: React.FC = () => {
                 Important Security Guarantee
               </h3>
               <p className="text-xs text-content-muted">
-                How Trader&apos;s Edge differs fundamentally from other trading platforms
+                How Arcade Fx differs fundamentally from other trading platforms
               </p>
             </div>
           </div>
           <p className="text-xs sm:text-sm text-content-secondary leading-relaxed">
-            Traditional online trading software often asks for your broker login ID and master password to fetch trade data on their remote servers. <strong>Trader&apos;s Edge never does this.</strong> All connection to MetaTrader 5 happens locally on your own computer using the official MetaQuotes API. The Trader&apos;s Edge bridge only reads historical closed deal tickets and pushes the mathematical reconstruction to your private cloud journal.
+            Traditional online trading software often asks for your broker login ID and master password to fetch trade data on their remote servers. <strong>Arcade Fx never does this.</strong> All connection to MetaTrader 5 happens locally on your own computer using the official MetaQuotes API. The Arcade Fx bridge only reads historical closed deal tickets and pushes the mathematical reconstruction to your private cloud journal.
           </p>
         </div>
 
@@ -155,7 +155,7 @@ export const SecurityPage: React.FC = () => {
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-content-secondary">
             <li className="p-3 rounded-xl bg-surface-secondary border border-border-subtle flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
-              <span>Use strong, unique passwords for your Trader&apos;s Edge account.</span>
+              <span>Use strong, unique passwords for your Arcade Fx account.</span>
             </li>
             <li className="p-3 rounded-xl bg-surface-secondary border border-border-subtle flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />

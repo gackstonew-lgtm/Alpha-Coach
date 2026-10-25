@@ -154,7 +154,7 @@ export const PairDevicePage: React.FC = () => {
             Authorize MT5 Desktop Bridge
           </h1>
           <p className="text-xs text-content-muted">
-            Connect your local MetaTrader 5 terminal to your Trader&apos;s Edge account
+            Connect your local MetaTrader 5 terminal to your Arcade Fx account
           </p>
         </div>
 
@@ -166,7 +166,7 @@ export const PairDevicePage: React.FC = () => {
               <span>Authentication Required</span>
             </div>
             <p className="text-content-secondary">
-              Please sign in to your Trader&apos;s Edge account to authorize this MT5 Bridge device.
+              Please sign in to your Arcade Fx account to authorize this MT5 Bridge device.
             </p>
             <Link
               to={`/login?redirect=${encodeURIComponent(`/pair?session=${sessionCode || ''}`)}`}
@@ -237,7 +237,7 @@ export const PairDevicePage: React.FC = () => {
             <div className="space-y-1">
               <h3 className="font-extrabold text-sm text-emerald-400">Device Successfully Connected!</h3>
               <p className="text-content-secondary">
-                Your Trader&apos;s Edge MT5 Bridge is now paired and authorized. You can switch back to the desktop application to begin synchronizing your trading activity.
+                Your Arcade Fx MT5 Bridge is now paired and authorized. You can switch back to the desktop application to begin synchronizing your trading activity.
               </p>
             </div>
             <div className="pt-2 flex flex-col gap-2">
@@ -295,7 +295,7 @@ export const PairDevicePage: React.FC = () => {
                 <span>Zero Broker Password Exposure</span>
               </div>
               <p className="text-[11px] text-content-secondary leading-relaxed">
-                Authorizing gives the local MT5 Bridge permission to send your read-only orders and deal histories to your private Trader&apos;s Edge journal.
+                Authorizing gives the local MT5 Bridge permission to send your read-only orders and deal histories to your private Arcade Fx journal.
               </p>
             </div>
 

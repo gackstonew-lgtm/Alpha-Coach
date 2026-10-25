@@ -8,16 +8,16 @@ const PORT = process.env.PORT || 4000;
 async function bootstrap() {
   try {
     await initDatabase();
-    console.log("[Trader's Edge] Relational Database Initialized & Seeded.");
+    console.log("[Arcade Fx] Relational Database Initialized & Seeded.");
 
     server.listen(PORT, () => {
       console.log(`=======================================================`);
-      console.log(`🚀 Trader's Edge Backend API running on port ${PORT}`);
+      console.log(`🚀 Arcade Fx Backend API running on port ${PORT}`);
       console.log(`📡 MT5 Synchronization Bridge Endpoint: http://localhost:${PORT}/api/v1/mt5/sync`);
       console.log(`=======================================================`);
     });
   } catch (err) {
-    console.error("[Trader's Edge Bootstrap Failed]:", err);
+    console.error("[Arcade Fx Bootstrap Failed]:", err);
     process.exit(1);
   }
 }
