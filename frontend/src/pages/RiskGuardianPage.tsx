@@ -82,6 +82,10 @@ export const RiskGuardianPage: React.FC = () => {
   const [pipStartPrice, setPipStartPrice] = useState<string>('1.08000');
   const [pipEndPrice, setPipEndPrice] = useState<string>('1.08650');
 
+  // Currency Exposure & Multi-currency Account State
+  const [currencyExposure, setCurrencyExposure] = useState<any>(null);
+  const [accountCurrency, setAccountCurrency] = useState<string>('USD');
+
   useEffect(() => {
     loadRiskData();
   }, [selectedAccountId, accounts]);
@@ -103,6 +107,19 @@ export const RiskGuardianPage: React.FC = () => {
       if (accId && accId !== 'ALL') {
         const monRes = await api.getRiskMonitor(accId);
         setMonitor(monRes.monitor);
+      }
+
+      // Fetch Portfolio Currency Exposure & Correlation Warnings
+      try {
+        const expRes = await api.getCurrencyExposure({ accountId: accId });
+        if (expRes.success) {
+          setCurrencyExposure(expRes.exposure);
+          if (expRes.exposure.accountCurrency) {
+            setAccountCurrency(expRes.exposure.accountCurrency);
+          }
+        }
+      } catch (e) {
+        // Fallback gracefully if no exposure data
       }
     } catch (err) {
       console.error('Failed to load risk guardian:', err);
@@ -571,6 +588,54 @@ export const RiskGuardianPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Portfolio Currency Exposure & Correlation Warnings */}
+      {currencyExposure && Object.keys(currencyExposure.currencyBreakdown || {}).length > 0 && (
+        <div className="framer-card p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+            <div className="flex items-center space-x-2">
+              <Scale className="w-4 h-4 text-brand-primary" />
+              <h2 className="text-sm font-bold text-content-primary">Portfolio Currency Exposure & Correlation Guardian</h2>
+            </div>
+            <span className="text-xs font-mono text-content-muted">
+              Account Base: <strong className="text-content-primary">{accountCurrency}</strong>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+            {Object.entries(currencyExposure.currencyBreakdown as Record<string, { longVolume: number; shortVolume: number; netVolume: number; openTradesCount: number }>).map(([curr, data]) => {
+              const isLong = data.netVolume > 0;
+              const isNeutral = data.netVolume === 0;
+              return (
+                <div key={curr} className="p-3 rounded-2xl bg-surface-secondary border border-border-subtle">
+                  <div className="flex items-center justify-between text-[11px] font-bold">
+                    <span className="text-content-primary">{curr}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+                      isNeutral ? 'bg-surface text-content-muted' : isLong ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                    }`}>
+                      {isNeutral ? 'FLAT' : isLong ? `+${data.netVolume}L` : `${data.netVolume}L`}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-content-muted mt-1">
+                    {data.openTradesCount} trade{data.openTradesCount === 1 ? '' : 's'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {currencyExposure.correlationWarnings && currencyExposure.correlationWarnings.length > 0 && (
+            <div className="space-y-2 pt-2">
+              {currencyExposure.correlationWarnings.map((w: any, idx: number) => (
+                <div key={idx} className="flex items-center space-x-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
+                  <span><strong>Correlation Warning:</strong> {w.warningMessage}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 2. Primary Smart Trade Risk & Position Calculator */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Trade Inputs (5 Cols) */}
@@ -580,7 +645,19 @@ export const RiskGuardianPage: React.FC = () => {
               <Calculator className="w-4 h-4 text-brand-primary" />
               <h2 className="text-sm font-bold text-content-primary">Proposed Trade Parameters</h2>
             </div>
-            <span className="text-[11px] text-content-muted font-mono">{selectedInstrument.category}</span>
+            <div className="flex items-center space-x-2">
+              <select
+                value={accountCurrency}
+                onChange={e => setAccountCurrency(e.target.value)}
+                className="bg-surface-secondary border border-border-subtle rounded-lg px-2 py-0.5 text-[11px] font-mono text-content-primary focus:outline-none"
+                title="Account Base Currency"
+              >
+                {['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF'].map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <span className="text-[11px] text-content-muted font-mono">{selectedInstrument.category}</span>
+            </div>
           </div>
 
           <div className="space-y-3.5 text-xs">

@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   LogOut,
   ChevronLeft,
-  X
+  X,
+  Compass
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { AlphaCoachLogo } from '../common/AlphaCoachLogo';
@@ -64,6 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navigationItems: NavItem[] = [
     { id: 'dashboard', name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
     { id: 'journal', name: 'Trading Journal', to: '/journal', icon: BookOpen },
+    { id: 'intelligence', name: 'Market Intelligence', to: '/intelligence', icon: Compass },
     { id: 'performance', name: 'Performance', to: '/performance', icon: LineChart },
     { id: 'strategy-lab', name: 'Strategy Lab', to: '/strategy-lab', icon: FlaskConical },
     { id: 'risk-guardian', name: 'Risk Guardian', to: '/risk-guardian', icon: ShieldAlert },

@@ -487,49 +487,51 @@ export class SyncService {
       );
 
       // 11. Cloud Synchronization for complete persistence across Supabase datastores
-      try {
-        const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
-        const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
-          ? getSupabaseAdmin()
-          : getSupabaseAnon();
-        if (supabase) {
-          await supabase.from('trading_accounts').upsert({
-            id: account.id,
-            user_id: userId,
-            account_number: String(payload.accountInfo.accountNumber),
-            broker_name: payload.accountInfo.brokerName || 'MetaQuotes',
-            server_name: payload.accountInfo.serverName || 'DefaultServer',
-            currency: payload.accountInfo.currency || 'USD',
-            leverage: payload.accountInfo.leverage || 100,
-            balance: payload.accountInfo.balance,
-            equity: payload.accountInfo.equity,
-            margin: payload.accountInfo.margin,
-            free_margin: payload.accountInfo.freeMargin,
-            margin_level: payload.accountInfo.marginLevel || 0,
-            account_type: payload.accountInfo.accountType || 'hedging',
-            is_active: 1,
-            last_synced_at: new Date().toISOString()
-          }, { onConflict: 'id' });
+      if (process.env.NODE_ENV !== 'test') {
+        try {
+          const { getSupabaseAdmin, getSupabaseAnon } = require('../lib/supabase');
+          const supabase = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY)
+            ? getSupabaseAdmin()
+            : getSupabaseAnon();
+          if (supabase) {
+            await supabase.from('trading_accounts').upsert({
+              id: account.id,
+              user_id: userId,
+              account_number: String(payload.accountInfo.accountNumber),
+              broker_name: payload.accountInfo.brokerName || 'MetaQuotes',
+              server_name: payload.accountInfo.serverName || 'DefaultServer',
+              currency: payload.accountInfo.currency || 'USD',
+              leverage: payload.accountInfo.leverage || 100,
+              balance: payload.accountInfo.balance,
+              equity: payload.accountInfo.equity,
+              margin: payload.accountInfo.margin,
+              free_margin: payload.accountInfo.freeMargin,
+              margin_level: payload.accountInfo.marginLevel || 0,
+              account_type: payload.accountInfo.accountType || 'hedging',
+              is_active: 1,
+              last_synced_at: new Date().toISOString()
+            }, { onConflict: 'id' });
 
-          const positions = await db.query(
-            `SELECT * FROM reconstructed_positions WHERE account_id = ? AND symbol IS NOT NULL AND symbol != ''`,
-            [account.id]
-          );
-          if (positions && positions.length > 0) {
-            await supabase.from('reconstructed_positions').upsert(positions, { onConflict: 'id' });
-          }
+            const positions = await db.query(
+              `SELECT * FROM reconstructed_positions WHERE account_id = ? AND symbol IS NOT NULL AND symbol != ''`,
+              [account.id]
+            );
+            if (positions && positions.length > 0) {
+              await supabase.from('reconstructed_positions').upsert(positions, { onConflict: 'id' });
+            }
 
-          // Clean legacy synthetic demo records from cloud if present
-          try {
-            await supabase.from('reconstructed_positions').delete().eq('position_id', '79001');
-            await supabase.from('raw_deals').delete().in('deal_id', ['99001', '99002']);
-            await supabase.from('raw_orders').delete().eq('order_id', '89001');
-          } catch {
-            // Ignore if cloud table does not contain them
+            // Clean legacy synthetic demo records from cloud if present
+            try {
+              await supabase.from('reconstructed_positions').delete().eq('position_id', '79001');
+              await supabase.from('raw_deals').delete().in('deal_id', ['99001', '99002']);
+              await supabase.from('raw_orders').delete().eq('order_id', '89001');
+            } catch {
+              // Ignore if cloud table does not contain them
+            }
           }
+        } catch (supaSyncErr) {
+          // Cloud sync optional in offline development
         }
-      } catch (supaSyncErr) {
-        // Cloud sync optional in offline development
       }
 
       return reconciliationResult;
