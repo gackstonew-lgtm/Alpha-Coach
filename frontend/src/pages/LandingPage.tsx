@@ -186,8 +186,13 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Desktop Left Content Column (Solid White Container Beside Video) */}
-          <div className="relative z-10 hidden lg:flex flex-col justify-center w-full lg:w-[48%] xl:w-[45%] bg-white pl-16 xl:pl-24 2xl:pl-32 pr-8 py-16 shrink-0">
+          {/* Desktop Full Hero Background Video (White Left Area + Coral Reef + Ocean) */}
+          <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none bg-white">
+            <HeroVideo objectPosition="object-[left_center]" />
+          </div>
+
+          {/* Desktop Left Content Column (Transparent over Video's White Area) */}
+          <div className="relative z-10 hidden lg:flex flex-col justify-center w-full lg:w-[48%] xl:w-[45%] bg-transparent pl-16 xl:pl-24 2xl:pl-32 pr-8 py-16 shrink-0 min-h-[580px] lg:min-h-[660px]">
             <div className="w-full max-w-[480px]">
               <div className="space-y-4">
                 <div className="inline-block px-3 py-1 rounded-full bg-[#BFEFEC]/70 text-[#0F1B4D] text-[11px] font-bold uppercase tracking-wider">
@@ -230,10 +235,7 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Desktop Right Video Column (Cropped strictly to ocean/kayak, sitting beside content) */}
-          <div className="hidden lg:block relative flex-1 min-h-[580px] lg:min-h-[660px] overflow-hidden select-none pointer-events-none bg-[#032630]">
-            <HeroVideo objectPosition="object-center" />
-          </div>
+
         </section>
 
         {/* ========================================================================= */}

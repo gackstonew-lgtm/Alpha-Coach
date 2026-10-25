@@ -8,7 +8,7 @@ export interface HeroVideoProps {
 
 export const HeroVideo: React.FC<HeroVideoProps> = ({
   className = '',
-  src = '/arcade_fx_hero.mp4',
+  src = '/hero%20arcade.mp4',
   objectPosition = 'object-center',
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -46,6 +46,8 @@ export const HeroVideo: React.FC<HeroVideoProps> = ({
       className={`w-full h-full object-cover ${objectPosition} pointer-events-none select-none ${className}`}
     >
       <source src={src} type="video/mp4" />
+      <source src="/hero%20arcade.mp4" type="video/mp4" />
+      <source src="/arcade_fx_hero.mp4" type="video/mp4" />
     </video>
   );
 };
