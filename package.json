@@ -3,7 +3,7 @@
   "version": "1.0.4",
   "description": "Arcade Fx - Professional Forex Intelligence & Trading OS",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.18.0 <25.0.0"
   },
   "scripts": {
     "dev": "cd frontend && npm run dev",
