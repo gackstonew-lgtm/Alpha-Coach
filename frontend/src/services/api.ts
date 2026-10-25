@@ -1813,8 +1813,9 @@ class ApiClient {
     return this.request('/intelligence/instruments');
   }
 
-  async getCandles(params: { symbol: string; timeframe: string; limit?: number; asOfTimestamp?: string }) {
+  async getCandles(params: { symbol: string; timeframe: string; limit?: number; asOfTimestamp?: string; allowExternalFetch?: boolean }) {
     const query = new URLSearchParams();
+    if (params.allowExternalFetch !== undefined) query.set('allowExternalFetch', String(params.allowExternalFetch));
     query.set('symbol', params.symbol);
     query.set('timeframe', params.timeframe);
     if (params.limit) query.set('limit', String(params.limit));
@@ -1843,12 +1844,13 @@ class ApiClient {
     });
   }
 
-  async getEconomicCalendar(filters: { currency?: string; impact?: string; category?: string; status?: string; startDate?: string; endDate?: string } = {}) {
+  async getEconomicCalendar(filters: { currency?: string; impact?: string; category?: string; status?: string; startDate?: string; endDate?: string; limit?: number } = {}) {
     const query = new URLSearchParams();
     if (filters.currency) query.set('currency', filters.currency);
     if (filters.impact) query.set('impact', filters.impact);
     if (filters.category) query.set('category', filters.category);
     if (filters.status) query.set('status', filters.status);
+    if (filters.limit) query.set('limit', String(filters.limit));
     if (filters.startDate) query.set('startDate', filters.startDate);
     if (filters.endDate) query.set('endDate', filters.endDate);
     return this.request(`/intelligence/fundamentals/calendar?${query.toString()}`);

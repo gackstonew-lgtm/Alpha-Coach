@@ -31,6 +31,7 @@ import { BridgeAccountsPage } from './pages/BridgeAccountsPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MarketIntelligencePage } from './pages/MarketIntelligencePage';
+import { ChartsPage } from './pages/ChartsPage';
 import { MarketScannerPage } from './pages/MarketScannerPage';
 import { MacroCalendarPage } from './pages/MacroCalendarPage';
 import { CurrencyStrengthPage } from './pages/CurrencyStrengthPage';
@@ -102,6 +103,7 @@ export const App: React.FC = () => {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/journal" element={<JournalPage />} />
           <Route path="/intelligence" element={<MarketIntelligencePage />} />
+          <Route path="/charts" element={<ChartsPage />} />
           <Route path="/scanner" element={<MarketScannerPage />} />
           <Route path="/macro-calendar" element={<MacroCalendarPage />} />
           <Route path="/currency-strength" element={<CurrencyStrengthPage />} />

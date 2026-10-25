@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scan, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Scan, RefreshCw, AlertTriangle, TrendingUp } from 'lucide-react';
 import { api } from '../services/api';
 import { MetaHead } from '../components/common/MetaHead';
 
@@ -161,6 +161,15 @@ export const MarketScannerPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => {
+                      navigate(`/charts?symbol=${hit.symbol}&timeframe=${hit.timeframe || 'H1'}`);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-primary/10 hover:bg-accent-primary/20 border border-accent-primary/30 rounded text-xs text-accent-primary transition font-semibold"
+                  >
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    <span>Chart</span>
+                  </button>
                   <button
                     onClick={() => {
                       navigate(`/intelligence?symbol=${hit.symbol}&tab=workspace`);

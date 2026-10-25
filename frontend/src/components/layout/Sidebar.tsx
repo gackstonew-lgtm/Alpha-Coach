@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   X,
   Compass,
+  TrendingUp,
   Scan,
   Calendar,
   Scale,
@@ -84,6 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       title: 'Market Intelligence',
       items: [
+        { id: 'charts', name: 'Interactive Charts', to: '/charts', icon: TrendingUp },
         { id: 'scanner', name: 'Market Scanner', to: '/scanner', icon: Scan },
         { id: 'macro-calendar', name: 'Macro & Calendar', to: '/macro-calendar', icon: Calendar },
         { id: 'currency-strength', name: 'Currency Strength', to: '/currency-strength', icon: Scale },

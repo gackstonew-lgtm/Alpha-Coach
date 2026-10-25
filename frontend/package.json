@@ -19,6 +19,7 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
+    "lightweight-charts": "^4.2.1",
     "lucide-react": "^0.475.0",
     "morgan": "^1.10.0",
     "pg": "^8.13.3",

@@ -1,9 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, RefreshCw, AlertTriangle, Filter } from 'lucide-react';
+import { Calendar, RefreshCw, AlertTriangle, Filter, TrendingUp, AlertCircle, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { MetaHead } from '../components/common/MetaHead';
 
+const getPrimaryPair = (currency: string) => {
+  switch (currency) {
+    case 'USD': return 'EURUSD';
+    case 'EUR': return 'EURUSD';
+    case 'GBP': return 'GBPUSD';
+    case 'JPY': return 'USDJPY';
+    case 'AUD': return 'AUDUSD';
+    case 'CAD': return 'USDCAD';
+    case 'CHF': return 'USDCHF';
+    case 'NZD': return 'NZDUSD';
+    default: return 'EURUSD';
+  }
+};
+
 export const MacroCalendarPage: React.FC = () => {
+  const navigate = useNavigate();
   const [economicEvents, setEconomicEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -192,9 +208,19 @@ export const MacroCalendarPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="text-right font-mono text-xs flex-shrink-0 ml-4">
-                  <div>Act: <span className="font-bold text-content-primary">{ev.actualValue ?? 'Pending'}</span></div>
-                  <div className="text-content-muted text-[10px]">Fcst: {ev.forecastValue ?? '-'} | Prev: {ev.previousValue ?? '-'}</div>
+                <div className="flex items-center gap-3 ml-4 flex-shrink-0">
+                  <div className="text-right font-mono text-xs">
+                    <div>Act: <span className="font-bold text-content-primary">{ev.actualValue ?? 'Pending'}</span></div>
+                    <div className="text-content-muted text-[10px]">Fcst: {ev.forecastValue ?? '-'} | Prev: {ev.previousValue ?? '-'}</div>
+                  </div>
+                  <button
+                    onClick={() => navigate(`/charts?symbol=${getPrimaryPair(ev.currency)}`)}
+                    title={`Open ${getPrimaryPair(ev.currency)} Chart`}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-secondary hover:bg-surface text-content-muted hover:text-accent-primary border border-border-subtle transition text-xs font-mono"
+                  >
+                    <TrendingUp className="w-3.5 h-3.5 text-accent-primary" />
+                    <span className="hidden sm:inline font-medium">Chart</span>
+                  </button>
                 </div>
               </div>
             ))

@@ -199,12 +199,13 @@ export const StrategyLabPage: React.FC = () => {
                 <th className="p-3">Profit Factor</th>
                 <th className="p-3">Max DD</th>
                 <th className="p-3">Net P/L</th>
+                <th className="p-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle font-mono">
               {backtestRuns.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-content-muted font-sans">
+                  <td colSpan={8} className="py-8 text-center text-content-muted font-sans">
                     No backtests executed yet. Use the Market Intelligence Backtester to simulate rule-based setups.
                   </td>
                 </tr>
@@ -219,6 +220,14 @@ export const StrategyLabPage: React.FC = () => {
                     <td className="p-3 text-trade-loss font-bold">{run.maxDrawdownPct}%</td>
                     <td className={`p-3 font-bold ${run.netProfitUSD >= 0 ? 'text-trade-profit' : 'text-trade-loss'}`}>
                       ${run.netProfitUSD.toFixed(2)}
+                    </td>
+                    <td className="p-3 text-right">
+                      <button
+                        onClick={() => navigate(`/charts?symbol=${run.symbol}&timeframe=${run.timeframe}`)}
+                        className="px-2.5 py-1 text-[11px] font-semibold bg-accent-primary/10 hover:bg-accent-primary/20 text-accent-primary border border-accent-primary/30 rounded transition"
+                      >
+                        Chart →
+                      </button>
                     </td>
                   </tr>
                 ))

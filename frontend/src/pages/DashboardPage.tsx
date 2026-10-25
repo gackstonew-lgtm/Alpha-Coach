@@ -24,6 +24,7 @@ import {
   ReferenceLine
 } from 'recharts';
 import { Link } from 'react-router-dom';
+import { MarketSessionsStrip } from '../components/dashboard/MarketSessionsStrip';
 
 export const DashboardPage: React.FC = () => {
   const { selectedAccountId, selectedAccount, accounts, isLoadingAccounts } = useAccounts();
@@ -189,6 +190,9 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Global Forex Market Sessions Strip */}
+      <MarketSessionsStrip />
+
       {/* Account Metric Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Net P/L */}

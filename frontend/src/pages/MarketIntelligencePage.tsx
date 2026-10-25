@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { TradingChart } from '../components/chart/TradingChart';
 import {
   Compass,
   Activity,
@@ -1209,6 +1210,39 @@ export const MarketIntelligencePage: React.FC = () => {
                   <span className="text-content-muted block">Max Drawdown</span>
                   <span className="text-base font-bold text-red-400">{backtestResult.maxDrawdownPct}%</span>
                 </div>
+              </div>
+
+              {/* Interactive Candlestick Chart with Overlaid Simulated Backtest Trades */}
+              <div className="space-y-2 pt-3 border-t border-border-subtle">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold font-mono text-content-primary flex items-center gap-1.5 uppercase tracking-wider">
+                    <TrendingUp className="w-3.5 h-3.5 text-accent-primary" />
+                    <span>Backtest Execution Chart ({backtestResult.trades?.length || 0} Trades Overlaid)</span>
+                  </span>
+                  <span className="text-[11px] text-content-muted font-mono">
+                    {selectedSymbol} • {ltfTimeframe}
+                  </span>
+                </div>
+                <TradingChart
+                  symbol={selectedSymbol}
+                  initialTimeframe={ltfTimeframe as any}
+                  height={340}
+                  showToolbar={true}
+                  compact={false}
+                  trades={(backtestResult.trades || []).map((t: any) => ({
+                    id: String(t.tradeIndex),
+                    symbol: selectedSymbol,
+                    direction: t.direction,
+                    openTime: t.entryTimestamp,
+                    closeTime: t.exitTimestamp,
+                    openPrice: Number(t.entryPrice),
+                    closePrice: Number(t.exitPrice),
+                    stopLoss: Number(t.stopLossPrice),
+                    takeProfit: Number(t.takeProfitPrice),
+                    pnl: Number(t.netPnl),
+                    rMultiple: Number(t.rMultipleNet)
+                  }))}
+                />
               </div>
             </div>
           )}

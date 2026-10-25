@@ -188,6 +188,28 @@ export const CurrencyStrengthPage: React.FC = () => {
                 <span>Spread Score: <strong className="text-content-primary">{pair.strengthSpread > 0 ? '+' : ''}{pair.strengthSpread}</strong></span>
                 <span className="truncate max-w-[130px]">{pair.correlationGroup}</span>
               </div>
+              <div className="flex items-center gap-2 pt-2 border-t border-border-subtle/60">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/charts?symbol=${pair.symbol}`);
+                  }}
+                  className="flex-1 py-1 px-2 text-[11px] font-semibold text-accent-primary bg-accent-primary/10 hover:bg-accent-primary/20 rounded transition text-center"
+                >
+                  Chart →
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/intelligence?symbol=${pair.symbol}&tab=workspace`);
+                  }}
+                  className="flex-1 py-1 px-2 text-[11px] font-semibold text-content-muted hover:text-content-primary hover:bg-surface-secondary rounded transition text-center"
+                >
+                  Workspace →
+                </button>
+              </div>
             </div>
           ))}
         </div>
