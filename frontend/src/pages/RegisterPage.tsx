@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { AlphaCoachLogo } from '../components/common/AlphaCoachLogo';
+import { Lock, Mail, User, ShieldCheck } from 'lucide-react';
+import { ArcadeFxLogo } from '../components/common/AlphaCoachLogo';
 import { MetaHead } from '../components/common/MetaHead';
 import { trackEvent } from '../services/analytics';
 
@@ -13,21 +13,25 @@ export const RegisterPage: React.FC = () => {
   const [lastName, setLastName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [agreedToTerms, setAgreedToTerms] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreedToTerms) {
+      setError('You must agree to the statements in terms of service.');
+      return;
+    }
+
     setError(null);
-    setSuccessMsg(null);
     setIsLoading(true);
     try {
       const res = await register({
         email,
         password,
-        firstName,
-        lastName,
+        firstName: firstName || 'Trader',
+        lastName: lastName || '',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         currency: 'USD'
       });
@@ -47,138 +51,192 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-canvas text-content-primary flex flex-col justify-center items-center p-4 relative overflow-hidden ambient-glow-bg">
+    <div className="min-h-screen w-full relative flex items-center justify-start overflow-hidden bg-[#003859]">
       <MetaHead
-        title="Create Account — Arcade Fx Trading Journal"
-        description="Join Arcade Fx to automate your MetaTrader 5 trade journaling, analyze setup expectancies, and maintain psychological discipline."
+        title="Sign Up — Arcade Fx Trading OS"
+        description="Create your Arcade Fx account to automate MetaTrader 5 trade journaling, evaluate setup expectancies, and maintain psychological discipline."
         canonicalPath="/register"
       />
-      <div className="max-w-md w-full framer-card p-8 rounded-3xl shadow-xl space-y-6 z-10 animate-in fade-in zoom-in-95 duration-300 border border-border-subtle">
-        {/* Brand Header */}
-        <div className="text-center space-y-3">
-          <div className="flex justify-center">
-            <Link to="/">
-              <AlphaCoachLogo size="lg" showWordmark={true} />
-            </Link>
-          </div>
-          <h1 className="text-xl font-extrabold text-content-primary tracking-tight">Create Arcade Fx Account</h1>
-          <p className="text-xs text-content-muted">Automate your MT5 trade journaling and trading psychology</p>
-        </div>
 
-        {error && (
-          <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-600 dark:text-rose-400 text-center font-medium">
-            {error}
-          </div>
-        )}
+      {/* Full-Viewport Aerial Turquoise Water Background (Fallback gradient + SVG reef caustics) */}
+      <div
+        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-1000 ease-out scale-105"
+        style={{
+          backgroundImage: "url('/brand/water-aerial.svg'), radial-gradient(circle at 65% 45%, #149fa8 0%, #08818c 35%, #005368 70%, #023b4f 100%)",
+          backgroundBlendMode: 'screen'
+        }}
+        aria-hidden="true"
+      />
 
-        {successMsg && (
-          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-600 dark:text-emerald-400 text-center font-medium space-y-2">
-            <div className="flex items-center justify-center space-x-1.5 font-bold">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Registration Successful</span>
-            </div>
-            <p>{successMsg}</p>
-            <Link
-              to="/login"
-              className="inline-block mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition"
-            >
-              Go to Sign In
-            </Link>
-          </div>
-        )}
-
-        {/* Form */}
-        {!successMsg && (
-          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="block text-slate-900 dark:text-slate-200 font-medium">First Name</label>
-                <input
-                  type="text"
-                  required
-                  autoComplete="given-name"
-                  value={firstName}
-                  onChange={e => setFirstName(e.target.value)}
-                  placeholder="Alex"
-                  className="auth-input w-full bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition caret-slate-900 dark:caret-white"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="block text-slate-900 dark:text-slate-200 font-medium">Last Name</label>
-                <input
-                  type="text"
-                  required
-                  autoComplete="family-name"
-                  value={lastName}
-                  onChange={e => setLastName(e.target.value)}
-                  placeholder="Vance"
-                  className="auth-input w-full bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 rounded-xl px-3.5 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition caret-slate-900 dark:caret-white"
-                />
-              </div>
+      {/* Main Container */}
+      <div className="relative z-10 w-full min-h-screen flex flex-col lg:flex-row items-center justify-between p-4 sm:p-6 lg:p-12">
+        {/* Left Inset White Card with Reference A Torn Right Edge */}
+        <div className="w-full max-w-[480px] lg:w-[42%] lg:max-w-[460px] my-auto">
+          <div className="torn-paper-card torn-edge-right torn-edge-bottom bg-white dark:bg-[#151922] p-8 sm:p-10 lg:pr-14 shadow-2xl rounded-2xl lg:rounded-r-none transition-all duration-300">
+            {/* Logo in Sleek Dark Navy Container (Protects Gold Contrast on White) */}
+            <div className="mb-6 flex items-center justify-between">
+              <Link to="/" className="inline-block group focus:outline-none">
+                <div className="bg-[#0A0F1D] px-3.5 py-1.5 rounded-xl border border-white/10 shadow-sm transition group-hover:scale-105">
+                  <ArcadeFxLogo size="sm" showWordmark={true} />
+                </div>
+              </Link>
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-slate-900 dark:text-slate-200 font-medium">Email Address</label>
-              <div className="flex items-center gap-2 bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
-                <Mail className="w-4 h-4 text-content-muted" />
+            {/* Reference A Title */}
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#00030C] dark:text-white tracking-[0.1em] uppercase mb-6 font-sans">
+              SIGN UP
+            </h1>
+
+            {error && (
+              <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-600 dark:text-rose-400 font-medium">
+                {error}
+              </div>
+            )}
+
+            {/* Sign-Up Form with Reference A Aqua Pill Inputs */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Optional Name Row for Real App Data */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="relative flex items-center">
+                  <User className="w-4 h-4 text-[#052728] dark:text-[#72E4E9] absolute left-4 z-10 opacity-70" />
+                  <input
+                    type="text"
+                    required
+                    autoComplete="given-name"
+                    value={firstName}
+                    onChange={e => setFirstName(e.target.value)}
+                    placeholder="first name"
+                    className="input-auth-pill pl-10 text-xs text-[#052728] dark:text-white"
+                  />
+                </div>
+                <div className="relative flex items-center">
+                  <User className="w-4 h-4 text-[#052728] dark:text-[#72E4E9] absolute left-4 z-10 opacity-70" />
+                  <input
+                    type="text"
+                    required
+                    autoComplete="family-name"
+                    value={lastName}
+                    onChange={e => setLastName(e.target.value)}
+                    placeholder="last name"
+                    className="input-auth-pill pl-10 text-xs text-[#052728] dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Reference A: e-mail Input Pill */}
+              <div className="relative flex items-center">
+                <Mail className="w-4 h-4 text-[#052728] dark:text-[#72E4E9] absolute left-4 z-10 opacity-70" />
                 <input
                   type="email"
                   required
                   autoComplete="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="auth-input bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-slate-900 dark:caret-white"
+                  placeholder="e-mail"
+                  className="input-auth-pill text-xs text-[#052728] dark:text-white"
                 />
               </div>
-            </div>
 
-            <div className="space-y-1">
-              <label className="block text-slate-900 dark:text-slate-200 font-medium">Password</label>
-              <div className="flex items-center gap-2 bg-transparent dark:bg-surface-secondary border border-border-strong dark:border-border-subtle focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 rounded-xl px-3.5 py-2.5 transition">
-                <Lock className="w-4 h-4 text-content-muted" />
+              {/* Reference A: password Input Pill */}
+              <div className="relative flex items-center">
+                <Lock className="w-4 h-4 text-[#052728] dark:text-[#72E4E9] absolute left-4 z-10 opacity-70" />
                 <input
                   type="password"
                   required
                   autoComplete="new-password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="auth-input bg-transparent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none w-full caret-slate-900 dark:caret-white"
+                  placeholder="password"
+                  className="input-auth-pill text-xs text-[#052728] dark:text-white"
                 />
+              </div>
+
+              {/* Reference A: Checkbox with terms of service */}
+              <div className="flex items-center gap-2 pt-1 text-xs">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={agreedToTerms}
+                  onChange={e => setAgreedToTerms(e.target.checked)}
+                  className="w-4 h-4 rounded text-[#40BEB3] focus:ring-[#40BEB3] border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 accent-[#40BEB3] cursor-pointer"
+                />
+                <label htmlFor="terms" className="text-[#334155] dark:text-slate-300 select-none cursor-pointer text-[11px] leading-tight">
+                  I agree all statements in{' '}
+                  <Link to="/terms" target="_blank" className="text-[#18837E] dark:text-[#40BEB3] font-semibold underline hover:text-[#40BEB3]">
+                    terms of service
+                  </Link>
+                </label>
+              </div>
+
+              {/* Reference A: Turquoise Pill Primary Button */}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="btn-auth-primary w-40 text-xs disabled:opacity-50"
+                >
+                  {isLoading ? 'SIGNING UP...' : 'SIGN UP'}
+                </button>
+              </div>
+            </form>
+
+            {/* Reference A: Social Icons Row */}
+            <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                {/* Facebook */}
+                <button
+                  type="button"
+                  aria-label="Continue with Facebook"
+                  onClick={() => alert('Social sign-up with Facebook is configured via Supabase OAuth.')}
+                  className="w-8 h-8 rounded-full bg-[#3B5998] hover:opacity-90 flex items-center justify-center text-white text-xs font-bold transition shadow-sm"
+                >
+                  f
+                </button>
+                {/* Google */}
+                <button
+                  type="button"
+                  aria-label="Continue with Google"
+                  onClick={() => alert('Social sign-up with Google is configured via Supabase OAuth.')}
+                  className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 flex items-center justify-center text-xs font-bold transition shadow-sm"
+                >
+                  <span className="text-[#4285F4]">G</span>
+                </button>
+                {/* X (replaces legacy Twitter bird) */}
+                <button
+                  type="button"
+                  aria-label="Continue with X"
+                  onClick={() => alert('Social sign-up with X is configured via Supabase OAuth.')}
+                  className="w-8 h-8 rounded-full bg-[#121212] hover:bg-black flex items-center justify-center text-white text-[11px] font-bold transition shadow-sm"
+                >
+                  𝕏
+                </button>
               </div>
             </div>
 
-            <div className="text-[11px] text-content-muted leading-relaxed text-center px-1">
-              By creating an account, you agree to our{' '}
-              <Link to="/terms" className="text-brand-500 hover:underline">Terms of Service</Link>,{' '}
-              <Link to="/privacy" className="text-brand-500 hover:underline">Privacy Policy</Link>, and acknowledge our{' '}
-              <Link to="/disclaimer" className="text-brand-500 hover:underline">Risk Disclaimer</Link>.
+            {/* Switch to Sign In */}
+            <div className="mt-5 text-xs text-slate-500 dark:text-slate-400">
+              Already have an account?{' '}
+              <Link to="/login" className="text-[#18837E] dark:text-[#40BEB3] font-bold hover:underline">
+                Sign In
+              </Link>
             </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-sky-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
-            >
-              <span>{isLoading ? 'Creating Account...' : "Get Started with Arcade Fx"}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
-        )}
-
-        <div className="space-y-2 text-center text-xs text-content-muted">
-          <div>
-            Already have an account?{' '}
-            <Link to="/login" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
-              Sign In
-            </Link>
           </div>
-          <div>
-            <Link to="/" className="text-content-subtle hover:text-content-secondary transition">
-              ← Return to Arcade Fx Overview
-            </Link>
-          </div>
+        </div>
+
+        {/* Right Headline Anchored Bottom-Right over Aerial Water (Reference A) */}
+        <div className="hidden lg:flex flex-col items-end justify-end text-right p-8 lg:p-12 self-end mt-auto pointer-events-none select-none">
+          <h2
+            className="text-4xl xl:text-5xl font-black text-white uppercase tracking-[0.12em] font-sans drop-shadow-[0_4px_16px_rgba(0,30,45,0.7)]"
+            style={{ textShadow: '0 4px 18px rgba(0, 30, 45, 0.85)' }}
+          >
+            ARCADE FX
+          </h2>
+          <p
+            className="text-sm xl:text-base font-bold text-teal-100 uppercase tracking-[0.2em] mt-1.5 drop-shadow-[0_2px_8px_rgba(0,30,45,0.7)]"
+            style={{ textShadow: '0 2px 10px rgba(0, 30, 45, 0.85)' }}
+          >
+            FOREX INTELLIGENCE & MT5 JOURNAL
+          </p>
         </div>
       </div>
     </div>

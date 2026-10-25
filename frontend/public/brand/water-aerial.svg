@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Ocean Depth Gradient -->
+    <linearGradient id="ocean-depth" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#023b4f" />
+      <stop offset="25%" stop-color="#005368" />
+      <stop offset="55%" stop-color="#08818c" />
+      <stop offset="78%" stop-color="#149fa8" />
+      <stop offset="100%" stop-color="#34c4cc" />
+    </linearGradient>
+
+    <!-- Deep Water Shallows Highlight -->
+    <radialGradient id="reef-glow" cx="65%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#3ed7df" stop-opacity="0.8" />
+      <stop offset="40%" stop-color="#12a8b3" stop-opacity="0.6" />
+      <stop offset="75%" stop-color="#056777" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#003444" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Coral Reef Bed Texture Pattern -->
+    <filter id="turb-reef" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="4" result="noise" />
+      <feColorMatrix type="matrix" values="
+        0.05 0 0 0 0.05
+        0 0.28 0 0 0.28
+        0 0 0.35 0 0.35
+        0 0 0 0.35 0" in="noise" result="coloredNoise" />
+      <feComposite operator="in" in2="SourceGraphic" />
+    </filter>
+
+    <!-- Sunlight Water Caustics -->
+    <filter id="caustics" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="2" result="causticNoise" />
+      <feDisplacementMap in="SourceGraphic" in2="causticNoise" scale="12" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+
+  <!-- Base Ocean -->
+  <rect width="1920" height="1080" fill="url(#ocean-depth)" />
+
+  <!-- Subsurface Coral Reef Formations -->
+  <g opacity="0.45" filter="url(#turb-reef)">
+    <path d="M 0,0 Q 400,200 800,100 T 1600,300 L 1920,400 L 1920,1080 L 0,1080 Z" fill="#034857" />
+    <path d="M 500,0 Q 900,300 1300,150 T 1920,600 L 1920,1080 L 300,1080 Z" fill="#086e7a" />
+    <path d="M 900,150 Q 1200,450 1600,350 T 1920,800 L 1920,1080 L 700,1080 Z" fill="#139aa5" />
+    <circle cx="1300" cy="400" r="350" fill="#20b5bf" opacity="0.6" />
+    <circle cx="1600" cy="700" r="450" fill="#2ccdd7" opacity="0.5" />
+    <circle cx="1100" cy="800" r="300" fill="#118d97" opacity="0.7" />
+  </g>
+
+  <!-- Turquoise Reef Glow Overlay -->
+  <rect width="1920" height="1080" fill="url(#reef-glow)" />
+
+  <!-- Soft Water Caustics Ripple -->
+  <g opacity="0.18">
+    <ellipse cx="1200" cy="450" rx="600" ry="350" fill="#a4f6fa" filter="url(#caustics)" />
+    <ellipse cx="1450" cy="700" rx="500" ry="300" fill="#8ef0f5" filter="url(#caustics)" />
+  </g>
+
+  <!-- Deep Ocean Trench Vignette on Right & Top Edges -->
+  <rect width="1920" height="1080" fill="url(#reef-glow)" opacity="0.3" />
+</svg>

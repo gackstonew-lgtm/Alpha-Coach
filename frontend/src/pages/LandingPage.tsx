@@ -4,18 +4,9 @@ import { MetaHead } from '../components/common/MetaHead';
 import { PublicNavbar } from '../components/public/PublicNavbar';
 import { PublicFooter } from '../components/public/PublicFooter';
 import { useAuth } from '../context/AuthContext';
-import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
-import { AnimatedNumber } from '../components/common/AnimatedNumber';
 import { FAQ_ITEMS, getFAQSchema } from '../data/faqData';
 import {
-  DemoExecutiveOverview,
-  DemoMarketScanner, DemoStrategyLab,
-  DemoRiskGuardian,
-  DemoAICoach
-} from '../components/landing/LandingDemoComponents';
-import {
   ArrowRight,
-  Zap,
   LineChart,
   BookOpen,
   Scan,
@@ -24,16 +15,14 @@ import {
   Trophy,
   Cpu,
   Layers,
-  Lock,
-  Mic,
-  TrendingUp,
-  Activity,
   ChevronDown,
-  HelpCircle,
-  Mail,
   CheckCircle2,
-  Sparkles
+  Calendar,
+  Scale,
+  TrendingUp,
+  FileText
 } from 'lucide-react';
+import { ArcadeFxLogo } from '../components/common/AlphaCoachLogo';
 
 const SOFTWARE_APPLICATION_SCHEMA = {
   '@context': 'https://schema.org',
@@ -53,15 +42,7 @@ const SOFTWARE_APPLICATION_SCHEMA = {
 
 export const LandingPage: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'scanner' | 'risk' | 'coach'>('overview');
   const [openFaqId, setOpenFaqId] = useState<string | null>(FAQ_ITEMS[0].id);
-
-  // Viewport Intersection Observers for Smooth Scroll Triggers
-  const [statsRef, isStatsVisible] = useIntersectionObserver<HTMLDivElement>({ threshold: 0.2 });
-  const [previewRef, isPreviewVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.15 });
-  const [pipelineRef, isPipelineVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.15 });
-  const [methodRef, isMethodVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.15 });
-  const [featuresRef, isFeaturesVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.1 });
 
   const coreFeatures = [
     {
@@ -73,384 +54,211 @@ export const LandingPage: React.FC = () => {
     {
       icon: Layers,
       title: 'Trade Reconstruction Engine',
-      description: 'Reconstructs complex MT5 deal tickets into complete lifecycles: tracking scale-ins, partial closes, commissions, and swaps.',
+      description: 'Reconstructs complex MT5 deal tickets into complete lifecycles: scale-ins, partial closes, commissions, and swaps.',
       badge: 'Automated'
     },
     {
       icon: BookOpen,
-      title: 'Subjective Journal & Review',
-      description: 'Immutable MT5 execution facts paired with trader-entered setup confluences, market bias, and psychological tags.',
-      badge: 'Psychology'
+      title: 'Structured Journal & Confluences',
+      description: 'Pair immutable MT5 execution tickets with your market bias, entry reasons, timeframe alignment, and psychology.',
+      badge: 'Journaling'
     },
     {
-      icon: Mic,
-      title: 'Voice Trade Journaling',
-      description: 'Dictate trade reflections naturally. Speech NLP extracts confluences and emotions with mandatory trader confirmation.',
-      badge: 'Voice AI'
-    },
-    {
-      icon: ShieldAlert,
-      title: 'Smart Risk & Position Calculator',
-      description: 'Dynamic lot sizing, multi-asset pip valuation (Forex, Gold, JPY, Indices), and pre-execution compliance checks against daily limits.',
-      badge: 'Risk Control'
+      icon: TrendingUp,
+      title: 'Interactive Multi-Asset Charts',
+      description: 'Full-featured TradingView and lightweight charts with multi-timeframe candle sync and technical indicators.',
+      badge: 'Charting'
     },
     {
       icon: Scan,
-      title: 'Market Scanner & Interactive Charts',
-      description: 'Isolate high-probability setups like Liquidity Sweeps, FVGs, and Order Blocks with TradingView charts.',
-      badge: 'Market Radar'
+      title: 'Real-Time Market Scanner',
+      description: 'Monitor liquidity sweeps, fair value gaps, order blocks, and key breakout levels across Forex, Gold, and Indices.',
+      badge: 'Scanner'
+    },
+    {
+      icon: Calendar,
+      title: 'Macro & Economic Calendar',
+      description: 'High-impact central bank announcements, non-farm payrolls, CPI releases, and historical volatility impacts.',
+      badge: 'Macro'
+    },
+    {
+      icon: Scale,
+      title: 'Currency Strength Matrix',
+      description: 'Dynamic 8-major currency momentum matrix to pair strongest with weakest currencies for high-probability setups.',
+      badge: 'Currency Matrix'
+    },
+    {
+      icon: FileText,
+      title: 'SEC & Institutional Tracker',
+      description: 'Track institutional insider disclosures, politician stock transactions, and large corporate filings.',
+      badge: 'Institutional'
+    },
+    {
+      icon: ShieldAlert,
+      title: 'Risk Guardian & Position Sizing',
+      description: 'Strict account risk parameters, dynamic pip valuation, and automated drawdown alerts.',
+      badge: 'Risk Control'
+    },
+    {
+      icon: Bot,
+      title: 'Empirical AI Trading Coach',
+      description: 'Context-grounded analytical feedback derived exclusively from your verified MT5 execution statistics.',
+      badge: 'AI Coach'
     },
     {
       icon: Trophy,
       title: 'Discipline Master / Rewards',
-      description: 'XP and progression rewards for journaling consistency, risk limit adherence, and reviewing losing trades (+50 XP).',
+      description: 'XP progression rewards for journaling consistency, sticking to risk limits, and reviewing losing trades.',
       badge: 'Discipline'
-    },
-    {
-      icon: Bot,
-      title: 'Grounded AI Trading Coach',
-      description: 'Ask deep analytical questions grounded exclusively in your verified historical trade records — never market speculation.',
-      badge: 'Empirical AI'
     },
     {
       icon: Cpu,
       title: 'Multi-Account MT5 Hub',
-      description: 'Manage multiple live, demo, and prop-firm MT5 accounts (HFM, IC Markets, etc.) with consolidated or filtered analytics.',
+      description: 'Manage multiple live, demo, and prop-firm MT5 accounts (HFM, IC Markets, FTMO, etc.) in one unified workspace.',
       badge: 'Multi-Terminal'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
+    <div className="min-h-screen bg-page text-content-primary flex flex-col antialiased">
       <MetaHead
         title="Arcade Fx — Automated MT5 Trading Journal & Performance OS"
-        description="Automated MetaTrader 5 trading journal, mathematical trade reconstruction, disciplined risk parameters, and grounded AI coaching. Zero broker passwords required."
+        description="Automated MetaTrader 5 trading journal, mathematical trade reconstruction, disciplined risk parameters, and grounded AI coaching."
         canonicalPath="/"
         structuredData={[SOFTWARE_APPLICATION_SCHEMA, getFAQSchema()]}
       />
       <PublicNavbar />
 
-      <main className="flex-1 space-y-20 sm:space-y-28 pb-20">
+      <main className="flex-1 space-y-16 sm:space-y-24 pb-20">
         {/* ========================================================================= */}
-        {/* 1. HERO SECTION                                                           */}
+        {/* 1. HERO SECTION (REFERENCE A VISUAL SYSTEM)                               */}
         {/* ========================================================================= */}
-        <section className="pt-12 sm:pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-8">
-          {/* Headline */}
-          <div className="max-w-4xl mx-auto space-y-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-content-primary leading-[1.1] animate-in fade-in slide-in-from-bottom-2 duration-400">
-              Trade Less Blindly. <br />
-              <span className="text-brand-600 dark:text-brand-400">
-                Understand Your True Performance.
-              </span>
-            </h1>
-            <p className="text-sm sm:text-base lg:text-lg text-content-secondary max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-3 duration-500">
-              Arcade Fx transforms raw MetaTrader 5 trading activity into structured journals, mathematical performance metrics, disciplined risk awareness, and data-grounded AI coaching.
-            </p>
-          </div>
-
-          {/* Action CTAs (Above the fold: Get Started & Instant Demo Access) */}
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            {user ? (
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-sky-500/25 transition-all duration-150 active:scale-95"
-              >
-                <span>Enter Trading Terminal</span>
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </Link>
-            ) : (
-              <>
-                <Link
-                  to="/register"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-sky-500/25 transition-all duration-150 active:scale-95"
-                >
-                  <span>Get Started</span>
-                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                </Link>
-                <Link
-                  to="/dashboard"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-surface-secondary hover:bg-surface-hover text-content-primary font-bold text-sm border border-border-subtle transition-all duration-150 active:scale-95"
-                >
-                  <Sparkles className="w-4 h-4 text-brand-500" aria-hidden="true" />
-                  <span>Instant Demo Access</span>
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Micro Trust Stats with Count-Up Animations */}
+        <section className="relative w-full min-h-[580px] lg:min-h-[640px] flex items-center justify-start overflow-hidden bg-[#003859]">
+          {/* Aerial Turquoise Water Canvas (Reference A) */}
           <div
-            ref={statsRef}
-            className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto text-left"
-          >
-            <div className="p-3.5 rounded-2xl bg-surface border border-border-subtle framer-card">
-              <div className="text-lg font-mono font-extrabold text-content-primary">0 Passwords</div>
-              <div className="text-[11px] text-content-muted">Zero broker credentials stored</div>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-surface border border-border-subtle framer-card">
-              <div className="text-lg font-mono font-extrabold text-content-primary">
-                <AnimatedNumber value={90} suffix="-Day Depth" duration={1200} isVisible={isStatsVisible} />
-              </div>
-              <div className="text-[11px] text-content-muted">Deep historical deal sync</div>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-surface border border-border-subtle framer-card">
-              <div className="text-lg font-mono font-extrabold text-content-primary">
-                <AnimatedNumber value={100} suffix="% Lifecycles" duration={1400} isVisible={isStatsVisible} />
-              </div>
-              <div className="text-[11px] text-content-muted">Scale-ins & partials calculated</div>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-surface border border-border-subtle framer-card">
-              <div className="text-lg font-mono font-extrabold text-content-primary">
-                <AnimatedNumber value={100} prefix="< " suffix="ms" duration={1300} isVisible={isStatsVisible} />
-              </div>
-              <div className="text-[11px] text-content-muted">Sub-second math engine</div>
-            </div>
-          </div>
-        </section>
+            className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-1000 ease-out scale-105"
+            style={{
+              backgroundImage: "url('/brand/water-aerial.svg'), radial-gradient(circle at 65% 45%, #149fa8 0%, #08818c 35%, #005368 70%, #023b4f 100%)",
+              backgroundBlendMode: 'screen'
+            }}
+            aria-hidden="true"
+          />
 
-        {/* ========================================================================= */}
-        {/* 2. INTERACTIVE PRODUCT TERMINAL PREVIEW                                    */}
-        {/* ========================================================================= */}
-        <section
-          ref={previewRef}
-          className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-4"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-content-muted">Sample Insights & Reconstructed Analytics</h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                  Demo Data
-                </span>
-              </div>
-              <p className="text-lg font-bold text-content-primary">Interactive Arcade Fx Terminal</p>
-            </div>
-
-            {/* Tab Switcher */}
-            <div className="flex items-center gap-1.5 p-1 bg-surface-secondary border border-border-subtle rounded-xl self-start">
-              {(['overview', 'scanner', 'risk', 'coach'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition capitalize ${
-                    activeTab === tab
-                      ? 'bg-surface text-brand-600 dark:text-brand-400 shadow-sm border border-border-subtle'
-                      : 'text-content-muted hover:text-content-primary'
-                  }`}
-                >
-                  {tab === 'overview' ? 'Executive Overview' : tab === 'scanner' ? 'Market Scanner' : tab === 'risk' ? 'Risk Guardian' : 'AI Coach'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Terminal Mock Window */}
-          <div className="framer-card rounded-3xl border border-border-strong overflow-hidden shadow-2xl bg-surface">
-            {/* Terminal Titlebar */}
-            <div className="px-5 py-3.5 border-b border-border-subtle bg-surface-secondary flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-rose-500/80" />
-                <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-                <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                <span className="ml-2 font-mono text-xs font-semibold text-content-muted">
-                  ARCADE_FX_TERMINAL // MT5 BRIDGE: CONNECTED
-                </span>
-              </div>
-              <div className="hidden sm:flex items-center gap-2 text-[11px] font-mono text-content-muted">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Demonstration Dataset</span>
-              </div>
-            </div>
-
-            {/* Dynamic Tab Content Display */}
-            <div className="p-6 sm:p-8">
-              {activeTab === 'overview' && (
-                <DemoExecutiveOverview isVisible={isPreviewVisible} />
-              )}
-              {activeTab === 'scanner' && (
-                <DemoMarketScanner isActive={activeTab === 'scanner'} isVisible={isPreviewVisible} />
-              )}
-              {activeTab === 'risk' && (
-                <DemoRiskGuardian isActive={activeTab === 'risk'} isVisible={isPreviewVisible} />
-              )}
-              {activeTab === 'coach' && (
-                <DemoAICoach isActive={activeTab === 'coach'} isVisible={isPreviewVisible} />
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================================================= */}
-        {/* 3. WHY ARCADE FX / PROGRESSION PIPELINE                               */}
-        {/* ========================================================================= */}
-        <section
-          ref={pipelineRef}
-          className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12"
-        >
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">The Problem & Solution</h2>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">Why Traders Need Arcade Fx</h3>
-            <p className="text-xs sm:text-sm text-content-secondary leading-relaxed">
-              MetaTrader 5 stores raw financial deal tickets — not trading context. Arcade Fx bridges the gap between raw execution and disciplined performance mastery.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div
-              style={{ transitionDelay: '0ms' }}
-              className={`framer-card p-6 rounded-3xl space-y-3 border border-border-subtle transition-all duration-500 ${
-                isPipelineVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
-            >
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center font-bold text-sm">
-                01
-              </div>
-              <h4 className="text-base font-bold text-content-primary">The Raw Deal Problem</h4>
-              <p className="text-xs text-content-muted leading-relaxed">
-                MT5 breaks a single trading idea into isolated entry tickets, partial take profits, and commission fees. Without reconstruction, calculating true position expectancy is nearly impossible.
-              </p>
-            </div>
-
-            <div
-              style={{ transitionDelay: '100ms' }}
-              className={`framer-card p-6 rounded-3xl space-y-3 border border-border-subtle transition-all duration-500 ${
-                isPipelineVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
-            >
-              <div className="w-10 h-10 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center font-bold text-sm">
-                02
-              </div>
-              <h4 className="text-base font-bold text-content-primary">Automated Lifecycle Math</h4>
-              <p className="text-xs text-content-muted leading-relaxed">
-                Arcade Fx automatically groups tickets into unified lifecycles, accurately computing volume-weighted prices, total commissions, swaps, net P/L, and holding durations.
-              </p>
-            </div>
-
-            <div
-              style={{ transitionDelay: '200ms' }}
-              className={`framer-card p-6 rounded-3xl space-y-3 border border-border-subtle transition-all duration-500 ${
-                isPipelineVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
-            >
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-sm">
-                03
-              </div>
-              <h4 className="text-base font-bold text-content-primary">Psychological & Edge Clarity</h4>
-              <p className="text-xs text-content-muted leading-relaxed">
-                Combine objective MT5 execution data with subjective emotional reviews, voice notes, mistake taxonomies, and AI inquiries to build unwavering discipline.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================================================= */}
-        {/* 4. METHODOLOGY OVERVIEW                                                    */}
-        {/* ========================================================================= */}
-        <section
-          ref={methodRef}
-          className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8"
-        >
-          <div className="p-8 sm:p-12 rounded-3xl bg-surface border border-border-subtle framer-card space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase">
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>The Quantitative Engine</span>
+          <div className="relative z-10 w-full flex flex-col lg:flex-row items-center justify-between p-4 sm:p-6 lg:p-12 max-w-7xl mx-auto">
+            {/* Left Inset White Card with Torn-Paper Right Edge (Reference A) */}
+            <div className="w-full max-w-[500px] lg:w-[45%] lg:max-w-[480px]">
+              <div className="torn-paper-card torn-edge-right torn-edge-bottom bg-white dark:bg-[#151922] p-8 sm:p-10 lg:pr-14 shadow-2xl rounded-2xl lg:rounded-r-none transition-all duration-300">
+                {/* Logo in Sleek Dark Navy Container */}
+                <div className="mb-5 flex items-center">
+                  <div className="bg-[#0A0F1D] px-3.5 py-1.5 rounded-xl border border-white/10 shadow-sm">
+                    <ArcadeFxLogo size="sm" showWordmark={true} />
+                  </div>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">
-                  Setup & Synchronization Methodology
-                </h3>
-                <p className="text-xs sm:text-sm text-content-muted max-w-xl">
-                  Connect your local MetaTrader 5 execution to your private journal in four seamless steps.
+
+                {/* Hero Title */}
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#00030C] dark:text-white tracking-[0.05em] uppercase mb-3 font-sans leading-tight">
+                  NEXT-GEN FOREX INTELLIGENCE
+                </h1>
+
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+                  Zero broker passwords. Link MetaTrader 5 via companion bridge for automatic deal reconstruction, risk calculations, and psychological journaling.
                 </p>
-              </div>
 
-              <Link
-                to="/methodology"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-secondary hover:bg-surface-hover text-content-primary font-bold text-xs border border-border-subtle transition shrink-0 active:scale-95"
-              >
-                <span>Read Full Methodology</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+                {/* CTA Buttons Row */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+                  <Link
+                    to={user ? "/dashboard" : "/register"}
+                    className="btn-auth-primary text-center text-xs"
+                  >
+                    {user ? 'GO TO DASHBOARD' : 'GET STARTED'}
+                  </Link>
+
+                  {!user && (
+                    <Link
+                      to="/login"
+                      className="inline-flex items-center justify-center px-5 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-bold text-[#052728] dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                    >
+                      Sign In
+                    </Link>
+                  )}
+                </div>
+
+                {/* Quick Feature Badges */}
+                <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#B3EFEF]/40 text-[#052728] dark:text-[#72E4E9]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#18837E]" /> MT5 Auto-Sync
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#B3EFEF]/40 text-[#052728] dark:text-[#72E4E9]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#18837E]" /> Zero Broker Passwords
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#B3EFEF]/40 text-[#052728] dark:text-[#72E4E9]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#18837E]" /> PWA Offline Ready
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
-              {[
-                {
-                  step: '01',
-                  name: 'Install MetaTrader 5',
-                  desc: 'Install MetaTrader 5 for Windows/MacBook, log in to your broker account, and keep it running.'
-                },
-                {
-                  step: '02',
-                  name: 'Install Companion App',
-                  desc: 'Download and run the Trader\'s Edge MT5 Companion on the Windows machine where MetaTrader 5 is installed.'
-                },
-                {
-                  step: '03',
-                  name: 'Click Authorization',
-                  desc: 'Launching the Bridge automatically opens your browser to authorize your device. No manual token copying required.'
-                },
-                {
-                  step: '04',
-                  name: 'Automatic Background Sync',
-                  desc: 'The bridge imports complete untruncated trade history and tracks live open positions in real time.'
-                }
-              ].map((s, idx) => (
-                <div
-                  key={idx}
-                  style={{ transitionDelay: `${idx * 60}ms` }}
-                  className={`p-5 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2 transition-all duration-400 ${
-                    isMethodVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-                  }`}
-                >
-                  <div className="text-xs font-mono font-bold text-brand-500">{s.step}</div>
-                  <div className="text-sm font-bold text-content-primary">{s.name}</div>
-                  <div className="text-xs text-content-muted leading-relaxed">{s.desc}</div>
-                </div>
-              ))}
+            {/* Right Headline Anchored Bottom-Right over Aerial Water (Reference A) */}
+            <div className="hidden lg:flex flex-col items-end justify-end text-right p-8 lg:p-12 self-end mt-auto pointer-events-none select-none">
+              <h2
+                className="text-4xl xl:text-5xl font-black text-white uppercase tracking-[0.12em] font-sans drop-shadow-[0_4px_16px_rgba(0,30,45,0.7)]"
+                style={{ textShadow: '0 4px 18px rgba(0, 30, 45, 0.85)' }}
+              >
+                ARCADE FX
+              </h2>
+              <p
+                className="text-sm xl:text-base font-bold text-teal-100 uppercase tracking-[0.2em] mt-1.5 drop-shadow-[0_2px_8px_rgba(0,30,45,0.7)]"
+                style={{ textShadow: '0 2px 10px rgba(0, 30, 45, 0.85)' }}
+              >
+                FOREX INTELLIGENCE & MT5 JOURNAL
+              </p>
             </div>
           </div>
         </section>
 
         {/* ========================================================================= */}
-        {/* 5. CORE 12-MODULE FEATURE GRID                                            */}
+        {/* 2. CORE FEATURES (REFERENCE B CARD STYLE: CLEAN WHITE ROUNDED TILES)     */}
         {/* ========================================================================= */}
-        <section
-          id="features"
-          ref={featuresRef}
-          className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12"
-        >
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">Institutional Toolset</h2>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">Everything Modern MT5 Traders Need</h3>
-            <p className="text-xs sm:text-sm text-content-secondary leading-relaxed">
-              Designed specifically for discretionary price action, systematic algorithms, and prop firm challenges.
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#18837E] dark:text-[#3FAE96]">
+              Engineered For Modern Traders
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#121212] dark:text-white tracking-tight">
+              A Complete Operating System for Discretionary & Systematic Edge
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+              Replace fragmented spreadsheets and manual trade logs with a unified, real-time trading ecosystem.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {coreFeatures.map((feat, idx) => {
               const Icon = feat.icon;
-              const staggerDelay = (idx % 6) * 60;
               return (
                 <div
                   key={idx}
-                  style={{ transitionDelay: `${staggerDelay}ms` }}
-                  className={`framer-card p-6 rounded-3xl space-y-3 border border-border-subtle hover:border-border-strong transition-all duration-300 ${
-                    isFeaturesVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-                  }`}
+                  className="bg-white dark:bg-[#19191C] rounded-2xl p-6 border border-[#EBECEF] dark:border-[#2C2C32] shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="p-3 rounded-2xl bg-surface-secondary border border-border-subtle text-brand-500">
-                      <Icon className="w-5 h-5" />
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="w-10 h-10 rounded-xl bg-[#F6F7FB] dark:bg-[#232328] flex items-center justify-center text-[#3FAE96] dark:text-[#48B89F] group-hover:scale-110 transition-transform">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        {feat.badge}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-surface-secondary border border-border-subtle text-content-secondary">
-                      {feat.badge}
-                    </span>
+
+                    <div>
+                      <h3 className="text-base font-bold text-[#121212] dark:text-white group-hover:text-[#3FAE96] dark:group-hover:text-[#48B89F] transition-colors">
+                        {feat.title}
+                      </h3>
+                      <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        {feat.description}
+                      </p>
+                    </div>
                   </div>
-                  <h4 className="text-sm font-bold text-content-primary">{feat.title}</h4>
-                  <p className="text-xs text-content-muted leading-relaxed">{feat.description}</p>
                 </div>
               );
             })}
@@ -458,216 +266,68 @@ export const LandingPage: React.FC = () => {
         </section>
 
         {/* ========================================================================= */}
-        {/* 6. SECURITY SECTION                                                        */}
+        {/* 3. CALL TO ACTION BANNER                                                  */}
         {/* ========================================================================= */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          <div className="p-8 sm:p-12 rounded-3xl bg-surface border border-border-subtle framer-card space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase">
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Security Guarantees</span>
-                </div>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">
-                  Zero-Password Security Model
-                </h3>
-                <p className="text-xs sm:text-sm text-content-muted max-w-xl">
-                  We engineered Arcade Fx so you never have to trust any remote server with your broker password.
-                </p>
-              </div>
-
-              <Link
-                to="/security"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-secondary hover:bg-surface-hover text-content-primary font-bold text-xs border border-border-subtle transition shrink-0 active:scale-95"
-              >
-                <span>View Security Specs</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-              <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
-                <h5 className="font-bold text-content-primary">0 Broker Passwords</h5>
-                <p className="text-content-muted text-[11px] leading-relaxed">
-                  Arcade Fx never requests or stores MT5 passwords. Connection runs locally on your desktop.
-                </p>
-              </div>
-              <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
-                <h5 className="font-bold text-content-primary">Official Python API</h5>
-                <p className="text-content-muted text-[11px] leading-relaxed">
-                  Communicates directly via the official MetaTrader5 Python package installed on your PC.
-                </p>
-              </div>
-              <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
-                <h5 className="font-bold text-content-primary">Device Tokens</h5>
-                <p className="text-content-muted text-[11px] leading-relaxed">
-                  Sync operations authorize through rotating device pairing keys revocable at any time.
-                </p>
-              </div>
-              <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
-                <h5 className="font-bold text-content-primary">Encrypted TLS & RLS</h5>
-                <p className="text-content-muted text-[11px] leading-relaxed">
-                  All synchronization uses TLS HTTPS encryption with Row-Level Security tenant isolation.
-                </p>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#121212] dark:bg-[#19191C] rounded-3xl p-8 sm:p-12 text-center text-white space-y-6 shadow-2xl relative overflow-hidden border border-white/10">
+            <div className="relative z-10 max-w-2xl mx-auto space-y-3">
+              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
+                Ready to Upgrade Your Trading Discipline?
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Connect your MetaTrader 5 account in seconds via the local Python companion bridge. Zero credentials shared.
+              </p>
+              <div className="pt-3">
+                <Link
+                  to="/register"
+                  className="btn-auth-primary text-xs"
+                >
+                  CREATE FREE ACCOUNT
+                </Link>
               </div>
             </div>
           </div>
         </section>
 
         {/* ========================================================================= */}
-        {/* 7. WHO IT IS FOR                                                           */}
+        {/* 4. FREQUENTLY ASKED QUESTIONS                                             */}
         {/* ========================================================================= */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">Target Audience</h2>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">Built For Serious Traders</h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-            <div className="p-5 rounded-2xl bg-surface border border-border-subtle framer-card space-y-2">
-              <h5 className="font-bold text-content-primary text-sm">Discretionary Price Action Traders</h5>
-              <p className="text-content-muted leading-relaxed">
-                Traders looking to review setup execution, confluences, market bias, and psychological triggers like FOMO or impatience.
-              </p>
-            </div>
-            <div className="p-5 rounded-2xl bg-surface border border-border-subtle framer-card space-y-2">
-              <h5 className="font-bold text-content-primary text-sm">Prop Firm & Funded Traders</h5>
-              <p className="text-content-muted leading-relaxed">
-                Traders who must adhere to strict daily loss limits and maximum drawdown caps with Risk Guardian monitoring.
-              </p>
-            </div>
-            <div className="p-5 rounded-2xl bg-surface border border-border-subtle framer-card space-y-2">
-              <h5 className="font-bold text-content-primary text-sm">Systematic & Algorithmic Traders</h5>
-              <p className="text-content-muted leading-relaxed">
-                Quant analysts who need mathematical expectancy, holding duration distributions, and session profitability heatmaps.
-              </p>
-            </div>
-            <div className="p-5 rounded-2xl bg-surface border border-border-subtle framer-card space-y-2">
-              <h5 className="font-bold text-content-primary text-sm">Multi-Account Portfolio Operators</h5>
-              <p className="text-content-muted leading-relaxed">
-                Traders managing live, demo, and challenge accounts simultaneously across various brokers with consolidated views.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================================================= */}
-        {/* 8. FREQUENTLY ASKED QUESTIONS (Part A.5)                                  */}
-        {/* ========================================================================= */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto space-y-8">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider">
-              <HelpCircle className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Got Questions?</span>
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-content-primary">
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#121212] dark:text-white">
               Frequently Asked Questions
-            </h3>
-            <p className="text-xs sm:text-sm text-content-secondary leading-relaxed">
-              Transparent answers regarding MT5 compatibility, Zero-Password architecture, pricing, and automated synchronization.
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Clear answers on MT5 companion security, data integrity, and privacy.
             </p>
           </div>
 
-          <div className="space-y-3">
-            {FAQ_ITEMS.map((item) => {
-              const isOpen = openFaqId === item.id;
+          <div className="divide-y divide-[#EBECEF] dark:divide-[#2C2C32] bg-white dark:bg-[#19191C] rounded-2xl border border-[#EBECEF] dark:border-[#2C2C32] p-4 sm:p-6 shadow-sm">
+            {FAQ_ITEMS.slice(0, 6).map((faq) => {
+              const isOpen = openFaqId === faq.id;
               return (
-                <div
-                  key={item.id}
-                  className="framer-card rounded-2xl border border-border-subtle bg-surface overflow-hidden transition-all duration-200"
-                >
+                <div key={faq.id} className="py-4 first:pt-0 last:pb-0">
                   <button
                     type="button"
-                    onClick={() => setOpenFaqId(prev => (prev === item.id ? null : item.id))}
-                    aria-expanded={isOpen}
-                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 hover:bg-surface-secondary/50 transition cursor-pointer"
+                    onClick={() => setOpenFaqId(isOpen ? null : faq.id)}
+                    className="w-full flex items-center justify-between text-left text-xs sm:text-sm font-bold text-[#121212] dark:text-white focus:outline-none"
                   >
-                    <span className="font-bold text-xs sm:text-sm text-content-primary">
-                      {item.question}
-                    </span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-content-muted flex-shrink-0 transition-transform duration-200 ${
-                        isOpen ? 'transform rotate-180 text-brand-500' : ''
-                      }`}
-                      aria-hidden="true"
-                    />
+                    <span>{faq.question}</span>
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isOpen && (
-                    <div className="px-4 sm:px-5 pb-5 text-xs text-content-muted leading-relaxed border-t border-border-subtle/50 pt-3">
-                      {item.answer}
+                    <div className="mt-2.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed pr-6 animate-in fade-in duration-200">
+                      {faq.answer}
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
-
-          <div className="text-center pt-2">
-            <Link
-              to="/faq"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-500 hover:underline"
-            >
-              <span>View full knowledge base & architectural FAQ</span>
-              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-            </Link>
-          </div>
-        </section>
-
-        {/* ========================================================================= */}
-        {/* 9. FINAL CONVERSION CALL TO ACTION                                        */}
-        {/* ========================================================================= */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-          <div className="p-8 sm:p-12 rounded-3xl bg-surface-secondary border border-border-strong text-center space-y-6 framer-card">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase">
-              <Zap className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Get Started Today</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-content-primary tracking-tight">
-              Turn Your Trading History Into Insight.
-            </h2>
-            <p className="text-xs sm:text-sm text-content-secondary max-w-xl mx-auto leading-relaxed">
-              Connect your local MT5 terminal in minutes. Reconstruct past trade lifecycles, eliminate recurring psychological friction, and journal with mathematical clarity.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <Link
-                to="/register"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-xs shadow-lg shadow-sky-500/25 transition active:scale-95"
-              >
-                <span>Create Your Arcade Fx Account</span>
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </Link>
-              <Link
-                to="/login"
-                className="px-6 py-3.5 rounded-2xl text-xs font-bold text-content-primary hover:bg-surface border border-border-subtle transition active:scale-95"
-              >
-                Sign In to Terminal
-              </Link>
-            </div>
-          </div>
         </section>
       </main>
 
       <PublicFooter />
-
-      {/* Sticky Mobile CTA (Part A.2) - Mobile Only, PWA Safe Area Aware */}
-      <div
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-md border-t border-border-strong px-4 py-2.5 flex items-center gap-2 shadow-2xl"
-        style={{ paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom, 0.6rem))' }}
-      >
-        <Link
-          to="/register"
-          className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-brand-600 active:bg-brand-700 text-white font-bold text-xs shadow-md active:scale-95"
-        >
-          <span>Get Started</span>
-          <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-        </Link>
-        <Link
-          to="/dashboard"
-          className="flex-1 inline-flex items-center justify-center py-2.5 rounded-xl bg-surface-secondary text-content-primary border border-border-subtle font-semibold text-xs active:scale-95"
-        >
-          Instant Demo Access
-        </Link>
-      </div>
     </div>
   );
 };

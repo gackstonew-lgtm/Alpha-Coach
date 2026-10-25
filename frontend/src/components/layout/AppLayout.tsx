@@ -6,28 +6,33 @@ import { MobileBottomNav } from './MobileBottomNav';
 import { InstallPrompt } from './InstallPrompt';
 
 export const AppLayout: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false); // mobile/tablet drawer
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   return (
-    <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased selection:bg-brand-500 selection:text-white transition-colors duration-200">
-      {/* Supabase-style Hover-Expand Sidebar (Desktop: 68px rail that overlays on hover; Mobile: touch drawer) */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+    <div className="min-h-screen bg-page text-content-primary antialiased selection:bg-brand-500 selection:text-white transition-colors duration-200">
+      {/* Reference B: Outer frame container with large rounded 24px app canvas on desktop */}
+      <div className="app-frame-container lg:py-6 lg:px-8">
+        <div className="app-frame border border-[#EBECEF] dark:border-[#2C2C32] min-h-[calc(100vh-3rem)]">
+          {/* Static White Sidebar (Reference B) */}
+          <Sidebar
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+          />
 
-      {/* Main Layout Area: fixed 68px left padding on desktop so overlay expansion never reflows content */}
-      <div className="lg:pl-[68px] flex flex-col flex-1 min-w-0">
-        <Navbar onToggleSidebar={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8 max-w-7xl w-full mx-auto animate-in fade-in duration-300">
-          <Outlet />
-        </main>
+          {/* Main Workspace Canvas (#F5F6F8) */}
+          <div className="flex-1 min-w-0 flex flex-col bg-[#F5F6F8] dark:bg-[#121214]">
+            <Navbar onToggleSidebar={() => setSidebarOpen(true)} />
+            <main className="flex-1 p-4 sm:p-6 lg:p-7 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8 w-full max-w-[1400px] mx-auto animate-in fade-in duration-200">
+              <Outlet />
+            </main>
+          </div>
+        </div>
       </div>
 
-      {/* Phones & tablets (below lg): bottom tab bar. "More" opens the Hostinger-style Sidebar drawer. */}
+      {/* Phones & Tablets (below lg): Mobile bottom nav */}
       <MobileBottomNav onMore={() => setSidebarOpen(true)} />
 
-      {/* Install card: native prompt on Android/Chrome, Add to Home Screen steps on iOS */}
+      {/* PWA Install prompt */}
       <InstallPrompt />
     </div>
   );

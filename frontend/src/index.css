@@ -3,101 +3,124 @@
 @tailwind utilities;
 
 :root {
-  /* Arcade Fx Light Mode — 10-Step Neutral Grey Ink Scale */
-  --ink-50: #f8fafc;
-  --ink-100: #f1f5f9;
-  --ink-200: #e2e8f0;
-  --ink-300: #cbd5e1;
-  --ink-400: #94a3b8;
-  --ink-500: #64748b;
-  --ink-600: #475569;
-  --ink-700: #334155;
-  --ink-800: #1e293b;
-  --ink-900: #0f172a;
+  /* REFERENCE B: Canvas & Workspace */
+  --bg-page: #F0F0F0;          /* Outer canvas surrounding app frame */
+  --bg-canvas: #F5F6F8;        /* Main dashboard canvas */
+  --bg-surface: #FFFFFF;       /* Sidebar, cards, containers */
+  --bg-surface-secondary: #F6F7FB; /* Active nav pill, hover states */
+  --bg-surface-elevated: #FFFFFF;
+  --bg-surface-hover: #F0F2F6;
 
-  /* Surfaces & Borders */
-  --bg-canvas: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-surface-secondary: #f1f5f9;
-  --bg-surface-elevated: #ffffff;
-  --bg-surface-hover: #e2e8f0;
+  /* Card and Frame Radii */
+  --radius-frame: 1.5rem;      /* 24px outer frame */
+  --radius-card: 1rem;         /* 16px cards */
+  --radius-pill: 9999px;       /* Pill buttons / inputs */
+  --radius-sm: 0.5rem;         /* 8px chips */
 
-  --border-subtle: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --border-focus: #0284c7;
+  /* Borders & Dividers */
+  --border-subtle: #EBECEF;
+  --border-strong: #D1D5DB;
+  --border-focus: #3FAE96;
 
-  /* Typography */
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
-  --text-subtle: #94a3b8;
+  /* Typography Scale */
+  --text-primary: #121212;     /* Dark charcoal/black */
+  --text-secondary: #4A4A4A;   /* Medium grey */
+  --text-muted: #8E8E93;       /* Secondary grey labels */
+  --text-subtle: #AEAEB2;
 
-  /* PRIMARY ACCENT: Sky Blue */
-  --accent-primary: #0284c7;
-  --accent-hover: #0369a1;
-  --accent-subtle: #e0f2fe;
-  --accent-glow: rgba(2, 132, 199, 0.25);
-  --accent-contrast: #ffffff;
+  /* REFERENCE B: Core Financial Accents */
+  --dash-dark-card: #191919;
+  --dash-dark-pill: #121212;
+  --accent-primary: #3FAE96;   /* Chart line green-teal */
+  --accent-hover: #349A84;
+  --accent-subtle: rgba(63, 174, 150, 0.12);
+  --accent-glow: rgba(63, 174, 150, 0.25);
+  --accent-contrast: #FFFFFF;
 
-  /* SUPPORTING ACCENT: Red (Errors, risk, destructive confirmations) */
-  --accent-red: #dc2626;
-  --accent-red-hover: #b91c1c;
-  --accent-red-subtle: rgba(220, 38, 38, 0.08);
+  /* Gains & Losses */
+  --trade-profit: #22A06B;     /* Reference B gain green */
+  --trade-loss: #E5484D;       /* Reference B loss red */
+  --chip-green-bg: #1B3B2B;
+  --chip-green-text: #22A06B;
+  --badge-red: #E13A41;
 
-  /* SUPPORTING ACCENT: Black (Structure & solid emphasis) */
-  --accent-black: #0a0a0b;
+  /* REFERENCE A: Auth & Landing Screen Tokens */
+  --auth-card-bg: #FFFFFF;
+  --auth-heading: #00030C;
+  --auth-input-bg: #B3EFEF;
+  --auth-input-text: #052728;
+  --auth-btn-primary: #1ED8CD;
+  --auth-btn-hover: #19C2B8;
+  --auth-btn-text: #FFFFFF;
+  --auth-btn-text-contrast: #003835;
+  --auth-checkbox: #40BEB3;
+  --auth-link: #18837E;
+  --auth-link-hover: #40BEB3;
 
-  --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-  --card-shadow-hover: 0 10px 25px -5px rgba(2, 132, 199, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  /* Water Aerial Theme */
+  --water-navy: #003859;
+  --water-teal-deep: #03737E;
+  --water-turquoise: #149B9E;
+  --water-bright: #38BAC0;
+
+  /* Shadows */
+  --card-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.04), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+  --card-shadow-hover: 0 12px 28px -6px rgba(0, 0, 0, 0.08), 0 4px 10px -4px rgba(0, 0, 0, 0.03);
+  --frame-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 .dark {
-  /* Arcade Fx Dark Mode — 10-Step Neutral Grey Ink Scale */
-  --ink-50: #060709;
-  --ink-100: #0e1015;
-  --ink-200: #171922;
-  --ink-300: #232634;
-  --ink-400: #34384b;
-  --ink-500: #5d637d;
-  --ink-600: #787f9b;
-  --ink-700: #bac0d4;
-  --ink-800: #e2e5f0;
-  --ink-900: #ffffff;
+  /* Clean Dark Mode variant derived from Reference B's #191919 and #121212 */
+  --bg-page: #0B0B0C;
+  --bg-canvas: #121214;
+  --bg-surface: #19191C;
+  --bg-surface-secondary: #232328;
+  --bg-surface-elevated: #28282E;
+  --bg-surface-hover: #303038;
 
-  /* Surfaces & Borders */
-  --bg-canvas: #060709;
-  --bg-surface: #0e1015;
-  --bg-surface-secondary: #171922;
-  --bg-surface-elevated: #1f222e;
-  --bg-surface-hover: #272a39;
+  --border-subtle: #2C2C32;
+  --border-strong: #3F3F48;
+  --border-focus: #48B89F;
 
-  --border-subtle: #232634;
-  --border-strong: #34384b;
-  --border-focus: #38bdf8;
+  --text-primary: #FFFFFF;
+  --text-secondary: #D1D5DB;
+  --text-muted: #9CA3AF;
+  --text-subtle: #6B7280;
 
-  /* Typography */
-  --text-primary: #ffffff;
-  --text-secondary: #bac0d4;
-  --text-muted: #787f9b;
-  --text-subtle: #4e5369;
+  --dash-dark-card: #0D0D0E;
+  --dash-dark-pill: #FFFFFF;
+  --accent-primary: #48B89F;
+  --accent-hover: #5ECAB2;
+  --accent-subtle: rgba(72, 184, 159, 0.16);
+  --accent-glow: rgba(72, 184, 159, 0.35);
+  --accent-contrast: #0B0B0C;
 
-  /* PRIMARY ACCENT: Sky Blue */
-  --accent-primary: #38bdf8;
-  --accent-hover: #7dd3fc;
-  --accent-subtle: rgba(56, 189, 248, 0.12);
-  --accent-glow: rgba(56, 189, 248, 0.35);
-  --accent-contrast: #060709;
+  --trade-profit: #34D399;
+  --trade-loss: #F87171;
+  --chip-green-bg: #132E22;
+  --chip-green-text: #34D399;
+  --badge-red: #F87171;
 
-  /* SUPPORTING ACCENT: Red (Errors, risk, destructive confirmations) */
-  --accent-red: #f87171;
-  --accent-red-hover: #ef4444;
-  --accent-red-subtle: rgba(248, 113, 113, 0.14);
+  --auth-card-bg: #19191C;
+  --auth-heading: #FFFFFF;
+  --auth-input-bg: #1B3537;
+  --auth-input-text: #C4FAF8;
+  --auth-btn-primary: #1ED8CD;
+  --auth-btn-hover: #19C2B8;
+  --auth-btn-text: #052728;
+  --auth-btn-text-contrast: #052728;
+  --auth-checkbox: #38BAC0;
+  --auth-link: #38BAC0;
+  --auth-link-hover: #72E4E9;
 
-  /* SUPPORTING ACCENT: Black (Floor) */
-  --accent-black: #060709;
+  --water-navy: #001F33;
+  --water-teal-deep: #02454B;
+  --water-turquoise: #0B6B6D;
+  --water-bright: #1E878C;
 
   --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-  --card-shadow-hover: 0 16px 36px -6px rgba(0, 0, 0, 0.8), 0 0 24px 0 rgba(56, 189, 248, 0.18);
+  --card-shadow-hover: 0 16px 36px -6px rgba(0, 0, 0, 0.8), 0 0 20px 0 rgba(72, 184, 159, 0.15);
+  --frame-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.9), 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
@@ -106,240 +129,213 @@
   }
 
   body {
-    background-color: var(--bg-canvas);
+    background-color: var(--bg-page);
     color: var(--text-primary);
-    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     overflow-x: hidden;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.012em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    letter-spacing: -0.025em;
+    letter-spacing: -0.02em;
+    font-weight: 700;
   }
 
-  code, pre, .font-mono {
+  code, pre, .font-mono, .tabular-nums {
     font-family: 'JetBrains Mono', monospace;
-    letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
   }
 }
 
-/* Primary Action & Button System */
+/* Reference A Torn Edge Clip-Path & Filter */
+.torn-paper-card {
+  position: relative;
+  background-color: var(--auth-card-bg);
+  border-top-left-radius: 1.25rem;
+  border-bottom-left-radius: 1.25rem;
+  filter: drop-shadow(18px 0 24px rgba(0, 30, 45, 0.32));
+}
+
+@media (min-width: 1024px) {
+  .torn-edge-right {
+    clip-path: polygon(
+      0% 0%,
+      88% 0%,
+      91% 2%,
+      89% 5%,
+      93% 8%,
+      90% 12%,
+      94% 15%,
+      91% 19%,
+      95% 23%,
+      92% 27%,
+      96% 31%,
+      93% 36%,
+      97% 41%,
+      94% 46%,
+      98% 51%,
+      93% 56%,
+      97% 61%,
+      92% 66%,
+      96% 71%,
+      93% 76%,
+      98% 81%,
+      94% 86%,
+      97% 91%,
+      92% 95%,
+      95% 98%,
+      90% 100%,
+      0% 100%
+    );
+  }
+}
+
+@media (max-width: 1023px) {
+  .torn-edge-bottom {
+    clip-path: polygon(
+      0% 0%,
+      100% 0%,
+      100% 88%,
+      97% 91%,
+      94% 89%,
+      91% 93%,
+      87% 90%,
+      83% 94%,
+      79% 91%,
+      74% 95%,
+      70% 92%,
+      65% 96%,
+      60% 93%,
+      55% 97%,
+      50% 94%,
+      45% 98%,
+      40% 93%,
+      35% 97%,
+      30% 92%,
+      25% 96%,
+      20% 93%,
+      15% 98%,
+      10% 94%,
+      5% 97%,
+      0% 90%
+    );
+  }
+}
+
+/* Reference Primary Buttons */
 .btn-primary,
-.hostinger-btn-primary,
-.framer-btn-primary {
+.btn-auth-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: var(--accent-primary);
-  color: var(--accent-contrast) !important;
+  background-color: var(--auth-btn-primary);
+  color: var(--auth-btn-text) !important;
   font-weight: 700;
   font-size: 0.875rem;
-  padding: 0.625rem 1.25rem;
-  border-radius: 0.75rem;
-  border: 1px solid transparent;
-  box-shadow: 0 2px 10px var(--accent-glow);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.75rem 1.75rem;
+  border-radius: 9999px;
+  border: none;
+  box-shadow: 0 4px 14px rgba(30, 216, 205, 0.35);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   user-select: none;
 }
 
 .btn-primary:hover,
-.hostinger-btn-primary:hover,
-.framer-btn-primary:hover {
-  background-color: var(--accent-hover);
+.btn-auth-primary:hover {
+  background-color: var(--auth-btn-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px var(--accent-glow);
+  box-shadow: 0 6px 18px rgba(30, 216, 205, 0.45);
 }
 
-.btn-primary:active,
-.hostinger-btn-primary:active,
-.framer-btn-primary:active {
-  transform: translateY(0);
-}
-
-/* Secondary Button (Outlined in neutral grey border) */
-.btn-secondary,
-.hostinger-btn-secondary,
-.framer-btn-secondary {
+.btn-dash-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: transparent;
-  color: var(--text-primary);
+  background-color: var(--accent-primary);
+  color: #FFFFFF !important;
   font-weight: 600;
   font-size: 0.875rem;
   padding: 0.625rem 1.25rem;
   border-radius: 0.75rem;
-  border: 1px solid var(--border-strong);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-  user-select: none;
-}
-
-.btn-secondary:hover,
-.hostinger-btn-secondary:hover,
-.framer-btn-secondary:hover {
-  background-color: var(--bg-surface-hover);
-  border-color: var(--border-strong);
-  transform: translateY(-1px);
-}
-
-/* Destructive Button (Red supporting accent, inside confirmation sheets) */
-.btn-destructive {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background-color: var(--accent-red);
-  color: #ffffff !important;
-  font-weight: 700;
-  font-size: 0.875rem;
-  padding: 0.625rem 1.25rem;
-  border-radius: 0.75rem;
   border: 1px solid transparent;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+  box-shadow: 0 2px 10px rgba(63, 174, 150, 0.25);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
-  user-select: none;
 }
 
-.btn-destructive:hover {
-  background-color: var(--accent-red-hover);
+.btn-dash-primary:hover {
+  background-color: var(--accent-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(63, 174, 150, 0.35);
 }
 
-/* Bento Card System */
-.framer-card,
-.hostinger-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 1.25rem;
-  box-shadow: var(--card-shadow);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.framer-card-interactive,
-.hostinger-card-interactive {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 1.25rem;
-  box-shadow: var(--card-shadow);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.framer-card-interactive:hover,
-.hostinger-card-interactive:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--card-shadow-hover);
-  transform: translateY(-2px);
-}
-
-.dark .framer-card-interactive:hover,
-.dark .hostinger-card-interactive:hover {
-  border-color: rgba(56, 189, 248, 0.4);
-  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.8), 0 0 24px 0 rgba(56, 189, 248, 0.15);
-}
-
-/* Glassmorphism Panels */
-.framer-glass {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-subtle);
-}
-
-.dark .framer-glass {
-  background: rgba(14, 16, 21, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-subtle);
-}
-
-/* Segmented Pill Toggle */
-.hostinger-pill-toggle {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem;
+/* Reference A Aqua Pill Input */
+.input-auth-pill {
+  width: 100%;
+  background-color: var(--auth-input-bg);
+  color: var(--auth-input-text);
   border-radius: 9999px;
-  background-color: var(--bg-surface-secondary);
-  border: 1px solid var(--border-subtle);
-}
-
-.hostinger-pill-toggle button {
-  padding: 0.375rem 1rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  border: 2px solid transparent;
+  padding: 0.75rem 1.25rem 0.75rem 2.85rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  outline: none;
   transition: all 0.2s ease;
 }
 
-.hostinger-pill-toggle button.active {
-  background-color: var(--accent-primary);
-  color: var(--accent-contrast);
-  box-shadow: 0 2px 8px var(--accent-glow);
+.input-auth-pill::placeholder {
+  color: var(--auth-input-text);
+  opacity: 0.75;
 }
 
-/* Custom modern scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.input-auth-pill:focus {
+  border-color: var(--auth-checkbox);
+  box-shadow: 0 0 0 3px rgba(64, 190, 179, 0.2);
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+/* Reference B Dashboard App Frame Container */
+.app-frame-container {
+  background-color: var(--bg-page);
+  min-height: 100vh;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: center;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
-}
-
-/* Accessible reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+@media (max-width: 1023px) {
+  .app-frame-container {
+    padding: 0;
   }
 }
 
-/* Dark theme input autofill override */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-text-fill-color: #ffffff !important;
-  caret-color: #ffffff !important;
-  -webkit-box-shadow: 0 0 0px 1000px #171922 inset !important;
-  box-shadow: 0 0 0px 1000px #171922 inset !important;
-  transition: background-color 5000s ease-in-out 0s;
+.app-frame {
+  background-color: var(--bg-canvas);
+  border-radius: var(--radius-frame);
+  box-shadow: var(--frame-shadow);
+  width: 100%;
+  max-width: 1536px;
+  display: flex;
+  overflow: hidden;
+  position: relative;
 }
 
-/* Light theme autofill override */
-html:not(.dark) input.auth-input:-webkit-autofill,
-html:not(.dark) input.auth-input:-webkit-autofill:hover,
-html:not(.dark) input.auth-input:-webkit-autofill:focus,
-html:not(.dark) input.auth-input:-webkit-autofill:active {
-  -webkit-text-fill-color: #0f172a !important;
-  caret-color: #0f172a !important;
-  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
-  box-shadow: 0 0 0px 1000px #ffffff inset !important;
+@media (max-width: 1023px) {
+  .app-frame {
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
 
-/* Privacy Mode Blur */
-.privacy-masked {
-  filter: blur(6px);
-  user-select: none;
-  pointer-events: none;
-  transition: filter 0.2s ease-in-out;
+/* Custom Scrollbar for Portfolio Carousel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -8,6 +8,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        page: 'var(--bg-page)',
         canvas: 'var(--bg-canvas)',
         surface: {
           DEFAULT: 'var(--bg-surface)',
@@ -26,18 +27,6 @@ export default {
           muted: 'var(--text-muted)',
           subtle: 'var(--text-subtle)'
         },
-        ink: {
-          50: 'var(--ink-50)',
-          100: 'var(--ink-100)',
-          200: 'var(--ink-200)',
-          300: 'var(--ink-300)',
-          400: 'var(--ink-400)',
-          500: 'var(--ink-500)',
-          600: 'var(--ink-600)',
-          700: 'var(--ink-700)',
-          800: 'var(--ink-800)',
-          900: 'var(--ink-900)'
-        },
         accent: {
           primary: 'var(--accent-primary)',
           hover: 'var(--accent-hover)',
@@ -45,49 +34,77 @@ export default {
           glow: 'var(--accent-glow)',
           contrast: 'var(--accent-contrast)'
         },
-        // Sky Blue Primary Accent Family
+        // Reference Primary Accent Family (Teal-Green / Turquoise)
         brand: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8', // Dark Mode Sky Primary
-          500: '#0ea5e9',
-          600: '#0284c7', // Light Mode Sky Primary
-          700: '#0369a1', // Light Mode Sky Hover
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49'
+          50: '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#3FAE96', // Reference B Chart Line & Primary
+          600: '#14B8A6',
+          700: '#0f766e',
+          800: '#115e59',
+          900: '#134e4a',
+          950: '#042f2e'
         },
-        // Supporting Red Accent (Alerts, risk, destructive confirmations)
+        // Reference A Auth Tokens
+        auth: {
+          heading: 'var(--auth-heading)',
+          input: 'var(--auth-input-bg)',
+          inputText: 'var(--auth-input-text)',
+          btn: 'var(--auth-btn-primary)',
+          btnHover: 'var(--auth-btn-hover)',
+          checkbox: 'var(--auth-checkbox)',
+          link: 'var(--auth-link)',
+          linkHover: 'var(--auth-link-hover)'
+        },
+        // Reference B Dashboard Specifics
+        dash: {
+          canvas: 'var(--bg-page)',
+          main: 'var(--bg-canvas)',
+          surface: 'var(--bg-surface)',
+          darkCard: 'var(--dash-dark-card)',
+          pillActive: 'var(--dash-dark-pill)',
+          chipGreen: 'var(--chip-green-bg)',
+          chipGreenText: 'var(--chip-green-text)',
+          badgeRed: 'var(--badge-red)',
+          line: 'var(--accent-primary)'
+        },
+        // Supporting Red Accent (Alerts, risk, destructive)
         danger: {
-          light: '#dc2626',
+          DEFAULT: '#E5484D',
+          light: '#E5484D',
           dark: '#f87171',
-          hover: '#b91c1c',
-          subtle: 'var(--accent-red-subtle)'
+          hover: '#c53030',
+          subtle: 'rgba(229, 72, 77, 0.12)'
         },
-        // Strict Data Semantics Only
+        // Financial Data Semantics (Reference B)
         trade: {
-          win: '#00b090',      // Vibrant Bullish / Profit
-          loss: '#dc2626',     // Aligned to Red accent token (Loss / Bearish)
-          breakeven: '#64748b',
+          win: '#22A06B',      // Reference B Positive Green
+          loss: '#E5484D',     // Reference B Negative Red
+          breakeven: '#8E8E93',
           gold: '#eab308'
         }
       },
       fontFamily: {
-        sans: ['DM Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace']
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        heading: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace']
       },
       borderRadius: {
-        '2xl': '1.25rem', // 20px
-        '3xl': '1.5rem',  // 24px
-        '4xl': '2rem'
+        'xl': '0.875rem', // 14px
+        '2xl': '1rem',    // 16px (Reference cards)
+        '3xl': '1.5rem',  // 24px (Reference B app frame)
+        '4xl': '2rem',
+        'pill': '9999px'
       },
       boxShadow: {
         'framer': 'var(--card-shadow)',
         'framer-hover': 'var(--card-shadow-hover)',
-        'sky-glow': '0 0 24px -4px rgba(56, 189, 248, 0.35)',
-        'sky-btn': '0 4px 14px 0 rgba(2, 132, 199, 0.35)'
+        'app-frame': 'var(--frame-shadow)',
+        'teal-glow': '0 0 24px -4px rgba(63, 174, 150, 0.35)',
+        'auth-btn': '0 4px 14px 0 rgba(30, 216, 205, 0.35)'
       }
     },
   },

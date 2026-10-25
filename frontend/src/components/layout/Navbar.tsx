@@ -3,36 +3,41 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useAccounts } from '../../context/AccountContext';
 import { useSettings } from '../../context/SettingsContext';
+import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../services/api';
 import {
   Bell,
-  Trophy,
+  Mail,
+  Search,
   ChevronDown,
   RefreshCw,
   LogOut,
   Layers,
   Radio,
   Check,
-  Settings
+  Settings,
+  Sun,
+  Moon,
+  User,
+  Shield,
+  Menu
 } from 'lucide-react';
-import { AlphaCoachLogo } from '../common/AlphaCoachLogo';
 
 export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
   const { accounts, selectedAccountId, setSelectedAccountId, refreshAccounts } = useAccounts();
   const { settings, privacyMode } = useSettings();
+  const { theme, toggleTheme } = useTheme();
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
   const [showUserDropdown, setShowUserDropdown] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const [progression, setProgression] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
       loadNotifications();
-      loadProgression();
     }
   }, [user]);
 
@@ -46,21 +51,11 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
     }
   };
 
-  const loadProgression = async () => {
-    try {
-      const res = await api.getGamificationProfile();
-      setProgression(res.profile || res.progression);
-    } catch {
-      // ignore
-    }
-  };
-
   const handleQuickSync = async () => {
     try {
       setIsSyncing(true);
       await refreshAccounts();
       await loadNotifications();
-      await loadProgression();
       setTimeout(() => setIsSyncing(false), 800);
     } catch {
       setIsSyncing(false);
@@ -77,108 +72,132 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
     }
   };
 
+  const displayName = user?.first_name
+    ? `${user.first_name} ${user.last_name || ''}`.trim()
+    : (user?.email?.split('@')[0] || 'Trader');
+
   return (
-    <header className="sticky top-0 z-40 framer-glass border-b border-border-subtle px-4 sm:px-6 lg:px-8 py-3 transition-colors duration-200">
-      <div className="flex items-center justify-between gap-3">
-        {/* Left: Mobile Brand Lockup & Desktop Account Selector */}
-        <div className="flex items-center gap-3 min-w-0">
-          {/* Mobile/Tablet Brand Lockup (Replaces Hamburger below lg) */}
-          <NavLink
-            to="/dashboard"
-            className="lg:hidden flex items-center flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-xl"
-            aria-label="Arcade Fx home"
-          >
-            <AlphaCoachLogo size="md" showWordmark={true} />
-          </NavLink>
-
-          {/* Account Selector Pill (Desktop Only) */}
-          <div className="hidden lg:flex items-center gap-2 bg-surface border border-border-subtle rounded-xl px-3 py-1.5 shadow-sm">
-            <Layers className="w-4 h-4 text-brand-500 flex-shrink-0" />
-            <span className="text-xs font-medium text-content-muted">Account:</span>
-            <select
-              value={selectedAccountId}
-              onChange={e => setSelectedAccountId(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-content-primary focus:outline-none cursor-pointer pr-2 max-w-[200px] truncate"
-            >
-              <option value="ALL" className="bg-surface text-content-primary">All Accounts (Consolidated)</option>
-              {accounts.map(acc => (
-                <option key={acc.id} value={acc.id} className="bg-surface text-content-primary">
-                  {acc.broker_name} ••••{acc.account_number.slice(-4)} ({privacyMode ? '••••••' : `$${acc.balance.toLocaleString()}`})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* MT5 Bridge Status Indicator (Desktop Only) */}
-          <div className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-            <Radio className="w-3.5 h-3.5 animate-pulse text-emerald-500" />
-            <span>Bridge Live</span>
-          </div>
-        </div>
-
-        {/* Right Controls */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          {/* Rewards Level & XP Badge (Desktop Only) */}
-          {progression && (
-            <NavLink
-              to="/rewards"
-              className="hidden lg:inline-flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold text-amber-600 dark:text-amber-400 shadow-sm transition"
-              title="View Rewards, Trader Progression & XP Achievements"
-            >
-              <Trophy className="w-3.5 h-3.5 text-amber-500" />
-              <span>Lv.{progression.currentLevel || progression.current_level || 1} Trader</span>
-              <span className="text-content-subtle">•</span>
-              <span className="text-brand-600 dark:text-brand-400 font-mono">{progression.currentXp || progression.current_xp || 0} XP</span>
-            </NavLink>
-          )}
-
-          {/* Quick Sync Button */}
+    <header className="sticky top-0 z-30 bg-[#F5F6F8] dark:bg-[#121214] px-4 sm:px-6 lg:px-8 py-3.5 border-b border-[#EBECEF] dark:border-[#2C2C32] transition-colors">
+      <div className="flex items-center justify-between gap-4 max-w-[1400px] mx-auto">
+        {/* Left: Mobile Menu Trigger + Search Input (Reference B) */}
+        <div className="flex items-center gap-3 flex-1 max-w-md">
+          {/* Mobile hamburger menu */}
           <button
-            onClick={handleQuickSync}
-            disabled={isSyncing}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-surface-secondary border border-border-strong text-content-primary rounded-xl text-xs font-semibold transition-all active:scale-95 disabled:opacity-50"
-            title="Synchronize MetaTrader 5 deals"
+            type="button"
+            onClick={onToggleSidebar}
+            aria-label="Toggle navigation menu"
+            className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Sync</span>
+            <Menu className="w-5 h-5" />
           </button>
 
-          {/* Notifications Dropdown */}
+          {/* Reference B Search Pill */}
+          <div className="relative w-full max-w-[340px]">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              readOnly
+              onClick={() => {
+                const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, metaKey: true });
+                window.dispatchEvent(event);
+              }}
+              placeholder="Press 'K' to search symbols and pages"
+              className="w-full bg-white dark:bg-[#19191C] border border-[#EBECEF] dark:border-[#2C2C32] rounded-xl pl-9 pr-4 py-2 text-xs text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#3FAE96] cursor-pointer shadow-xs transition"
+            />
+          </div>
+
+          {/* Account Selector Pill */}
+          {accounts.length > 0 && (
+            <div className="hidden xl:flex items-center gap-2 bg-white dark:bg-[#19191C] border border-[#EBECEF] dark:border-[#2C2C32] rounded-xl px-3 py-1.5 shadow-xs">
+              <Layers className="w-3.5 h-3.5 text-[#3FAE96] shrink-0" />
+              <select
+                value={selectedAccountId}
+                onChange={e => setSelectedAccountId(e.target.value)}
+                className="bg-transparent text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer max-w-[150px] truncate"
+              >
+                <option value="ALL" className="bg-white dark:bg-[#19191C] text-slate-800 dark:text-slate-200">All MT5 Accounts</option>
+                {accounts.map(acc => (
+                  <option key={acc.id} value={acc.id} className="bg-white dark:bg-[#19191C] text-slate-800 dark:text-slate-200">
+                    {acc.broker_name || 'MT5'} ••••{acc.account_number.slice(-4)} ({privacyMode ? '••••' : `$${Number(acc.balance).toLocaleString()}`})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Actions, Badges & User Profile (Reference B) */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Quick MT5 Sync Button */}
+          <button
+            type="button"
+            onClick={handleQuickSync}
+            disabled={isSyncing}
+            className="p-2 rounded-xl bg-white dark:bg-[#19191C] border border-[#EBECEF] dark:border-[#2C2C32] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-xs transition active:scale-95 disabled:opacity-50"
+            title="Synchronize MT5 deals"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-[#3FAE96]' : ''}`} />
+          </button>
+
+          {/* Theme Toggle (Light/Dark Mode) */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Toggle theme mode"
+            className="p-2 rounded-xl bg-white dark:bg-[#19191C] border border-[#EBECEF] dark:border-[#2C2C32] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-xs transition"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+          </button>
+
+          {/* Mail / Inbox Icon with Dot (Reference B) */}
+          <button
+            type="button"
+            onClick={() => alert('Arcade Fx Market Reports & Announcements Inbox is up to date.')}
+            className="p-2 rounded-xl bg-white dark:bg-[#19191C] border border-[#EBECEF] dark:border-[#2C2C32] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-xs transition relative"
+            aria-label="Open messages"
+          >
+            <Mail className="w-4 h-4" />
+          </button>
+
+          {/* Notification Bell with Red Dot Badge (Reference B: #E13A41) */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 rounded-xl text-content-muted hover:text-content-primary hover:bg-surface-secondary border border-border-subtle relative transition-all duration-200"
+              className="p-2 rounded-xl bg-white dark:bg-[#19191C] border border-[#EBECEF] dark:border-[#2C2C32] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-xs transition relative"
               aria-label="Open notifications"
             >
               <Bell className="w-4 h-4" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-surface animate-pulse" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#E13A41] ring-2 ring-white dark:ring-[#19191C] animate-pulse" />
               )}
             </button>
 
+            {/* Notification Dropdown */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-surface border border-border-strong rounded-2xl shadow-xl z-50 p-4 animate-in fade-in slide-in-from-top-2">
-                <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
-                  <span className="text-xs font-bold uppercase tracking-wider text-content-muted">Notifications</span>
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#19191C] border border-[#EBECEF] dark:border-[#2C2C32] rounded-2xl shadow-xl z-50 p-4 animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Notifications</h4>
                   {unreadCount > 0 && (
-                    <button onClick={markAllRead} className="text-xs text-brand-600 dark:text-brand-400 hover:underline font-semibold">
+                    <button
+                      onClick={markAllRead}
+                      className="text-[11px] font-semibold text-[#3FAE96] hover:underline"
+                    >
                       Mark all read
                     </button>
                   )}
                 </div>
-                <div className="max-h-64 overflow-y-auto divide-y divide-border-subtle my-2">
+
+                <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 py-1">
                   {notifications.length === 0 ? (
-                    <div className="py-6 text-center text-xs text-content-muted">No new notifications</div>
+                    <div className="py-6 text-center text-xs text-slate-400">
+                      No new notifications. MT5 sync active.
+                    </div>
                   ) : (
-                    notifications.map(n => (
-                      <div key={n.id} className={`py-2.5 text-xs ${n.is_read ? 'opacity-60' : 'font-medium'}`}>
-                        <div className="flex items-center justify-between text-content-primary">
-                          <span className="font-semibold">{n.title}</span>
-                          <span className="text-[10px] text-content-muted font-mono">
-                            {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <p className="text-content-muted text-[11px] mt-0.5">{n.message}</p>
+                    notifications.map((n, idx) => (
+                      <div key={idx} className="py-2.5 text-xs space-y-0.5">
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">{n.title}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">{n.message}</div>
                       </div>
                     ))
                   )}
@@ -187,108 +206,60 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
             )}
           </div>
 
-          {/* User Profile Dropdown */}
+          {/* User Profile Avatar & Name (Reference B: circular avatar + name + chevron) */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => setShowUserDropdown(!showUserDropdown)}
-              className="flex items-center gap-2 pl-2 pr-1.5 py-1 rounded-xl hover:bg-surface-secondary border border-border-subtle transition-all duration-200"
-              aria-label="User account menu"
+              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-white dark:bg-[#19191C] border border-[#EBECEF] dark:border-[#2C2C32] hover:bg-slate-50 dark:hover:bg-slate-800/60 shadow-xs transition focus:outline-none"
             >
-              {settings.profile.avatarUrl ? (
-                <img
-                  src={settings.profile.avatarUrl}
-                  alt="Profile"
-                  className="w-7 h-7 rounded-lg object-cover ring-1 ring-border-subtle shadow-sm"
-                />
-              ) : (
-                <div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center font-bold text-xs text-white shadow-sm">
-                  {user?.first_name ? user.first_name[0] : 'T'}
-                </div>
-              )}
-              <ChevronDown className="w-3.5 h-3.5 text-content-muted" />
+              <div className="w-7 h-7 rounded-full bg-[#121212] dark:bg-[#2C2C32] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+              <span className="hidden md:inline-block text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[120px] truncate">
+                {displayName}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
 
+            {/* User Dropdown Menu */}
             {showUserDropdown && (
-              <div className="absolute right-0 mt-2 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-surface border border-border-strong rounded-2xl shadow-xl z-50 p-2 text-xs animate-in fade-in slide-in-from-top-2 max-h-[85vh] overflow-y-auto">
-                {/* User Profile Header */}
-                <div className="px-3 py-2.5 border-b border-border-subtle">
-                  <div className="font-bold text-content-primary text-sm">{user?.first_name} {user?.last_name}</div>
-                  <div className="text-[11px] text-content-muted truncate">{user?.email}</div>
-                  <div className="mt-1.5 inline-block px-2 py-0.5 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded text-[10px] font-bold border border-brand-500/20">
-                    {user?.subscription_tier || 'PRO'} PLAN
-                  </div>
+              <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#19191C] border border-[#EBECEF] dark:border-[#2C2C32] rounded-2xl shadow-xl z-50 p-2 text-xs animate-in fade-in duration-150">
+                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+                  <div className="font-bold text-slate-900 dark:text-white truncate">{displayName}</div>
+                  <div className="text-[11px] text-slate-400 truncate">{user?.email}</div>
                 </div>
 
-                {/* Mobile & Tablet Relocated Controls */}
-                <div className="lg:hidden divide-y divide-border-subtle">
-                  {/* 1. Account Selector */}
-                  <div className="py-2.5 px-3 space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-content-muted">
-                      <Layers className="w-3.5 h-3.5 text-brand-500" />
-                      <span>Trading Account</span>
-                    </div>
-                    <select
-                      value={selectedAccountId}
-                      onChange={e => setSelectedAccountId(e.target.value)}
-                      className="w-full bg-surface-secondary border border-border-subtle rounded-xl px-2.5 py-2 text-xs font-semibold text-content-primary focus:outline-none focus:border-brand-500 cursor-pointer truncate"
-                    >
-                      <option value="ALL" className="bg-surface text-content-primary">All Accounts (Consolidated)</option>
-                      {accounts.map(acc => (
-                        <option key={acc.id} value={acc.id} className="bg-surface text-content-primary">
-                          {acc.broker_name} ••••{acc.account_number.slice(-4)} ({privacyMode ? '••••••' : `$${acc.balance.toLocaleString()}`})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* 2 & 3. Bridge Status & Progression */}
-                  <div className="py-2.5 px-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-content-muted">MT5 Bridge</span>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
-                        <Radio className="w-3 h-3 animate-pulse text-emerald-500" />
-                        <span>Bridge Live</span>
-                      </div>
-                    </div>
-
-                    {progression && (
-                      <NavLink
-                        to="/rewards"
-                        onClick={() => setShowUserDropdown(false)}
-                        className="flex items-center justify-between hover:bg-surface-secondary/80 p-1.5 rounded-xl transition"
-                      >
-                        <span className="text-[11px] font-semibold text-content-muted">Discipline Tier</span>
-                        <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-amber-600 dark:text-amber-400">
-                          <Trophy className="w-3 h-3 text-amber-500" />
-                          <span>Lv.{progression.currentLevel || progression.current_level || 1}</span>
-                          <span className="text-content-subtle">•</span>
-                          <span className="text-brand-600 dark:text-brand-400 font-mono">{progression.currentXp || progression.current_xp || 0} XP</span>
-                        </div>
-                      </NavLink>
-                    )}
-                  </div>
-                </div>
-
-                {/* Settings Link */}
-                <div className="py-1 border-b border-border-subtle">
+                <div className="py-1">
                   <NavLink
                     to="/settings"
                     onClick={() => setShowUserDropdown(false)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-content-primary hover:bg-surface-secondary rounded-xl transition font-medium text-left"
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                   >
-                    <Settings className="w-4 h-4 text-content-muted" />
-                    <span>Settings & Preferences</span>
+                    <Settings className="w-4 h-4 text-slate-400" />
+                    <span>Settings & Security</span>
+                  </NavLink>
+                  <NavLink
+                    to="/bridge"
+                    onClick={() => setShowUserDropdown(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                  >
+                    <Radio className="w-4 h-4 text-slate-400" />
+                    <span>MT5 Companion Bridge</span>
                   </NavLink>
                 </div>
 
-                {/* Logout Button */}
-                <div className="pt-1">
+                <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
                   <button
-                    onClick={logout}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-xl transition font-medium text-left"
+                    type="button"
+                    onClick={async () => {
+                      setShowUserDropdown(false);
+                      if (logout) await logout();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 font-semibold transition"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Log out</span>
+                    <span>Sign Out</span>
                   </button>
                 </div>
               </div>
