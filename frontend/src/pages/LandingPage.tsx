@@ -23,6 +23,7 @@ import {
   FileText
 } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
+import { AnimatedOcean } from '../components/common/AnimatedOcean';
 
 const SOFTWARE_APPLICATION_SCHEMA = {
   '@context': 'https://schema.org',
@@ -136,20 +137,7 @@ export const LandingPage: React.FC = () => {
         <section className="relative w-full min-h-[580px] lg:min-h-[660px] flex items-center justify-start overflow-hidden bg-white">
           {/* Desktop Artwork: Full Composition (White panel on left, wavy coral edge, ocean, kayak on right) */}
           <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none">
-            <picture>
-              <source
-                srcSet="/assets/auth-bg-full-2400.webp 2400w, /assets/auth-bg-full-1600.webp 1600w, /assets/auth-bg-full-1024.webp 1024w"
-                sizes="100vw"
-                type="image/webp"
-              />
-              <img
-                src="/assets/auth-bg-full.jpg"
-                alt=""
-                className="w-full h-full object-cover object-[center_left]"
-                loading="eager"
-                decoding="async"
-              />
-            </picture>
+            <AnimatedOcean variant="full" priority />
           </div>
 
           {/* Over-photo Graphics on Desktop: Top-Right Logo & Bottom-Right Lockup */}
@@ -175,20 +163,7 @@ export const LandingPage: React.FC = () => {
           {/* Mobile & Tablet Portrait Hero Banner (< 1024px) */}
           <div className="relative w-full lg:hidden flex flex-col">
             <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] overflow-hidden shrink-0 select-none bg-[#032630]">
-              <picture>
-                <source
-                  srcSet="/assets/auth-photo-1024.webp 1024w, /assets/auth-photo-640.webp 640w"
-                  sizes="100vw"
-                  type="image/webp"
-                />
-                <img
-                  src="/assets/auth-photo.jpg"
-                  alt="Arcade Fx Kayak on Turquoise Ocean"
-                  className="w-full h-full object-cover object-[center_32%]"
-                  loading="eager"
-                  decoding="async"
-                />
-              </picture>
+              <AnimatedOcean variant="photo" priority />
 
               <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/30 pointer-events-none" />
 
