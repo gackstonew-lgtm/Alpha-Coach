@@ -8,6 +8,7 @@
   },
   "scripts": {
     "prebuild": "node scripts/check-build-env.mjs",
+    "test:sidebar": "node scripts/test-sidebar-contract.mjs",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
