@@ -4,7 +4,7 @@
   "description": "Trader's Edge - Professional Automated MT5 Trading Journal & Performance OS Backend API",
   "main": "dist/server.js",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.18.0 <25.0.0"
   },
   "scripts": {
     "build": "tsc && node ../scripts/build-api-bundle.js",

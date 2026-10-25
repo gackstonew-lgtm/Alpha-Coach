@@ -75,7 +75,7 @@ jobs:
       - name: Install Frontend Dependencies (Strict CI)
         run: |
           cd frontend
-          npm ci
+          npm ci --include=dev
 
       - name: Typecheck & Build Frontend
         run: |
@@ -103,7 +103,7 @@ jobs:
       - name: Install Frontend Dependencies
         run: |
           cd frontend
-          npm ci
+          npm ci --include=dev
 
       - name: Install Backend Dependencies
         run: |

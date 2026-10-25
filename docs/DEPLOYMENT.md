@@ -76,7 +76,7 @@ Configure the following variables in **Vercel Project Settings > Environment Var
    - Root Directory: `.` (or `frontend`)
    - Build Command: `npm run build`
    - Output Directory: `frontend/dist` (or `dist` if root directory is set to `frontend`)
-   - Install Command: `npm ci` (or `npm install`)
+   - Install Command: `npm ci --include=dev` (configured in vercel.json)
 3. **Automated Ignore Command (Vercel)**:
    - To prevent failed preview deployments from uncoordinated Dependabot PRs, `vercel.json` defines:
      ```json
@@ -90,7 +90,7 @@ Configure the following variables in **Vercel Project Settings > Environment Var
 
 ## 5. Node.js Runtime & CI Verification
 
-- **Node Engine**: Node.js `>= 20.0.0 LTS` is required. The active version is pinned in `.nvmrc` and enforced in `package.json` `engines`.
+- **Node Engine**: Node.js `>= 20.18.0 < 25.0.0` is required. The active version is pinned in `.nvmrc` and enforced in `package.json` `engines`.
 - **GitHub Actions CI** (`.github/workflows/ci.yml`):
   Runs automatically on pushes to `main`, `master`, and PRs against `main`:
   1. `backend-test`: Strict `npm ci` and Jest test suite run.
@@ -123,5 +123,9 @@ npm run dev
   Occurs when `tailwindcss` is bumped to v4 without updating PostCSS config and styles. See [`docs/UPGRADES.md`](./UPGRADES.md) for the coordinated Tailwind v4 migration guide.
 - **`ERESOLVE unable to resolve dependency tree` (peer dependency conflicts)**:
   Occurs when a single toolchain package (such as `@vitejs/plugin-react@6.x`) is bumped without bumping its required peer dependency (`vite@^8.x`). Never bypass with `--force` or `--legacy-peer-deps`. Follow the coordinated upgrade checklist in [`docs/UPGRADES.md`](./UPGRADES.md).
+- **`sh: tsc: command not found` (Exit code 127 / DevDependencies Omitted)**:
+  - **Symptom**: `npm ci` reports adding only ~181 packages, and the build immediately fails on `tsc && vite build` with `tsc: command not found`.
+  - **Cause**: Vercel sets `NODE_ENV=production` for Production deployments. By default, npm v7+ omits `devDependencies` under `NODE_ENV=production`. Because build tools (`typescript`, `vite`, etc.) reside in `devDependencies`, `node_modules/.bin/tsc` is never installed.
+  - **Fix**: Configure `installCommand: "npm ci --include=dev"` in `vercel.json` (and in Vercel Project Settings if overridden). A prebuild script (`frontend/scripts/check-build-env.mjs`) automatically validates the presence of required devDependencies and binaries before building.
 - **CORS Errors**:
   Ensure the origin domain is listed in `allowedOrigins` in `backend/src/app.ts` or provided via `FRONTEND_URL`.
