@@ -212,11 +212,11 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Horizontal Portfolio Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,250px),1fr))] gap-4">
           {portfolioItems.map((item) => (
             <div
               key={item.id}
-              className="bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between"
+              className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs flex flex-col justify-between animate-in fade-in duration-200"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -253,7 +253,7 @@ export const DashboardPage: React.FC = () => {
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* LEFT COLUMN: MAIN INTERACTIVE CHART CARD (REFERENCE B) */}
-        <section className="lg:col-span-8 bg-white dark:bg-[#19191C] rounded-2xl p-5 sm:p-6 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs space-y-5">
+        <section className="lg:col-span-8 card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-5 sm:p-6 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs space-y-5">
           {/* Header Row: Symbol + LIVE chip + Price + Timestamp */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -404,7 +404,7 @@ export const DashboardPage: React.FC = () => {
         </section>
 
         {/* RIGHT COLUMN: "MY WATCHLIST" CARD (REFERENCE B) */}
-        <section className="lg:col-span-4 bg-white dark:bg-[#19191C] rounded-2xl p-5 sm:p-6 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs space-y-4">
+        <section className="lg:col-span-4 card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-5 sm:p-6 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-extrabold text-[#121212] dark:text-white tracking-tight">
               My watchlist
@@ -474,7 +474,7 @@ export const DashboardPage: React.FC = () => {
 
         {/* 4 Core Quantitative Edge Tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
+          <div className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Net Realized P/L</span>
             <div className={`text-lg font-extrabold mt-1 font-mono tabular-nums ${isPositiveNet ? 'text-[#22A06B]' : 'text-[#E5484D]'}`}>
               {netProfit >= 0 ? `+$${netProfit.toFixed(2)}` : `-$${Math.abs(netProfit).toFixed(2)}`}
@@ -484,7 +484,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
+          <div className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Win Rate</span>
             <div className="text-lg font-extrabold mt-1 text-slate-900 dark:text-white font-mono tabular-nums">
               {(overview?.winRate || 0).toFixed(1)}%
@@ -494,7 +494,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
+          <div className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Profit Factor</span>
             <div className="text-lg font-extrabold mt-1 text-slate-900 dark:text-white font-mono tabular-nums">
               {(overview?.profitFactor || 0).toFixed(2)}
@@ -504,7 +504,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
+          <div className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Max Drawdown</span>
             <div className="text-lg font-extrabold mt-1 text-[#E5484D] font-mono tabular-nums">
               {(overview?.maxDrawdownPct || 0).toFixed(1)}%
@@ -516,7 +516,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Recent Trades Table (Matching Reference B Clean Card Style) */}
-        <div className="bg-white dark:bg-[#19191C] rounded-2xl p-5 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs space-y-4">
+        <div className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-5 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-extrabold text-[#121212] dark:text-white tracking-tight">
               Recent Executed Trades
