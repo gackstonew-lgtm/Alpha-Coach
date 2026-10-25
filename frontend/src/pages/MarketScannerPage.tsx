@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PrimaryAction } from '../components/common/PrimaryAction';
+import { SkeletonTile } from '../components/common/Skeleton';
 import { Scan, RefreshCw, AlertTriangle, TrendingUp } from 'lucide-react';
 import { api } from '../services/api';
 import { MetaHead } from '../components/common/MetaHead';
@@ -70,14 +72,12 @@ export const MarketScannerPage: React.FC = () => {
           </p>
         </div>
 
-        <button
+        <PrimaryAction
+          label={isScanning ? 'Scanning Markets...' : 'Run Market Scan'}
+          icon={<RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />}
           onClick={handleRunScanner}
-          disabled={isScanning}
-          className="flex items-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-xl text-xs font-semibold hover:opacity-90 transition disabled:opacity-50 shadow-md self-start sm:self-auto"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-          <span>{isScanning ? 'Scanning Markets...' : 'Run Market Scan'}</span>
-        </button>
+          loading={isScanning}
+        />
       </div>
 
       {/* Error Notification */}

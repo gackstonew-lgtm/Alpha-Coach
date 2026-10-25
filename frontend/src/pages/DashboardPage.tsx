@@ -25,6 +25,13 @@ import {
 } from 'recharts';
 import { Link } from 'react-router-dom';
 import { MarketSessionsStrip } from '../components/dashboard/MarketSessionsStrip';
+import { PrimaryAction } from '../components/common/PrimaryAction';
+import { BentoGrid, BentoTile } from '../components/common/BentoGrid';
+import { SkeletonMetricCard, SkeletonChart, SkeletonTile, SkeletonTable } from '../components/common/Skeleton';
+import { BottomSheet } from '../components/common/BottomSheet';
+import { useNavigate } from 'react-router-dom';
+import { RefreshCw } from 'lucide-react';
+
 
 export const DashboardPage: React.FC = () => {
   const { selectedAccountId, selectedAccount, accounts, isLoadingAccounts } = useAccounts();
@@ -34,6 +41,10 @@ export const DashboardPage: React.FC = () => {
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
   const [riskMonitor, setRiskMonitor] = useState<any>(null);
   const [chartMode, setChartMode] = useState<'cumulative' | 'equity'>('cumulative');
+  const navigate = useNavigate();
+  const [selectedTradeDetail, setSelectedTradeDetail] = useState<any | null>(null);
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState<boolean>(false);
+
 
   // Account Balance & Equity computations (derived from connected MT5 accounts)
   const hasAccounts = accounts.length > 0;
@@ -190,10 +201,47 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Dashboard Header with Single Dominant PrimaryAction */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-content-primary">
+            Trading Cockpit
+          </h1>
+          <p className="text-xs text-content-secondary mt-0.5">
+            Real-time MT5 account metrics, reconstructed equity curve & risk parameters
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <PrimaryAction
+            label={isLoading ? 'Syncing...' : 'Sync MT5 Deals'}
+            icon={<RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+            onClick={loadDashboardData}
+            loading={isLoading}
+          />
+        </div>
+      </div>
+
       {/* Global Forex Market Sessions Strip */}
       <MarketSessionsStrip />
 
-      {/* Account Metric Grid */}
+      {/* Layout-Exact Skeleton Loading (Zero Layout Shift) */}
+      {isLoading ? (
+        <div className="space-y-6 animate-in fade-in duration-150">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <SkeletonMetricCard />
+            <SkeletonMetricCard />
+            <SkeletonMetricCard />
+            <SkeletonMetricCard />
+          </div>
+          <SkeletonChart />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <SkeletonTile height="h-64" />
+            <SkeletonTable rows={4} columns={5} className="lg:col-span-2" />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Account Metric Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Net P/L */}
         <div className="framer-card-interactive p-5 rounded-2xl">
@@ -624,7 +672,7 @@ export const DashboardPage: React.FC = () => {
                   recentTrades.map(trade => {
                     const isWin = Number(trade.net_profit) >= 0;
                     return (
-                      <tr key={trade.id} className="hover:bg-surface-secondary/70 transition-colors">
+                      <tr key={trade.id} className="hover:bg-surface-secondary/70 transition-colors cursor-pointer group" onClick={() => { setSelectedTradeDetail(trade); setIsDetailSheetOpen(true); }}>
                         <td className="py-3 font-bold text-content-primary">{trade.symbol}</td>
                         <td className="py-3">
                           <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
@@ -657,6 +705,68 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+        </>
+      )}
+
+      {/* Reconstructed Trade Quick Detail BottomSheet */}
+      <BottomSheet
+        isOpen={isDetailSheetOpen}
+        onClose={() => {
+          setIsDetailSheetOpen(false);
+          setSelectedTradeDetail(null);
+        }}
+        title={selectedTradeDetail ? `${selectedTradeDetail.symbol} ${selectedTradeDetail.position_type} Position` : 'Trade Detail'}
+        subtitle={selectedTradeDetail ? `Ticket #${selectedTradeDetail.ticket || selectedTradeDetail.id?.slice(0, 8)} • ${selectedTradeDetail.session_name || 'MT5'}` : undefined}
+        primaryAction={{
+          label: 'View Full Journal Entry',
+          onClick: () => {
+            setIsDetailSheetOpen(false);
+            navigate('/journal');
+          }
+        }}
+        secondaryAction={{
+          label: 'Close',
+          onClick: () => setIsDetailSheetOpen(false)
+        }}
+      >
+        {selectedTradeDetail && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 font-mono">
+              <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle">
+                <span className="text-[11px] font-sans text-content-muted block">Net Realized P/L</span>
+                <span className={`text-base font-extrabold ${Number(selectedTradeDetail.net_profit) >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  {Number(selectedTradeDetail.net_profit) >= 0 ? '+' : ''}${Number(selectedTradeDetail.net_profit).toFixed(2)}
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle">
+                <span className="text-[11px] font-sans text-content-muted block">Volume / Lots</span>
+                <span className="text-base font-extrabold text-content-primary">
+                  {selectedTradeDetail.total_volume} lots
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 p-3.5 rounded-xl bg-surface-secondary/70 border border-border-subtle font-mono text-xs">
+              <div className="flex justify-between">
+                <span className="text-content-muted font-sans">Execution Price:</span>
+                <span className="text-content-primary font-bold">{selectedTradeDetail.entry_price_avg} → {selectedTradeDetail.exit_price_avg || 'Open'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-content-muted font-sans">Execution Commission:</span>
+                <span className="text-content-primary">${Number(selectedTradeDetail.commission || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-content-muted font-sans">Trading Session:</span>
+                <span className="text-content-primary font-sans font-semibold">{selectedTradeDetail.session_name || 'Off-Hours'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-content-muted font-sans">Status:</span>
+                <span className="font-sans font-bold text-sky-500">{selectedTradeDetail.status}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 };

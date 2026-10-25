@@ -136,7 +136,7 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
           <button
             onClick={handleQuickSync}
             disabled={isSyncing}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-sky-500/20 transition-all active:scale-95 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-surface-secondary border border-border-strong text-content-primary rounded-xl text-xs font-semibold transition-all active:scale-95 disabled:opacity-50"
             title="Synchronize MetaTrader 5 deals"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />

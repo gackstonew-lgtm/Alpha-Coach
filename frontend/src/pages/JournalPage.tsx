@@ -1,3 +1,6 @@
+import { PrimaryAction } from '../components/common/PrimaryAction';
+import { Skeleton } from '../components/common/Skeleton';
+import { BottomSheet } from '../components/common/BottomSheet';
 import React, { useState, useEffect } from 'react';
 import { useAccounts } from '../context/AccountContext';
 import { api } from '../services/api';
@@ -230,13 +233,11 @@ export const JournalPage: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-2">
-          <button
+          <PrimaryAction
+            label="Voice Journal"
+            icon={<Mic className="w-4 h-4" />}
             onClick={() => setIsVoiceModalOpen(true)}
-            className="framer-btn-primary flex items-center space-x-2"
-          >
-            <Mic className="w-4 h-4" />
-            <span>Voice Journal</span>
-          </button>
+          />
         </div>
       </div>
 
@@ -372,12 +373,22 @@ export const JournalPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-border-subtle font-mono">
               {isLoading ? (
-                <tr>
-                  <td colSpan={12} className="py-12 text-center text-content-muted">
-                    <div className="inline-block w-6 h-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin mb-2" />
-                    <div>Synchronizing journal entries from MT5...</div>
-                  </td>
-                </tr>
+                Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={`skel-${i}`} className="border-b border-border-subtle/50 animate-pulse">
+                    <td className="px-4 py-3.5"><div className="w-16 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="w-20 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="w-12 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="w-10 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="w-14 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="w-16 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="w-16 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="w-12 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="w-20 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="w-24 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5"><div className="w-20 h-4 bg-surface-secondary rounded" /></td>
+                    <td className="px-4 py-3.5 text-right"><div className="w-12 h-4 bg-surface-secondary rounded ml-auto" /></td>
+                  </tr>
+                ))
               ) : trades.length === 0 ? (
                 <tr>
                   <td colSpan={12} className="py-12 text-center text-content-muted">

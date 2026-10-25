@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { PrimaryAction } from '../components/common/PrimaryAction';
+import { SkeletonTable } from '../components/common/Skeleton';
 import { Calendar, RefreshCw, AlertTriangle, Filter, TrendingUp, AlertCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
@@ -90,14 +92,12 @@ export const MacroCalendarPage: React.FC = () => {
           </p>
         </div>
 
-        <button
+        <PrimaryAction
+          label={isRefreshing ? 'Refreshing...' : 'Refresh Calendar'}
+          icon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
           onClick={() => loadCalendarData(true)}
-          disabled={isRefreshing || isLoading}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-secondary hover:bg-surface border border-border-subtle rounded-xl text-xs font-semibold text-content-primary transition disabled:opacity-50 shadow-sm self-start sm:self-auto"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span>{isRefreshing ? 'Refreshing...' : 'Refresh Calendar'}</span>
-        </button>
+          loading={isRefreshing}
+        />
       </div>
 
       {/* Error Notification */}

@@ -1,3 +1,5 @@
+import { PrimaryAction } from '../components/common/PrimaryAction';
+import { BottomSheet } from '../components/common/BottomSheet';
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -38,6 +40,7 @@ export const ChartsPage: React.FC = () => {
   const paramSymbol = searchParams.get('symbol');
   const { selectedAccountId } = useAccounts();
   const [activeSymbol, setActiveSymbol] = useState<string>(paramSymbol || 'EURUSD');
+  const [isSymbolPickerOpen, setIsSymbolPickerOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (paramSymbol && paramSymbol !== activeSymbol) {
@@ -172,6 +175,13 @@ export const ChartsPage: React.FC = () => {
           >
             <RefreshCw className={`w-4 h-4 ${isLoadingTrades ? 'animate-spin' : ''}`} />
           </button>
+
+          <PrimaryAction
+            label={activeSymbol}
+            icon={<Search className="w-4 h-4" />}
+            onClick={() => setIsSymbolPickerOpen(true)}
+            title="Change active chart symbol"
+          />
         </div>
       </div>
 
@@ -285,6 +295,59 @@ export const ChartsPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Symbol Search & Watchlist BottomSheet */}
+      <BottomSheet
+        isOpen={isSymbolPickerOpen}
+        onClose={() => setIsSymbolPickerOpen(false)}
+        title="Market Watchlist"
+        subtitle="Select currency pair or metal to render on TradingView chart"
+        secondaryAction={{
+          label: 'Close',
+          onClick: () => setIsSymbolPickerOpen(false)
+        }}
+      >
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-content-muted absolute left-3 top-3" />
+            <input
+              type="text"
+              placeholder="Search symbol, category or name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-surface-secondary border border-border-subtle rounded-xl pl-9 pr-3 py-2 text-xs text-content-primary focus:outline-none focus:border-sky-500 font-mono"
+            />
+          </div>
+
+          <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
+            {filteredWatchlist.map((item) => {
+              const isSelected = activeSymbol === item.symbol;
+              return (
+                <div
+                  key={item.symbol}
+                  onClick={() => {
+                    setActiveSymbol(item.symbol);
+                    setIsSymbolPickerOpen(false);
+                  }}
+                  className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${
+                    isSelected
+                      ? 'bg-sky-500/10 border-sky-500/40 text-sky-500 font-bold'
+                      : 'bg-surface-secondary/40 border-border-subtle hover:bg-surface-secondary text-content-secondary hover:text-content-primary'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold font-mono text-xs">{item.symbol}</span>
+                    <span className="text-[10px] text-content-muted font-sans">{item.name}</span>
+                  </div>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border-subtle text-content-muted font-mono">
+                    {item.category}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 };

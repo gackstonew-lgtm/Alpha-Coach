@@ -1,3 +1,5 @@
+import { PrimaryAction } from '../components/common/PrimaryAction';
+import { SkeletonMetricCard } from '../components/common/Skeleton';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Scale, RefreshCw, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
@@ -75,14 +77,12 @@ export const CurrencyStrengthPage: React.FC = () => {
             ))}
           </div>
 
-          <button
+          <PrimaryAction
+            label={isRefreshing ? 'Updating...' : 'Refresh Matrix'}
+            icon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
             onClick={() => loadStrengthData(true)}
-            disabled={isRefreshing || isLoading}
-            className="flex items-center gap-2 px-3 py-2 bg-surface-secondary hover:bg-surface border border-border-subtle rounded-xl text-xs font-semibold text-content-primary transition disabled:opacity-50 shadow-sm"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">{isRefreshing ? 'Updating...' : 'Refresh'}</span>
-          </button>
+            loading={isRefreshing}
+          />
         </div>
       </div>
 

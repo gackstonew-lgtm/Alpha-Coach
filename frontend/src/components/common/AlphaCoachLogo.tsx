@@ -13,27 +13,35 @@ export const ArcadeFxLogo: React.FC<LogoProps> = ({
   showWordmark = true,
   variant = 'auto'
 }) => {
-  // Dimension tokens scaled for crisp display across all device viewports
+  // Dimension tokens scaled slightly larger for crisp visibility across all screens
   const sizeStyles = {
     sm: {
-      wordmark: 'h-8 sm:h-9 w-auto',
-      mark: 'h-8 w-8',
-      container: 'px-2 py-0.5'
-    },
-    md: {
-      wordmark: 'h-10 sm:h-11 w-auto',
-      mark: 'h-10 w-10',
+      wordmark: 'h-9 sm:h-10 w-auto',
+      mark: 'h-9 w-9',
+      width: 140,
+      height: 40,
       container: 'px-2.5 py-1'
     },
+    md: {
+      wordmark: 'h-11 sm:h-12 w-auto',
+      mark: 'h-11 w-11',
+      width: 175,
+      height: 48,
+      container: 'px-3 py-1'
+    },
     lg: {
-      wordmark: 'h-14 sm:h-16 w-auto',
-      mark: 'h-14 w-14',
-      container: 'px-3 py-1.5'
+      wordmark: 'h-16 sm:h-18 w-auto',
+      mark: 'h-16 w-16',
+      width: 250,
+      height: 72,
+      container: 'px-3.5 py-1.5'
     },
     xl: {
-      wordmark: 'h-20 sm:h-24 w-auto',
-      mark: 'h-20 w-20',
-      container: 'px-4 py-2'
+      wordmark: 'h-22 sm:h-26 w-auto',
+      mark: 'h-22 w-22',
+      width: 360,
+      height: 104,
+      container: 'px-5 py-2.5'
     }
   }[size];
 
@@ -41,13 +49,15 @@ export const ArcadeFxLogo: React.FC<LogoProps> = ({
   if (variant === 'badge' || (!showWordmark && variant === 'auto')) {
     return (
       <div
-        className={`inline-flex items-center justify-center select-none flex-shrink-0 ${className}`}
+        className={`inline-flex items-center justify-center select-none shrink-0 ${className}`}
         role="img"
         aria-label="Arcade Fx"
       >
         <img
           src="/brand/arcade-fx-badge.png"
           alt="Arcade Fx"
+          width={sizeStyles.height}
+          height={sizeStyles.height}
           className={`${sizeStyles.mark} object-contain transition-transform duration-200 hover:scale-105`}
           loading="eager"
           decoding="async"
@@ -58,7 +68,7 @@ export const ArcadeFxLogo: React.FC<LogoProps> = ({
 
   return (
     <div
-      className={`inline-flex items-center select-none flex-shrink-0 ${className}`}
+      className={`inline-flex items-center select-none shrink-0 ${className}`}
       role="img"
       aria-label="Arcade Fx"
     >
@@ -71,6 +81,8 @@ export const ArcadeFxLogo: React.FC<LogoProps> = ({
               src="/brand/arcade-fx-wordmark.png"
               srcSet="/brand/arcade-fx-wordmark.png 1x, /brand/arcade-fx-wordmark@2x.png 2x, /brand/arcade-fx-wordmark@3x.png 3x"
               alt="Arcade Fx"
+              width={sizeStyles.width}
+              height={sizeStyles.height}
               className={`${sizeStyles.wordmark} object-contain transition-opacity duration-200`}
               loading="eager"
               decoding="async"
@@ -80,6 +92,8 @@ export const ArcadeFxLogo: React.FC<LogoProps> = ({
           <img
             src="/brand/arcade-fx-mark.png"
             alt="Arcade Fx"
+            width={sizeStyles.height}
+            height={sizeStyles.height}
             className={`${sizeStyles.mark} object-contain`}
             loading="eager"
             decoding="async"
@@ -97,6 +111,8 @@ export const ArcadeFxLogo: React.FC<LogoProps> = ({
                 src="/brand/arcade-fx-wordmark.png"
                 srcSet="/brand/arcade-fx-wordmark.png 1x, /brand/arcade-fx-wordmark@2x.png 2x"
                 alt="Arcade Fx"
+                width={sizeStyles.width}
+                height={sizeStyles.height}
                 className={`${sizeStyles.wordmark} object-contain`}
                 loading="eager"
                 decoding="async"
@@ -107,6 +123,8 @@ export const ArcadeFxLogo: React.FC<LogoProps> = ({
           <img
             src="/brand/arcade-fx-badge.png"
             alt="Arcade Fx"
+            width={sizeStyles.height}
+            height={sizeStyles.height}
             className={`${sizeStyles.mark} object-contain shadow-xs rounded-full`}
             loading="eager"
             decoding="async"
