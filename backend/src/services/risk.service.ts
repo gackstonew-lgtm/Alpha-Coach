@@ -1,8 +1,326 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDatabase } from '../db/db';
 import { RiskRule } from '../models/types';
+import { PositionSizingInput, PositionSizingResult } from '../models/intelligence.types';
+import { getInstrumentSpec, priceDiffInPips, roundPrice } from './marketData.service';
+
+// Reference USD exchange rates (1 unit of currency in USD) used as fallback when live cross conversion is not supplied
+const FALLBACK_CURRENCY_TO_USD_RATES: Record<string, number> = {
+  USD: 1.0,
+  EUR: 1.085,
+  GBP: 1.295,
+  AUD: 0.665,
+  NZD: 0.605,
+  CAD: 0.725,
+  CHF: 1.155,
+  JPY: 1 / 150.0
+};
 
 export class RiskGuardianService {
+  /**
+   * Resolves conversion rate from `fromCurrency` (typically instrument quoteCurrency) into `toAccountCurrency`.
+   */
+  public static resolveQuoteToAccountRate(
+    baseCurrency: string,
+    quoteCurrency: string,
+    accountCurrency: string,
+    entryPrice: number,
+    customRates?: Record<string, number>
+  ): number {
+    const quote = quoteCurrency.toUpperCase();
+    const base = baseCurrency.toUpperCase();
+    const acct = accountCurrency.toUpperCase();
+
+    if (quote === acct) {
+      return 1.0;
+    }
+
+    if (customRates) {
+      const directKey = `${quote}${acct}`;
+      const inverseKey = `${acct}${quote}`;
+      if (customRates[quote] && customRates[quote] > 0) {
+        return customRates[quote];
+      }
+      if (customRates[directKey] && customRates[directKey] > 0) {
+        return customRates[directKey];
+      }
+      if (customRates[inverseKey] && customRates[inverseKey] > 0) {
+        return 1 / customRates[inverseKey];
+      }
+    }
+
+    // If the instrument itself has accountCurrency as baseCurrency (e.g., USDJPY for a USD account, or EURGBP for a EUR account),
+    // then 1 unit of quoteCurrency = (1 / entryPrice) units of accountCurrency!
+    if (base === acct && entryPrice > 0) {
+      return 1 / entryPrice;
+    }
+
+    // Use USD reference bridge: (quote -> USD) / (acct -> USD)
+    const quoteInUsd = FALLBACK_CURRENCY_TO_USD_RATES[quote] ?? 1.0;
+    const acctInUsd = FALLBACK_CURRENCY_TO_USD_RATES[acct] ?? 1.0;
+    return quoteInUsd / acctInUsd;
+  }
+
+  /**
+   * Module I — Deterministic Position Size, Pip Value, Friction Cost, and Multi-Target R:R Calculator.
+   */
+  public static calculatePositionSize(input: PositionSizingInput): PositionSizingResult {
+    const warnings: string[] = [];
+    const spec = getInstrumentSpec(input.symbol);
+    const accountCurrency = (input.accountCurrency || 'USD').toUpperCase();
+    const balance = Math.max(0, Number(input.accountBalance) || 0);
+    const equity =
+      input.accountEquity !== undefined && input.accountEquity !== null
+        ? Math.max(0, Number(input.accountEquity))
+        : balance;
+
+    const sizingCapital = equity > 0 ? Math.min(balance, equity) : balance;
+    const riskPct = Math.max(0, Number(input.riskPercentage) || 0);
+    if (riskPct > 3.0) {
+      warnings.push(
+        `High per-trade risk warning: ${riskPct.toFixed(2)}% exceeds institutional 1%–2% risk guideline.`
+      );
+    }
+
+    const entryPrice = Number(input.entryPrice);
+    const stopLossPrice = Number(input.stopLossPrice);
+    const stopDistancePrice = Math.abs(entryPrice - stopLossPrice);
+    const stopDistancePips = priceDiffInPips(spec.symbol, stopDistancePrice);
+
+    if (stopDistancePips <= 0) {
+      warnings.push('Invalid Stop Loss: Stop Loss price must differ from Entry price.');
+    } else if (stopDistancePips < spec.typicalSpreadPips * 2) {
+      warnings.push(
+        `Stop distance (${stopDistancePips} pips) is dangerously tight relative to typical spread (${spec.typicalSpreadPips} pips).`
+      );
+    }
+
+    const inferredDirection: 'BUY' | 'SELL' =
+      input.direction || (stopLossPrice <= entryPrice ? 'BUY' : 'SELL');
+
+    if (inferredDirection === 'BUY' && stopLossPrice >= entryPrice) {
+      warnings.push('Directional mismatch: BUY order requires Stop Loss below Entry Price.');
+    } else if (inferredDirection === 'SELL' && stopLossPrice <= entryPrice) {
+      warnings.push('Directional mismatch: SELL order requires Stop Loss above Entry Price.');
+    }
+
+    const pipValuePerStandardLotInQuote = spec.contractSize * spec.pipSize;
+    const quoteToAccountRateUsed = this.resolveQuoteToAccountRate(
+      spec.baseCurrency,
+      spec.quoteCurrency,
+      accountCurrency,
+      entryPrice,
+      input.conversionRatesToAccountCurrency
+    );
+
+    const pipValuePerStandardLotInAccountCurrency = Number(
+      (pipValuePerStandardLotInQuote * quoteToAccountRateUsed).toFixed(4)
+    );
+
+    const spreadPipsAssumed =
+      input.spreadPipsOverride !== undefined && input.spreadPipsOverride >= 0
+        ? input.spreadPipsOverride
+        : spec.typicalSpreadPips;
+    const commissionPerLotCurrency = Math.max(0, Number(input.commissionPerLotRoundTurn) || 0);
+
+    const spreadCostPerLotCurrency =
+      spreadPipsAssumed * pipValuePerStandardLotInAccountCurrency;
+    const totalFrictionCostPerLotCurrency = Number(
+      (spreadCostPerLotCurrency + commissionPerLotCurrency).toFixed(2)
+    );
+
+    const riskAmountCurrency = Number(((sizingCapital * riskPct) / 100).toFixed(2));
+
+    // Risk per 1.00 standard lot including stop loss + round-turn commission
+    const lossPerStandardLotCurrency =
+      stopDistancePips * pipValuePerStandardLotInAccountCurrency + commissionPerLotCurrency;
+
+    let recommendedLotSizeRaw = 0;
+    let recommendedLotSize = 0;
+
+    if (lossPerStandardLotCurrency > 0 && riskAmountCurrency > 0 && stopDistancePips > 0) {
+      recommendedLotSizeRaw = Number(
+        (riskAmountCurrency / lossPerStandardLotCurrency).toFixed(4)
+      );
+      // Floor to lotStep so risk never exceeds target riskAmountCurrency
+      const steps = Math.floor((recommendedLotSizeRaw + 1e-9) / spec.lotStep);
+      const steppedLots = Number((steps * spec.lotStep).toFixed(2));
+
+      if (steppedLots < spec.minLot) {
+        warnings.push(
+          `Calculated position size (${recommendedLotSizeRaw.toFixed(3)} lots) is below minimum broker lot size (${spec.minLot}). Executing ${spec.minLot} lot will exceed target risk %.`
+        );
+        recommendedLotSize = 0;
+      } else if (steppedLots > spec.maxLot) {
+        warnings.push(
+          `Calculated position size (${steppedLots} lots) clamped to instrument maximum lot size (${spec.maxLot}).`
+        );
+        recommendedLotSize = spec.maxLot;
+      } else {
+        recommendedLotSize = steppedLots;
+      }
+    }
+
+    const recommendedUnits = Math.round(recommendedLotSize * spec.contractSize);
+    const effectiveRiskAmountWithFriction = Number(
+      (
+        recommendedLotSize *
+        (stopDistancePips * pipValuePerStandardLotInAccountCurrency +
+          totalFrictionCostPerLotCurrency)
+      ).toFixed(2)
+    );
+    const effectiveRiskPercentage =
+      sizingCapital > 0
+        ? Number(((effectiveRiskAmountWithFriction / sizingCapital) * 100).toFixed(2))
+        : 0;
+
+    const tpList = input.takeProfitPrices || [];
+    const targets = tpList.map((tp, idx) => {
+      const rewardDistancePrice =
+        inferredDirection === 'BUY' ? tp - entryPrice : entryPrice - tp;
+      const rewardPips =
+        rewardDistancePrice > 0
+          ? priceDiffInPips(spec.symbol, rewardDistancePrice)
+          : -priceDiffInPips(spec.symbol, Math.abs(rewardDistancePrice));
+
+      const grossRewardCurrency = Number(
+        (
+          recommendedLotSize *
+          rewardPips *
+          pipValuePerStandardLotInAccountCurrency
+        ).toFixed(2)
+      );
+      const frictionTotal = recommendedLotSize * totalFrictionCostPerLotCurrency;
+      const netRewardCurrency = Number((grossRewardCurrency - frictionTotal).toFixed(2));
+
+      const rewardToRiskRatioGross =
+        stopDistancePips > 0 ? Number((rewardPips / stopDistancePips).toFixed(2)) : 0;
+      const rewardToRiskRatioNet =
+        effectiveRiskAmountWithFriction > 0
+          ? Number((netRewardCurrency / effectiveRiskAmountWithFriction).toFixed(2))
+          : rewardToRiskRatioGross;
+
+      return {
+        targetIndex: idx + 1,
+        targetPrice: roundPrice(spec.symbol, tp),
+        rewardPips,
+        grossRewardCurrency,
+        netRewardCurrency,
+        rewardToRiskRatioGross,
+        rewardToRiskRatioNet
+      };
+    });
+
+    return {
+      symbol: spec.symbol,
+      accountCurrency,
+      direction: inferredDirection,
+      accountBalance: balance,
+      accountEquity: equity,
+      riskPercentage: riskPct,
+      riskAmountCurrency,
+      entryPrice: roundPrice(spec.symbol, entryPrice),
+      stopLossPrice: roundPrice(spec.symbol, stopLossPrice),
+      stopDistancePrice: roundPrice(spec.symbol, stopDistancePrice),
+      stopDistancePips,
+      pipSize: spec.pipSize,
+      contractSize: spec.contractSize,
+      pipValuePerStandardLotInQuote: Number(pipValuePerStandardLotInQuote.toFixed(4)),
+      quoteToAccountRateUsed: Number(quoteToAccountRateUsed.toFixed(6)),
+      pipValuePerStandardLotInAccountCurrency,
+      spreadPipsAssumed,
+      commissionPerLotCurrency,
+      totalFrictionCostPerLotCurrency,
+      recommendedLotSizeRaw,
+      recommendedLotSize,
+      recommendedUnits,
+      effectiveRiskAmountWithFriction,
+      effectiveRiskPercentage,
+      targets,
+      warnings,
+      provenance: {
+        category: 'DETERMINISTIC_METRIC',
+        sourceProvider: 'RISK_GUARDIAN_CALCULATOR',
+        retrievedAt: new Date().toISOString(),
+        timezone: 'UTC',
+        freshnessStatus: 'FRESH',
+        ruleVersion: 'RISK-ENGINE-v1.0.0'
+      }
+    };
+  }
+
+  /**
+   * Evaluates correlated currency exposure across open positions and a proposed new trade.
+   */
+  public static async evaluateOpenCurrencyExposure(
+    accountId: string | undefined,
+    proposedSymbol: string,
+    proposedDirection: 'BUY' | 'SELL'
+  ): Promise<{
+    openPositionsCount: number;
+    currencyNetExposure: Record<string, number>;
+    correlatedExposureWarnings: string[];
+  }> {
+    const db = getDatabase();
+    let openRows: any[] = [];
+    if (accountId && accountId !== 'ALL') {
+      openRows = await db.query(
+        `SELECT symbol, position_type, total_volume FROM reconstructed_positions WHERE account_id = ? AND status = 'OPEN'`,
+        [accountId]
+      );
+    } else {
+      openRows = await db.query(
+        `SELECT symbol, position_type, total_volume FROM reconstructed_positions WHERE status = 'OPEN' LIMIT 50`
+      );
+    }
+
+    const currencyNetExposure: Record<string, number> = {};
+    const addExposure = (sym: string, dir: string, lots: number) => {
+      const spec = getInstrumentSpec(sym);
+      const sign = dir.toUpperCase().includes('BUY') ? 1 : -1;
+      currencyNetExposure[spec.baseCurrency] =
+        Number(((currencyNetExposure[spec.baseCurrency] || 0) + sign * lots).toFixed(2));
+      currencyNetExposure[spec.quoteCurrency] =
+        Number(((currencyNetExposure[spec.quoteCurrency] || 0) - sign * lots).toFixed(2));
+    };
+
+    for (const r of openRows) {
+      addExposure(r.symbol, r.position_type || 'BUY', Number(r.total_volume) || 0.1);
+    }
+
+    const proposedSpec = getInstrumentSpec(proposedSymbol);
+    const propSign = proposedDirection === 'BUY' ? 1 : -1;
+    const warnings: string[] = [];
+
+    const existingBaseExp = currencyNetExposure[proposedSpec.baseCurrency] || 0;
+    const existingQuoteExp = currencyNetExposure[proposedSpec.quoteCurrency] || 0;
+
+    if (existingBaseExp * propSign > 0) {
+      warnings.push(
+        `Correlated ${proposedSpec.baseCurrency} Exposure: You already hold net ${
+          existingBaseExp > 0 ? 'LONG' : 'SHORT'
+        } ${Math.abs(existingBaseExp)} lots on ${proposedSpec.baseCurrency}. Adding ${proposedDirection} ${
+          proposedSpec.symbol
+        } compounds single-currency risk.`
+      );
+    }
+    if (existingQuoteExp * -propSign > 0) {
+      warnings.push(
+        `Correlated ${proposedSpec.quoteCurrency} Exposure: You already hold net ${
+          existingQuoteExp > 0 ? 'LONG' : 'SHORT'
+        } ${Math.abs(existingQuoteExp)} lots on ${proposedSpec.quoteCurrency}. Adding ${proposedDirection} ${
+          proposedSpec.symbol
+        } compounds single-currency risk.`
+      );
+    }
+
+    return {
+      openPositionsCount: openRows.length,
+      currencyNetExposure,
+      correlatedExposureWarnings: warnings
+    };
+  }
+
   /**
    * Get or create default risk rule for user/account
    */
@@ -219,3 +537,4 @@ export class RiskGuardianService {
     await db.run(`UPDATE risk_alerts SET is_acknowledged = 1 WHERE id = ? AND user_id = ?`, [alertId, userId]);
   }
 }
+

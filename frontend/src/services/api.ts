@@ -1789,6 +1789,217 @@ class ApiClient {
       body: JSON.stringify({ confirmation })
     });
   }
+
+  // ==========================================
+  // Forex Intelligence Platform (Modules A - K, 14)
+  // ==========================================
+  async getWorkspace(params: {
+    symbol: string;
+    htfTimeframe?: string;
+    ltfTimeframe?: string;
+    persistReport?: boolean;
+    referenceCandleTimestamp?: string;
+  }) {
+    const query = new URLSearchParams();
+    query.set('symbol', params.symbol);
+    if (params.htfTimeframe) query.set('htfTimeframe', params.htfTimeframe);
+    if (params.ltfTimeframe) query.set('ltfTimeframe', params.ltfTimeframe);
+    if (params.persistReport) query.set('persistReport', 'true');
+    if (params.referenceCandleTimestamp) query.set('referenceCandleTimestamp', params.referenceCandleTimestamp);
+    return this.request(`/intelligence/workspace?${query.toString()}`);
+  }
+
+  async getInstruments() {
+    return this.request('/intelligence/instruments');
+  }
+
+  async getCandles(params: { symbol: string; timeframe: string; limit?: number; asOfTimestamp?: string }) {
+    const query = new URLSearchParams();
+    query.set('symbol', params.symbol);
+    query.set('timeframe', params.timeframe);
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.asOfTimestamp) query.set('asOfTimestamp', params.asOfTimestamp);
+    return this.request(`/intelligence/candles?${query.toString()}`);
+  }
+
+  async ingestCandles(payload: { symbol: string; timeframe: string; candles: any[]; sourceProvider?: string }) {
+    return this.request('/intelligence/candles/ingest', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async analyzeCRT(payload: any) {
+    return this.request('/intelligence/crt/analyze', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async analyzeSMC(payload: any) {
+    return this.request('/intelligence/smc/analyze', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async getEconomicCalendar(filters: { currency?: string; impact?: string; category?: string; status?: string; startDate?: string; endDate?: string } = {}) {
+    const query = new URLSearchParams();
+    if (filters.currency) query.set('currency', filters.currency);
+    if (filters.impact) query.set('impact', filters.impact);
+    if (filters.category) query.set('category', filters.category);
+    if (filters.status) query.set('status', filters.status);
+    if (filters.startDate) query.set('startDate', filters.startDate);
+    if (filters.endDate) query.set('endDate', filters.endDate);
+    return this.request(`/intelligence/fundamentals/calendar?${query.toString()}`);
+  }
+
+  async upsertEconomicCalendarEvent(payload: any) {
+    return this.request('/intelligence/fundamentals/calendar', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async getMacroProfiles(currency?: string) {
+    const query = currency ? `?currency=${currency}` : '';
+    return this.request(`/intelligence/fundamentals/macro${query}`);
+  }
+
+  async getPairFundamentals(symbol: string) {
+    return this.request(`/intelligence/fundamentals/pair/${symbol}`);
+  }
+
+  async getCurrencyStrength(window: string = '24H') {
+    return this.request(`/intelligence/currency-strength?window=${encodeURIComponent(window)}`);
+  }
+
+  async calculatePositionSize(payload: any) {
+    return this.request('/intelligence/risk/position-size', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async getCurrencyExposure(params: { accountId?: string; symbol?: string; direction?: string } = {}) {
+    const query = new URLSearchParams();
+    if (params.accountId) query.set('accountId', params.accountId);
+    if (params.symbol) query.set('symbol', params.symbol);
+    if (params.direction) query.set('direction', params.direction);
+    return this.request(`/intelligence/risk/exposure?${query.toString()}`);
+  }
+
+  async runBacktest(payload: any) {
+    return this.request('/intelligence/backtest/run', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async getBacktestRuns() {
+    return this.request('/intelligence/backtest/runs');
+  }
+
+  async getSavedReports(symbol?: string) {
+    const query = symbol ? `?symbol=${symbol}` : '';
+    return this.request(`/intelligence/reports${query}`);
+  }
+
+  async getTradeEnrichment(positionId: string) {
+    return this.request(`/intelligence/journal/enrichment/${positionId}`);
+  }
+
+  async enrichTrade(positionId: string, payload?: any) {
+    return this.request(`/intelligence/journal/enrichment/${positionId}`, {
+      method: 'POST',
+      body: payload ? JSON.stringify(payload) : undefined
+    });
+  }
+
+  async getJournalInsights(accountId?: string) {
+    const query = accountId ? `?accountId=${accountId}` : '';
+    return this.request(`/intelligence/journal/insights${query}`);
+  }
+
+  async getTradePlans(symbol?: string, status?: string) {
+    const query = new URLSearchParams();
+    if (symbol) query.set('symbol', symbol);
+    if (status) query.set('status', status);
+    return this.request(`/intelligence/trade-plans?${query.toString()}`);
+  }
+
+  async createTradePlan(payload: any) {
+    return this.request('/intelligence/trade-plans', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async updateTradePlanStatus(id: string, status: string, linkedPositionId?: string) {
+    return this.request(`/intelligence/trade-plans/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, linkedPositionId })
+    });
+  }
+
+  async evaluateTradePlanAlerts(symbol: string, currentPrice: number) {
+    return this.request('/intelligence/trade-plans/evaluate-alerts', {
+      method: 'POST',
+      body: JSON.stringify({ symbol, currentPrice })
+    });
+  }
+
+  // Market Scanner (Adapted from trader-scanner)
+  async scanMarket(payload?: any) {
+    return this.request('/intelligence/scanner/scan', {
+      method: 'POST',
+      body: payload ? JSON.stringify(payload) : JSON.stringify({})
+    });
+  }
+
+  async getScannerHistory() {
+    return this.request('/intelligence/scanner/history');
+  }
+
+  // Monte Carlo Simulation Engine (Adapted from trader-timemachine)
+  async runMonteCarlo(payload: any) {
+    return this.request('/intelligence/monte-carlo/simulate', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async getMonteCarloRuns() {
+    return this.request('/intelligence/monte-carlo/runs');
+  }
+
+  // Broker Order Preparation & Explicit Approval Protocol (Adapted from trader-broker)
+  async prepareBrokerOrder(payload: any) {
+    return this.request('/intelligence/broker/prepare-order', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async approveBrokerOrder(ticketId: string, userApprovalReply: string, expectedFingerprint?: string) {
+    return this.request('/intelligence/broker/approve-order', {
+      method: 'POST',
+      body: JSON.stringify({ ticketId, userApprovalReply, expectedFingerprint })
+    });
+  }
+
+  async getBrokerTickets() {
+    return this.request('/intelligence/broker/tickets');
+  }
+
+  // SEC Company Fundamentals & Congressional Disclosures (Adapted from trader-analyst & trader-pelosi)
+  async getCompanyDisclosures(ticker: string) {
+    return this.request(`/intelligence/disclosures/company/${encodeURIComponent(ticker)}`);
+  }
+
+  async getCongressionalDisclosures() {
+    return this.request('/intelligence/disclosures/congress');
+  }
 }
 
 export const api = new ApiClient();

@@ -16,7 +16,7 @@ export const PublicFooter: React.FC = () => {
             <div>
               <h4 className="font-bold text-content-primary mb-1">Zero-Password Architecture</h4>
               <p className="text-content-muted leading-relaxed">
-                Meta Coach never asks for, receives, or stores your MT5 or broker login credentials.
+                Trader&apos;s Edge never asks for, receives, or stores your MT5 or broker login credentials.
               </p>
             </div>
           </div>
@@ -103,7 +103,7 @@ export const PublicFooter: React.FC = () => {
 
             <div className="pt-2 text-[11px] text-content-muted space-y-1">
               <div className="font-semibold text-content-primary">Trader Support:</div>
-              <a href="mailto:support@metacoach.io" className="text-brand-500 hover:underline font-mono">support@metacoach.io</a>
+              <a href="mailto:support@tradersedge.io" className="text-brand-500 hover:underline font-mono">support@tradersedge.io</a>
               <div className="text-[10px] text-content-subtle">We reply within 24 hours.</div>
             </div>
           </div>
@@ -116,14 +116,14 @@ export const PublicFooter: React.FC = () => {
               Important Financial & Analytical Disclaimer
             </p>
             <p>
-              Meta Coach is a software tool developed solely for trade recording, historical analysis, mathematical performance metrics, risk awareness, and personal journaling. Meta Coach does not provide personalized investment advice, trading recommendations, or financial brokerage services. Trading foreign exchange, commodities, indices, cryptocurrencies, and equities on margin carries high risk and may not be suitable for all investors. Past performance recorded in historical journals does not guarantee future results.
+              Trader&apos;s Edge is a software tool developed solely for trade recording, historical analysis, mathematical performance metrics, risk awareness, and personal journaling. Trader&apos;s Edge does not provide personalized investment advice, trading recommendations, or financial brokerage services. Trading foreign exchange, commodities, indices, cryptocurrencies, and equities on margin carries high risk and may not be suitable for all investors. Past performance recorded in historical journals does not guarantee future results.
             </p>
           </div>
 
           {/* Copyright & Entity Notice */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-content-muted pt-4">
             <div className="flex items-center gap-2">
-              <span>&copy; 2026 Meta Coach. All rights reserved.</span>
+              <span>&copy; 2026 Trader&apos;s Edge. All rights reserved.</span>
               <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-surface-secondary border border-border-subtle">v1.0.6</span>
             </div>
             <div className="flex items-center gap-4 text-[11px]">

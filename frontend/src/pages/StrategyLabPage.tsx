@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAccounts } from '../context/AccountContext';
 import { api } from '../services/api';
 import {
@@ -10,13 +11,17 @@ import {
   Sparkles,
   Trash2,
   CheckCircle2,
-  X
+  X,
+  Compass,
+  ArrowRight
 } from 'lucide-react';
 
 export const StrategyLabPage: React.FC = () => {
+  const navigate = useNavigate();
   const { selectedAccountId } = useAccounts();
   const [strategies, setStrategies] = useState<any[]>([]);
   const [confluences, setConfluences] = useState<any[]>([]);
+  const [backtestRuns, setBacktestRuns] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [newStrategy, setNewStrategy] = useState({ name: '', description: '', rules: '', colorTag: '#3b82f6' });
@@ -28,9 +33,15 @@ export const StrategyLabPage: React.FC = () => {
   const loadStrategyData = async () => {
     try {
       setIsLoading(true);
-      const res = await api.getStrategyAnalytics(selectedAccountId);
+      const [res, btRes] = await Promise.all([
+        api.getStrategyAnalytics(selectedAccountId),
+        api.getBacktestRuns().catch(() => ({ success: false, runs: [] }))
+      ]);
       setStrategies(res.strategies || []);
       setConfluences(res.confluences || []);
+      if (btRes && btRes.success) {
+        setBacktestRuns(btRes.runs || []);
+      }
     } catch (err) {
       console.error('Failed to load Strategy Lab:', err);
     } finally {
@@ -68,13 +79,22 @@ export const StrategyLabPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="framer-btn-primary flex items-center space-x-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Strategy Setup</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => navigate('/intelligence')}
+            className="framer-btn-secondary flex items-center space-x-2"
+          >
+            <Compass className="w-4 h-4 text-brand-primary" />
+            <span>Open Backtester</span>
+          </button>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="framer-btn-primary flex items-center space-x-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Strategy Setup</span>
+          </button>
+        </div>
       </div>
 
       {/* Strategies Grid */}
@@ -143,6 +163,62 @@ export const StrategyLabPage: React.FC = () => {
                     <td className="p-3 text-trade-profit font-bold">{c.winRate}%</td>
                     <td className={`p-3 font-bold ${c.netProfit >= 0 ? 'text-trade-profit' : 'text-trade-loss'}`}>
                       ${c.netProfit.toFixed(2)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Quantitative Backtest Simulations (Module J: CRT / SMC / ICT) */}
+      <div className="framer-card p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-sm text-content-primary flex items-center space-x-2">
+            <Compass className="w-4 h-4 text-brand-primary" />
+            <span>Quantitative Strategy Backtest Simulations (Zero Look-Ahead Bias)</span>
+          </h3>
+          <button
+            onClick={() => navigate('/intelligence')}
+            className="text-xs text-brand-primary hover:underline flex items-center space-x-1"
+          >
+            <span>Run New Backtest</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-surface-secondary/70 text-content-muted font-semibold border-b border-border-subtle uppercase text-[10px] tracking-wider">
+              <tr>
+                <th className="p-3">Strategy Archetype</th>
+                <th className="p-3">Symbol / TF</th>
+                <th className="p-3">Total Trades</th>
+                <th className="p-3">Win Rate</th>
+                <th className="p-3">Profit Factor</th>
+                <th className="p-3">Max DD</th>
+                <th className="p-3">Net P/L</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-subtle font-mono">
+              {backtestRuns.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-content-muted font-sans">
+                    No backtests executed yet. Use the Market Intelligence Backtester to simulate rule-based setups.
+                  </td>
+                </tr>
+              ) : (
+                backtestRuns.map(run => (
+                  <tr key={run.runId} className="hover:bg-surface-secondary/50 transition">
+                    <td className="p-3 font-sans font-bold text-content-primary">{run.strategyName}</td>
+                    <td className="p-3 text-content-secondary">{run.symbol} • {run.timeframe}</td>
+                    <td className="p-3">{run.totalTrades}</td>
+                    <td className="p-3 text-trade-profit font-bold">{run.winRate}%</td>
+                    <td className="p-3 text-brand-primary font-bold">{run.profitFactor}</td>
+                    <td className="p-3 text-trade-loss font-bold">{run.maxDrawdownPct}%</td>
+                    <td className={`p-3 font-bold ${run.netProfitUSD >= 0 ? 'text-trade-profit' : 'text-trade-loss'}`}>
+                      ${run.netProfitUSD.toFixed(2)}
                     </td>
                   </tr>
                 ))

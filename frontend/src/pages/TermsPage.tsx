@@ -10,8 +10,8 @@ export const TermsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="Terms of Service & Operational Conditions | Meta Coach"
-        description="Comprehensive terms of service for Meta Coach trading journal, MT5 local bridge daemon, software licensing, and user responsibilities."
+        title="Terms of Service & Operational Conditions | Trader's Edge"
+        description="Comprehensive terms of service for Trader's Edge trading journal, MT5 local bridge daemon, software licensing, and user responsibilities."
         canonicalPath="/terms"
       />
       <PublicNavbar />
@@ -25,7 +25,7 @@ export const TermsPage: React.FC = () => {
           <div>
             <span className="font-bold uppercase tracking-wider block mb-0.5">Notice to Users & Compliance Reviewers</span>
             <span>
-              This document represents our preliminary operational terms draft and is currently pending formal legal review. The conditions below govern access to the Meta Coach trading operating system.
+              This document represents our preliminary operational terms draft and is currently pending formal legal review. The conditions below govern access to the Trader&apos;s Edge trading operating system.
             </span>
           </div>
         </div>
@@ -53,7 +53,7 @@ export const TermsPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="text-base sm:text-lg font-bold text-content-primary">1. Acceptance of Terms</h2>
             <p>
-              By accessing, registering for, or using the Meta Coach software application, website, local MT5 bridge, or related services (collectively, the "Platform"), provided by [COMPANY LEGAL NAME] ("we", "us", or "our"), you agree to be bound by these Terms of Service and Conditions ("Terms"). If you do not agree with any part of these Terms, you must immediately cease all use of the Platform.
+              By accessing, registering for, or using the Trader&apos;s Edge software application, website, local MT5 bridge, or related services (collectively, the "Platform"), provided by [COMPANY LEGAL NAME] ("we", "us", or "our"), you agree to be bound by these Terms of Service and Conditions ("Terms"). If you do not agree with any part of these Terms, you must immediately cease all use of the Platform.
             </p>
           </section>
 
@@ -66,7 +66,7 @@ export const TermsPage: React.FC = () => {
                 <span>Non-Advisory & Analytical Scope</span>
               </div>
               <p className="text-xs text-content-muted">
-                Meta Coach is strictly a personal software application designed for trade journaling, statistical performance analysis, position reconstruction, and behavioral self-reflection. Meta Coach is NOT a registered financial advisor, broker-dealer, commodity trading advisor, or investment manager. Nothing on the Platform constitutes personalized financial, investment, legal, or tax advice.
+                Trader&apos;s Edge is strictly a personal software application designed for trade journaling, statistical performance analysis, position reconstruction, and behavioral self-reflection. Trader&apos;s Edge is NOT a registered financial advisor, broker-dealer, commodity trading advisor, or investment manager. Nothing on the Platform constitutes personalized financial, investment, legal, or tax advice.
               </p>
             </div>
             <p>
@@ -86,7 +86,7 @@ export const TermsPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="text-base sm:text-lg font-bold text-content-primary">4. MT5 Connection & Zero-Password Model</h2>
             <p>
-              Meta Coach utilizes a local desktop bridge script that interacts with your locally installed MetaTrader 5 client via official IPC APIs. Meta Coach does not request, receive, or store your MT5 or broker login passwords. You are solely responsible for:
+              Trader&apos;s Edge utilizes a local desktop bridge script that interacts with your locally installed MetaTrader 5 client via official IPC APIs. Trader&apos;s Edge does not request, receive, or store your MT5 or broker login passwords. You are solely responsible for:
             </p>
             <ul className="list-disc pl-5 space-y-1 text-content-muted text-xs">
               <li>Maintaining the security of your local desktop machine and MT5 terminal installation.</li>

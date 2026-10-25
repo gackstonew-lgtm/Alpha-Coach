@@ -1,5 +1,5 @@
 /**
- * Meta Coach Client Sentry Monitoring (Env-based & Safe Fallback)
+ * Trader's Edge Client Sentry Monitoring (Env-based & Safe Fallback)
  * Automatically activates if VITE_SENTRY_DSN is configured in environment.
  * Zero overhead and crash-proof when unconfigured.
  */

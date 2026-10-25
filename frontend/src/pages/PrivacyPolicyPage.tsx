@@ -10,8 +10,8 @@ export const PrivacyPolicyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="Privacy Policy & Trader Data Sovereignty | Meta Coach"
-        description="Meta Coach privacy policy: Zero-Password architecture, local read-only MT5 integration, data encryption, and GDPR compliance."
+        title="Privacy Policy & Trader Data Sovereignty | Trader's Edge"
+        description="Trader's Edge privacy policy: Zero-Password architecture, local read-only MT5 integration, data encryption, and GDPR compliance."
         canonicalPath="/privacy"
       />
       <PublicNavbar />
@@ -53,7 +53,7 @@ export const PrivacyPolicyPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="text-base sm:text-lg font-bold text-content-primary">1. Introduction & Scope</h2>
             <p>
-              [COMPANY LEGAL NAME] ("we", "us", or "Meta Coach") values your privacy. This Privacy Policy outlines what information we collect, how it is processed, stored, and protected when you use our web platform, APIs, and local MT5 bridge integration.
+              [COMPANY LEGAL NAME] ("we", "us", or "Trader&apos;s Edge") values your privacy. This Privacy Policy outlines what information we collect, how it is processed, stored, and protected when you use our web platform, APIs, and local MT5 bridge integration.
             </p>
           </section>
 
@@ -65,7 +65,7 @@ export const PrivacyPolicyPage: React.FC = () => {
               <div className="space-y-1">
                 <div className="font-bold text-content-primary">We Never Collect Broker Credentials</div>
                 <p className="text-xs text-content-muted">
-                  Meta Coach does not ask for, intercept, receive, or store your MT5 master passwords, investor passwords, or broker credentials. All communication with MetaTrader 5 occurs on your local machine using the official MetaTrader5 Python desktop library.
+                  Trader&apos;s Edge does not ask for, intercept, receive, or store your MT5 master passwords, investor passwords, or broker credentials. All communication with MetaTrader 5 occurs on your local machine using the official MetaTrader5 Python desktop library.
                 </p>
               </div>
             </div>

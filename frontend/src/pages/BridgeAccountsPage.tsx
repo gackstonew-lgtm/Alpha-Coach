@@ -206,7 +206,7 @@ export const BridgeAccountsPage: React.FC = () => {
             </div>
             <h3 className="font-bold text-content-primary">Install Companion App</h3>
             <p className="text-content-secondary text-[11px] leading-relaxed">
-              Download and run the Meta Coach MT5 Companion on the Windows machine where MetaTrader 5 is installed.
+              Download and run the Trader&apos;s Edge MT5 Companion on the Windows machine where MetaTrader 5 is installed.
             </p>
           </div>
 
@@ -241,7 +241,7 @@ export const BridgeAccountsPage: React.FC = () => {
         <div className="p-4 rounded-2xl bg-surface border border-border-subtle flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-content-secondary font-sans">Meta Coach Cloud:</span>
+            <span className="text-content-secondary font-sans">Trader&apos;s Edge Cloud:</span>
             <span className="text-emerald-400 font-bold">ONLINE</span>
           </div>
 

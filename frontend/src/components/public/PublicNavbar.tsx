@@ -34,7 +34,7 @@ export const PublicNavbar: React.FC = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border-subtle bg-surface/90 backdrop-blur-md transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-3 group focus:outline-none">
+        <Link to="/" className="flex items-center gap-3 group focus:outline-none" aria-label="Trader's Edge home">
           <AlphaCoachLogo size="md" showWordmark={true} />
         </Link>
 

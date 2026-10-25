@@ -1,5 +1,5 @@
 /**
- * Meta Coach Production Feature Flags Configuration
+ * Trader's Edge Production Feature Flags Configuration
  * Provides type-safe toggles with optional VITE_FF_* environment variable overrides.
  */
 

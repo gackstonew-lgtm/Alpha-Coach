@@ -1,5 +1,5 @@
 /**
- * Meta Coach PWA Service
+ * Trader's Edge PWA Service
  * Handles Service Worker registration, installation prompts, and device detection
  */
 

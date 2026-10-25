@@ -27,7 +27,9 @@ export const MetaHead: React.FC<MetaHeadProps> = ({
   const location = useLocation();
   const currentPath = canonicalPath || location.pathname;
   const canonicalUrl = `${SITE_URL}${currentPath === '/' ? '' : currentPath}`;
-  const fullTitle = title.includes('Meta Coach') ? title : `${title} | Meta Coach`;
+  const fullTitle = title.includes("Trader's Edge") || title.includes('Meta Coach')
+    ? (title.includes('Meta Coach') ? title.replace(/Meta Coach/g, "Trader's Edge") : title)
+    : `${title} | Trader's Edge`;
 
   return (
     <Helmet>
@@ -45,7 +47,7 @@ export const MetaHead: React.FC<MetaHeadProps> = ({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage.startsWith('http') ? ogImage : `${SITE_URL}${ogImage}`} />
-      <meta property="og:site_name" content="Meta Coach" />
+      <meta property="og:site_name" content="Trader's Edge" />
 
       {/* Twitter Cards */}
       <meta name="twitter:card" content="summary_large_image" />

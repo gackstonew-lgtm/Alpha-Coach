@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   LogOut,
   ChevronLeft,
-  X
+  X,
+  Compass
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { AlphaCoachLogo } from '../common/AlphaCoachLogo';
@@ -64,6 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navigationItems: NavItem[] = [
     { id: 'dashboard', name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
     { id: 'journal', name: 'Trading Journal', to: '/journal', icon: BookOpen },
+    { id: 'intelligence', name: 'Market Intelligence', to: '/intelligence', icon: Compass },
     { id: 'performance', name: 'Performance', to: '/performance', icon: LineChart },
     { id: 'strategy-lab', name: 'Strategy Lab', to: '/strategy-lab', icon: FlaskConical },
     { id: 'risk-guardian', name: 'Risk Guardian', to: '/risk-guardian', icon: ShieldAlert },
@@ -191,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div
           className={`p-3.5 border-t border-border-subtle bg-surface-secondary/40 text-[11px] text-content-muted flex items-center justify-between ${hideWhenCollapsed}`}
         >
-          <span className="font-medium">Meta Coach v1.0</span>
+          <span className="font-medium">Trader&apos;s Edge v1.0</span>
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-semibold border border-emerald-500/20">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
             MT5 Ready

@@ -1,6 +1,6 @@
-# Meta Coach REST API Reference
+# Trader's Edge REST API Reference
 
-The Meta Coach REST API serves both the web PWA frontend and local MT5 Python bridge clients.
+The Trader's Edge REST API serves both the web PWA frontend and local MT5 Python bridge clients.
 All endpoints are mounted under `/api/v1` and `/v1`.
 
 ## Base URLs
@@ -18,7 +18,7 @@ Returns system health, database latency, and build provenance.
 {
   "success": true,
   "status": "ONLINE",
-  "service": "Meta Coach Performance API",
+  "service": "Trader's Edge Performance API",
   "version": "1.0.6",
   "databaseProvider": "supabase",
   "databaseConnection": "healthy",
