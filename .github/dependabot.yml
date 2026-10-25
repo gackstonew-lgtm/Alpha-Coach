@@ -6,13 +6,32 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      backend-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
-  # Maintain dependencies for frontend
+  # Maintain dependencies for frontend (Pin Tailwind v3 LTS - ignore v4 major upgrades)
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "postcss"
+        update-types: ["version-update:semver-major"]
+    groups:
+      frontend-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Maintain dependencies for root
   - package-ecosystem: "npm"
@@ -20,6 +39,13 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      root-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Maintain dependencies for Python MT5 Bridge
   - package-ecosystem: "pip"
