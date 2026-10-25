@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   BookOpen,
   LineChart,
-  FlaskConical,
   ShieldAlert,
   Bot,
   Trophy,
@@ -12,17 +11,18 @@ import {
   Settings,
   ShieldCheck,
   LogOut,
-  ChevronLeft,
   X,
-  Compass,
   TrendingUp,
   Scan,
   Calendar,
   Scale,
-  FileText
+  FileText,
+  ChevronRight,
+  Globe,
+  UserCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { AlphaCoachLogo } from '../common/AlphaCoachLogo';
+import { ArcadeFxLogo } from '../common/AlphaCoachLogo';
 
 interface NavItem {
   id: string;
@@ -40,17 +40,11 @@ interface NavSection {
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Desktop only (lg+): shrink the sidebar to an icon rail */
   collapsed?: boolean;
   onToggleCollapse?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
-  isOpen,
-  onClose,
-  collapsed = false,
-  onToggleCollapse
-}) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const auth = useAuth() as ReturnType<typeof useAuth> & {
     logout?: () => unknown;
     signOut?: () => unknown;
@@ -59,8 +53,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Text/labels hide only on desktop when collapsed. The mobile drawer is always full width.
-  const hideWhenCollapsed = collapsed ? 'lg:hidden' : '';
+  // Desktop Hover-Intent & Focus State
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [isFocusedWithin, setIsFocusedWithin] = useState<boolean>(false);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isExpanded = isHovered || isFocusedWithin;
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    // 120ms hover-intent delay to prevent accidental flickering
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(true);
+    }, 120);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setIsHovered(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    };
+  }, []);
 
   const handleLogout = async () => {
     onClose();
@@ -72,6 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  // Sections with Analysis Hub and Strategy Lab removed
   const navSections: NavSection[] = [
     {
       title: 'Platform',
@@ -89,14 +107,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'scanner', name: 'Market Scanner', to: '/scanner', icon: Scan },
         { id: 'macro-calendar', name: 'Macro & Calendar', to: '/macro-calendar', icon: Calendar },
         { id: 'currency-strength', name: 'Currency Strength', to: '/currency-strength', icon: Scale },
-        { id: 'sec-tracker', name: 'SEC & Politician Tracker', to: '/sec-tracker', icon: FileText },
-        { id: 'intelligence', name: 'Analysis Hub', to: '/intelligence', icon: Compass }
+        { id: 'sec-tracker', name: 'SEC & Politician Tracker', to: '/sec-tracker', icon: FileText }
       ]
     },
     {
-      title: 'Quantitative & Risk',
+      title: 'Risk & Execution',
       items: [
-        { id: 'strategy-lab', name: 'Strategy Lab', to: '/strategy-lab', icon: FlaskConical },
         { id: 'risk-guardian', name: 'Risk Guardian', to: '/risk-guardian', icon: ShieldAlert }
       ]
     },
@@ -115,147 +131,236 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* ========================================================================= */}
+      {/* 1. MOBILE SLIDE-OUT DRAWER (HOSTINGER WHITE/DARK SHEET PATTERN)         */}
+      {/* ========================================================================= */}
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-200"
+          aria-hidden="true"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden animate-in fade-in duration-200"
         />
       )}
 
+      {/* Mobile Drawer */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 ${
-          collapsed ? 'lg:w-[72px]' : 'lg:w-64'
-        } bg-surface border-r border-border-subtle flex flex-col transition-[transform,width] duration-300 ease-out lg:translate-x-0 ${
+        role="dialog"
+        aria-label="Navigation Menu"
+        aria-modal={isOpen}
+        className={`fixed top-0 bottom-0 left-0 z-50 w-full max-w-[320px] bg-surface border-r border-border-subtle flex flex-col transition-transform duration-300 ease-out lg:hidden shadow-2xl ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Desktop collapse / expand button, sits on the sidebar's right edge */}
-        {onToggleCollapse && (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            aria-expanded={!collapsed}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="hidden lg:flex absolute -right-3 top-[68px] z-10 w-6 h-6 items-center justify-center rounded-full bg-surface border border-border-subtle text-content-muted hover:text-content-primary hover:bg-surface-secondary shadow-md transition"
-          >
-            <ChevronLeft
-              className={`w-4 h-4 transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`}
-            />
-          </button>
-        )}
-
-        {/* Brand Header */}
-        <div
-          className={`flex items-center justify-between px-5 py-4 border-b border-border-subtle ${
-            collapsed ? 'lg:justify-center lg:px-0' : ''
-          }`}
-        >
-          <NavLink to="/dashboard" onClick={onClose} className="flex items-center gap-2 group">
-            <span className={hideWhenCollapsed}>
-              <AlphaCoachLogo size="sm" showWordmark={true} />
-            </span>
-            {collapsed && (
-              <span className="hidden lg:block">
-                <AlphaCoachLogo size="sm" showWordmark={false} />
-              </span>
-            )}
+        {/* Mobile Header: Logo + Close */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle bg-surface">
+          <NavLink to="/dashboard" onClick={onClose} className="focus:outline-none">
+            <ArcadeFxLogo size="sm" showWordmark={true} />
           </NavLink>
           <button
+            type="button"
             onClick={onClose}
-            className="lg:hidden p-1.5 rounded-lg text-content-muted hover:text-content-primary hover:bg-surface-secondary transition"
-            aria-label="Close sidebar"
+            aria-label="Close navigation"
+            className="p-2 rounded-xl text-content-muted hover:text-content-primary hover:bg-surface-secondary transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Navigation Items (Grouped with Scroll) */}
-        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+        {/* Mobile Nav Items with Hostinger Chevron Rows */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+          {navSections.map((section, sIdx) => (
+            <div key={sIdx} className="space-y-1">
+              {section.title && (
+                <div className="px-3 pb-1 text-[11px] font-bold tracking-wider uppercase text-content-muted">
+                  {section.title}
+                </div>
+              )}
+              <div className="divide-y divide-border-subtle/50">
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const active =
+                    location.pathname === item.to ||
+                    (item.to !== '/dashboard' && location.pathname.startsWith(item.to));
+
+                  return (
+                    <NavLink
+                      key={item.id}
+                      to={item.to}
+                      onClick={onClose}
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex items-center justify-between py-3 px-3 rounded-xl text-sm font-medium transition ${
+                        active
+                          ? 'bg-brand-500/10 text-brand-500 font-semibold'
+                          : 'text-content-secondary hover:text-content-primary hover:bg-surface-secondary'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`p-1.5 rounded-lg ${
+                            active
+                              ? 'bg-brand-500 text-white'
+                              : 'bg-surface-secondary text-content-muted'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </span>
+                        <span>{item.name}</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-content-muted/60" />
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile Footer: Language + Account / Logout */}
+        <div className="p-4 border-t border-border-subtle bg-surface-secondary/40 space-y-2">
+          <div className="flex items-center justify-between text-xs text-content-muted px-1">
+            <span className="flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5" />
+              <span>English (US)</span>
+            </span>
+            <span className="flex items-center gap-1 font-mono text-[11px] text-brand-500">
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>{user?.email?.split('@')[0] || 'Trader'}</span>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl transition"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* ========================================================================= */}
+      {/* 2. DESKTOP SUPABASE-STYLE HOVER-EXPAND SIDEBAR (OVERLAY WITHOUT REFLOW)  */}
+      {/* ========================================================================= */}
+      <aside
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onFocus={() => setIsFocusedWithin(true)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setIsFocusedWithin(false);
+          }
+        }}
+        aria-label="Desktop Navigation"
+        className={`hidden lg:flex fixed top-0 bottom-0 left-0 z-50 flex-col bg-surface border-r border-border-subtle select-none transition-[width,box-shadow] duration-200 ease-out ${
+          isExpanded
+            ? 'w-64 shadow-2xl shadow-black/40'
+            : 'w-[68px] shadow-sm'
+        }`}
+      >
+        {/* Brand Header */}
+        <div className="h-16 flex items-center px-4 border-b border-border-subtle overflow-hidden">
+          <NavLink
+            to="/dashboard"
+            className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-xl"
+            aria-label="Arcade Fx Dashboard"
+          >
+            {isExpanded ? (
+              <ArcadeFxLogo size="sm" showWordmark={true} className="transition-opacity duration-200" />
+            ) : (
+              <div className="w-9 h-9 flex items-center justify-center">
+                <ArcadeFxLogo size="sm" showWordmark={false} variant="badge" />
+              </div>
+            )}
+          </NavLink>
+        </div>
+
+        {/* Nav Sections Scroll Area */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2.5 space-y-4">
           {navSections.map((section, sIdx) => (
             <div key={sIdx} className="space-y-1">
               {section.title && (
                 <div
-                  className={`px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-content-muted/70 ${hideWhenCollapsed}`}
+                  className={`text-[10px] font-bold tracking-wider uppercase text-content-muted px-2.5 pt-1 transition-all duration-150 ${
+                    isExpanded
+                      ? 'opacity-100 max-h-6'
+                      : 'opacity-0 max-h-0 pointer-events-none'
+                  }`}
                 >
                   {section.title}
                 </div>
               )}
-              {collapsed && section.title && sIdx > 0 && (
-                <div className="hidden lg:block my-2 border-t border-border-subtle/50 mx-2" />
-              )}
               {section.items.map((item) => {
                 const Icon = item.icon;
-                const isActive =
+                const active =
                   location.pathname === item.to ||
-                  (item.to !== '/dashboard' && location.pathname.startsWith(item.to + '/')) ||
-                  (item.to === '/performance' && location.pathname === '/analytics') ||
-                  (item.to === '/sec-tracker' && location.pathname === '/disclosures') ||
-                  (item.to === '/scanner' && location.pathname === '/market-scanner') ||
-                  (item.to === '/macro-calendar' && location.pathname === '/economic-calendar');
+                  (item.to !== '/dashboard' && location.pathname.startsWith(item.to));
 
                 return (
                   <NavLink
-                    key={item.to}
+                    key={item.id}
                     to={item.to}
-                    onClick={() => onClose()}
-                    title={collapsed ? item.name : undefined}
-                    aria-current={isActive ? 'page' : undefined}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group relative ${
-                      collapsed ? 'lg:justify-center lg:px-0' : ''
-                    } ${
-                      isActive
-                        ? 'bg-brand-600 text-white font-semibold shadow-md shadow-brand-500/20'
+                    title={!isExpanded ? item.name : undefined}
+                    aria-label={item.name}
+                    aria-current={active ? 'page' : undefined}
+                    className={`relative flex items-center gap-3.5 h-10 px-2.5 rounded-xl text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                      active
+                        ? 'bg-brand-500/10 text-brand-500 font-semibold'
                         : 'text-content-secondary hover:text-content-primary hover:bg-surface-secondary'
                     }`}
                   >
+                    {/* Active vertical indicator bar */}
+                    {active && (
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-brand-500 rounded-r" />
+                    )}
+
                     <Icon
-                      className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${
-                        isActive
-                          ? 'text-white scale-105'
-                          : 'text-content-muted group-hover:text-brand-500'
+                      className={`w-5 h-5 shrink-0 transition-transform duration-150 ${
+                        active ? 'text-brand-500 scale-105' : 'text-content-muted'
                       }`}
                     />
-                    <span className={`truncate ${hideWhenCollapsed}`}>{item.name}</span>
-                    {isActive && (
-                      <span
-                        className={`ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse ${hideWhenCollapsed}`}
-                      />
-                    )}
+
+                    {/* Label with slide + fade stagger */}
+                    <span
+                      className={`whitespace-nowrap overflow-hidden transition-all duration-150 ${
+                        isExpanded
+                          ? 'opacity-100 max-w-[170px] translate-x-0'
+                          : 'opacity-0 max-w-0 -translate-x-1 pointer-events-none'
+                      }`}
+                    >
+                      {item.name}
+                    </span>
                   </NavLink>
                 );
               })}
             </div>
           ))}
-        </nav>
-
-        {/* Logout, pinned below the navigation list */}
-        <div className="px-3 pb-3 border-t border-border-subtle/50 pt-2">
-          <button
-            type="button"
-            onClick={handleLogout}
-            title={collapsed ? 'Log out' : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-content-secondary hover:text-red-500 hover:bg-red-500/10 transition-all ${
-              collapsed ? 'lg:justify-center lg:px-0' : ''
-            }`}
-          >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
-            <span className={hideWhenCollapsed}>Log out</span>
-          </button>
         </div>
 
-        {/* Footer Meta */}
-        <div
-          className={`p-3.5 border-t border-border-subtle bg-surface-secondary/40 text-[11px] text-content-muted flex items-center justify-between ${hideWhenCollapsed}`}
-        >
-          <span className="font-medium">Trader&apos;s Edge v1.0</span>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-semibold border border-emerald-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-            MT5 Ready
-          </span>
+        {/* Footer: Settings */}
+        <div className="p-2.5 border-t border-border-subtle bg-surface-secondary/30">
+          <div className="flex items-center justify-between overflow-hidden">
+            <NavLink
+              to="/settings"
+              title="Settings"
+              aria-label="Settings"
+              className="flex items-center gap-3 h-10 px-2.5 rounded-xl text-xs font-medium text-content-secondary hover:text-content-primary hover:bg-surface-secondary transition w-full"
+            >
+              <Settings className="w-5 h-5 shrink-0 text-content-muted" />
+              <span
+                className={`whitespace-nowrap overflow-hidden transition-all duration-150 ${
+                  isExpanded
+                    ? 'opacity-100 max-w-[170px] translate-x-0'
+                    : 'opacity-0 max-w-0 -translate-x-1 pointer-events-none'
+                }`}
+              >
+                Settings
+              </span>
+            </NavLink>
+          </div>
         </div>
       </aside>
     </>
   );
 };
+
+export default Sidebar;
