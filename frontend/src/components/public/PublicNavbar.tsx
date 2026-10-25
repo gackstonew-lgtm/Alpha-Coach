@@ -11,7 +11,7 @@ import {
   ArrowRight,
   Shield,
   Layers,
-  Sparkles,
+  LineChart,
   BookOpen,
   LayoutDashboard,
   ChevronRight,
@@ -27,7 +27,7 @@ export const PublicNavbar: React.FC = () => {
 
   const productLinks = [
     { name: 'Trading Journal', href: '/journal', icon: BookOpen, desc: 'Automated deal grouping & lifecycle math' },
-    { name: 'Interactive Charts', href: '/charts', icon: Sparkles, desc: 'TradingView candlesticks & trade overlays' },
+    { name: 'Interactive Charts', href: '/charts', icon: LineChart, desc: 'TradingView candlesticks & trade overlays' },
     { name: 'Market Scanner', href: '/scanner', icon: Layers, desc: 'Structure alerts & ICT/SMC setup detection' },
     { name: 'Macro Calendar', href: '/macro-calendar', icon: Globe, desc: 'High-impact central bank announcements' }
   ];

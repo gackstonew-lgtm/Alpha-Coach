@@ -19,7 +19,7 @@ import {
   Eye,
   EyeOff,
   RotateCcw,
-  Sparkles,
+  LineChart,
   Info,
   Calendar,
   DollarSign,

@@ -21,7 +21,6 @@ import {
   TrendingDown,
   Layers,
   ArrowRight,
-  Sparkles,
   HelpCircle,
   RotateCcw
 } from 'lucide-react';
@@ -869,7 +868,7 @@ export const RiskGuardianPage: React.FC = () => {
           {/* Validation Checks Breakdown */}
           <div className="framer-card p-5 rounded-3xl space-y-3">
             <div className="text-xs font-bold uppercase tracking-wider text-content-muted flex items-center space-x-1.5">
-              <Sparkles className="w-4 h-4 text-brand-primary" />
+              <Zap className="w-4 h-4 text-brand-primary" />
               <span>Pre-Execution Risk Compliance Checklist</span>
             </div>
 

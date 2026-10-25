@@ -48,75 +48,75 @@ export const LandingPage: React.FC = () => {
   const coreFeatures = [
     {
       icon: LineChart,
-      title: 'Performance & Edge Analytics',
-      description: 'Live high-water mark equity curves, net profit, win rate, profit factor, max drawdown, and mathematical expectancy.',
-      badge: 'Core Analytics'
+      title: 'Edge Analytics',
+      description: 'Track equity curves, win rates, profit factor, and drawdown.',
+      badge: 'Analytics'
     },
     {
       icon: Layers,
-      title: 'Trade Reconstruction Engine',
-      description: 'Reconstructs complex MT5 deal tickets into complete lifecycles: scale-ins, partial closes, commissions, and swaps.',
-      badge: 'Automated'
+      title: 'Trade Reconstruction',
+      description: 'Reconstruct MT5 deals, partial closes, commissions, and swaps.',
+      badge: 'Engine'
     },
     {
       icon: BookOpen,
-      title: 'Structured Journal & Confluences',
-      description: 'Pair immutable MT5 execution tickets with your market bias, entry reasons, timeframe alignment, and psychology.',
-      badge: 'Journaling'
+      title: 'Trade Journal',
+      description: 'Log confluences, timeframe bias, and execution discipline.',
+      badge: 'Journal'
     },
     {
       icon: TrendingUp,
-      title: 'Interactive Multi-Asset Charts',
-      description: 'Full-featured TradingView and lightweight charts with multi-timeframe candle sync and technical indicators.',
-      badge: 'Charting'
+      title: 'Live Charts',
+      description: 'Candlestick charts with trade markers and session overlays.',
+      badge: 'Charts'
     },
     {
       icon: Scan,
-      title: 'Real-Time Market Scanner',
-      description: 'Monitor liquidity sweeps, fair value gaps, order blocks, and key breakout levels across Forex, Gold, and Indices.',
+      title: 'Market Scanner',
+      description: 'Scan liquidity sweeps, gaps, and breakouts across pairs.',
       badge: 'Scanner'
     },
     {
       icon: Calendar,
-      title: 'Macro & Economic Calendar',
-      description: 'High-impact central bank announcements, non-farm payrolls, CPI releases, and historical volatility impacts.',
+      title: 'Economic Calendar',
+      description: 'Track central bank decisions, rate changes, and volatility.',
       badge: 'Macro'
     },
     {
       icon: Scale,
-      title: 'Currency Strength Matrix',
-      description: 'Dynamic 8-major currency momentum matrix to pair strongest with weakest currencies for high-probability setups.',
-      badge: 'Currency Matrix'
+      title: 'Currency Matrix',
+      description: 'Compare strength across 8 currencies to spot momentum.',
+      badge: 'Matrix'
     },
     {
       icon: FileText,
-      title: 'SEC & Institutional Tracker',
-      description: 'Track institutional insider disclosures, politician stock transactions, and large corporate filings.',
-      badge: 'Institutional'
+      title: 'Institutional Flows',
+      description: 'Monitor insider transactions and institutional disclosures.',
+      badge: 'Flows'
     },
     {
       icon: ShieldAlert,
-      title: 'Risk Guardian & Position Sizing',
-      description: 'Strict account risk parameters, dynamic pip valuation, and automated drawdown alerts.',
-      badge: 'Risk Control'
+      title: 'Risk Guardian',
+      description: 'Set stop-loss rules, position limits, and drawdown alerts.',
+      badge: 'Risk'
     },
     {
       icon: Bot,
-      title: 'Empirical AI Trading Coach',
-      description: 'Context-grounded analytical feedback derived exclusively from your verified MT5 execution statistics.',
-      badge: 'AI Coach'
+      title: 'AI Coach',
+      description: 'Get empirical feedback based on verified MT5 metrics.',
+      badge: 'Coach'
     },
     {
       icon: Trophy,
-      title: 'Discipline Master / Rewards',
-      description: 'XP progression rewards for journaling consistency, sticking to risk limits, and reviewing losing trades.',
-      badge: 'Discipline'
+      title: 'Discipline Rewards',
+      description: 'Earn XP for following risk rules and journaling.',
+      badge: 'Rewards'
     },
     {
       icon: Cpu,
-      title: 'Multi-Account MT5 Hub',
-      description: 'Manage multiple live, demo, and prop-firm MT5 accounts (HFM, IC Markets, FTMO, etc.) in one unified workspace.',
-      badge: 'Multi-Terminal'
+      title: 'Multi-Account Hub',
+      description: 'Manage live, demo, and prop firm accounts together.',
+      badge: 'Accounts'
     }
   ];
 
@@ -150,36 +150,36 @@ export const LandingPage: React.FC = () => {
             <div className="bg-white px-6 py-8 sm:px-10">
               <div className="max-w-[440px] mx-auto space-y-4">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F1B4D] tracking-[0.1em] uppercase font-sans leading-tight">
-                  NEXT-GEN FOREX INTELLIGENCE
+                  FOREX INTELLIGENCE & MT5 JOURNAL
                 </h1>
                 <p className="text-xs sm:text-sm text-[#0F1B4D]/80 leading-relaxed">
-                  Zero broker passwords. Link MetaTrader 5 via companion bridge for automatic deal reconstruction, risk calculations, and psychological journaling.
+                  Track trades, calculate risk, and journal MT5 performance.
                 </p>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                   <Link
                     to={user ? "/dashboard" : "/register"}
                     className="h-11 px-8 rounded-full bg-gradient-to-r from-[#2CC5C0] to-[#1BA9B0] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(44,197,192,0.35)] hover:shadow-[0_8px_24px_rgba(44,197,192,0.5)] flex items-center justify-center transition-all"
                   >
-                    {user ? 'GO TO DASHBOARD' : 'GET STARTED'}
+                    {user ? 'Dashboard' : 'Start Free'}
                   </Link>
                   {!user && (
                     <Link
                       to="/login"
                       className="h-11 px-6 rounded-full border-2 border-[#1BA9B0]/40 text-[#0F1B4D] font-bold text-xs uppercase tracking-wider hover:bg-[#BFEFEC]/30 flex items-center justify-center transition-all"
                     >
-                      Sign In
+                      Log In
                     </Link>
                   )}
                 </div>
                 <div className="pt-4 border-t border-slate-100 flex flex-wrap gap-2 text-[11px] font-semibold text-[#0F1B4D]/70">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> MT5 Auto-Sync
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> MT5 Sync
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> Zero Broker Passwords
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> No Passwords
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> PWA Offline Ready
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> Offline Ready
                   </span>
                 </div>
               </div>
@@ -194,36 +194,36 @@ export const LandingPage: React.FC = () => {
                   Quantitative Forex Terminal
                 </div>
                 <h1 className="text-3xl xl:text-4xl font-extrabold text-[#0F1B4D] tracking-[0.12em] uppercase font-sans leading-tight">
-                  NEXT-GEN FOREX INTELLIGENCE
+                  FOREX INTELLIGENCE & MT5 JOURNAL
                 </h1>
                 <p className="text-xs sm:text-sm text-[#0F1B4D]/80 leading-relaxed">
-                  Zero broker passwords. Link MetaTrader 5 via companion bridge for automatic deal reconstruction, risk calculations, and psychological journaling.
+                  Track trades, calculate risk, and journal MT5 performance.
                 </p>
                 <div className="flex items-center gap-3 pt-2">
                   <Link
                     to={user ? "/dashboard" : "/register"}
                     className="h-11 px-8 rounded-full bg-gradient-to-r from-[#2CC5C0] to-[#1BA9B0] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(44,197,192,0.35)] hover:shadow-[0_8px_24px_rgba(44,197,192,0.5)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all"
                   >
-                    {user ? 'GO TO DASHBOARD' : 'GET STARTED'}
+                    {user ? 'Dashboard' : 'Start Free'}
                   </Link>
                   {!user && (
                     <Link
                       to="/login"
                       className="h-11 px-6 rounded-full border-2 border-[#1BA9B0]/40 text-[#0F1B4D] font-bold text-xs uppercase tracking-wider hover:bg-[#BFEFEC]/30 flex items-center justify-center transition-all"
                     >
-                      Sign In
+                      Log In
                     </Link>
                   )}
                 </div>
                 <div className="pt-5 border-t border-slate-100 flex flex-wrap gap-2 text-[11px] font-semibold text-[#0F1B4D]/70">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> MT5 Auto-Sync
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> MT5 Sync
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> Zero Broker Passwords
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> No Passwords
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> PWA Offline Ready
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> Offline Ready
                   </span>
                 </div>
               </div>
@@ -245,10 +245,10 @@ export const LandingPage: React.FC = () => {
               Engineered For Modern Traders
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#121212] dark:text-white tracking-tight">
-              A Complete Operating System for Discretionary & Systematic Edge
+              Trading Operating System
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              Replace fragmented spreadsheets and manual trade logs with a unified, real-time trading ecosystem.
+              Unified MT5 analytics, charting, and risk tracking.
             </p>
           </div>
 
@@ -292,17 +292,17 @@ export const LandingPage: React.FC = () => {
           <div className="bg-[#121212] dark:bg-[#19191C] rounded-3xl p-8 sm:p-12 text-center text-white space-y-6 shadow-2xl relative overflow-hidden border border-white/10">
             <div className="relative z-10 max-w-2xl mx-auto space-y-3">
               <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
-                Ready to Upgrade Your Trading Discipline?
+                Track Your Trading Edge
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Connect your MetaTrader 5 account in seconds via the local Python companion bridge. Zero credentials shared.
+                Connect MetaTrader 5 in seconds. No broker passwords.
               </p>
               <div className="pt-3">
                 <Link
                   to="/register"
                   className="btn-auth-primary text-xs"
                 >
-                  CREATE FREE ACCOUNT
+                  START FREE
                 </Link>
               </div>
             </div>
@@ -318,7 +318,7 @@ export const LandingPage: React.FC = () => {
               Frequently Asked Questions
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Clear answers on MT5 companion security, data integrity, and privacy.
+              Key details on companion security, data, and sync.
             </p>
           </div>
 

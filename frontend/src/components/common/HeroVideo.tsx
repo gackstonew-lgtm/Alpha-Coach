@@ -1,59 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export interface HeroVideoProps {
   className?: string;
-  poster?: string;
   src?: string;
   objectPosition?: string;
 }
 
 export const HeroVideo: React.FC<HeroVideoProps> = ({
   className = '',
-  poster = '/hero-poster.jpg',
   src = '/arcade_fx_hero.mp4',
-  objectPosition = 'object-[right_center]',
+  objectPosition = 'object-right',
 }) => {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
-    // Respect prefers-reduced-motion user preference
+    // Respect prefers-reduced-motion: pause on first frame without swapping to an image
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
+
+    if (mediaQuery.matches && videoRef.current) {
+      videoRef.current.pause();
+    }
 
     const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
+      if (!videoRef.current) return;
+      if (e.matches) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play().catch(() => {});
+      }
     };
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Reduced motion or fallback if video fails to load
-  if (prefersReducedMotion || hasError) {
-    return (
-      <img
-        src={poster}
-        alt=""
-        aria-hidden="true"
-        className={`w-full h-full object-cover ${objectPosition} pointer-events-none select-none ${className}`}
-        loading="eager"
-        decoding="async"
-      />
-    );
-  }
-
   return (
     <video
+      ref={videoRef}
       autoPlay
       muted
       loop
       playsInline
       preload="auto"
-      poster={poster}
-      onError={() => setHasError(true)}
       aria-hidden="true"
-      className={`w-full h-full object-cover ${objectPosition} pointer-events-none select-none ${className}`}
+      className={`w-[160%] max-w-none h-full object-cover ${objectPosition} pointer-events-none select-none ${className}`}
     >
       <source src={src} type="video/mp4" />
     </video>

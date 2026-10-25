@@ -9,7 +9,7 @@ import {
   Grid,
   Columns,
   Square,
-  Sparkles,
+  LineChart,
   Layers,
   ArrowRight,
   ShieldCheck,

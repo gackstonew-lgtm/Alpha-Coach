@@ -12,7 +12,7 @@ import {
   Lightbulb,
   Plus,
   ShieldCheck,
-  Sparkles,
+  Zap,
   TrendingDown,
   TrendingUp
 } from 'lucide-react';
@@ -427,7 +427,7 @@ export const AICoachPage: React.FC = () => {
               {/* Greeting */}
               <div className="space-y-3">
                 <div className="w-11 h-11 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary">
-                  <Sparkles className="w-5 h-5" />
+                  <Zap className="w-5 h-5" />
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-content-primary">
                   {greeting}
@@ -477,7 +477,7 @@ export const AICoachPage: React.FC = () => {
                 ) : (
                   <div key={msg.id} className="flex gap-3">
                     <span className="w-8 h-8 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0">
-                      <Sparkles className="w-4 h-4" />
+                      <Zap className="w-4 h-4" />
                     </span>
                     <div className="flex-1 min-w-0 space-y-4">
                       <MarkdownBlock text={msg.text} />
@@ -557,7 +557,7 @@ export const AICoachPage: React.FC = () => {
               {isLoading && (
                 <div className="flex gap-3 items-center">
                   <span className="w-8 h-8 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0">
-                    <Sparkles className="w-4 h-4 animate-pulse" />
+                    <Zap className="w-4 h-4 animate-pulse" />
                   </span>
                   <div className="flex items-center gap-2 text-xs text-content-muted">
                     <span className="flex gap-1">

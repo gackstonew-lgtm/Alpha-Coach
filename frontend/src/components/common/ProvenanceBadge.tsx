@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, UserCheck, Sparkles, HelpCircle } from 'lucide-react';
+import { Database, UserCheck, Cpu, HelpCircle } from 'lucide-react';
 
 export type ProvenanceType = 'MT5 Execution Fact' | 'Trader Input' | 'AI Inference';
 
@@ -32,7 +32,7 @@ export const ProvenanceBadge: React.FC<Props> = ({
     'AI Inference': {
       label: 'AI Inference',
       bg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
-      icon: Sparkles,
+      icon: Cpu,
       defaultTooltip: 'Derived pattern or statistical observation produced by AI / quantitative engine.'
     }
   }[type];

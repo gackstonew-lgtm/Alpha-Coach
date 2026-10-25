@@ -7,8 +7,7 @@ import {
   Award,
   ShieldCheck,
   CheckCircle2,
-  Lock,
-  Sparkles
+  Lock
 } from 'lucide-react';
 
 export const GamificationPage: React.FC = () => {

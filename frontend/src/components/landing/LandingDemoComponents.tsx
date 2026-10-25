@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AnimatedNumber } from '../common/AnimatedNumber';
-import { Bot, Sparkles, TrendingUp, Flame } from 'lucide-react';
+import { Bot, Zap, TrendingUp, Flame } from 'lucide-react';
 
 /* ========================================================================= */
 /* 1. EXECUTIVE OVERVIEW DEMO WITH PROGRESSIVE CHART & COUNT-UP             */
@@ -433,7 +433,7 @@ export const DemoAICoach: React.FC<{ isActive: boolean; isVisible: boolean }> = 
       {/* Grounded Response Bubble with Typewriter */}
       <div className="p-4 rounded-xl bg-surface border border-border-subtle text-xs text-content-secondary space-y-2 leading-relaxed min-h-[90px]">
         <div className="flex items-center gap-1.5 font-bold text-content-primary">
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <Zap className="w-3.5 h-3.5 text-amber-500" />
           <span>Empirical Finding from your 120 Journal Records:</span>
         </div>
         <p className="text-content-secondary">

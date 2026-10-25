@@ -188,7 +188,7 @@ export const RegisterPage: React.FC = () => {
                 disabled={isLoading}
                 className="h-10 px-8 rounded-full bg-gradient-to-r from-[#2CC5C0] to-[#1BA9B0] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(44,197,192,0.35)] hover:shadow-[0_8px_24px_rgba(44,197,192,0.5)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F1B4D]"
               >
-                {isLoading ? 'CREATING ACCOUNT...' : 'SIGN UP'}
+                {isLoading ? 'Signing up...' : 'Sign up'}
               </button>
             </div>
           </form>
@@ -231,9 +231,9 @@ export const RegisterPage: React.FC = () => {
 
           {/* Switch to Sign In */}
           <div className="pt-4 text-xs text-[#0F1B4D]/70 font-medium">
-            Already have an account?{' '}
+            Have an account?{' '}
             <Link to="/login" className="text-[#1BA9B0] hover:text-[#2CC5C0] font-bold underline transition">
-              Sign in
+              Log in
             </Link>
           </div>
         </div>

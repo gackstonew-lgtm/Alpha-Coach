@@ -13,7 +13,7 @@ import {
   Clock,
   Bell,
   Award,
-  Sparkles,
+  Bot,
   Radio,
   Lock,
   Check,
@@ -103,7 +103,7 @@ const SECTIONS: SectionMeta[] = [
   { id: 'sessions', label: 'Sessions & Markets', description: 'Session hours, favorite & excluded tickers', icon: Clock },
   { id: 'notifications', label: 'Notifications', description: 'Reports, quiet hours, streak & risk alerts', icon: Bell },
   { id: 'rewards', label: 'Rewards & Discipline', description: 'XP levels, streaks & daily trade journal goals', icon: Award },
-  { id: 'aiCoach', label: 'AI Coach', description: 'Tone preferences, context sources & history', icon: Sparkles },
+  { id: 'aiCoach', label: 'AI Coach', description: 'Tone preferences, context sources & history', icon: Bot },
   { id: 'bridge', label: 'Bridge & Sync', description: 'Connected MT5 terminals, status & pairing', icon: Radio },
   { id: 'security', label: 'Privacy & Security', description: '2FA TOTP, active sessions & global privacy', icon: Lock }
 ];
@@ -1766,7 +1766,7 @@ export const SettingsPage: React.FC = () => {
               <div className="space-y-6">
                 <div>
                   <h2 className="text-lg font-bold text-content-primary flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-brand-500" />
+                    <Bot className="w-5 h-5 text-brand-500" />
                     <span>AI Trading Coach Configuration</span>
                   </h2>
                   <p className="text-xs text-content-muted mt-0.5">Control the cognitive persona, accessible trading history sources, and privacy memory</p>

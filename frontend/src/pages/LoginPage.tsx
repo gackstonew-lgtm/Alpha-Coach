@@ -83,7 +83,7 @@ export const LoginPage: React.FC = () => {
         <div className="w-full max-w-[340px] sm:max-w-[360px] mx-auto lg:mx-0">
           {/* Mockup Heading */}
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F1B4D] tracking-[0.16em] uppercase mb-6 sm:mb-8 font-sans">
-            SIGN IN
+            LOG IN
           </h1>
 
           {/* MT5 Bridge Redirect Alert */}
@@ -91,10 +91,10 @@ export const LoginPage: React.FC = () => {
             <div className="mb-5 p-3 rounded-2xl bg-[#BFEFEC]/50 border border-[#2CC5C0]/40 text-xs text-[#0F1B4D] space-y-1">
               <div className="flex items-center space-x-1.5 font-bold">
                 <ShieldAlert className="w-4 h-4 shrink-0 text-[#1BA9B0]" />
-                <span>Authorize MT5 Companion Bridge</span>
+                <span>Authorize MT5 Bridge</span>
               </div>
               <p className="text-[11px] leading-relaxed text-[#0F1B4D]/80">
-                Sign in with your credentials to link your MetaTrader 5 terminal.
+                Log in to link your MetaTrader 5 terminal.
               </p>
             </div>
           )}
@@ -177,7 +177,7 @@ export const LoginPage: React.FC = () => {
                 disabled={isLoading}
                 className="h-10 px-8 rounded-full bg-gradient-to-r from-[#2CC5C0] to-[#1BA9B0] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(44,197,192,0.35)] hover:shadow-[0_8px_24px_rgba(44,197,192,0.5)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F1B4D]"
               >
-                {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
+                {isLoading ? 'Logging in...' : 'Log in'}
               </button>
             </div>
           </form>
@@ -220,9 +220,9 @@ export const LoginPage: React.FC = () => {
 
           {/* Switch to Sign Up */}
           <div className="pt-4 text-xs text-[#0F1B4D]/70 font-medium">
-            New to Arcade Fx?{' '}
+            New trader?{' '}
             <Link to="/register" className="text-[#1BA9B0] hover:text-[#2CC5C0] font-bold underline transition">
-              Create an Account
+              Sign Up
             </Link>
           </div>
         </div>

@@ -21,14 +21,13 @@ import {
   TrendingUp,
   TrendingDown,
   Clock,
-  Sparkles,
+  Zap,
   Award,
   Layers,
   SlidersHorizontal,
   ChevronLeft,
   Compass,
-  ShieldCheck,
-  Zap
+  ShieldCheck
 } from 'lucide-react';
 
 export const JournalPage: React.FC = () => {
@@ -861,7 +860,7 @@ export const JournalPage: React.FC = () => {
               disabled={isParsingVoice || !voiceText.trim()}
               className="framer-btn-primary w-full py-2.5 flex items-center justify-center space-x-2"
             >
-              <Sparkles className="w-4 h-4" />
+              <Zap className="w-4 h-4" />
               <span>{isParsingVoice ? 'Extracting...' : 'Extract Suggested Fields'}</span>
             </button>
 
