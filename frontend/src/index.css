@@ -74,6 +74,16 @@
   --sidebar-icon: #81CAB9;
   --sidebar-icon-active: #3FAE96;
   --sidebar-badge: #E13A41;
+  /* Reference Floating Glass Capsule Sidebar Tokens */
+  --sidebar-grad-top: #044D40;
+  --sidebar-grad-mid: #062A24;
+  --sidebar-grad-bot: #030706;
+  --sidebar-glass-fill: rgba(255, 255, 255, 0.08);
+  --sidebar-glass-border: rgba(255, 255, 255, 0.14);
+  --sidebar-glass-hover: #FFFFFF;
+  --sidebar-active-fill: #FFFFFF;
+  --sidebar-active-ink: #062A24;
+  --sidebar-glow: rgba(63, 174, 150, 0.35);
 
   /* Shadows */
   --card-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.04), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
@@ -141,6 +151,16 @@
   --sidebar-icon: #79C7B6;
   --sidebar-icon-active: #48B89F;
   --sidebar-badge: #F87171;
+  /* Reference Floating Glass Capsule Sidebar Tokens */
+  --sidebar-grad-top: #033B31;
+  --sidebar-grad-mid: #041F1A;
+  --sidebar-grad-bot: #020504;
+  --sidebar-glass-fill: rgba(255, 255, 255, 0.07);
+  --sidebar-glass-border: rgba(255, 255, 255, 0.12);
+  --sidebar-glass-hover: #FFFFFF;
+  --sidebar-active-fill: #FFFFFF;
+  --sidebar-active-ink: #041F1A;
+  --sidebar-glow: rgba(72, 184, 159, 0.35);
 
   --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 1px 3px 0 rgba(0, 0, 0, 0.4);
   --card-shadow-hover: 0 16px 36px -6px rgba(0, 0, 0, 0.8), 0 0 20px 0 rgba(72, 184, 159, 0.15);
@@ -372,5 +392,27 @@
     transition: none !important;
     animation: none !important;
     transform: none !important;
+  }
+}
+
+/* Floating Glass Capsule Sidebar */
+.sidebar-glass-capsule {
+  background: linear-gradient(180deg, var(--sidebar-grad-top) 0%, var(--sidebar-grad-mid) 45%, var(--sidebar-grad-bot) 100%);
+  border: 1px solid var(--sidebar-glass-border);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  border-radius: 28px;
+}
+
+/* Stylish Card Hover Utility */
+@media (hover: hover) and (pointer: fine) {
+  .card-hover-interactive {
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+  }
+  .card-hover-interactive:hover {
+    transform: translateY(-4px) scale(1.008);
+    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.12), 0 0 1px 1px rgba(63, 174, 150, 0.25);
+  }
+  .dark .card-hover-interactive:hover {
+    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(72, 184, 159, 0.3);
   }
 }

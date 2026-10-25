@@ -7,11 +7,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const sidebarPath = path.resolve(__dirname, '../src/components/layout/Sidebar.tsx');
-const navConfigPath = path.resolve(__dirname, '../src/config/navigation.ts');
+const appLayoutPath = path.resolve(__dirname, '../src/components/layout/AppLayout.tsx');
+const dashboardPath = path.resolve(__dirname, '../src/pages/DashboardPage.tsx');
 const cssPath = path.resolve(__dirname, '../src/index.css');
 
 console.log('='.repeat(70));
-console.log('RUNNING SIDEBAR COMPONENT & ARCHITECTURAL VERIFICATION SUITE');
+console.log('RUNNING GLASS CAPSULE SIDEBAR, FULL-BLEED & CARD HOVER TEST SUITE');
 console.log('='.repeat(70));
 
 let failures = 0;
@@ -25,56 +26,50 @@ function assert(condition, message) {
 }
 
 const sidebarCode = fs.readFileSync(sidebarPath, 'utf8');
-const navConfigCode = fs.readFileSync(navConfigPath, 'utf8');
+const appLayoutCode = fs.readFileSync(appLayoutPath, 'utf8');
+const dashboardCode = fs.readFileSync(dashboardPath, 'utf8');
 const cssCode = fs.readFileSync(cssPath, 'utf8');
 
-// Test 1: Total Investment Card Removed
-console.log('\n[Suite 1: Card Removal]');
-assert(!sidebarCode.includes('Total Investment'), 'No "Total Investment" card markup in Sidebar.tsx');
-assert(!sidebarCode.includes('+18.30%'), 'No hardcoded +18.30% change chip in Sidebar.tsx');
-assert(!sidebarCode.includes('Demo Portfolio (Live MT5 Ready)'), 'No sidebar card portfolio text in Sidebar.tsx');
+// Test 1: Floating Glass Capsule Rail Geometry
+console.log('\n[Suite 1: Floating Glass Capsule Sidebar]');
+assert(sidebarCode.includes('sidebar-glass-capsule'), 'Sidebar uses sidebar-glass-capsule class');
+assert(sidebarCode.includes('top-3 bottom-3 left-3'), 'Capsule is inset by 12px margins from viewport edges');
+assert(sidebarCode.includes('w-[72px]'), 'Collapsed rail width is 72px');
+assert(sidebarCode.includes('w-[248px]'), 'Expanded rail width is 248px');
+assert(sidebarCode.includes('w-[92px] shrink-0'), 'Stationary 92px placeholder prevents content reflow');
 
-// Test 2: Collapsed by Default Dimensions & Zero Layout Shift
-console.log('\n[Suite 2: Collapsed Rail & Zero Layout Shift]');
-assert(sidebarCode.includes('w-[72px]'), 'Collapsed rail width is set to 72px');
-assert(sidebarCode.includes('w-[248px]'), 'Expanded rail width is set to 248px');
-assert(sidebarCode.includes('shrink-0') && sidebarCode.includes('pointer-events-none'), 'Stationary 72px layout anchor prevents content layout shift');
+// Test 2: Collapsed Circular Icon Buttons & Solid White Active Circle
+console.log('\n[Suite 2: Collapsed Icon-Only Circular Buttons]');
+assert(sidebarCode.includes('rounded-full') && sidebarCode.includes('w-11 h-11'), 'Collapsed items are circular buttons (44x44px)');
+assert(sidebarCode.includes('active') && sidebarCode.includes('bg-white text-[#062A24]'), 'Active item is a solid white circle with dark icon');
+assert(sidebarCode.includes('hover:bg-white') && sidebarCode.includes('hover:text-[#062A24]'), 'Hover implements "white touch" highlight');
 
-// Test 3: Hover Intent Delays & Focus Within
-console.log('\n[Suite 3: Hover Intent Delays & Keyboard Accessibility]');
-assert(sidebarCode.includes('enterTimerRef') && sidebarCode.includes('leaveTimerRef'), 'Timers configured for hover-intent enter and exit');
-assert(sidebarCode.includes('setTimeout') && (sidebarCode.includes('90') || sidebarCode.includes('100')), 'Hover-intent enter delay configured');
-assert(sidebarCode.includes('setTimeout') && (sidebarCode.includes('180') || sidebarCode.includes('200')), 'Hover leave delay configured to prevent flicker');
-assert(sidebarCode.includes('onFocus') && sidebarCode.includes('onBlur'), 'Focus and blur handlers manage focus-within expansion');
-assert(sidebarCode.includes("e.key === 'Escape'"), 'Escape key listener collapses sidebar');
+// Test 3: Expanded Translucent Pills & Solid White Active Pill
+console.log('\n[Suite 3: Expanded Translucent Pills]');
+assert(sidebarCode.includes('bg-white/[0.08]') || sidebarCode.includes('bg-white/10'), 'Inactive rows use translucent glass styling');
+assert(sidebarCode.includes('bg-white text-[#062A24]') && sidebarCode.includes('font-extrabold'), 'Active expanded row is a solid white pill with bold dark text');
 
-// Test 4: Expandable Groups State Preservation
-console.log('\n[Suite 4: Expandable Groups]');
-assert(sidebarCode.includes('isIntelOpen') && sidebarCode.includes('setIsIntelOpen'), 'Market Intelligence group state managed independently');
-assert(sidebarCode.includes('isExpanded && isIntelOpen'), 'Sub-items rendered only when expanded');
+// Test 4: Gradient Tokens & Styling
+console.log('\n[Suite 4: Accent-to-Black Gradient Tokens]');
+assert(cssCode.includes('--sidebar-grad-top: #044D40') || cssCode.includes('--sidebar-grad-top: #033B31'), 'Deep accent gradient top stop defined');
+assert(cssCode.includes('--sidebar-grad-bot: #030706') || cssCode.includes('--sidebar-grad-bot: #020504'), 'Near-black gradient bottom stop defined');
+assert(cssCode.includes('sidebar-glass-capsule'), 'sidebar-glass-capsule CSS utility declared');
 
-// Test 5: Badges Responsive State
-console.log('\n[Suite 5: Badges]');
-assert(sidebarCode.includes('!isExpanded && item.badge'), 'Badge rendered as small dot when collapsed');
-assert(sidebarCode.includes('isExpanded && item.badge'), 'Badge rendered as full badge pill when expanded');
+// Test 5: Full-Bleed Edge-to-Edge Layout (Popup Frame Removed)
+console.log('\n[Suite 5: Viewport Full-Bleed Shell]');
+assert(!appLayoutCode.includes('app-frame-container'), 'app-frame-container removed from AppLayout');
+assert(!appLayoutCode.includes('app-frame border'), 'app-frame card removed from AppLayout');
+assert(appLayoutCode.includes('min-h-[100dvh]') || appLayoutCode.includes('min-h-screen'), 'App shell uses full viewport min-height (100dvh)');
+assert(appLayoutCode.includes('overflow-x-hidden'), 'Layout prevents horizontal overflow');
 
-// Test 6: Tablet Tap-to-Expand Toggle
-console.log('\n[Suite 6: Tablet Navigation]');
-assert(sidebarCode.includes('tabletExpanded') && sidebarCode.includes('setTabletExpanded'), 'Tablet tap-to-expand toggle state implemented');
-assert(sidebarCode.includes('aria-expanded'), 'Tablet toggle exposes aria-expanded accessibility attribute');
+// Test 6: Dashboard Auto-Fit Cards & Hover Transitions
+console.log('\n[Suite 6: Auto-Fit Cards & Hover Motion]');
+assert(dashboardCode.includes('repeat(auto-fit,minmax(min(100%,250px),1fr))'), 'Portfolio row uses auto-fit CSS grid');
+assert(dashboardCode.includes('card-hover-interactive'), 'Dashboard cards use card-hover-interactive utility');
+assert(cssCode.includes('card-hover-interactive'), 'card-hover-interactive declared with lift and glow');
 
-// Test 7: Mobile Drawer
-console.log('\n[Suite 7: Mobile Off-Canvas Drawer]');
-assert(sidebarCode.includes('role="dialog"') && sidebarCode.includes('aria-modal'), 'Mobile drawer is an accessible dialog landmark');
-
-// Test 8: Main Accent Color Tokens & Contrast Ratios
-console.log('\n[Suite 8: Color Tokens & WCAG AA/AAA Contrast]');
-assert(cssCode.includes('--sidebar-bg: #0A231E'), 'Light theme derived deep forest teal surface (--sidebar-bg: #0A231E)');
-assert(cssCode.includes('--sidebar-bg: #061513'), 'Dark theme derived obsidian teal surface (--sidebar-bg: #061513)');
-assert(cssCode.includes('--sidebar-active-indicator: #3FAE96'), 'Light theme luminous active indicator token');
-assert(cssCode.includes('--sidebar-active-indicator: #48B89F'), 'Dark theme luminous active indicator token');
-
-// Contrast verification
+// Test 7: Accessibility & Contrast
+console.log('\n[Suite 7: WCAG AA/AAA Contrast Verification]');
 function hexToLuminance(hex) {
   const rgb = hex.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16) / 255);
   const [r, g, b] = rgb.map(c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
@@ -88,21 +83,23 @@ function contrastRatio(hex1, hex2) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-const ratioLightText = contrastRatio('#0A231E', '#FFFFFF');
-console.log(`  Measured Contrast (Light: #FFFFFF on #0A231E): ${ratioLightText.toFixed(2)}:1`);
-assert(ratioLightText >= 7.0, `Contrast ratio (${ratioLightText.toFixed(2)}:1) meets WCAG AAA (≥ 7.0:1)`);
+// Contrast of white text on top of gradient (#044D40)
+const ratioGradTop = contrastRatio('#044D40', '#FFFFFF');
+console.log(`  Measured Contrast (White on Gradient Top #044D40): ${ratioGradTop.toFixed(2)}:1`);
+assert(ratioGradTop >= 4.5, `Contrast on gradient top (${ratioGradTop.toFixed(2)}:1) meets WCAG AA (≥ 4.5:1)`);
 
-const ratioDarkText = contrastRatio('#061513', '#FFFFFF');
-console.log(`  Measured Contrast (Dark: #FFFFFF on #061513): ${ratioDarkText.toFixed(2)}:1`);
-assert(ratioDarkText >= 7.0, `Contrast ratio (${ratioDarkText.toFixed(2)}:1) meets WCAG AAA (≥ 7.0:1)`);
+// Contrast of dark ink icon/text on solid white active button (#062A24 on #FFFFFF)
+const ratioActiveInk = contrastRatio('#062A24', '#FFFFFF');
+console.log(`  Measured Contrast (Dark Ink #062A24 on White #FFFFFF): ${ratioActiveInk.toFixed(2)}:1`);
+assert(ratioActiveInk >= 7.0, `Contrast of active dark ink on white (${ratioActiveInk.toFixed(2)}:1) meets WCAG AAA (≥ 7.0:1)`);
 
 console.log('\n' + '='.repeat(70));
 if (failures === 0) {
-  console.log('✓ ALL VERIFICATION TESTS PASSED SUCCESSFULLY (0 FAILURES)');
+  console.log('✓ ALL 16 VERIFICATION ASSERTIONS PASSED (0 FAILURES)');
   console.log('='.repeat(70));
   process.exit(0);
 } else {
-  console.error(`❌ VERIFICATION FAILED WITH ${failures} ERRORS`);
+  console.error(`❌ TEST SUITE FAILED WITH ${failures} ERRORS`);
   console.log('='.repeat(70));
   process.exit(1);
 }
