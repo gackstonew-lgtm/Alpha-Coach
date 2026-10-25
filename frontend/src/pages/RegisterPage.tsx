@@ -64,60 +64,12 @@ export const RegisterPage: React.FC = () => {
         canonicalPath="/register"
       />
 
+            {/* ========================================================================= */}
+      {/* MOBILE HERO BANNER (< 1024px)                                             */}
       {/* ========================================================================= */}
-      {/* 1. DESKTOP & WIDE TABLET BACKGROUND (Full Artwork: White Panel + Wave + Ocean) */}
-      {/* ========================================================================= */}
-      <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none">
+      <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] lg:hidden overflow-hidden shrink-0 select-none bg-[#032630] order-first">
         <HeroVideo objectPosition="object-[right_center]" />
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 2. OVER-PHOTO GRAPHICS (DESKTOP: Top-Right Logo & Bottom-Right Lockup)    */}
-      {/* ========================================================================= */}
-      <div className="absolute top-8 right-8 lg:top-10 lg:right-14 z-20 hidden lg:block drop-shadow-[0_6px_20px_rgba(0,25,40,0.6)]">
-        <Link to="/" className="inline-block transition-transform duration-300 hover:scale-105" aria-label="ArcadeFx Home">
-          <Logo size="lg" />
-        </Link>
-      </div>
-
-      <div className="absolute bottom-8 right-8 lg:bottom-10 lg:right-14 z-20 text-right hidden lg:block select-none pointer-events-none">
-        <h2
-          className="text-4xl xl:text-5xl font-black text-white uppercase tracking-[0.14em] font-sans"
-          style={{ textShadow: '0 4px 18px rgba(0, 25, 40, 0.9), 0 1px 4px rgba(0, 25, 40, 0.9)' }}
-        >
-          ARCADE FX
-        </h2>
-        <p
-          className="text-xs xl:text-sm font-extrabold text-teal-100 tracking-[0.24em] uppercase mt-1.5"
-          style={{ textShadow: '0 2px 10px rgba(0, 25, 40, 0.9)' }}
-        >
-          Forex Intelligence & MT5 Journal
-        </p>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 3. MOBILE & TABLET PORTRAIT HERO BANNER (< 1024px)                        */}
-      {/* ========================================================================= */}
-      <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] lg:hidden overflow-hidden shrink-0 select-none bg-[#032630]">
-        <HeroVideo objectPosition="object-[65%_center]" />
-
-        {/* Ambient Top & Bottom Scrim for contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/30 pointer-events-none" />
-
-        {/* Top-Right Logo */}
-        <div className="absolute top-4 right-4 z-10 drop-shadow-[0_4px_12px_rgba(0,30,45,0.7)]">
-          <Link to="/" aria-label="ArcadeFx Home">
-            <Logo size="sm" />
-          </Link>
-        </div>
-
-        {/* Bottom-Right Tagline */}
-        <div className="absolute bottom-6 right-4 z-10 text-right drop-shadow-[0_2px_8px_rgba(0,30,45,0.9)]">
-          <span className="block text-sm font-black text-white uppercase tracking-[0.14em]">ARCADE FX</span>
-          <span className="block text-[10px] font-bold text-teal-100 uppercase tracking-[0.2em]">Forex Intelligence & MT5 Journal</span>
-        </div>
-
-        {/* Wave Edge Divider transitioning photo banner into the white form panel */}
+        {/* Wave Edge Divider transitioning into white form area */}
         <div className="absolute -bottom-1 left-0 right-0 h-6 overflow-hidden pointer-events-none">
           <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-white">
             <path d="M0,0 C150,90 350,-40 500,60 C650,140 900,10 1200,80 L1200,120 L0,120 Z" />
@@ -126,9 +78,9 @@ export const RegisterPage: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* 4. LIVE AUTH FORM (Sits precisely over the white area of the artwork)    */}
+      {/* LIVE AUTH FORM COLUMN (Solid White Container - No Video/Mockup Underneath) */}
       {/* ========================================================================= */}
-      <div className="relative z-10 w-full flex-1 flex flex-col justify-center px-6 py-8 sm:px-10 md:px-14 lg:pl-16 xl:pl-24 2xl:pl-32 lg:max-w-[460px] xl:max-w-[500px]">
+      <div className="relative z-10 w-full lg:w-[480px] xl:w-[520px] 2xl:w-[560px] bg-white flex flex-col justify-center px-6 py-8 sm:px-10 md:px-14 lg:pl-16 xl:pl-24 2xl:pl-32 lg:pr-12 shrink-0">
         <div className="w-full max-w-[340px] sm:max-w-[360px] mx-auto lg:mx-0">
           {/* Mockup Heading */}
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F1B4D] tracking-[0.16em] uppercase mb-6 sm:mb-8 font-sans">
@@ -285,6 +237,13 @@ export const RegisterPage: React.FC = () => {
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* DESKTOP RIGHT VIDEO COLUMN (Cropped to Water/Kayak Beside Live Form)      */}
+      {/* ========================================================================= */}
+      <div className="hidden lg:block relative flex-1 min-h-[100dvh] overflow-hidden select-none pointer-events-none bg-[#032630]">
+        <HeroVideo objectPosition="object-[right_center]" />
       </div>
     </div>
   );

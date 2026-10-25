@@ -132,50 +132,13 @@ export const LandingPage: React.FC = () => {
 
       <main className="flex-1 space-y-16 sm:space-y-24 pb-20">
         {/* ========================================================================= */}
-        {/* 1. HERO SECTION (ACTUAL ARTWORK BACKGROUND: WHITE PANEL + REEF + OCEAN)   */}
+        {/* 1. HERO SECTION (SIDE-BY-SIDE: CONTENT ON WHITE + CROPPED WATER/KAYAK VIDEO) */}
         {/* ========================================================================= */}
-        <section className="relative w-full min-h-[580px] lg:min-h-[660px] flex items-center justify-start overflow-hidden bg-white">
-          {/* Desktop Artwork: Full Composition (White panel on left, wavy coral edge, ocean, kayak on right) */}
-          <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none">
-            <HeroVideo objectPosition="object-[right_center]" />
-          </div>
-
-          {/* Over-photo Graphics on Desktop: Top-Right Logo & Bottom-Right Lockup */}
-          <div className="absolute top-8 right-8 lg:top-10 lg:right-14 z-20 hidden lg:block drop-shadow-[0_6px_20px_rgba(0,25,40,0.6)]">
-            <Logo size="lg" />
-          </div>
-
-          <div className="absolute bottom-8 right-8 lg:bottom-10 lg:right-14 z-20 text-right hidden lg:block select-none pointer-events-none">
-            <h2
-              className="text-4xl xl:text-5xl font-black text-white uppercase tracking-[0.14em] font-sans"
-              style={{ textShadow: '0 4px 18px rgba(0, 25, 40, 0.9), 0 1px 4px rgba(0, 25, 40, 0.9)' }}
-            >
-              ARCADE FX
-            </h2>
-            <p
-              className="text-xs xl:text-sm font-extrabold text-teal-100 tracking-[0.24em] uppercase mt-1.5"
-              style={{ textShadow: '0 2px 10px rgba(0, 25, 40, 0.9)' }}
-            >
-              Forex Intelligence & MT5 Journal
-            </p>
-          </div>
-
+        <section className="relative w-full min-h-[580px] lg:min-h-[660px] flex flex-col lg:flex-row items-stretch justify-start overflow-hidden bg-white">
           {/* Mobile & Tablet Portrait Hero Banner (< 1024px) */}
           <div className="relative w-full lg:hidden flex flex-col">
             <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] overflow-hidden shrink-0 select-none bg-[#032630]">
-              <HeroVideo objectPosition="object-[65%_center]" />
-
-              <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/30 pointer-events-none" />
-
-              <div className="absolute top-4 right-4 z-10 drop-shadow-[0_4px_12px_rgba(0,30,45,0.7)]">
-                <Logo size="sm" />
-              </div>
-
-              <div className="absolute bottom-6 right-4 z-10 text-right drop-shadow-[0_2px_8px_rgba(0,30,45,0.9)]">
-                <span className="block text-sm font-black text-white uppercase tracking-[0.14em]">ARCADE FX</span>
-                <span className="block text-[10px] font-bold text-teal-100 uppercase tracking-[0.2em]">Forex Intelligence & MT5 Journal</span>
-              </div>
-
+              <HeroVideo objectPosition="object-[right_center]" />
               <div className="absolute -bottom-1 left-0 right-0 h-6 overflow-hidden pointer-events-none">
                 <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-white">
                   <path d="M0,0 C150,90 350,-40 500,60 C650,140 900,10 1200,80 L1200,120 L0,120 Z" />
@@ -223,8 +186,8 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Desktop Content on White Area */}
-          <div className="relative z-10 w-full hidden lg:flex items-center justify-between p-8 lg:p-14 max-w-7xl mx-auto">
+          {/* Desktop Left Content Column (Solid White Container Beside Video) */}
+          <div className="relative z-10 hidden lg:flex flex-col justify-center w-full lg:w-[48%] xl:w-[45%] bg-white pl-16 xl:pl-24 2xl:pl-32 pr-8 py-16 shrink-0">
             <div className="w-full max-w-[480px]">
               <div className="space-y-4">
                 <div className="inline-block px-3 py-1 rounded-full bg-[#BFEFEC]/70 text-[#0F1B4D] text-[11px] font-bold uppercase tracking-wider">
@@ -265,6 +228,11 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Desktop Right Video Column (Cropped strictly to ocean/kayak, sitting beside content) */}
+          <div className="hidden lg:block relative flex-1 min-h-[580px] lg:min-h-[660px] overflow-hidden select-none pointer-events-none bg-[#032630]">
+            <HeroVideo objectPosition="object-[right_center]" />
           </div>
         </section>
 
