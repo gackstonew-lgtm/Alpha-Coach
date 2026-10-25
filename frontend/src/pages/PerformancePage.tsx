@@ -98,7 +98,7 @@ export const PerformancePage: React.FC = () => {
         {/* Average R */}
         <div className="framer-card p-4">
           <div className="text-[10px] font-semibold text-content-muted uppercase tracking-wider">Average R</div>
-          <div className="text-xl font-extrabold font-mono text-purple-400 mt-1">
+          <div className="text-xl font-extrabold font-mono text-sky-400 mt-1">
             {overview?.averageR ? `${overview.averageR}R` : '1.42R'}
           </div>
           <div className="text-[10px] text-content-muted mt-1">Reward to Risk</div>

@@ -178,7 +178,7 @@ export const PairDevicePage: React.FC = () => {
             </p>
             <Link
               to={`/login?redirect=${encodeURIComponent(`/pair?session=${sessionCode || ''}`)}`}
-              className="inline-flex items-center justify-center w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl transition text-xs shadow-md shadow-brand-500/25"
+              className="inline-flex items-center justify-center w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl transition text-xs shadow-md shadow-sky-500/25"
             >
               <span>Sign In to Continue</span>
               <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
@@ -321,7 +321,7 @@ export const PairDevicePage: React.FC = () => {
                 type="button"
                 onClick={handleAuthorize}
                 disabled={isSubmitting}
-                className="w-2/3 py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-brand-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
+                className="w-2/3 py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-sky-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

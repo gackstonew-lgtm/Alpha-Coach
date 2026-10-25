@@ -93,7 +93,7 @@ export const PrivacyPolicyPage: React.FC = () => {
 
               <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
                 <div className="flex items-center gap-2 font-bold text-content-primary">
-                  <Database className="w-4 h-4 text-purple-500" />
+                  <Database className="w-4 h-4 text-sky-500" />
                   <span>Trading & Journal Data</span>
                 </div>
                 <ul className="text-xs text-content-muted list-disc pl-4 space-y-1">

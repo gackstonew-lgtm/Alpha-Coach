@@ -34,7 +34,7 @@ export const PublicFooter: React.FC = () => {
           </div>
 
           <div className="flex items-start gap-3 p-4 rounded-2xl bg-surface-secondary border border-border-subtle">
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+            <div className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
               <Activity className="w-4 h-4" />
             </div>
             <div>

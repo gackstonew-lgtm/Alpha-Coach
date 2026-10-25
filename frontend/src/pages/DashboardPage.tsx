@@ -232,7 +232,7 @@ export const DashboardPage: React.FC = () => {
         <div className="framer-card-interactive p-5 rounded-2xl">
           <div className="flex items-center justify-between text-xs font-semibold text-content-muted">
             <span>Account Balance</span>
-            <span className="p-1 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400"><Award className="w-4 h-4" /></span>
+            <span className="p-1 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400"><Award className="w-4 h-4" /></span>
           </div>
           <div className="text-xl sm:text-2xl font-extrabold font-mono text-content-primary mt-2 truncate">
             {displayBalance ?? '—'}
@@ -532,7 +532,7 @@ export const DashboardPage: React.FC = () => {
               </div>
               <Link
                 to="/bridge"
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-brand-500/20 transition"
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-sky-500/20 transition"
               >
                 Configure MT5 Bridge
               </Link>

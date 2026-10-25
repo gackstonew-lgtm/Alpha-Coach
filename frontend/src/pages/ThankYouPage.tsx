@@ -49,12 +49,12 @@ export const ThankYouPage: React.FC = () => {
 
           {/* Step 2: Connect MT5 Bridge */}
           <div className="p-6 rounded-2xl bg-surface border border-border-subtle framer-card flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold text-sm flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-sm flex-shrink-0">
               02
             </div>
             <div className="space-y-1.5 flex-1">
               <div className="flex items-center gap-2">
-                <Radio className="w-4 h-4 text-purple-500" aria-hidden="true" />
+                <Radio className="w-4 h-4 text-sky-500" aria-hidden="true" />
                 <h2 className="text-sm font-bold text-content-primary">Connect Your MT5 Bridge</h2>
               </div>
               <p className="text-xs text-content-muted leading-relaxed">
@@ -63,7 +63,7 @@ export const ThankYouPage: React.FC = () => {
               <div className="pt-2">
                 <Link
                   to="/pair"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-sm transition"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-sm transition"
                 >
                   <span>Open Pairing Terminal</span>
                   <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -93,7 +93,7 @@ export const ThankYouPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
           <Link
             to="/dashboard"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-lg shadow-brand-500/25 transition active:scale-95"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-lg shadow-sky-500/25 transition active:scale-95"
           >
             <LayoutDashboard className="w-4 h-4" aria-hidden="true" />
             <span>Go to Trading Dashboard</span>

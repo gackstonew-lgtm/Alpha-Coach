@@ -52,7 +52,7 @@ export const MethodologyPage: React.FC = () => {
       title: 'RECONSTRUCT',
       subtitle: 'Position Lifecycle & Complex Order Math',
       icon: Layers,
-      color: 'text-purple-500',
+      color: 'text-sky-500',
       description:
         "Raw MT5 deals do not reflect true trading intent. The Arcade Fx Reconstruction Engine groups multiple tickets into complete position lifecycles: tracking entry deals, scale-in additions, partial closes, final exits, commissions, and overnight swaps.",
       details: [

@@ -76,7 +76,7 @@ export const DisclaimerPage: React.FC = () => {
 
           <div className="p-6 rounded-2xl bg-surface border border-border-strong space-y-4 framer-card">
             <h2 className="text-base font-bold text-content-primary flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-500" />
+              <span className="w-2 h-2 rounded-full bg-sky-500" />
               4. Grounded AI Insights & Algorithmic Computations
             </h2>
             <p className="text-xs text-content-muted leading-relaxed">

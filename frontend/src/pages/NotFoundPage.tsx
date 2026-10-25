@@ -36,7 +36,7 @@ export const NotFoundPage: React.FC = () => {
           <div className="flex flex-col gap-2.5 pt-2">
             <Link
               to="/dashboard"
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-500/20 transition-all active:scale-95"
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-xs shadow-md shadow-sky-500/20 transition-all active:scale-95"
             >
               <LayoutDashboard className="w-4 h-4" aria-hidden="true" />
               <span>Enter Trading Dashboard</span>

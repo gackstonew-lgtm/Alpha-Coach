@@ -92,7 +92,7 @@ export const CookiePolicyPage: React.FC = () => {
               <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-mono font-bold text-content-primary">theme</span>
-                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 bg-purple-500/10 text-purple-600 rounded">Preference</span>
+                  <span className="text-[10px] uppercase font-bold px-2 py-0.5 bg-sky-500/10 text-sky-600 rounded">Preference</span>
                 </div>
                 <p className="text-xs text-content-muted">
                   Remembers your selected visual mode (<code className="font-mono text-xs">dark</code> or <code className="font-mono text-xs">light</code>) to prevent screen flickering upon application boot.

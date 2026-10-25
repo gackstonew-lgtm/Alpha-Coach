@@ -122,7 +122,7 @@ export const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-brand-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
+            className="w-full py-3 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold rounded-xl transition shadow-md shadow-sky-500/25 flex items-center justify-center gap-2 text-xs active:scale-95 disabled:opacity-50"
           >
             <span>{isLoading ? 'Signing In...' : 'Sign In to Performance OS'}</span>
             <ArrowRight className="w-4 h-4" />

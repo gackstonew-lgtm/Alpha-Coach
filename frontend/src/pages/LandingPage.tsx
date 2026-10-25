@@ -153,7 +153,7 @@ export const LandingPage: React.FC = () => {
             {user ? (
               <Link
                 to="/dashboard"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-brand-500/25 transition-all duration-150 active:scale-95"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-sky-500/25 transition-all duration-150 active:scale-95"
               >
                 <span>Enter Trading Terminal</span>
                 <ArrowRight className="w-4 h-4" aria-hidden="true" />
@@ -162,7 +162,7 @@ export const LandingPage: React.FC = () => {
               <>
                 <Link
                   to="/register"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-brand-500/25 transition-all duration-150 active:scale-95"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-sky-500/25 transition-all duration-150 active:scale-95"
                 >
                   <span>Get Started</span>
                   <ArrowRight className="w-4 h-4" aria-hidden="true" />
@@ -631,7 +631,7 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-xs shadow-lg shadow-brand-500/25 transition active:scale-95"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white font-bold text-xs shadow-lg shadow-sky-500/25 transition active:scale-95"
               >
                 <span>Create Your Arcade Fx Account</span>
                 <ArrowRight className="w-4 h-4" aria-hidden="true" />

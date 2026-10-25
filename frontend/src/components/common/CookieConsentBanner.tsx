@@ -59,7 +59,7 @@ export const CookieConsentBanner: React.FC = () => {
           <button
             type="button"
             onClick={handleAccept}
-            className="flex-1 sm:flex-initial px-4 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-brand-500/20 transition"
+            className="flex-1 sm:flex-initial px-4 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-sky-500/20 transition"
           >
             Accept
           </button>

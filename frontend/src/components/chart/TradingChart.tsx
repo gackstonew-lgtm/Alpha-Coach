@@ -427,7 +427,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     if (showEMA) {
       const emaData = calculateEMA(activeDataBars, 21);
       const emaSeries = chart.addLineSeries({
-        color: '#8b5cf6', // Violet
+        color: '#38bdf8', // Sky Blue
         lineWidth: 2,
         title: 'EMA (21)'
       });
@@ -704,7 +704,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
               <button
                 onClick={() => setShowEMA(!showEMA)}
                 className={`px-1.5 py-0.5 rounded transition ${
-                  showEMA ? 'bg-violet-600 text-white font-bold' : 'text-content-muted hover:text-content-primary'
+                  showEMA ? 'bg-sky-600 text-white font-bold' : 'text-content-muted hover:text-content-primary'
                 }`}
                 title="Toggle Exponential Moving Average (21)"
               >

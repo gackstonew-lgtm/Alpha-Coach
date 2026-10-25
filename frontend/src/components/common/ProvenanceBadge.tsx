@@ -31,7 +31,7 @@ export const ProvenanceBadge: React.FC<Props> = ({
     },
     'AI Inference': {
       label: 'AI Inference',
-      bg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+      bg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
       icon: Sparkles,
       defaultTooltip: 'Derived pattern or statistical observation produced by AI / quantitative engine.'
     }

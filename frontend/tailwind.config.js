@@ -26,38 +26,52 @@ export default {
           muted: 'var(--text-muted)',
           subtle: 'var(--text-subtle)'
         },
+        ink: {
+          50: 'var(--ink-50)',
+          100: 'var(--ink-100)',
+          200: 'var(--ink-200)',
+          300: 'var(--ink-300)',
+          400: 'var(--ink-400)',
+          500: 'var(--ink-500)',
+          600: 'var(--ink-600)',
+          700: 'var(--ink-700)',
+          800: 'var(--ink-800)',
+          900: 'var(--ink-900)'
+        },
+        accent: {
+          primary: 'var(--accent-primary)',
+          hover: 'var(--accent-hover)',
+          subtle: 'var(--accent-subtle)',
+          glow: 'var(--accent-glow)',
+          contrast: 'var(--accent-contrast)'
+        },
+        // Sky Blue Primary Accent Family
         brand: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#673de6', // Hostinger Primary Purple
-          600: '#5530c4', // Hover
-          700: '#4827af', // Active
-          800: '#3c1e95',
-          900: '#2e1477',
-          950: '#170845'
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8', // Dark Mode Sky Primary
+          500: '#0ea5e9',
+          600: '#0284c7', // Light Mode Sky Primary
+          700: '#0369a1', // Light Mode Sky Hover
+          800: '#075985',
+          900: '#0c4a6e',
+          950: '#082f49'
         },
-        hostinger: {
-          purple: '#673de6',
-          purpleHover: '#5530c4',
-          purpleActive: '#4827af',
-          darkBg: '#09090b',
-          darkCard: '#121217',
-          darkCardHover: '#181820',
-          darkElevated: '#1f1f2a',
-          coral: '#fc5a5a',
-          green: '#00b090',
+        // Supporting Red Accent (Alerts, risk, destructive confirmations)
+        danger: {
+          light: '#dc2626',
+          dark: '#f87171',
+          hover: '#b91c1c',
+          subtle: 'var(--accent-red-subtle)'
         },
+        // Strict Data Semantics Only
         trade: {
-          win: '#00b090',      // Hostinger vibrant green (Profit / Bullish)
-          loss: '#fc5a5a',     // Hostinger vibrant coral-red (Loss / Bearish)
-          breakeven: '#71717a',
-          gold: '#eab308',
-          blue: '#673de6',
-          purple: '#8b5cf6',
-          cyan: '#38bdf8'
+          win: '#00b090',      // Vibrant Bullish / Profit
+          loss: '#dc2626',     // Aligned to Red accent token (Loss / Bearish)
+          breakeven: '#64748b',
+          gold: '#eab308'
         }
       },
       fontFamily: {
@@ -66,16 +80,14 @@ export default {
       },
       borderRadius: {
         '2xl': '1.25rem', // 20px
-        '3xl': '1.5rem',  // 24px (Hostinger feature card radius)
+        '3xl': '1.5rem',  // 24px
         '4xl': '2rem'
       },
       boxShadow: {
         'framer': 'var(--card-shadow)',
         'framer-hover': 'var(--card-shadow-hover)',
-        'hostinger': '0 4px 20px -2px rgba(0, 0, 0, 0.4), 0 1px 3px 0 rgba(0, 0, 0, 0.3)',
-        'hostinger-glow': '0 12px 40px -8px rgba(103, 61, 230, 0.28)',
-        'glow-purple': '0 0 24px -4px rgba(103, 61, 230, 0.35)',
-        'glow-green': '0 0 24px -4px rgba(0, 176, 144, 0.35)'
+        'sky-glow': '0 0 24px -4px rgba(56, 189, 248, 0.35)',
+        'sky-btn': '0 4px 14px 0 rgba(2, 132, 199, 0.35)'
       }
     },
   },

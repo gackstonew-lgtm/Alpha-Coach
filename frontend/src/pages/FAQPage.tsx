@@ -94,7 +94,7 @@ export const FAQPage: React.FC = () => {
 
           <Link
             to="/register"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-brand-500/20 transition whitespace-nowrap active:scale-95"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-sky-500/20 transition whitespace-nowrap active:scale-95"
           >
             <span>Start Free Trial</span>
             <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
