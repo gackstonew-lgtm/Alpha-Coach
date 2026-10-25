@@ -2,6 +2,9 @@
   "name": "alpha-coach",
   "version": "1.0.4",
   "description": "Arcade Fx - Professional Forex Intelligence & Trading OS",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "cd frontend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",

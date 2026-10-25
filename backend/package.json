@@ -3,6 +3,9 @@
   "version": "1.0.4",
   "description": "Trader's Edge - Professional Automated MT5 Trading Journal & Performance OS Backend API",
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "build": "tsc && node ../scripts/build-api-bundle.js",
     "start": "node dist/server.js",
@@ -47,5 +50,8 @@
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.2"
+  },
+  "allowScripts": {
+    "esbuild@0.27.0": true
   }
 }

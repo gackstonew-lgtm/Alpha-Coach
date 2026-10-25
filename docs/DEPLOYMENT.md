@@ -7,7 +7,7 @@ This guide describes the production deployment architecture for **Arcade Fx / Tr
 ## 1. Architecture Overview
 
 Arcade Fx is organized as a unified monorepo:
-- **Frontend**: React + Vite 6 + TypeScript PWA (in `/frontend`), bundled with Tailwind CSS v3 LTS.
+- **Frontend**: React 18 + Vite 6 + TypeScript PWA (in `/frontend`), styled with Tailwind CSS v3 LTS and custom Hostinger/Arcade design tokens.
 - **Backend / API**: Express + TypeScript serverless microservices in `/backend`, bundled into a standalone production serverless bundle (`api/app.bundle.js` and `frontend/api/app.bundle.js`) mounted via `api/index.js`.
 - **MT5 Companion Bridge**: Python desktop application in `/bridge` providing zero-lag trade and position synchronization.
 - **Database & Auth**: PostgreSQL via Supabase with row-level security (RLS).
@@ -67,7 +67,7 @@ Configure the following variables in **Vercel Project Settings > Environment Var
 
 ---
 
-## 4. Vercel Dashboard Settings
+## 4. Vercel Dashboard Settings & Build Flow
 
 1. **Git Integration**:
    - Production Branch: `main`
@@ -76,11 +76,31 @@ Configure the following variables in **Vercel Project Settings > Environment Var
    - Root Directory: `.` (or `frontend`)
    - Build Command: `npm run build`
    - Output Directory: `frontend/dist` (or `dist` if root directory is set to `frontend`)
-   - Install Command: `npm install`
+   - Install Command: `npm ci` (or `npm install`)
+3. **Automated Ignore Command (Vercel)**:
+   - To prevent failed preview deployments from uncoordinated Dependabot PRs, `vercel.json` defines:
+     ```json
+     "ignoreCommand": "node -e \"process.exit(process.env.VERCEL_GIT_COMMIT_REF && process.env.VERCEL_GIT_COMMIT_REF.startsWith('dependabot/') ? 0 : 1)\""
+     ```
+   - When `$VERCEL_GIT_COMMIT_REF` starts with `dependabot/`, this command exits with `0` (telling Vercel to skip the build).
+   - For all other branches (`main`, `chore/*`, `feat/*`, `fix/*`), it exits with `1` (telling Vercel to proceed with the build).
+   - Pull request verification is handled via GitHub Actions CI.
 
 ---
 
-## 5. Local Development & Testing
+## 5. Node.js Runtime & CI Verification
+
+- **Node Engine**: Node.js `>= 20.0.0 LTS` is required. The active version is pinned in `.nvmrc` and enforced in `package.json` `engines`.
+- **GitHub Actions CI** (`.github/workflows/ci.yml`):
+  Runs automatically on pushes to `main`, `master`, and PRs against `main`:
+  1. `backend-test`: Strict `npm ci` and Jest test suite run.
+  2. `bridge-test`: Python 3.11 MT5 bridge unit tests.
+  3. `frontend-build`: Strict `npm ci`, TypeScript typecheck (`tsc --noEmit`), and Vite production build.
+  4. `api-bundle`: Full production serverless bundle generation test.
+
+---
+
+## 6. Local Development & Testing
 
 ```bash
 # 1. Run automated test suites (Backend Jest + MT5 Python Bridge)
@@ -95,8 +115,13 @@ npm run dev
 
 ---
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
-- **`DEPLOYMENT_NOT_FOUND` on `/api/v1/*`**: Check that the rewrites in `vercel.json` target `"/api"` and that `node scripts/build-api-bundle.js` has run to update `api/app.bundle.js`.
-- **CORS Errors**: Ensure origin domain is listed in `allowedOrigins` in `backend/src/app.ts` or provided via `FRONTEND_URL`.
-- **PostCSS / Tailwind Error**: Ensure Tailwind remains pinned to v3 (`^3.4.17`). Major updates are ignored via `.github/dependabot.yml`.
+- **`DEPLOYMENT_NOT_FOUND` on `/api/v1/*`**:
+  Check that the rewrites in `vercel.json` target `"/api"` and that `node scripts/build-api-bundle.js` has run to update `api/app.bundle.js`.
+- **PostCSS / Tailwind Error (`[postcss] It looks like you're trying to use tailwindcss directly as a PostCSS plugin`)**:
+  Occurs when `tailwindcss` is bumped to v4 without updating PostCSS config and styles. See [`docs/UPGRADES.md`](./UPGRADES.md) for the coordinated Tailwind v4 migration guide.
+- **`ERESOLVE unable to resolve dependency tree` (peer dependency conflicts)**:
+  Occurs when a single toolchain package (such as `@vitejs/plugin-react@6.x`) is bumped without bumping its required peer dependency (`vite@^8.x`). Never bypass with `--force` or `--legacy-peer-deps`. Follow the coordinated upgrade checklist in [`docs/UPGRADES.md`](./UPGRADES.md).
+- **CORS Errors**:
+  Ensure the origin domain is listed in `allowedOrigins` in `backend/src/app.ts` or provided via `FRONTEND_URL`.
