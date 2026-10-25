@@ -34,6 +34,18 @@ export default {
           glow: 'var(--accent-glow)',
           contrast: 'var(--accent-contrast)'
         },
+        sidebar: {
+          DEFAULT: 'var(--sidebar-bg)',
+          hover: 'var(--sidebar-hover-bg)',
+          active: 'var(--sidebar-active-bg)',
+          indicator: 'var(--sidebar-active-indicator)',
+          border: 'var(--sidebar-border)',
+          text: 'var(--sidebar-text)',
+          muted: 'var(--sidebar-text-muted)',
+          icon: 'var(--sidebar-icon)',
+          'icon-active': 'var(--sidebar-icon-active)',
+          badge: 'var(--sidebar-badge)'
+        },
         // Reference Primary Accent Family (Teal-Green / Turquoise)
         brand: {
           50: '#f0fdfa',
