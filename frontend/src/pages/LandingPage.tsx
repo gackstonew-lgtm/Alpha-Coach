@@ -138,7 +138,7 @@ export const LandingPage: React.FC = () => {
           {/* Mobile & Tablet Portrait Hero Banner (< 1024px) */}
           <div className="relative w-full lg:hidden flex flex-col">
             <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] overflow-hidden shrink-0 select-none bg-[#032630]">
-              <HeroVideo objectPosition="object-[right_center]" />
+              <HeroVideo objectPosition="object-center" />
               <div className="absolute -bottom-1 left-0 right-0 h-6 overflow-hidden pointer-events-none">
                 <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-white">
                   <path d="M0,0 C150,90 350,-40 500,60 C650,140 900,10 1200,80 L1200,120 L0,120 Z" />
@@ -232,7 +232,7 @@ export const LandingPage: React.FC = () => {
 
           {/* Desktop Right Video Column (Cropped strictly to ocean/kayak, sitting beside content) */}
           <div className="hidden lg:block relative flex-1 min-h-[580px] lg:min-h-[660px] overflow-hidden select-none pointer-events-none bg-[#032630]">
-            <HeroVideo objectPosition="object-[right_center]" />
+            <HeroVideo objectPosition="object-center" />
           </div>
         </section>
 

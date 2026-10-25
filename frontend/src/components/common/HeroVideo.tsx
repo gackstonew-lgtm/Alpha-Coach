@@ -9,7 +9,7 @@ export interface HeroVideoProps {
 export const HeroVideo: React.FC<HeroVideoProps> = ({
   className = '',
   src = '/arcade_fx_hero.mp4',
-  objectPosition = 'object-right',
+  objectPosition = 'object-center',
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -43,7 +43,7 @@ export const HeroVideo: React.FC<HeroVideoProps> = ({
       playsInline
       preload="auto"
       aria-hidden="true"
-      className={`w-[160%] max-w-none h-full object-cover ${objectPosition} pointer-events-none select-none ${className}`}
+      className={`w-full h-full object-cover ${objectPosition} pointer-events-none select-none ${className}`}
     >
       <source src={src} type="video/mp4" />
     </video>

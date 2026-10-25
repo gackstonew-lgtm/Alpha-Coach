@@ -68,7 +68,7 @@ export const RegisterPage: React.FC = () => {
       {/* MOBILE HERO BANNER (< 1024px)                                             */}
       {/* ========================================================================= */}
       <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] lg:hidden overflow-hidden shrink-0 select-none bg-[#032630] order-first">
-        <HeroVideo objectPosition="object-[right_center]" />
+        <HeroVideo objectPosition="object-center" />
         {/* Wave Edge Divider transitioning into white form area */}
         <div className="absolute -bottom-1 left-0 right-0 h-6 overflow-hidden pointer-events-none">
           <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-white">
@@ -243,7 +243,7 @@ export const RegisterPage: React.FC = () => {
       {/* DESKTOP RIGHT VIDEO COLUMN (Cropped to Water/Kayak Beside Live Form)      */}
       {/* ========================================================================= */}
       <div className="hidden lg:block relative flex-1 min-h-[100dvh] overflow-hidden select-none pointer-events-none bg-[#032630]">
-        <HeroVideo objectPosition="object-[right_center]" />
+        <HeroVideo objectPosition="object-center" />
       </div>
     </div>
   );
