@@ -44,18 +44,22 @@
   --chip-green-text: #22A06B;
   --badge-red: #E13A41;
 
-  /* REFERENCE A: Auth & Landing Screen Tokens */
+  /* AUTH SOURCE ARTWORK DESIGN TOKENS (Sampled from auth-source.jpg) */
   --auth-card-bg: #FFFFFF;
-  --auth-heading: #00030C;
-  --auth-input-bg: #B3EFEF;
-  --auth-input-text: #052728;
-  --auth-btn-primary: #1ED8CD;
-  --auth-btn-hover: #19C2B8;
+  --auth-heading: #0F1B4D;
+  --auth-input-bg: #BFEFEC;
+  --auth-input-text: #0F1B4D;
+  --auth-input-placeholder: #458B89;
+  --auth-btn-primary: #2CC5C0;
+  --auth-btn-hover: #1BA9B0;
+  --auth-btn-start: #2CC5C0;
+  --auth-btn-end: #1BA9B0;
   --auth-btn-text: #FFFFFF;
-  --auth-btn-text-contrast: #003835;
-  --auth-checkbox: #40BEB3;
-  --auth-link: #18837E;
-  --auth-link-hover: #40BEB3;
+  --auth-btn-text-contrast: #FFFFFF;
+  --auth-checkbox: #25BAC0;
+  --auth-link: #1BA9B0;
+  --auth-link-hover: #2CC5C0;
+  --auth-teal-glow: rgba(44, 197, 192, 0.4);
 
   /* Water Aerial Theme */
   --water-navy: #003859;

@@ -131,85 +131,164 @@ export const LandingPage: React.FC = () => {
 
       <main className="flex-1 space-y-16 sm:space-y-24 pb-20">
         {/* ========================================================================= */}
-        {/* 1. HERO SECTION (REFERENCE A VISUAL SYSTEM)                               */}
+        {/* 1. HERO SECTION (ACTUAL ARTWORK BACKGROUND: WHITE PANEL + REEF + OCEAN)   */}
         {/* ========================================================================= */}
-        <section className="relative w-full min-h-[580px] lg:min-h-[640px] flex items-center justify-start overflow-hidden bg-[#003859]">
-          {/* Aerial Turquoise Water Canvas (Reference A) */}
-          <div
-            className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-1000 ease-out scale-105"
-            style={{
-              backgroundImage: "url('/brand/water-aerial.svg'), radial-gradient(circle at 65% 45%, #149fa8 0%, #08818c 35%, #005368 70%, #023b4f 100%)",
-              backgroundBlendMode: 'screen'
-            }}
-            aria-hidden="true"
-          />
+        <section className="relative w-full min-h-[580px] lg:min-h-[660px] flex items-center justify-start overflow-hidden bg-white">
+          {/* Desktop Artwork: Full Composition (White panel on left, wavy coral edge, ocean, kayak on right) */}
+          <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none">
+            <picture>
+              <source
+                srcSet="/assets/auth-bg-full-2400.webp 2400w, /assets/auth-bg-full-1600.webp 1600w, /assets/auth-bg-full-1024.webp 1024w"
+                sizes="100vw"
+                type="image/webp"
+              />
+              <img
+                src="/assets/auth-bg-full.jpg"
+                alt=""
+                className="w-full h-full object-cover object-[center_left]"
+                loading="eager"
+                decoding="async"
+              />
+            </picture>
+          </div>
 
-          <div className="relative z-10 w-full flex flex-col lg:flex-row items-center justify-between p-4 sm:p-6 lg:p-12 max-w-7xl mx-auto">
-            {/* Left Inset White Card with Torn-Paper Right Edge (Reference A) */}
-            <div className="w-full max-w-[500px] lg:w-[45%] lg:max-w-[480px]">
-              <div className="torn-paper-card torn-edge-right torn-edge-bottom bg-white dark:bg-[#151922] p-8 sm:p-10 lg:pr-14 shadow-2xl rounded-2xl lg:rounded-r-none transition-all duration-300">
-                {/* Brand Logo */}
-                <div className="mb-5 flex items-center">
-                  <Logo size="md" />
-                </div>
+          {/* Over-photo Graphics on Desktop: Top-Right Logo & Bottom-Right Lockup */}
+          <div className="absolute top-8 right-8 lg:top-10 lg:right-14 z-20 hidden lg:block drop-shadow-[0_6px_20px_rgba(0,25,40,0.6)]">
+            <Logo size="lg" />
+          </div>
 
-                {/* Hero Title */}
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#00030C] dark:text-white tracking-[0.05em] uppercase mb-3 font-sans leading-tight">
+          <div className="absolute bottom-8 right-8 lg:bottom-10 lg:right-14 z-20 text-right hidden lg:block select-none pointer-events-none">
+            <h2
+              className="text-4xl xl:text-5xl font-black text-white uppercase tracking-[0.14em] font-sans"
+              style={{ textShadow: '0 4px 18px rgba(0, 25, 40, 0.9), 0 1px 4px rgba(0, 25, 40, 0.9)' }}
+            >
+              ARCADE FX
+            </h2>
+            <p
+              className="text-xs xl:text-sm font-extrabold text-teal-100 tracking-[0.24em] uppercase mt-1.5"
+              style={{ textShadow: '0 2px 10px rgba(0, 25, 40, 0.9)' }}
+            >
+              Forex Intelligence & MT5 Journal
+            </p>
+          </div>
+
+          {/* Mobile & Tablet Portrait Hero Banner (< 1024px) */}
+          <div className="relative w-full lg:hidden flex flex-col">
+            <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] overflow-hidden shrink-0 select-none bg-[#032630]">
+              <picture>
+                <source
+                  srcSet="/assets/auth-photo-1024.webp 1024w, /assets/auth-photo-640.webp 640w"
+                  sizes="100vw"
+                  type="image/webp"
+                />
+                <img
+                  src="/assets/auth-photo.jpg"
+                  alt="Arcade Fx Kayak on Turquoise Ocean"
+                  className="w-full h-full object-cover object-[center_32%]"
+                  loading="eager"
+                  decoding="async"
+                />
+              </picture>
+
+              <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/30 pointer-events-none" />
+
+              <div className="absolute top-4 right-4 z-10 drop-shadow-[0_4px_12px_rgba(0,30,45,0.7)]">
+                <Logo size="sm" />
+              </div>
+
+              <div className="absolute bottom-6 right-4 z-10 text-right drop-shadow-[0_2px_8px_rgba(0,30,45,0.9)]">
+                <span className="block text-sm font-black text-white uppercase tracking-[0.14em]">ARCADE FX</span>
+                <span className="block text-[10px] font-bold text-teal-100 uppercase tracking-[0.2em]">Forex Intelligence & MT5 Journal</span>
+              </div>
+
+              <div className="absolute -bottom-1 left-0 right-0 h-6 overflow-hidden pointer-events-none">
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-white">
+                  <path d="M0,0 C150,90 350,-40 500,60 C650,140 900,10 1200,80 L1200,120 L0,120 Z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Mobile / Tablet Content under banner */}
+            <div className="bg-white px-6 py-8 sm:px-10">
+              <div className="max-w-[440px] mx-auto space-y-4">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F1B4D] tracking-[0.1em] uppercase font-sans leading-tight">
                   NEXT-GEN FOREX INTELLIGENCE
                 </h1>
-
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+                <p className="text-xs sm:text-sm text-[#0F1B4D]/80 leading-relaxed">
                   Zero broker passwords. Link MetaTrader 5 via companion bridge for automatic deal reconstruction, risk calculations, and psychological journaling.
                 </p>
-
-                {/* CTA Buttons Row */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                   <Link
                     to={user ? "/dashboard" : "/register"}
-                    className="btn-auth-primary text-center text-xs"
+                    className="h-11 px-8 rounded-full bg-gradient-to-r from-[#2CC5C0] to-[#1BA9B0] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(44,197,192,0.35)] hover:shadow-[0_8px_24px_rgba(44,197,192,0.5)] flex items-center justify-center transition-all"
                   >
                     {user ? 'GO TO DASHBOARD' : 'GET STARTED'}
                   </Link>
-
                   {!user && (
                     <Link
                       to="/login"
-                      className="inline-flex items-center justify-center px-5 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-bold text-[#052728] dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                      className="h-11 px-6 rounded-full border-2 border-[#1BA9B0]/40 text-[#0F1B4D] font-bold text-xs uppercase tracking-wider hover:bg-[#BFEFEC]/30 flex items-center justify-center transition-all"
                     >
                       Sign In
                     </Link>
                   )}
                 </div>
-
-                {/* Quick Feature Badges */}
-                <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#B3EFEF]/40 text-[#052728] dark:text-[#72E4E9]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#18837E]" /> MT5 Auto-Sync
+                <div className="pt-4 border-t border-slate-100 flex flex-wrap gap-2 text-[11px] font-semibold text-[#0F1B4D]/70">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> MT5 Auto-Sync
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#B3EFEF]/40 text-[#052728] dark:text-[#72E4E9]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#18837E]" /> Zero Broker Passwords
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> Zero Broker Passwords
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#B3EFEF]/40 text-[#052728] dark:text-[#72E4E9]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#18837E]" /> PWA Offline Ready
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> PWA Offline Ready
                   </span>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Right Headline Anchored Bottom-Right over Aerial Water (Reference A) */}
-            <div className="hidden lg:flex flex-col items-end justify-end text-right p-8 lg:p-12 self-end mt-auto pointer-events-none select-none">
-              <h2
-                className="text-4xl xl:text-5xl font-black text-white uppercase tracking-[0.12em] font-sans drop-shadow-[0_4px_16px_rgba(0,30,45,0.7)]"
-                style={{ textShadow: '0 4px 18px rgba(0, 30, 45, 0.85)' }}
-              >
-                ARCADE FX
-              </h2>
-              <p
-                className="text-sm xl:text-base font-bold text-teal-100 uppercase tracking-[0.2em] mt-1.5 drop-shadow-[0_2px_8px_rgba(0,30,45,0.7)]"
-                style={{ textShadow: '0 2px 10px rgba(0, 30, 45, 0.85)' }}
-              >
-                FOREX INTELLIGENCE & MT5 JOURNAL
-              </p>
+          {/* Desktop Content on White Area */}
+          <div className="relative z-10 w-full hidden lg:flex items-center justify-between p-8 lg:p-14 max-w-7xl mx-auto">
+            <div className="w-full max-w-[480px]">
+              <div className="space-y-4">
+                <div className="inline-block px-3 py-1 rounded-full bg-[#BFEFEC]/70 text-[#0F1B4D] text-[11px] font-bold uppercase tracking-wider">
+                  Quantitative Forex Terminal
+                </div>
+                <h1 className="text-3xl xl:text-4xl font-extrabold text-[#0F1B4D] tracking-[0.12em] uppercase font-sans leading-tight">
+                  NEXT-GEN FOREX INTELLIGENCE
+                </h1>
+                <p className="text-xs sm:text-sm text-[#0F1B4D]/80 leading-relaxed">
+                  Zero broker passwords. Link MetaTrader 5 via companion bridge for automatic deal reconstruction, risk calculations, and psychological journaling.
+                </p>
+                <div className="flex items-center gap-3 pt-2">
+                  <Link
+                    to={user ? "/dashboard" : "/register"}
+                    className="h-11 px-8 rounded-full bg-gradient-to-r from-[#2CC5C0] to-[#1BA9B0] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(44,197,192,0.35)] hover:shadow-[0_8px_24px_rgba(44,197,192,0.5)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all"
+                  >
+                    {user ? 'GO TO DASHBOARD' : 'GET STARTED'}
+                  </Link>
+                  {!user && (
+                    <Link
+                      to="/login"
+                      className="h-11 px-6 rounded-full border-2 border-[#1BA9B0]/40 text-[#0F1B4D] font-bold text-xs uppercase tracking-wider hover:bg-[#BFEFEC]/30 flex items-center justify-center transition-all"
+                    >
+                      Sign In
+                    </Link>
+                  )}
+                </div>
+                <div className="pt-5 border-t border-slate-100 flex flex-wrap gap-2 text-[11px] font-semibold text-[#0F1B4D]/70">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> MT5 Auto-Sync
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> Zero Broker Passwords
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/60 text-[#0F1B4D]">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#1BA9B0]" /> PWA Offline Ready
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </section>

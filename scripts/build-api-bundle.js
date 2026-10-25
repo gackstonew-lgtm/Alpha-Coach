@@ -121,8 +121,17 @@ try {
     process.exit(1);
   }
 
-  // Copy bundle to frontend/api for unified monorepo support
-  fs.copyFileSync(targetBundleFile, targetFrontendBundleFile);
+  // Copy bundle to frontend/api for unified monorepo support (with fallback for transient Windows locks)
+  try {
+    fs.copyFileSync(targetBundleFile, targetFrontendBundleFile);
+  } catch (err) {
+    try {
+      const data = fs.readFileSync(targetBundleFile);
+      fs.writeFileSync(targetFrontendBundleFile, data);
+    } catch (retryErr) {
+      console.warn('[BUILD WARN] Transient file lock on frontend/api/app.bundle.js:', retryErr.message);
+    }
+  }
 
   // Write build manifests
   const manifestJson = JSON.stringify(manifest, null, 2);

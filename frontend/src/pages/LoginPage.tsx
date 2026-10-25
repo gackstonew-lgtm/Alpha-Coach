@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, ShieldAlert } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
 import { MetaHead } from '../components/common/MetaHead';
 
@@ -31,6 +31,7 @@ export const LoginPage: React.FC = () => {
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,183 +50,258 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  const handleOAuth = (provider: 'google' | 'facebook' | 'twitter') => {
+    alert(`Social sign-in with ${provider.charAt(0).toUpperCase() + provider.slice(1)} is configured via your connected Supabase OAuth project.`);
+  };
+
   return (
-    <div className="min-h-screen w-full relative flex items-center justify-start overflow-hidden bg-[#003859]">
+    <div className="min-h-[100dvh] w-full relative flex flex-col lg:flex-row items-stretch justify-start overflow-x-hidden bg-white">
       <MetaHead
         title="Sign In — Arcade Fx Trading OS"
         description="Sign in to your Arcade Fx trading account to review automated MT5 trade journals, edge metrics, and AI Coach analysis."
         canonicalPath="/login"
       />
 
-      {/* Full-Viewport Aerial Turquoise Water Background (Fallback gradient + SVG reef caustics) */}
-      <div
-        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-1000 ease-out scale-105"
-        style={{
-          backgroundImage: "url('/brand/water-aerial.svg'), radial-gradient(circle at 65% 45%, #149fa8 0%, #08818c 35%, #005368 70%, #023b4f 100%)",
-          backgroundBlendMode: 'screen'
-        }}
-        aria-hidden="true"
-      />
+      {/* ========================================================================= */}
+      {/* 1. DESKTOP & WIDE TABLET BACKGROUND (Full Artwork: White Panel + Wave + Ocean) */}
+      {/* ========================================================================= */}
+      <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none">
+        <picture>
+          <source
+            srcSet="/assets/auth-bg-full-2400.webp 2400w, /assets/auth-bg-full-1600.webp 1600w, /assets/auth-bg-full-1024.webp 1024w"
+            sizes="100vw"
+            type="image/webp"
+          />
+          <img
+            src="/assets/auth-bg-full.jpg"
+            alt=""
+            className="w-full h-full object-cover object-[center_left]"
+            loading="eager"
+            decoding="async"
+          />
+        </picture>
+      </div>
 
-      {/* Main Container */}
-      <div className="relative z-10 w-full min-h-screen flex flex-col lg:flex-row items-center justify-between p-4 sm:p-6 lg:p-12">
-        {/* Left Inset White Card with Reference A Torn Right Edge */}
-        <div className="w-full max-w-[480px] lg:w-[42%] lg:max-w-[460px] my-auto">
-          <div className="torn-paper-card torn-edge-right torn-edge-bottom bg-white dark:bg-[#151922] p-8 sm:p-10 lg:pr-14 shadow-2xl rounded-2xl lg:rounded-r-none transition-all duration-300">
-            {/* Brand Logo */}
-            <div className="mb-6 flex items-center justify-between">
-              <Link to="/" className="inline-block group focus:outline-none" aria-label="ArcadeFx Home">
-                <Logo size="md" />
-              </Link>
-            </div>
+      {/* ========================================================================= */}
+      {/* 2. OVER-PHOTO GRAPHICS (DESKTOP: Top-Right Logo & Bottom-Right Lockup)    */}
+      {/* ========================================================================= */}
+      <div className="absolute top-8 right-8 lg:top-10 lg:right-14 z-20 hidden lg:block drop-shadow-[0_6px_20px_rgba(0,25,40,0.6)]">
+        <Link to="/" className="inline-block transition-transform duration-300 hover:scale-105" aria-label="ArcadeFx Home">
+          <Logo size="lg" />
+        </Link>
+      </div>
 
-            {/* Reference A Title */}
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#00030C] dark:text-white tracking-[0.1em] uppercase mb-6 font-sans">
-              SIGN IN
-            </h1>
+      <div className="absolute bottom-8 right-8 lg:bottom-10 lg:right-14 z-20 text-right hidden lg:block select-none pointer-events-none">
+        <h2
+          className="text-4xl xl:text-5xl font-black text-white uppercase tracking-[0.14em] font-sans"
+          style={{ textShadow: '0 4px 18px rgba(0, 25, 40, 0.9), 0 1px 4px rgba(0, 25, 40, 0.9)' }}
+        >
+          ARCADE FX
+        </h2>
+        <p
+          className="text-xs xl:text-sm font-extrabold text-teal-100 tracking-[0.24em] uppercase mt-1.5"
+          style={{ textShadow: '0 2px 10px rgba(0, 25, 40, 0.9)' }}
+        >
+          Forex Intelligence & MT5 Journal
+        </p>
+      </div>
 
-            {isPairingRedirect && (
-              <div className="mb-5 p-3 rounded-xl bg-teal-500/10 border border-teal-500/25 text-xs text-teal-700 dark:text-teal-300 space-y-1">
-                <div className="flex items-center space-x-1.5 font-bold">
-                  <ShieldAlert className="w-4 h-4 shrink-0 text-teal-600" />
-                  <span>Authorize MT5 Companion Bridge</span>
-                </div>
-                <p className="text-[11px] leading-relaxed">
-                  Sign in with your credentials to link your MetaTrader 5 terminal.
-                </p>
-              </div>
-            )}
+      {/* ========================================================================= */}
+      {/* 3. MOBILE & TABLET PORTRAIT HERO BANNER (< 1024px)                        */}
+      {/* ========================================================================= */}
+      <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] lg:hidden overflow-hidden shrink-0 select-none bg-[#032630]">
+        <picture>
+          <source
+            srcSet="/assets/auth-photo-1024.webp 1024w, /assets/auth-photo-640.webp 640w"
+            sizes="100vw"
+            type="image/webp"
+          />
+          <img
+            src="/assets/auth-photo.jpg"
+            alt="Arcade Fx Kayak on Turquoise Ocean"
+            className="w-full h-full object-cover object-[center_32%]"
+            loading="eager"
+            decoding="async"
+          />
+        </picture>
 
-            {error && (
-              <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-600 dark:text-rose-400 font-medium">
-                {error}
-              </div>
-            )}
+        {/* Ambient Top & Bottom Scrim for contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/30 pointer-events-none" />
 
-            {/* Sign-In Form with Reference A Aqua Pill Inputs */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Reference A: e-mail Input Pill */}
-              <div className="relative flex items-center">
-                <Mail className="w-4 h-4 text-[#052728] dark:text-[#72E4E9] absolute left-4 z-10 opacity-70" />
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="e-mail"
-                  className="input-auth-pill text-xs text-[#052728] dark:text-white"
-                />
-              </div>
-
-              {/* Reference A: password Input Pill */}
-              <div className="relative flex items-center">
-                <Lock className="w-4 h-4 text-[#052728] dark:text-[#72E4E9] absolute left-4 z-10 opacity-70" />
-                <input
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="password"
-                  className="input-auth-pill text-xs text-[#052728] dark:text-white"
-                />
-              </div>
-
-              {/* Remember me & Forgot Password */}
-              <div className="flex items-center justify-between pt-1 text-xs">
-                <label className="flex items-center gap-2 select-none cursor-pointer text-[#334155] dark:text-slate-300 text-[11px]">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={e => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#40BEB3] focus:ring-[#40BEB3] border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 accent-[#40BEB3] cursor-pointer"
-                  />
-                  <span>Remember session</span>
-                </label>
-                <Link
-                  to="/forgot-password"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert('Password reset link has been dispatched to your email.');
-                  }}
-                  className="text-[#18837E] dark:text-[#40BEB3] font-semibold hover:underline text-[11px]"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
-              {/* Reference A: Turquoise Pill Primary Button */}
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="btn-auth-primary w-40 text-xs disabled:opacity-50"
-                >
-                  {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
-                </button>
-              </div>
-            </form>
-
-            {/* Reference A: Social Icons Row */}
-            <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-3">
-                {/* Facebook */}
-                <button
-                  type="button"
-                  aria-label="Continue with Facebook"
-                  onClick={() => alert('Social sign-in with Facebook is configured via Supabase OAuth.')}
-                  className="w-8 h-8 rounded-full bg-[#3B5998] hover:opacity-90 flex items-center justify-center text-white text-xs font-bold transition shadow-sm"
-                >
-                  f
-                </button>
-                {/* Google */}
-                <button
-                  type="button"
-                  aria-label="Continue with Google"
-                  onClick={() => alert('Social sign-in with Google is configured via Supabase OAuth.')}
-                  className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 flex items-center justify-center text-xs font-bold transition shadow-sm"
-                >
-                  <span className="text-[#4285F4]">G</span>
-                </button>
-                {/* X */}
-                <button
-                  type="button"
-                  aria-label="Continue with X"
-                  onClick={() => alert('Social sign-in with X is configured via Supabase OAuth.')}
-                  className="w-8 h-8 rounded-full bg-[#121212] hover:bg-black flex items-center justify-center text-white text-[11px] font-bold transition shadow-sm"
-                >
-                  𝕏
-                </button>
-              </div>
-            </div>
-
-            {/* Switch to Sign Up */}
-            <div className="mt-5 text-xs text-slate-500 dark:text-slate-400">
-              New to Arcade Fx?{' '}
-              <Link to="/register" className="text-[#18837E] dark:text-[#40BEB3] font-bold hover:underline">
-                Create an Account
-              </Link>
-            </div>
-          </div>
+        {/* Top-Right Logo */}
+        <div className="absolute top-4 right-4 z-10 drop-shadow-[0_4px_12px_rgba(0,30,45,0.7)]">
+          <Link to="/" aria-label="ArcadeFx Home">
+            <Logo size="sm" />
+          </Link>
         </div>
 
-        {/* Right Headline Anchored Bottom-Right over Aerial Water (Reference A) */}
-        <div className="hidden lg:flex flex-col items-end justify-end text-right p-8 lg:p-12 self-end mt-auto pointer-events-none select-none">
-          <h2
-            className="text-4xl xl:text-5xl font-black text-white uppercase tracking-[0.12em] font-sans drop-shadow-[0_4px_16px_rgba(0,30,45,0.7)]"
-            style={{ textShadow: '0 4px 18px rgba(0, 30, 45, 0.85)' }}
-          >
-            ARCADE FX
-          </h2>
-          <p
-            className="text-sm xl:text-base font-bold text-teal-100 uppercase tracking-[0.2em] mt-1.5 drop-shadow-[0_2px_8px_rgba(0,30,45,0.7)]"
-            style={{ textShadow: '0 2px 10px rgba(0, 30, 45, 0.85)' }}
-          >
-            FOREX INTELLIGENCE & MT5 JOURNAL
-          </p>
+        {/* Bottom-Right Tagline */}
+        <div className="absolute bottom-6 right-4 z-10 text-right drop-shadow-[0_2px_8px_rgba(0,30,45,0.9)]">
+          <span className="block text-sm font-black text-white uppercase tracking-[0.14em]">ARCADE FX</span>
+          <span className="block text-[10px] font-bold text-teal-100 uppercase tracking-[0.2em]">Forex Intelligence & MT5 Journal</span>
+        </div>
+
+        {/* Wave Edge Divider transitioning photo banner into the white form panel */}
+        <div className="absolute -bottom-1 left-0 right-0 h-6 overflow-hidden pointer-events-none">
+          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-white">
+            <path d="M0,0 C150,90 350,-40 500,60 C650,140 900,10 1200,80 L1200,120 L0,120 Z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 4. LIVE AUTH FORM (Sits precisely over the white area of the artwork)    */}
+      {/* ========================================================================= */}
+      <div className="relative z-10 w-full flex-1 flex flex-col justify-center px-6 py-8 sm:px-10 md:px-14 lg:pl-16 xl:pl-24 2xl:pl-32 lg:max-w-[460px] xl:max-w-[500px]">
+        <div className="w-full max-w-[340px] sm:max-w-[360px] mx-auto lg:mx-0">
+          {/* Mockup Heading */}
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F1B4D] tracking-[0.16em] uppercase mb-6 sm:mb-8 font-sans">
+            SIGN IN
+          </h1>
+
+          {/* MT5 Bridge Redirect Alert */}
+          {isPairingRedirect && (
+            <div className="mb-5 p-3 rounded-2xl bg-[#BFEFEC]/50 border border-[#2CC5C0]/40 text-xs text-[#0F1B4D] space-y-1">
+              <div className="flex items-center space-x-1.5 font-bold">
+                <ShieldAlert className="w-4 h-4 shrink-0 text-[#1BA9B0]" />
+                <span>Authorize MT5 Companion Bridge</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-[#0F1B4D]/80">
+                Sign in with your credentials to link your MetaTrader 5 terminal.
+              </p>
+            </div>
+          )}
+
+          {/* Error Message (with preserved height to avoid layout shift) */}
+          {error && (
+            <div
+              role="alert"
+              className="mb-4 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-600 font-medium animate-in fade-in duration-200"
+            >
+              {error}
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* E-mail Pill Input */}
+            <div className="relative flex items-center">
+              <Mail className="w-4 h-4 text-[#458B89] absolute left-4.5 pointer-events-none" />
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="e-mail"
+                className="w-full h-11 bg-[#BFEFEC] text-[#0F1B4D] placeholder:text-[#458B89] placeholder:font-normal rounded-full pl-12 pr-4 text-xs font-semibold border-0 focus:ring-2 focus:ring-[#2CC5C0] outline-none transition-all shadow-none"
+              />
+            </div>
+
+            {/* Password Pill Input with Visibility Toggle */}
+            <div className="relative flex items-center">
+              <Lock className="w-4 h-4 text-[#458B89] absolute left-4.5 pointer-events-none" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="password"
+                className="w-full h-11 bg-[#BFEFEC] text-[#0F1B4D] placeholder:text-[#458B89] placeholder:font-normal rounded-full pl-12 pr-11 text-xs font-semibold border-0 focus:ring-2 focus:ring-[#2CC5C0] outline-none transition-all shadow-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 p-1 text-[#458B89] hover:text-[#0F1B4D] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2CC5C0] rounded-full"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Remember Me & Forgot Password Row */}
+            <div className="flex items-center justify-between pt-1 text-xs">
+              <label className="flex items-center gap-2 select-none cursor-pointer text-[#0F1B4D]/80 text-[11px]">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded text-[#25BAC0] bg-[#BFEFEC] border-0 focus:ring-2 focus:ring-[#2CC5C0] accent-[#25BAC0] cursor-pointer"
+                />
+                <span>Remember session</span>
+              </label>
+              <Link
+                to="/forgot-password"
+                onClick={(e) => {
+                  e.preventDefault();
+                  alert('Password reset link has been dispatched to your email.');
+                }}
+                className="text-[#1BA9B0] hover:text-[#2CC5C0] font-semibold hover:underline text-[11px]"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            {/* Pill Teal-Gradient Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="h-10 px-8 rounded-full bg-gradient-to-r from-[#2CC5C0] to-[#1BA9B0] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(44,197,192,0.35)] hover:shadow-[0_8px_24px_rgba(44,197,192,0.5)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F1B4D]"
+              >
+                {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
+              </button>
+            </div>
+          </form>
+
+          {/* Social OAuth Icons Row (Original Brand Colors) */}
+          <div className="flex items-center gap-3 pt-6 sm:pt-8">
+            {/* Facebook */}
+            <button
+              type="button"
+              onClick={() => handleOAuth('facebook')}
+              className="w-9 h-9 rounded-full bg-[#3B5998] hover:bg-[#324b80] flex items-center justify-center text-white text-sm font-bold shadow-xs hover:scale-105 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B5998]"
+              aria-label="Continue with Facebook"
+            >
+              f
+            </button>
+            {/* Google */}
+            <button
+              type="button"
+              onClick={() => handleOAuth('google')}
+              className="w-9 h-9 rounded-full bg-white border border-slate-200 shadow-xs hover:bg-slate-50 flex items-center justify-center hover:scale-105 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4]"
+              aria-label="Continue with Google"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+            </button>
+            {/* X / Twitter */}
+            <button
+              type="button"
+              onClick={() => handleOAuth('twitter')}
+              className="w-9 h-9 rounded-full bg-[#121212] hover:bg-black text-white text-xs font-bold shadow-xs hover:scale-105 active:scale-95 flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              aria-label="Continue with X"
+            >
+              𝕏
+            </button>
+          </div>
+
+          {/* Switch to Sign Up */}
+          <div className="pt-4 text-xs text-[#0F1B4D]/70 font-medium">
+            New to Arcade Fx?{' '}
+            <Link to="/register" className="text-[#1BA9B0] hover:text-[#2CC5C0] font-bold underline transition">
+              Create an Account
+            </Link>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
+export default LoginPage;
