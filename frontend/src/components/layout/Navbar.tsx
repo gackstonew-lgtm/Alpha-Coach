@@ -210,7 +210,7 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-surface border border-border text-foreground hover:bg-surface-elevated shadow-xs transition focus:outline-none"
             >
-              <div className="w-7 h-7 rounded-full bg-surface-elevated text-foreground border border-border flex items-center justify-center text-xs font-bold shrink-0">
+              <div className="w-7 h-7 rounded-full bg-accent-tint text-primary dark:bg-surface-elevated dark:text-foreground border border-accent-border/40 dark:border-border flex items-center justify-center text-xs font-bold shrink-0">
                 {displayName.charAt(0).toUpperCase()}
               </div>
               <span className="hidden md:inline-block text-xs font-bold text-foreground max-w-[120px] truncate">

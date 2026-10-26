@@ -224,7 +224,7 @@ export const DashboardPage: React.FC = () => {
                   <p className="text-[11px] text-muted-foreground">{item.symbol}</p>
                 </div>
                 {/* Mini Visual Sparkline Indicator */}
-                <div className={`w-12 h-6 flex items-center justify-end ${item.isPositive ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                <div className={`w-12 h-6 flex items-center justify-end ${item.isPositive ? 'text-profit' : 'text-loss'}`}>
                   {item.isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                 </div>
               </div>
@@ -232,7 +232,7 @@ export const DashboardPage: React.FC = () => {
               <div className="mt-3 flex items-baseline justify-between pt-2 border-t border-border">
                 <div>
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Total Return</span>
-                  <span className={`text-xs font-bold ${item.isPositive ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                  <span className={`text-xs font-bold ${item.isPositive ? 'text-profit' : 'text-loss'}`}>
                     {item.change} {item.isPositive ? '↑' : '↓'}
                   </span>
                 </div>
@@ -257,7 +257,7 @@ export const DashboardPage: React.FC = () => {
           {/* Header Row: Symbol + LIVE chip + Price + Timestamp */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-surface-elevated flex items-center justify-center font-bold text-xs text-primary">
+              <div className="w-9 h-9 rounded-xl bg-accent-tint text-primary dark:bg-surface-elevated dark:text-primary flex items-center justify-center font-bold text-xs">
                 FX
               </div>
               <div>
@@ -282,7 +282,7 @@ export const DashboardPage: React.FC = () => {
                 {displayEquity}
               </div>
               <p className="text-[10px] text-muted-foreground">
-                Last update at {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                Updated {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
           </div>
@@ -419,7 +419,7 @@ export const DashboardPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="divide-y divide-[#EDF0F6] dark:divide-slate-800">
             {watchlist.map((item, idx) => (
               <div
                 key={idx}
@@ -444,7 +444,7 @@ export const DashboardPage: React.FC = () => {
                   <div className="text-xs font-bold text-foreground font-mono tabular-nums">
                     {item.price}
                   </div>
-                  <div className={`text-[10px] font-bold ${item.isPositive ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                  <div className={`text-[10px] font-bold ${item.isPositive ? 'text-profit' : 'text-loss'}`}>
                     {item.change}
                   </div>
                 </div>
@@ -476,7 +476,7 @@ export const DashboardPage: React.FC = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Net Realized P/L</span>
-            <div className={`text-lg font-extrabold mt-1 font-mono tabular-nums ${isPositiveNet ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+            <div className={`text-lg font-extrabold mt-1 font-mono tabular-nums ${isPositiveNet ? 'text-profit' : 'text-loss'}`}>
               {netProfit >= 0 ? `+$${netProfit.toFixed(2)}` : `-$${Math.abs(netProfit).toFixed(2)}`}
             </div>
             <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
@@ -539,7 +539,7 @@ export const DashboardPage: React.FC = () => {
                   <th className="py-2.5 px-3 text-right">Net Profit</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-[#EDF0F6] dark:divide-slate-800">
                 {recentTrades.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-xs text-muted-foreground">
