@@ -204,7 +204,7 @@ export const DashboardPage: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/performance')}
-            className="w-7 h-7 rounded-full bg-surface border border-border shadow-xs flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white transition"
+            className="w-7 h-7 rounded-full bg-surface border border-border shadow-xs flex items-center justify-center text-muted-foreground hover:text-foreground transition"
             title="View Full Performance"
           >
             <ChevronRight className="w-4 h-4" />
@@ -221,7 +221,7 @@ export const DashboardPage: React.FC = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-xs font-bold text-foreground">{item.name}</h3>
-                  <p className="text-[11px] text-slate-400">{item.symbol}</p>
+                  <p className="text-[11px] text-muted-foreground">{item.symbol}</p>
                 </div>
                 {/* Mini Visual Sparkline Indicator */}
                 <div className={`w-12 h-6 flex items-center justify-end ${item.isPositive ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
@@ -229,16 +229,16 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-3 flex items-baseline justify-between pt-2 border-t border-slate-50 dark:border-slate-800/60">
+              <div className="mt-3 flex items-baseline justify-between pt-2 border-t border-border">
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Total Return</span>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Total Return</span>
                   <span className={`text-xs font-bold ${item.isPositive ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
                     {item.change} {item.isPositive ? '↑' : '↓'}
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Value</span>
-                  <span className="text-xs font-bold text-slate-800 dark:text-white font-mono tabular-nums">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Value</span>
+                  <span className="text-xs font-bold text-foreground font-mono tabular-nums">
                     {item.value}
                   </span>
                 </div>
@@ -271,7 +271,7 @@ export const DashboardPage: React.FC = () => {
                     <span>LIVE</span>
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-muted-foreground">
                   {selectedAccount ? `Account ····${selectedAccount.account_number.slice(-4)}` : 'Euro vs US Dollar'}
                 </p>
               </div>
@@ -281,14 +281,14 @@ export const DashboardPage: React.FC = () => {
               <div className="text-xl sm:text-2xl font-black text-foreground font-mono tabular-nums tracking-tight">
                 {displayEquity}
               </div>
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-muted-foreground">
                 Last update at {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
           </div>
 
-          {/* Timeframe Pills Row (Reference B: Active pill #121212) */}
-          <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+          {/* Timeframe Pills Row (QC NetCore Active Pill) */}
+          <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-border">
             <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
               {['1 Day', '1 Week', '1 Month', '3 Month', '6 Month', '1 Year', 'All'].map((tf) => {
                 const isActive = activeTimeframe === tf;
@@ -299,8 +299,8 @@ export const DashboardPage: React.FC = () => {
                     onClick={() => setActiveTimeframe(tf)}
                     className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                       isActive
-                        ? 'bg-[#121212] dark:bg-white text-white dark:text-[#121212] shadow-xs'
-                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-primary text-primary-foreground shadow-xs font-bold'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-surface-elevated'
                     }`}
                   >
                     {tf}
@@ -310,12 +310,12 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* Chart Mode Toggle */}
-            <div className="flex items-center gap-1 bg-surface-elevated p-0.5 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+            <div className="flex items-center gap-1 bg-surface-elevated p-0.5 rounded-xl text-[11px] font-semibold text-muted-foreground dark:text-slate-300">
               <button
                 type="button"
                 onClick={() => setChartMode('cumulative')}
                 className={`px-2.5 py-1 rounded-lg transition ${
-                  chartMode === 'cumulative' ? 'bg-surface text-slate-900 dark:text-white shadow-xs font-bold' : ''
+                  chartMode === 'cumulative' ? 'bg-surface text-foreground shadow-xs font-bold' : ''
                 }`}
               >
                 P&L
@@ -324,7 +324,7 @@ export const DashboardPage: React.FC = () => {
                 type="button"
                 onClick={() => setChartMode('equity')}
                 className={`px-2.5 py-1 rounded-lg transition ${
-                  chartMode === 'equity' ? 'bg-surface text-slate-900 dark:text-white shadow-xs font-bold' : ''
+                  chartMode === 'equity' ? 'bg-surface text-foreground shadow-xs font-bold' : ''
                 }`}
               >
                 Equity
@@ -332,30 +332,30 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Area Chart (Reference B: Teal-Green line #3FAE96 with soft gradient) */}
+          {/* Main Area Chart (QC NetCore Primary Gradient) */}
           <div className="h-72 sm:h-80 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="chartTealGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#3FAE96" stop-opacity="0.25" />
-                    <stop offset="100%" stop-color="#3FAE96" stop-opacity="0.0" />
+                    <stop offset="0%" stopColor="var(--primary)" stop-opacity="0.25" />
+                    <stop offset="100%" stopColor="var(--primary)" stop-opacity="0.0" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#2A2A30' : '#F0F0F2'} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#2a313c' : '#e9edf1'} />
                 <XAxis
                   dataKey="timestamp"
                   type="number"
                   domain={['dataMin', 'dataMax']}
                   tickFormatter={(ts) => new Date(ts).toLocaleDateString([], { month: 'numeric', day: 'numeric' })}
-                  tick={{ fontSize: 10, fill: '#8E8E93' }}
+                  tick={{ fontSize: 10, fill: theme === 'dark' ? '#9aa4b2' : '#566171' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   domain={['auto', 'auto']}
                   tickFormatter={(val) => `$${Number(val).toLocaleString()}`}
-                  tick={{ fontSize: 10, fill: '#8E8E93' }}
+                  tick={{ fontSize: 10, fill: theme === 'dark' ? '#9aa4b2' : '#566171' }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -365,8 +365,8 @@ export const DashboardPage: React.FC = () => {
                       const data = payload[0].payload;
                       const val = chartMode === 'cumulative' ? data.cumulativeProfit : data.equity;
                       return (
-                        <div className="bg-[#1E1E1E] text-white px-3 py-2 rounded-xl text-xs shadow-xl border border-white/10 font-mono">
-                          <div className="text-[10px] text-slate-400">
+                        <div className="bg-surface text-foreground px-3 py-2 rounded-xl text-xs shadow-xl border border-border font-mono">
+                          <div className="text-[10px] text-muted-foreground">
                             {new Date(data.timestamp || data.date).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </div>
                           <div className="font-bold text-sm text-primary mt-0.5">
@@ -381,7 +381,7 @@ export const DashboardPage: React.FC = () => {
                 <Area
                   type="monotone"
                   dataKey={chartMode === 'cumulative' ? 'cumulativeProfit' : 'equity'}
-                  stroke="#3FAE96"
+                  stroke="var(--primary)"
                   strokeWidth={2.5}
                   fillOpacity={1}
                   fill="url(#chartTealGradient)"
@@ -391,9 +391,9 @@ export const DashboardPage: React.FC = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border">
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#3FAE96]" />
+              <span className="w-2 h-2 rounded-full bg-primary" />
               <span>Real-Time MT5 Tick Engine Sync</span>
             </span>
             <Link to="/charts" className="text-primary hover:underline font-semibold flex items-center gap-1">
@@ -412,7 +412,7 @@ export const DashboardPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsWatchlistSheetOpen(true)}
-              className="w-7 h-7 rounded-full bg-surface-elevated text-slate-700 dark:text-slate-200 hover:bg-[#3FAE96] hover:text-white flex items-center justify-center transition shadow-xs"
+              className="w-7 h-7 rounded-full bg-surface-elevated text-muted-foreground hover:bg-primary hover:text-white flex items-center justify-center transition shadow-xs"
               title="Add Symbol to Watchlist"
             >
               <Plus className="w-4 h-4" />
@@ -423,25 +423,25 @@ export const DashboardPage: React.FC = () => {
             {watchlist.map((item, idx) => (
               <div
                 key={idx}
-                className="py-3 flex items-center justify-between hover:bg-slate-50/70 dark:hover:bg-slate-800/40 px-2 rounded-xl transition cursor-pointer"
+                className="py-3 flex items-center justify-between hover:bg-surface-elevated px-2 rounded-xl transition cursor-pointer"
                 onClick={() => navigate(`/charts?symbol=${item.ticker}`)}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-surface-elevated flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-slate-300">
+                  <div className="w-8 h-8 rounded-full bg-surface-elevated flex items-center justify-center text-[10px] font-black text-foreground">
                     {item.ticker.slice(0, 3)}
                   </div>
                   <div>
                     <div className="text-xs font-bold text-foreground leading-tight">
                       {item.ticker}
                     </div>
-                    <div className="text-[10px] text-slate-400 leading-tight">
+                    <div className="text-[10px] text-muted-foreground leading-tight">
                       {item.name}
                     </div>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="text-xs font-bold text-slate-900 dark:text-white font-mono tabular-nums">
+                  <div className="text-xs font-bold text-foreground font-mono tabular-nums">
                     {item.price}
                   </div>
                   <div className={`text-[10px] font-bold ${item.isPositive ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
@@ -456,7 +456,7 @@ export const DashboardPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsWatchlistSheetOpen(true)}
-              className="w-full py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white hover:border-slate-400 transition flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 rounded-xl border border-dashed border-border text-xs font-semibold text-muted-foreground hover:text-slate-800 dark:hover:text-white hover:border-slate-400 transition flex items-center justify-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Instrument</span>
@@ -475,41 +475,41 @@ export const DashboardPage: React.FC = () => {
         {/* 4 Core Quantitative Edge Tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Net Realized P/L</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Net Realized P/L</span>
             <div className={`text-lg font-extrabold mt-1 font-mono tabular-nums ${isPositiveNet ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
               {netProfit >= 0 ? `+$${netProfit.toFixed(2)}` : `-$${Math.abs(netProfit).toFixed(2)}`}
             </div>
-            <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+            <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
               <span>{overview?.totalTrades || 0} reconstructed deals</span>
             </div>
           </div>
 
           <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Win Rate</span>
-            <div className="text-lg font-extrabold mt-1 text-slate-900 dark:text-white font-mono tabular-nums">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Win Rate</span>
+            <div className="text-lg font-extrabold mt-1 text-foreground font-mono tabular-nums">
               {(overview?.winRate || 0).toFixed(1)}%
             </div>
-            <div className="text-[10px] text-slate-400 mt-1">
+            <div className="text-[10px] text-muted-foreground mt-1">
               {overview?.winningTrades || 0}W / {overview?.losingTrades || 0}L
             </div>
           </div>
 
           <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Profit Factor</span>
-            <div className="text-lg font-extrabold mt-1 text-slate-900 dark:text-white font-mono tabular-nums">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Profit Factor</span>
+            <div className="text-lg font-extrabold mt-1 text-foreground font-mono tabular-nums">
               {(overview?.profitFactor || 0).toFixed(2)}
             </div>
-            <div className="text-[10px] text-slate-400 mt-1">
+            <div className="text-[10px] text-muted-foreground mt-1">
               Expectancy: ${(overview?.expectancy || 0).toFixed(2)}
             </div>
           </div>
 
           <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Max Drawdown</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Max Drawdown</span>
             <div className="text-lg font-extrabold mt-1 text-rose-500 dark:text-rose-400 font-mono tabular-nums">
               {(overview?.maxDrawdownPct || 0).toFixed(1)}%
             </div>
-            <div className="text-[10px] text-slate-400 mt-1">
+            <div className="text-[10px] text-muted-foreground mt-1">
               Peak: ${(overview?.maxDrawdownAmount || 0).toFixed(2)}
             </div>
           </div>
@@ -530,7 +530,7 @@ export const DashboardPage: React.FC = () => {
           <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] uppercase font-bold text-slate-400">
+                <tr className="border-b border-border text-[10px] uppercase font-bold text-muted-foreground">
                   <th className="py-2.5 px-3">Symbol</th>
                   <th className="py-2.5 px-3">Type</th>
                   <th className="py-2.5 px-3">Volume</th>
@@ -542,7 +542,7 @@ export const DashboardPage: React.FC = () => {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {recentTrades.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-xs text-slate-400">
+                    <td colSpan={6} className="py-8 text-center text-xs text-muted-foreground">
                       No trades found for this account. MT5 Companion Bridge will stream trades automatically.
                     </td>
                   </tr>
@@ -557,9 +557,9 @@ export const DashboardPage: React.FC = () => {
                           setSelectedTradeDetail(t);
                           setIsDetailSheetOpen(true);
                         }}
-                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition"
+                        className="hover:bg-surface-elevated cursor-pointer transition"
                       >
-                        <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white">{t.symbol}</td>
+                        <td className="py-2.5 px-3 font-bold text-foreground">{t.symbol}</td>
                         <td className="py-2.5 px-3">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                             t.action === 'BUY' ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-500 dark:text-rose-400'
@@ -592,7 +592,7 @@ export const DashboardPage: React.FC = () => {
         title="Add Symbol to Watchlist"
       >
         <form onSubmit={handleAddSymbol} className="space-y-4 pt-2">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             Enter a ticker symbol (e.g. EURUSD, GBPJPY, XAUUSD, NAS100) to monitor price alerts and market scanner sweeps.
           </p>
           <input
@@ -602,13 +602,13 @@ export const DashboardPage: React.FC = () => {
             value={newSymbolInput}
             onChange={e => setNewSymbolInput(e.target.value)}
             placeholder="e.g. US30, GBPJPY, ETHUSD"
-            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white uppercase font-bold focus:outline-none focus:ring-2 focus:ring-[#3FAE96]"
+            className="w-full bg-surface-subtle border border-border rounded-xl px-3.5 py-2.5 text-xs text-foreground uppercase font-bold focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <div className="flex gap-2 justify-end pt-2">
             <button
               type="button"
               onClick={() => setIsWatchlistSheetOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:bg-surface-elevated transition"
             >
               Cancel
             </button>
@@ -632,27 +632,27 @@ export const DashboardPage: React.FC = () => {
       >
         {selectedTradeDetail && (
           <div className="space-y-4 pt-2 text-xs">
-            <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl">
+            <div className="grid grid-cols-2 gap-3 bg-surface-subtle p-3.5 rounded-xl">
               <div>
-                <span className="text-[10px] text-slate-400 uppercase">Symbol</span>
-                <div className="font-bold text-sm text-slate-900 dark:text-white">{selectedTradeDetail.symbol}</div>
+                <span className="text-[10px] text-muted-foreground uppercase">Symbol</span>
+                <div className="font-bold text-sm text-foreground">{selectedTradeDetail.symbol}</div>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase">Action</span>
-                <div className="font-bold text-sm text-slate-900 dark:text-white">{selectedTradeDetail.action} ({selectedTradeDetail.volume} lots)</div>
+                <span className="text-[10px] text-muted-foreground uppercase">Action</span>
+                <div className="font-bold text-sm text-foreground">{selectedTradeDetail.action} ({selectedTradeDetail.volume} lots)</div>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase">Open Price</span>
+                <span className="text-[10px] text-muted-foreground uppercase">Open Price</span>
                 <div className="font-mono">{selectedTradeDetail.open_price}</div>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase">Close Price</span>
+                <span className="text-[10px] text-muted-foreground uppercase">Close Price</span>
                 <div className="font-mono">{selectedTradeDetail.close_price || 'Open Position'}</div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-slate-200 dark:border-slate-800">
-              <span className="font-medium text-slate-500">Realized Profit / Loss</span>
+            <div className="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-border">
+              <span className="font-medium text-muted-foreground">Realized Profit / Loss</span>
               <span className={`text-base font-extrabold font-mono ${Number(selectedTradeDetail.profit) >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
                 ${Number(selectedTradeDetail.profit || 0).toFixed(2)}
               </span>

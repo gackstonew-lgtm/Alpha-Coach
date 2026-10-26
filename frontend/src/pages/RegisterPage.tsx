@@ -54,7 +54,7 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full relative flex flex-col lg:flex-row items-stretch justify-start overflow-x-hidden bg-white">
+    <div className="min-h-[100dvh] w-full relative flex flex-col lg:flex-row items-stretch justify-start overflow-x-hidden bg-background text-foreground">
       <MetaHead
         title="Sign Up — Arcade Fx Trading OS"
         description="Create your Arcade Fx account to automate MetaTrader 5 trade journaling, evaluate setup expectancies, and maintain psychological discipline."
@@ -64,30 +64,30 @@ export const RegisterPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* 1. DESKTOP FULL-SCREEN BACKGROUND VIDEO (White Panel + Wave + Ocean)     */}
       {/* ========================================================================= */}
-      <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none bg-white">
+      <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none bg-background">
         <HeroVideo objectPosition="object-[left_center]" />
       </div>
 
       {/* ========================================================================= */}
       {/* 2. MOBILE HERO BANNER (< 1024px)                                          */}
       {/* ========================================================================= */}
-      <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] lg:hidden overflow-hidden shrink-0 select-none bg-[#032630] order-first">
+      <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] lg:hidden overflow-hidden shrink-0 select-none bg-background order-first">
         <HeroVideo objectPosition="object-[65%_center]" />
-        {/* Wave Edge Divider transitioning into white form area */}
+        {/* Wave Edge Divider transitioning into themed background area */}
         <div className="absolute -bottom-1 left-0 right-0 h-6 overflow-hidden pointer-events-none">
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-white">
+          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-background">
             <path d="M0,0 C150,90 350,-40 500,60 C650,140 900,10 1200,80 L1200,120 L0,120 Z" />
           </svg>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. LIVE AUTH FORM COLUMN (Transparent on Desktop over Video White Area)   */}
+      {/* 3. LIVE AUTH FORM COLUMN (Themed Split-Panel over Video Area)             */}
       {/* ========================================================================= */}
-      <div className="relative z-10 w-full lg:w-[480px] xl:w-[520px] 2xl:w-[560px] bg-white lg:bg-transparent flex flex-col justify-center px-6 py-8 sm:px-10 md:px-14 lg:pl-16 xl:pl-24 2xl:pl-28 lg:pr-8 shrink-0 min-h-[100dvh]">
+      <div className="relative z-10 w-full lg:w-[480px] xl:w-[520px] 2xl:w-[560px] bg-background/95 dark:bg-[#0e1217]/95 lg:bg-background/90 lg:dark:bg-[#0e1217]/90 backdrop-blur-md border-r border-border/40 flex flex-col justify-center px-6 py-8 sm:px-10 md:px-14 lg:pl-16 xl:pl-24 2xl:pl-28 lg:pr-8 shrink-0 min-h-[100dvh]">
         <div className="w-full max-w-[340px] sm:max-w-[380px] mx-auto lg:mx-0">
-          {/* Mockup Heading */}
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F1B4D] tracking-[0.16em] uppercase mb-6 sm:mb-8 font-sans">
+          {/* Reference Heading */}
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight uppercase mb-6 sm:mb-8 font-sans">
             SIGN UP
           </h1>
 
@@ -95,7 +95,7 @@ export const RegisterPage: React.FC = () => {
           {error && (
             <div
               role="alert"
-              className="mb-4 p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-600 font-medium animate-in fade-in duration-200"
+              className="mb-4 p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive font-medium animate-in fade-in duration-200"
             >
               {error}
             </div>
@@ -103,9 +103,9 @@ export const RegisterPage: React.FC = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* E-mail Pill Input */}
+            {/* E-mail Input */}
             <div className="relative flex items-center">
-              <User className="w-4.5 h-4.5 text-[#458B89] absolute left-4.5 pointer-events-none" />
+              <User className="w-4.5 h-4.5 text-muted-foreground absolute left-3.5 pointer-events-none" />
               <input
                 type="email"
                 required
@@ -113,13 +113,13 @@ export const RegisterPage: React.FC = () => {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="e-mail"
-                className="w-full h-12 bg-[#BFEFEC] text-[#0F1B4D] placeholder:text-[#458B89] placeholder:font-normal rounded-full pl-12 pr-4 text-xs font-semibold border-0 focus:ring-2 focus:ring-[#2CC5C0] outline-none transition-all shadow-none"
+                className="w-full h-12 bg-surface-subtle border border-border text-foreground placeholder:text-muted-foreground rounded-xl pl-11 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all shadow-xs"
               />
             </div>
 
-            {/* Password Pill Input with Visibility Toggle */}
+            {/* Password Input with Visibility Toggle */}
             <div className="relative flex items-center">
-              <Lock className="w-4.5 h-4.5 text-[#458B89] absolute left-4.5 pointer-events-none" />
+              <Lock className="w-4.5 h-4.5 text-muted-foreground absolute left-3.5 pointer-events-none" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
@@ -127,55 +127,55 @@ export const RegisterPage: React.FC = () => {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="password"
-                className="w-full h-12 bg-[#BFEFEC] text-[#0F1B4D] placeholder:text-[#458B89] placeholder:font-normal rounded-full pl-12 pr-11 text-xs font-semibold border-0 focus:ring-2 focus:ring-[#2CC5C0] outline-none transition-all shadow-none"
+                className="w-full h-12 bg-surface-subtle border border-border text-foreground placeholder:text-muted-foreground rounded-xl pl-11 pr-11 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all shadow-xs"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 p-1 text-[#458B89] hover:text-[#0F1B4D] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2CC5C0] rounded-full"
+                className="absolute right-3.5 p-1 text-muted-foreground hover:text-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
 
-            {/* Terms of Service Checkbox (Exact Mockup Match) */}
+            {/* Terms of Service Checkbox */}
             <div className="pt-1">
-              <label className="flex items-center gap-2 select-none cursor-pointer text-xs text-[#0F1B4D]/80">
+              <label className="flex items-center gap-2 select-none cursor-pointer text-xs text-muted-foreground">
                 <input
                   type="checkbox"
                   checked={agreedToTerms}
                   onChange={e => setAgreedToTerms(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#24C6C0] bg-[#BFEFEC] border-0 focus:ring-2 focus:ring-[#24C6C0] accent-[#24C6C0] cursor-pointer"
+                  className="w-4 h-4 rounded text-primary bg-surface border border-border focus:ring-2 focus:ring-primary accent-primary cursor-pointer"
                 />
-                <span className="text-[11px] sm:text-xs text-[#458B89]">
+                <span className="text-[11px] sm:text-xs text-muted-foreground">
                   I agree all statements in{' '}
-                  <Link to="/terms" className="text-[#24C6C0] underline font-semibold transition">
+                  <Link to="/terms" className="text-primary hover:text-primary-hover underline font-semibold transition">
                     terms of service
                   </Link>
                 </span>
               </label>
             </div>
 
-            {/* Pill Vibrant Aqua Button (Exact Mockup Match) */}
+            {/* Reference Primary Button */}
             <div className="pt-2">
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-44 h-12 rounded-full bg-[#24C6C0] hover:bg-[#1fb3ad] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(36,198,192,0.4)] hover:shadow-[0_8px_24px_rgba(36,198,192,0.6)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F1B4D]"
+                className="w-44 h-12 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-extrabold text-xs uppercase tracking-wider shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 {isLoading ? 'SIGNING UP...' : 'SIGN UP'}
               </button>
             </div>
           </form>
 
-          {/* Social OAuth Icons Row (Exact Mockup Match: FB Navy, Google White, Twitter Sky Blue) */}
+          {/* Social OAuth Icons Row */}
           <div className="flex items-center gap-3 pt-6 sm:pt-8">
             {/* Facebook */}
             <button
               type="button"
               onClick={() => handleOAuth('facebook')}
-              className="w-10 h-10 rounded-full bg-[#3B5998] hover:bg-[#324b80] flex items-center justify-center text-white text-base font-bold shadow-xs hover:scale-105 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B5998]"
+              className="w-10 h-10 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] flex items-center justify-center text-white text-base font-bold shadow-xs hover:scale-105 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Continue with Facebook"
             >
               f
@@ -184,7 +184,7 @@ export const RegisterPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleOAuth('google')}
-              className="w-10 h-10 rounded-full bg-white border border-slate-200 shadow-xs hover:bg-slate-50 flex items-center justify-center hover:scale-105 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4]"
+              className="w-10 h-10 rounded-xl bg-surface border border-border shadow-xs hover:bg-surface-elevated flex items-center justify-center hover:scale-105 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Continue with Google"
             >
               <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
@@ -198,19 +198,19 @@ export const RegisterPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleOAuth('twitter')}
-              className="w-10 h-10 rounded-full bg-[#1DA1F2] hover:bg-[#1a90d9] text-white shadow-xs hover:scale-105 active:scale-95 flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1DA1F2]"
+              className="w-10 h-10 rounded-xl bg-surface border border-border text-foreground shadow-xs hover:bg-surface-elevated hover:scale-105 active:scale-95 flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Continue with Twitter"
             >
-              <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
-                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.936 9.936 0 0024 4.59z" />
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
             </button>
           </div>
 
           {/* Switch to Sign In */}
-          <div className="pt-4 text-xs text-[#0F1B4D]/70 font-medium">
+          <div className="pt-4 text-xs text-muted-foreground font-medium">
             Have an account?{' '}
-            <Link to="/login" className="text-[#1BA9B0] hover:text-[#2CC5C0] font-bold underline transition">
+            <Link to="/login" className="text-primary hover:text-primary-hover font-bold underline transition">
               Log in
             </Link>
           </div>

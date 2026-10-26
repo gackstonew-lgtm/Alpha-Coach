@@ -1354,7 +1354,7 @@ export const SettingsPage: React.FC = () => {
                           : 'border-border-subtle bg-surface-secondary hover:bg-surface-elevated text-content-secondary'
                       }`}
                     >
-                      <div className="p-2 rounded-xl bg-slate-900 text-amber-400 border border-slate-800">
+                      <div className="p-2 rounded-xl bg-surface-elevated text-amber-400 border border-border">
                         <Sun className="w-4 h-4" />
                       </div>
                       <div>
@@ -1373,7 +1373,7 @@ export const SettingsPage: React.FC = () => {
                           : 'border-border-subtle bg-surface-secondary hover:bg-surface-elevated text-content-secondary'
                       }`}
                     >
-                      <div className="p-2 rounded-xl bg-slate-100 text-brand-600 border border-slate-200">
+                      <div className="p-2 rounded-xl bg-surface-elevated text-primary border border-border">
                         <Moon className="w-4 h-4" />
                       </div>
                       <div>
@@ -2255,8 +2255,8 @@ export const SettingsPage: React.FC = () => {
               <p>Scan this QR code with Google Authenticator or enter the manual secret key:</p>
 
               {/* Mock QR visual */}
-              <div className="w-36 h-36 mx-auto bg-white p-2 rounded-xl flex items-center justify-center border border-slate-300 shadow-sm">
-                <div className="w-full h-full bg-slate-900 rounded-lg flex flex-col items-center justify-center text-white text-[10px] text-center font-mono p-2">
+              <div className="w-36 h-36 mx-auto bg-white p-2 rounded-xl flex items-center justify-center border border-border shadow-xs">
+                <div className="w-full h-full bg-surface-elevated rounded-lg flex flex-col items-center justify-center text-white text-[10px] text-center font-mono p-2">
                   <div className="w-6 h-6 border-2 border-white rounded mb-1" />
                   <span>TOTP AUTH</span>
                 </div>
