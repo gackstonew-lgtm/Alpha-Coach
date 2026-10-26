@@ -59,8 +59,16 @@ export default {
           foreground: 'var(--accent-foreground)',
           primary: 'var(--primary)',
           hover: 'var(--primary-hover)',
-          subtle: 'var(--primary-soft)',
+          subtle: 'var(--accent-tint)',
+          tint: 'var(--accent-tint)',
+          border: 'var(--accent-border)',
           glow: 'var(--ring)'
+        },
+        profit: 'var(--profit)',
+        loss: 'var(--loss)',
+        live: {
+          bg: 'var(--live-badge-bg)',
+          text: 'var(--live-badge-text)',
         },
         border: {
           DEFAULT: 'var(--border)',

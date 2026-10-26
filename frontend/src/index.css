@@ -4,76 +4,94 @@
 
 :root {
   /* ========================================================================= */
-  /* REFERENCE DESIGN SYSTEM TOKENS — LIGHT MODE                               */
-  /* Exact sampled values from https://billing.quantumcode.co.ke/#pricing      */
+  /* ARCADE FX DESIGN SYSTEM TOKENS — LIGHT MODE (MOCKUP ALIGNED)               */
   /* ========================================================================= */
   --font-sans: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
 
-  /* Surfaces & Canvas */
-  --background: #f4f6f8;
-  --foreground: #131820;
-  --card: #ffffff;
-  --card-foreground: #131820;
-  --card-inner: #f1f3f6;
-  --popover: #ffffff;
-  --popover-foreground: #131820;
-  --surface: #ffffff;
-  --surface-subtle: #f8f9fb;
-  --surface-elevated: #eef1f4;
-  --surface-secondary: #dfe4ea;
-  --surface-hover: #f0f2f6;
+  /* Surfaces */
+  --background: #F3F5F9;
+  --bg-page: #F3F5F9;
+  --bg-canvas: #F3F5F9;
 
-  /* Primary Brand Accent (Enterprise Electric Blue) */
-  --primary: #1f5fd1;
-  --primary-foreground: #ffffff;
-  --primary-hover: #194fb0;
-  --primary-soft: #e8f0fd;
+  --card: #FFFFFF;
+  --card-foreground: #0F1A2E;
+  --bg-card: #FFFFFF;
+  --surface: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F1A2E;
 
-  /* Text & Muted Hierarchy */
-  --muted: #eef1f4;
-  --muted-foreground: #566171;
-  --text-primary: #131820;
-  --text-secondary: #424b57;
-  --text-muted: #566171;
-  --text-subtle: #8994a3;
+  --border: #E3E8F1;
+  --border-card: #E3E8F1;
+  --border-strong: #D1D8E5;
+  --border-subtle: #EDF0F6;
+  --divider: #EDF0F6;
 
-  /* Status & Financial Semantics */
-  --success: #15803d;
-  --success-foreground: #ffffff;
-  --success-soft: #e6f4ec;
-  --warning: #a85b00;
-  --warning-soft: #fdf1dc;
-  --danger: #b42318;
-  --danger-soft: #fdebe9;
-  --info: #1f5fd1;
-  --info-soft: #e8f0fd;
-  --accent: #1f5fd1;
-  --accent-foreground: #ffffff;
-  --destructive: #b42318;
-  --destructive-foreground: #ffffff;
+  --surface-subtle: #EEF1F7;
+  --surface-elevated: #EEF1F7;
+  --surface-secondary: #EEF1F7;
+  --surface-hover: #E6EBF4;
+  --card-inner: #EEF1F7;
+  --input: #FFFFFF;
 
-  /* Trading Gains & Losses */
-  --trade-profit: #15803d;
-  --trade-loss: #b42318;
-  --chip-green-bg: #e6f4ec;
-  --chip-green-text: #15803d;
-  --badge-red: #b42318;
+  /* Text Hierarchy */
+  --foreground: #0F1A2E;
+  --text-primary: #0F1A2E;
+  --text-secondary: #55627A;
+  --text-muted: #7C89A1;
+  --text-subtle: #7C89A1;
+  --muted: #EEF1F7;
+  --muted-foreground: #7C89A1;
 
-  /* Borders & Focus Rings */
-  --border: #dde2e8;
-  --border-subtle: #e9edf1;
-  --border-strong: #c3cbd5;
-  --border-focus: #1f5fd1;
-  --input: #ffffff;
-  --ring: rgba(31, 95, 209, 0.35);
+  /* Accent (Single Primary Accent) */
+  --primary: #2F5BEA;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #2449C2;
+  --primary-soft: #E8EEFE;
+  --accent: #2F5BEA;
+  --accent-foreground: #FFFFFF;
+  --accent-primary: #2F5BEA;
+  --accent-hover: #2449C2;
+  --accent-tint: #E8EEFE;
+  --accent-subtle: #E8EEFE;
+  --accent-border: #C9D6FB;
+  --accent-glow: rgba(47, 91, 234, 0.25);
+  --accent-contrast: #FFFFFF;
+  --border-focus: #2F5BEA;
+  --ring: rgba(47, 91, 234, 0.35);
+
+  /* Semantic (Performance Only) */
+  --profit: #0E9F6E;
+  --trade-profit: #0E9F6E;
+  --success: #0E9F6E;
+  --success-foreground: #FFFFFF;
+  --success-soft: #E6F8F0;
+  --chip-green-bg: #E6F8F0;
+  --chip-green-text: #0E9F6E;
+
+  --loss: #D12F42;
+  --trade-loss: #D12F42;
+  --danger: #D12F42;
+  --destructive: #D12F42;
+  --danger-soft: #FDE8EA;
+  --destructive-foreground: #FFFFFF;
+
+  --live-badge-bg: #FDE8EA;
+  --live-badge-text: #C42A3B;
+  --badge-red: #D12F42;
+
+  --warning: #A85B00;
+  --warning-soft: #FDF1DC;
+  --info: #2F5BEA;
+  --info-soft: #E8EEFE;
 
   /* Shadows & Elevation */
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-pop: 0 8px 24px rgba(16, 24, 40, 0.12);
-  --card-shadow: 0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04);
-  --card-shadow-hover: 0 10px 25px -5px rgba(16, 24, 40, 0.1), 0 8px 10px -6px rgba(16, 24, 40, 0.05);
-  --frame-shadow: 0 20px 40px -15px rgba(16, 24, 40, 0.08);
+  --shadow-card: 0 1px 3px rgba(15, 26, 46, 0.04), 0 1px 2px rgba(15, 26, 46, 0.02);
+  --shadow-pop: 0 8px 24px rgba(15, 26, 46, 0.08);
+  --card-shadow: 0 1px 3px rgba(15, 26, 46, 0.05), 0 1px 2px rgba(15, 26, 46, 0.03);
+  --card-shadow-hover: 0 10px 25px -5px rgba(15, 26, 46, 0.08), 0 8px 10px -6px rgba(15, 26, 46, 0.04);
+  --frame-shadow: 0 20px 40px -15px rgba(15, 26, 46, 0.06);
 
   /* Radii */
   --radius: 0.5rem;
@@ -82,50 +100,39 @@
   --radius-pill: 9999px;
   --radius-sm: 0.25rem;
 
-  /* Aliases for Existing ArcadeFx Components */
-  --bg-page: #f4f6f8;
-  --bg-canvas: #f4f6f8;
-  --bg-surface: #ffffff;
-  --bg-surface-secondary: #f8f9fb;
-  --bg-surface-elevated: #eef1f4;
-  --bg-surface-hover: #f0f2f6;
-  --accent-primary: #1f5fd1;
-  --accent-hover: #194fb0;
-  --accent-subtle: rgba(31, 95, 209, 0.12);
-  --accent-glow: rgba(31, 95, 209, 0.25);
-  --accent-contrast: #ffffff;
-  --dash-dark-card: #eef1f4;
-  --dash-dark-pill: #1f5fd1;
+  /* Aliases for Components */
+  --dash-dark-card: #EEF1F7;
+  --dash-dark-pill: #2F5BEA;
 
   /* Auth Artwork Specific Tokens */
   --auth-card-bg: #FFFFFF;
-  --auth-heading: #0F1B4D;
-  --auth-input-bg: #BFEFEC;
-  --auth-input-text: #0F1B4D;
-  --auth-input-placeholder: #458B89;
-  --auth-btn-primary: #24C6C0;
-  --auth-btn-hover: #1fb3ad;
+  --auth-heading: #0F1A2E;
+  --auth-input-bg: #EEF1F7;
+  --auth-input-text: #0F1A2E;
+  --auth-input-placeholder: #7C89A1;
+  --auth-btn-primary: #2F5BEA;
+  --auth-btn-hover: #2449C2;
   --auth-btn-text: #FFFFFF;
-  --auth-checkbox: #24C6C0;
-  --auth-link: #24C6C0;
-  --auth-link-hover: #1fb3ad;
+  --auth-checkbox: #2F5BEA;
+  --auth-link: #2F5BEA;
+  --auth-link-hover: #2449C2;
 
-  /* Floating Glass Capsule Sidebar Sky-Blue-to-Black Theme Tokens */
-  --sidebar-bg: #0B1B2B;
-  --sidebar-hover-bg: rgba(56, 189, 248, 0.08);
-  --sidebar-active-bg: rgba(56, 189, 248, 0.14);
-  --sidebar-active-indicator: #38BDF8;
-  --sidebar-border: rgba(56, 189, 248, 0.2);
+  /* Sidebar Tokens (Light / Base Theme Aligned) */
+  --sidebar-bg: #0E1A33;
+  --sidebar-hover-bg: rgba(47, 91, 234, 0.08);
+  --sidebar-active-bg: rgba(47, 91, 234, 0.16);
+  --sidebar-active-indicator: #2F5BEA;
+  --sidebar-border: rgba(47, 91, 234, 0.2);
   --sidebar-text: #FFFFFF;
-  --sidebar-text-muted: #A9BBCB;
-  --sidebar-icon: #A9BBCB;
-  --sidebar-icon-active: #38BDF8;
-  --sidebar-badge: #b42318;
-  --sidebar-grad-top: #0B1B2B;
-  --sidebar-grad-mid: #0A1522;
-  --sidebar-grad-bot: #080D14;
+  --sidebar-text-muted: #8FA0C4;
+  --sidebar-icon: #8FA0C4;
+  --sidebar-icon-active: #FFFFFF;
+  --sidebar-badge: #D12F42;
+  --sidebar-grad-top: #0E1A33;
+  --sidebar-grad-mid: #0B152B;
+  --sidebar-grad-bot: #080E1D;
   --sidebar-glass-fill: rgba(255, 255, 255, 0.08);
-  --sidebar-glass-border: rgba(56, 189, 248, 0.18);
+  --sidebar-glass-border: rgba(47, 91, 234, 0.18);
 }
 
 .dark {
