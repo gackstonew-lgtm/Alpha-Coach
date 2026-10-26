@@ -123,18 +123,27 @@ export default {
           gold: '#eab308'
         },
 
-        // Floating Glass Capsule Sidebar Contract Tokens (Preserved for test-sidebar-contract)
+        // Floating Glass Capsule Sidebar Tokens (Light & Dark Theme Matched)
         sidebar: {
           DEFAULT: 'var(--sidebar-bg)',
-          hover: 'var(--sidebar-hover-bg)',
-          active: 'var(--sidebar-active-bg)',
-          indicator: 'var(--sidebar-active-indicator)',
+          bg: 'var(--sidebar-bg)',
           border: 'var(--sidebar-border)',
-          text: 'var(--sidebar-text)',
-          muted: 'var(--sidebar-text-muted)',
+          divider: 'var(--sidebar-divider)',
           icon: 'var(--sidebar-icon)',
-          'icon-active': 'var(--sidebar-icon-active)',
-          badge: 'var(--sidebar-badge)'
+          'icon-hover': 'var(--sidebar-icon-hover)',
+          'item-hover-bg': 'var(--sidebar-item-hover-bg)',
+          text: 'var(--sidebar-text)',
+          'active-bg': 'var(--sidebar-active-bg)',
+          'active-icon': 'var(--sidebar-active-icon)',
+          'logo-ring': 'var(--sidebar-logo-ring)',
+          'danger-bg': 'var(--sidebar-danger-bg)',
+          'danger-icon': 'var(--sidebar-danger-icon)',
+          hover: 'var(--sidebar-item-hover-bg)',
+          active: 'var(--sidebar-active-bg)',
+          indicator: 'var(--sidebar-active-bg)',
+          muted: 'var(--sidebar-text-muted)',
+          'icon-active': 'var(--sidebar-active-icon)',
+          badge: 'var(--sidebar-danger-icon)'
         },
 
         // Auth Artwork Specific Tokens
