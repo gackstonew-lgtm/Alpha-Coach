@@ -169,19 +169,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             className={`group relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-95 ${
               active
                 ? 'bg-[#2F5BEA] text-white ring-2 ring-[#2F5BEA] scale-105 shadow-[0_0_12px_rgba(47,91,234,0.5)]'
-                : 'bg-transparent hover:bg-white/10 text-[#8FA0C4] hover:text-white'
+                : 'bg-transparent hover:bg-[var(--sidebar-item-hover-bg)] text-[var(--sidebar-icon)] hover:text-[var(--sidebar-icon-hover)]'
             }`}
           >
             <Icon
               className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                active ? 'text-white stroke-[2.5]' : 'text-[#8FA0C4] group-hover:text-white'
+                active ? 'text-white stroke-[2.5]' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--sidebar-icon-hover)]'
               }`}
             />
 
             {/* Notification Badge Dot when collapsed */}
             {item.badge && (
               <span
-                className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[#D12F42] ring-2 ring-[#0E1A33]"
+                className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[var(--sidebar-danger-icon)] ring-2 ring-[var(--sidebar-bg)]"
                 aria-label={`Notification: ${item.badge}`}
               />
             )}
@@ -204,8 +204,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             isSubItem ? 'text-[11px] py-2' : 'text-xs py-2.5'
           } ${
             active
-              ? 'bg-[#2F5BEA]/15 text-white font-extrabold shadow-xs'
-              : 'bg-transparent text-[#8FA0C4] hover:text-white hover:bg-white/5 font-medium'
+              ? 'bg-[#2F5BEA]/15 text-[var(--sidebar-icon-hover)] font-extrabold shadow-xs'
+              : 'bg-transparent text-[var(--sidebar-icon)] hover:text-[var(--sidebar-icon-hover)] hover:bg-[var(--sidebar-item-hover-bg)] font-medium'
           }`}
         >
           {/* Sleek left sky-blue accent indicator bar for active item */}
@@ -220,7 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="w-5 h-5 flex items-center justify-center shrink-0">
               <Icon
                 className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
-                  active ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[#8FA0C4] group-hover:text-white'
+                  active ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--sidebar-icon-hover)]'
                 }`}
               />
             </div>
@@ -232,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           {/* Expanded full badge pill */}
           {item.badge && (
             <span
-              className="shrink-0 ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#D12F42] text-white shadow-xs"
+              className="shrink-0 ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[var(--sidebar-danger-bg)] text-[var(--sidebar-danger-icon)] border border-[var(--sidebar-danger-icon)]/20 shadow-xs"
             >
               {item.badge}
             </span>
@@ -244,18 +244,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   // Main interior content of the floating glass capsule
   const renderCapsuleContent = (isExpanded: boolean) => (
-    <div className="sidebar-glass-capsule flex flex-col h-full text-white select-none overflow-hidden p-2.5">
+    <div className="sidebar-glass-capsule flex flex-col h-full text-[var(--sidebar-text)] select-none overflow-hidden p-2.5">
       {/* 1. Header with Clock/Date (when expanded) or Circular Logo (when collapsed) */}
-      <div className={`pb-2.5 pt-1 flex items-center border-b border-white/10 ${
+      <div className={`pb-2.5 pt-1 flex items-center border-b border-[var(--sidebar-divider)] ${
         isExpanded ? 'px-2 justify-between' : 'justify-center'
       }`}>
         {isExpanded ? (
           <div className="flex flex-col justify-center min-h-[44px] px-1 select-none animate-in fade-in duration-200">
-            <div className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-white tracking-wide tabular-nums font-mono">
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-[var(--sidebar-icon-hover)] tracking-wide tabular-nums font-mono">
               <Clock className="w-3.5 h-3.5 text-[#2F5BEA] shrink-0" aria-hidden="true" />
               <span>{formattedTime}</span>
             </div>
-            <div className="text-[10px] sm:text-[11px] font-medium text-[#8FA0C4] truncate">
+            <div className="text-[10px] sm:text-[11px] font-medium text-[var(--sidebar-icon)] truncate">
               {formattedDate}
             </div>
           </div>
@@ -271,7 +271,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] rounded-full flex items-center justify-center"
             aria-label="Arcade Fx Dashboard"
           >
-            <div className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/[0.12] border border-white/20 flex items-center justify-center shadow-xs hover:scale-105 transition-transform duration-200">
+            <div className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[var(--sidebar-bg)] border border-[var(--sidebar-logo-ring)] flex items-center justify-center shadow-xs hover:scale-105 transition-all duration-200">
               <img
                 src="/brand/arcade-fx-badge.png"
                 alt="Arcade Fx"
@@ -288,7 +288,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           type="button"
           onClick={onClose}
           aria-label="Close navigation"
-          className="lg:hidden p-1.5 rounded-full text-[#8FA0C4] hover:text-white hover:bg-white/10 transition"
+          className="lg:hidden p-1.5 rounded-full text-[var(--sidebar-icon)] hover:text-[var(--sidebar-icon-hover)] hover:bg-[var(--sidebar-item-hover-bg)] transition"
         >
           <X className="w-5 h-5" />
         </button>
@@ -300,7 +300,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             onClick={() => setTabletExpanded(!tabletExpanded)}
             aria-label={tabletExpanded ? 'Collapse navigation' : 'Expand navigation'}
             aria-expanded={tabletExpanded}
-            className="hidden md:inline-flex lg:hidden w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 items-center justify-center text-white/90 hover:text-white transition shadow-xs"
+            className="hidden md:inline-flex lg:hidden w-8 h-8 rounded-full bg-[var(--sidebar-item-hover-bg)] hover:bg-[var(--sidebar-border)] border border-[var(--sidebar-border)] items-center justify-center text-[var(--sidebar-text)] hover:text-[var(--sidebar-icon-hover)] transition shadow-xs"
           >
             {tabletExpanded ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
           </button>
@@ -328,12 +328,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 className={`group w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-95 ${
                   isMarketIntelActive
                     ? 'bg-[#2F5BEA] text-white ring-2 ring-[#2F5BEA] scale-105 shadow-[0_0_12px_rgba(47,91,234,0.5)]'
-                    : 'bg-transparent hover:bg-white/10 text-[#8FA0C4] hover:text-white'
+                    : 'bg-transparent hover:bg-[var(--sidebar-item-hover-bg)] text-[var(--sidebar-icon)] hover:text-[var(--sidebar-icon-hover)]'
                 }`}
               >
                 <Layers
                   className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                    isMarketIntelActive ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[#8FA0C4] group-hover:text-white'
+                    isMarketIntelActive ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--sidebar-icon-hover)]'
                   }`}
                 />
               </button>
@@ -347,8 +347,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 aria-label="Market Intelligence Navigation Group"
                 className={`w-full group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 border-0 shadow-none outline-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-[0.98] ${
                   isMarketIntelActive
-                    ? 'bg-[#2F5BEA]/15 text-white font-extrabold shadow-xs'
-                    : 'bg-transparent text-[#8FA0C4] hover:text-white hover:bg-white/5 font-medium'
+                    ? 'bg-[#2F5BEA]/15 text-[var(--sidebar-icon-hover)] font-extrabold shadow-xs'
+                    : 'bg-transparent text-[var(--sidebar-icon)] hover:text-[var(--sidebar-icon-hover)] hover:bg-[var(--sidebar-item-hover-bg)] font-medium'
                 }`}
               >
                 {/* Sleek left accent indicator bar if active */}
@@ -363,7 +363,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   <div className="w-5 h-5 flex items-center justify-center shrink-0">
                     <Layers
                       className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
-                        isMarketIntelActive ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[#8FA0C4] group-hover:text-white'
+                        isMarketIntelActive ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--sidebar-icon-hover)]'
                       }`}
                     />
                   </div>
@@ -374,7 +374,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
                     isIntelOpen ? 'rotate-180' : ''
-                  } ${isMarketIntelActive ? 'text-[#2F5BEA]' : 'text-[#8FA0C4] group-hover:text-white'}`}
+                  } ${isMarketIntelActive ? 'text-[#2F5BEA]' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--sidebar-icon-hover)]'}`}
                 />
               </button>
 
@@ -389,14 +389,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Divider */}
-        <div className="my-2 border-t border-white/10" />
+        <div className="my-2 border-t border-[var(--sidebar-divider)]" />
 
         {/* Bottom Utility Items */}
         {BOTTOM_NAV_ITEMS.map(item => renderNavItem(item, false, isExpanded))}
       </div>
 
       {/* 3. Bottom Sign Out Action */}
-      <div className="pt-2 border-t border-white/10">
+      <div className="pt-2 border-t border-[var(--sidebar-divider)]">
         {!isExpanded ? (
           <div className="flex justify-center">
             <button
@@ -404,7 +404,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               onClick={handleLogout}
               aria-label="Sign Out"
               title="Sign Out"
-              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-rose-500/20 hover:bg-rose-500 text-rose-200 hover:text-white border border-rose-500/30 flex items-center justify-center transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[var(--sidebar-danger-bg)] text-[var(--sidebar-danger-icon)] hover:bg-[var(--sidebar-danger-icon)] hover:text-white border border-[var(--sidebar-danger-icon)]/30 flex items-center justify-center transition-all duration-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-danger-icon)]"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -414,7 +414,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             type="button"
             onClick={handleLogout}
             aria-label="Sign Out"
-            className="w-full flex items-center gap-3 min-h-[44px] rounded-xl px-3.5 py-2.5 bg-rose-500/20 hover:bg-rose-500 text-rose-200 hover:text-white border border-rose-500/30 font-bold transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+            className="w-full flex items-center gap-3 min-h-[44px] rounded-xl px-3.5 py-2.5 bg-[var(--sidebar-danger-bg)] text-[var(--sidebar-danger-icon)] hover:bg-[var(--sidebar-danger-icon)] hover:text-white border border-[var(--sidebar-danger-icon)]/30 font-bold transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-danger-icon)]"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span className="whitespace-nowrap font-heading tracking-tight">Sign Out</span>
@@ -441,10 +441,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         onFocus={handleFocus}
         onBlur={handleBlur}
         aria-label="Main Navigation"
-        className={`sidebar-animated hidden lg:flex flex-col fixed top-3 bottom-3 left-3 z-40 transition-[width,box-shadow] duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          isDesktopExpanded
-            ? 'w-[248px] shadow-[0_20px_50px_rgba(0,0,0,0.65)]'
-            : 'w-[72px] shadow-[0_12px_36px_rgba(0,0,0,0.4)]'
+        className={`sidebar-animated hidden lg:flex flex-col fixed top-3 bottom-3 left-3 z-40 rounded-[28px] transition-[width] duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          isDesktopExpanded ? 'w-[248px]' : 'w-[72px]'
         }`}
       >
         {renderCapsuleContent(isDesktopExpanded)}
@@ -461,10 +459,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       />
       <aside
         aria-label="Tablet Navigation"
-        className={`sidebar-animated hidden md:flex lg:hidden flex-col fixed top-3 bottom-3 left-3 z-40 transition-[width,box-shadow] duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          isTabletExpanded
-            ? 'w-[248px] shadow-[0_20px_50px_rgba(0,0,0,0.65)]'
-            : 'w-[72px] shadow-[0_12px_36px_rgba(0,0,0,0.4)]'
+        className={`sidebar-animated hidden md:flex lg:hidden flex-col fixed top-3 bottom-3 left-3 z-40 rounded-[28px] transition-[width] duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          isTabletExpanded ? 'w-[248px]' : 'w-[72px]'
         }`}
       >
         {renderCapsuleContent(isTabletExpanded)}
@@ -484,7 +480,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         role="dialog"
         aria-label="Navigation Menu"
         aria-modal={isOpen}
-        className={`fixed top-3 bottom-3 left-3 z-50 w-full max-w-[280px] flex flex-col transition-transform duration-300 ease-out md:hidden ${
+        className={`fixed top-3 bottom-3 left-3 z-50 w-full max-w-[280px] flex flex-col rounded-[28px] transition-transform duration-300 ease-out md:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-[120%]'
         }`}
       >
