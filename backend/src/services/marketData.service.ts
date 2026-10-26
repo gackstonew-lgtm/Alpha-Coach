@@ -1,3 +1,4 @@
+import { ForexDataLayerService } from './forexDataLayer.service';
 import { v4 as uuidv4 } from 'uuid';
 import { getDatabase } from '../db/db';
 import {
@@ -245,11 +246,13 @@ export const TIMEFRAME_SECONDS: Record<SupportedTimeframe, number> = {
   M1: 60,
   M5: 300,
   M15: 900,
+  M30: 1800,
   H1: 3600,
   H4: 14400,
   D1: 86400,
   W1: 604800,
-  MN1: 2592000
+  MN1: 2592000,
+  MN: 2592000
 };
 
 export function getInstrumentSpec(rawSymbol: string): InstrumentSpecification {
@@ -583,11 +586,13 @@ export class MarketDataService {
           M1: '1min',
           M5: '5min',
           M15: '15min',
+          M30: '30min',
           H1: '1h',
           H4: '4h',
           D1: '1day',
           W1: '1week',
-          MN1: '1month'
+          MN1: '1month',
+          MN: '1month'
         };
         const formattedPair = `${spec.baseCurrency}/${spec.quoteCurrency}`;
         const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(formattedPair)}&interval=${intervalMap[timeframe]}&outputsize=${Math.min(limit, 500)}&timezone=UTC&apikey=${twelveDataKey}`;
@@ -664,6 +669,25 @@ export class MarketDataService {
         // Ignore network errors
       }
     }
+
+    try {
+      const bars = await ForexDataLayerService.fetchYahooFinanceCandles(spec.symbol, timeframe, limit);
+      if (bars && bars.length > 0) {
+        const candles: OHLCVCandle[] = bars.map(b => ({
+          symbol: spec.symbol,
+          timeframe,
+          timestamp: new Date(b.time * 1000).toISOString(),
+          open: b.open,
+          high: b.high,
+          low: b.low,
+          close: b.close,
+          volume: b.volume,
+          isClosed: true,
+          sourceProvider: 'YAHOO_FINANCE'
+        }));
+        return { provider: 'YAHOO_FINANCE' as any, candles };
+      }
+    } catch {}
 
     return null;
   }

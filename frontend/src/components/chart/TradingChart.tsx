@@ -174,6 +174,20 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [activeLegend, setActiveLegend] = useState<any>(null);
 
+  // Live Stream & Quote State
+  const [liveQuote, setLiveQuote] = useState<{ bid: number; ask: number; spreadPips: number; lastUpdated?: string } | null>(null);
+  const [connectionState, setConnectionState] = useState<"CONNECTING" | "LIVE" | "POLLING" | "CLOSED">("CONNECTING");
+
+  // Institutional Price Levels & Toggles
+  const [priceLevels, setPriceLevels] = useState<any>(null);
+  const [showLevelsMenu, setShowLevelsMenu] = useState<boolean>(false);
+  const [showClassicPivots, setShowClassicPivots] = useState<boolean>(false);
+  const [showPreviousHL, setShowPreviousHL] = useState<boolean>(false);
+  const [showSwingSR, setShowSwingSR] = useState<boolean>(false);
+
+  // Market Conditions State
+  const [marketConditions, setMarketConditions] = useState<any>(null);
+
   // Indicators toggle state
   const [showSMA, setShowSMA] = useState<boolean>(false);
   const [showEMA, setShowEMA] = useState<boolean>(true);
@@ -258,7 +272,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
       const res = await api.getCandles({
         symbol: currentSymbol,
         timeframe: timeframe as any,
-        limit: 300,
+        limit: 500,
         allowExternalFetch: true
       });
 
@@ -297,6 +311,106 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   useEffect(() => {
     loadCandles();
   }, [loadCandles]);
+
+  // Fetch Institutional Price Levels & Market Conditions
+  useEffect(() => {
+    api.getForexLevels(currentSymbol)
+      .then((res: any) => {
+        if (res && res.today) setPriceLevels(res);
+      })
+      .catch(() => {});
+
+    api.getForexConditions(currentSymbol)
+      .then((res: any) => {
+        if (res && res.daily) setMarketConditions(res);
+      })
+      .catch(() => {});
+  }, [currentSymbol]);
+
+  // Real-time SSE / Polling Stream for Bid/Ask ticks and active candle updates
+  useEffect(() => {
+    let eventSource: EventSource | null = null;
+    let pollTimer: any = null;
+
+    const startPolling = () => {
+      if (pollTimer) return;
+      pollTimer = setInterval(async () => {
+        try {
+          const res = await api.getForexQuote(currentSymbol);
+          if (res && res.data) {
+            const q = res.data;
+            setLiveQuote({
+              bid: q.bid,
+              ask: q.ask,
+              spreadPips: q.spreadPips,
+              lastUpdated: q.lastUpdated
+            });
+            if (mainSeriesRef.current && q.bid) {
+              setRawBars((prevBars) => {
+                if (prevBars.length === 0) return prevBars;
+                const last = { ...prevBars[prevBars.length - 1] };
+                last.close = q.bid;
+                if (q.bid > last.high) last.high = q.bid;
+                if (q.bid < last.low) last.low = q.bid;
+                mainSeriesRef.current?.update(last);
+                return [...prevBars.slice(0, -1), last];
+              });
+            }
+          }
+        } catch {}
+      }, 2500);
+    };
+
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const streamUrl = `${baseUrl}/api/v1/forex/stream?symbol=${currentSymbol}`;
+      eventSource = new EventSource(streamUrl);
+
+      eventSource.onopen = () => {
+        setConnectionState("LIVE");
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === "tick" || payload.type === "quote") {
+            const q = payload.data;
+            setLiveQuote({
+              bid: q.bid,
+              ask: q.ask,
+              spreadPips: q.spreadPips,
+              lastUpdated: q.lastUpdated
+            });
+            if (mainSeriesRef.current && q.bid) {
+              setRawBars((prevBars) => {
+                if (prevBars.length === 0) return prevBars;
+                const last = { ...prevBars[prevBars.length - 1] };
+                last.close = q.bid;
+                if (q.bid > last.high) last.high = q.bid;
+                if (q.bid < last.low) last.low = q.bid;
+                mainSeriesRef.current?.update(last);
+                return [...prevBars.slice(0, -1), last];
+              });
+            }
+          }
+        } catch {}
+      };
+
+      eventSource.onerror = () => {
+        eventSource?.close();
+        setConnectionState("POLLING");
+        startPolling();
+      };
+    } catch {
+      setConnectionState("POLLING");
+      startPolling();
+    }
+
+    return () => {
+      eventSource?.close();
+      if (pollTimer) clearInterval(pollTimer);
+    };
+  }, [currentSymbol]);
 
   // 2. Initialize and Update Lightweight Chart
   useEffect(() => {
@@ -659,6 +773,10 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     showVWAP,
     showRSI,
     showTradesOverlay,
+    showClassicPivots,
+    showPreviousHL,
+    showSwingSR,
+    priceLevels,
     trades,
     macroEvents,
     currentSymbol
@@ -711,8 +829,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   const isOil = currentSymbol.toUpperCase().includes('OIL');
   const spreadDelta = isMetal ? 0.30 : isOil ? 0.04 : isCrypto ? 12.0 : isJpy ? 0.015 : 0.00015;
 
-  const bidPrice = currentPrice;
-  const askPrice = currentPrice + spreadDelta;
+  const bidPrice = liveQuote?.bid ?? currentPrice;
+  const askPrice = liveQuote?.ask ?? (currentPrice + spreadDelta);
 
   const formattedBid = formatMT5Price(bidPrice, currentSymbol);
   const formattedAsk = formatMT5Price(askPrice, currentSymbol);
@@ -843,6 +961,49 @@ export const TradingChart: React.FC<TradingChartProps> = ({
                   >
                     <span>VWAP</span>
                     {showVWAP && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Institutional Price Levels Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowLevelsMenu(!showLevelsMenu)}
+                className={`p-1.5 rounded-lg border text-xs transition flex items-center gap-1 ${
+                  showLevelsMenu || showClassicPivots || showPreviousHL || showSwingSR
+                    ? "bg-brand-500/10 border-brand-500/40 text-brand-500 font-bold"
+                    : "bg-surface border-border-subtle text-content-muted hover:text-content-primary"
+                }`}
+                title="Institutional Price Levels & Pivots"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px] font-medium">Levels</span>
+              </button>
+
+              {showLevelsMenu && (
+                <div className="absolute top-full right-0 mt-1 z-30 w-56 bg-surface border border-border-subtle rounded-xl shadow-xl p-2 space-y-1 text-xs">
+                  <div className="text-[10px] font-bold text-content-muted uppercase tracking-wider px-2 py-1">Price Levels</div>
+                  <button
+                    onClick={() => setShowClassicPivots(!showClassicPivots)}
+                    className={`w-full text-left px-2 py-1.5 rounded-lg flex items-center justify-between ${showClassicPivots ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold" : "text-content-secondary hover:bg-surface-secondary"}`}
+                  >
+                    <span>Classic Pivots (P, R1-3, S1-3)</span>
+                    {showClassicPivots && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    onClick={() => setShowPreviousHL(!showPreviousHL)}
+                    className={`w-full text-left px-2 py-1.5 rounded-lg flex items-center justify-between ${showPreviousHL ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold" : "text-content-secondary hover:bg-surface-secondary"}`}
+                  >
+                    <span>Prev Day/Week H/L (PDH/PDL)</span>
+                    {showPreviousHL && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    onClick={() => setShowSwingSR(!showSwingSR)}
+                    className={`w-full text-left px-2 py-1.5 rounded-lg flex items-center justify-between ${showSwingSR ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold" : "text-content-secondary hover:bg-surface-secondary"}`}
+                  >
+                    <span>Swing Support & Resistance</span>
+                    {showSwingSR && <Check className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               )}

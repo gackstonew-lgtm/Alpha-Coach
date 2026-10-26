@@ -15,7 +15,7 @@ export type DataProvenanceCategory =
   | 'AI_EXPLANATION'
   | 'UNAVAILABLE_DATA';
 
-export type SupportedTimeframe = 'M1' | 'M5' | 'M15' | 'H1' | 'H4' | 'D1' | 'W1' | 'MN1';
+export type SupportedTimeframe = 'M1' | 'M5' | 'M15' | 'M30' | 'H1' | 'H4' | 'D1' | 'W1' | 'MN1' | 'MN';
 
 export type MarketDataProviderId =
   | 'MT5_TERMINAL'

@@ -18086,17 +18086,17 @@ var require_router = __commonJS({
     var toString = Object.prototype.toString;
     var proto = module2.exports = function(options) {
       var opts = options || {};
-      function router20(req, res, next) {
-        router20.handle(req, res, next);
+      function router21(req, res, next) {
+        router21.handle(req, res, next);
       }
-      setPrototypeOf(router20, proto);
-      router20.params = {};
-      router20._params = [];
-      router20.caseSensitive = opts.caseSensitive;
-      router20.mergeParams = opts.mergeParams;
-      router20.strict = opts.strict;
-      router20.stack = [];
-      return router20;
+      setPrototypeOf(router21, proto);
+      router21.params = {};
+      router21._params = [];
+      router21.caseSensitive = opts.caseSensitive;
+      router21.mergeParams = opts.mergeParams;
+      router21.strict = opts.strict;
+      router21.stack = [];
+      return router21;
     };
     proto.param = function param(name, fn) {
       if (typeof name === "function") {
@@ -20705,7 +20705,7 @@ var require_application = __commonJS({
   "node_modules/express/lib/application.js"(exports2, module2) {
     "use strict";
     var finalhandler = require_finalhandler();
-    var Router20 = require_router();
+    var Router21 = require_router();
     var methods = require_methods();
     var middleware = require_init();
     var query = require_query();
@@ -20770,7 +20770,7 @@ var require_application = __commonJS({
     };
     app2.lazyrouter = function lazyrouter() {
       if (!this._router) {
-        this._router = new Router20({
+        this._router = new Router21({
           caseSensitive: this.enabled("case sensitive routing"),
           strict: this.enabled("strict routing")
         });
@@ -20779,17 +20779,17 @@ var require_application = __commonJS({
       }
     };
     app2.handle = function handle(req, res, callback) {
-      var router20 = this._router;
+      var router21 = this._router;
       var done = callback || finalhandler(req, res, {
         env: this.get("env"),
         onerror: logerror.bind(this)
       });
-      if (!router20) {
+      if (!router21) {
         debug("no routes defined on app");
         done();
         return;
       }
-      router20.handle(req, res, done);
+      router21.handle(req, res, done);
     };
     app2.use = function use(fn) {
       var offset = 0;
@@ -20809,15 +20809,15 @@ var require_application = __commonJS({
         throw new TypeError("app.use() requires a middleware function");
       }
       this.lazyrouter();
-      var router20 = this._router;
+      var router21 = this._router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router20.use(path3, fn2);
+          return router21.use(path3, fn2);
         }
         debug(".use app under %s", path3);
         fn2.mountpath = path3;
         fn2.parent = this;
-        router20.use(path3, function mounted_app(req, res, next) {
+        router21.use(path3, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             setPrototypeOf(req, orig.request);
@@ -22634,7 +22634,7 @@ var require_express = __commonJS({
     var mixin = require_merge_descriptors();
     var proto = require_application();
     var Route = require_route();
-    var Router20 = require_router();
+    var Router21 = require_router();
     var req = require_request();
     var res = require_response();
     exports2 = module2.exports = createApplication;
@@ -22657,7 +22657,7 @@ var require_express = __commonJS({
     exports2.request = req;
     exports2.response = res;
     exports2.Route = Route;
-    exports2.Router = Router20;
+    exports2.Router = Router21;
     exports2.json = bodyParser.json;
     exports2.query = require_query();
     exports2.raw = bodyParser.raw;
@@ -51721,7 +51721,7 @@ __export(app_exports, {
   default: () => app_default
 });
 module.exports = __toCommonJS(app_exports);
-var import_express20 = __toESM(require_express2());
+var import_express21 = __toESM(require_express2());
 var import_cors = __toESM(require_lib3());
 
 // node_modules/helmet/index.mjs
@@ -55409,6 +55409,682 @@ var PositionReconstructionService = class {
   }
 };
 
+// src/services/forexDataLayer.service.ts
+var ForexDataLayerService = class {
+  // In-memory quote cache to prevent excessive provider calls
+  static quoteCache = /* @__PURE__ */ new Map();
+  // Connected SSE clients by symbol
+  static sseClients = /* @__PURE__ */ new Map();
+  // Polling ticker timer
+  static tickerInterval = null;
+  /**
+   * Normalizes symbol (EURUSD, EUR/USD, EURUSD.raw -> EURUSD)
+   */
+  static cleanSymbol(raw) {
+    return (raw || "EURUSD").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  }
+  /**
+   * Normalizes timeframe string to standard SupportedTimeframe
+   */
+  static normalizeTimeframe(tf) {
+    const upper = (tf || "H1").toUpperCase();
+    if (upper === "M1" || upper === "1M" || upper === "1MIN") return "M1";
+    if (upper === "M5" || upper === "5M" || upper === "5MIN") return "M5";
+    if (upper === "M15" || upper === "15M" || upper === "15MIN") return "M15";
+    if (upper === "M30" || upper === "30M" || upper === "30MIN") return "M30";
+    if (upper === "H1" || upper === "1H" || upper === "60M") return "H1";
+    if (upper === "H4" || upper === "4H" || upper === "240M") return "H4";
+    if (upper === "D1" || upper === "1D" || upper === "D") return "D1";
+    if (upper === "W1" || upper === "1W" || upper === "W") return "W1";
+    if (upper === "MN" || upper === "MN1" || upper === "1MTH") return "MN1";
+    return "H1";
+  }
+  /**
+   * Checks whether the Forex market is currently open.
+   * Standard Forex trading hours: Sunday 22:00 UTC through Friday 22:00 UTC.
+   */
+  static isForexMarketOpen(now = /* @__PURE__ */ new Date()) {
+    const day = now.getUTCDay();
+    const hour = now.getUTCHours();
+    const min = now.getUTCMinutes();
+    const timeDec = hour + min / 60;
+    if (day === 6) return false;
+    if (day === 0 && timeDec < 22) return false;
+    if (day === 5 && timeDec >= 22) return false;
+    return true;
+  }
+  /**
+   * Computes active Forex trading sessions in UTC, including overlaps.
+   * - Sydney:   21:00 - 06:00 UTC
+   * - Tokyo:    00:00 - 09:00 UTC
+   * - London:   07:00 - 16:00 UTC
+   * - New York: 12:00 - 21:00 UTC
+   */
+  static getActiveSessions(now = /* @__PURE__ */ new Date()) {
+    const hour = now.getUTCHours();
+    const checkSession = (utcOpen, utcClose) => {
+      if (utcOpen < utcClose) {
+        return hour >= utcOpen && hour < utcClose;
+      } else {
+        return hour >= utcOpen || hour < utcClose;
+      }
+    };
+    const sydneyActive = checkSession(21, 6);
+    const tokyoActive = checkSession(0, 9);
+    const londonActive = checkSession(7, 16);
+    const newYorkActive = checkSession(12, 21);
+    const sessions = [
+      { name: "Sydney", utcOpenHour: 21, utcCloseHour: 6, isActive: sydneyActive, status: sydneyActive ? "OPEN" : "CLOSED" },
+      { name: "Tokyo", utcOpenHour: 0, utcCloseHour: 9, isActive: tokyoActive, status: tokyoActive ? "OPEN" : "CLOSED" },
+      { name: "London", utcOpenHour: 7, utcCloseHour: 16, isActive: londonActive, status: londonActive ? "OPEN" : "CLOSED" },
+      { name: "New York", utcOpenHour: 12, utcCloseHour: 21, isActive: newYorkActive, status: newYorkActive ? "OPEN" : "CLOSED" }
+    ];
+    const activeSessions = sessions.filter((s) => s.isActive).map((s) => s.name);
+    const isOverlap = activeSessions.length >= 2;
+    return { activeSessions, isOverlap, sessions };
+  }
+  /**
+   * Aggregates lower-timeframe candles into higher-timeframe candles deterministically.
+   * Groups by interval boundary in UTC seconds.
+   */
+  static aggregateCandles(candles, targetSeconds) {
+    if (!candles || candles.length === 0 || targetSeconds <= 0) return [];
+    const sorted = [...candles].sort((a, b) => a.time - b.time);
+    const buckets = /* @__PURE__ */ new Map();
+    for (const c of sorted) {
+      if (!isFinite(c.open) || !isFinite(c.high) || !isFinite(c.low) || !isFinite(c.close)) continue;
+      const bucketTime = Math.floor(c.time / targetSeconds) * targetSeconds;
+      const list = buckets.get(bucketTime) || [];
+      list.push(c);
+      buckets.set(bucketTime, list);
+    }
+    const aggregated = [];
+    const sortedTimes = Array.from(buckets.keys()).sort((a, b) => a - b);
+    for (const bucketTime of sortedTimes) {
+      const bars = buckets.get(bucketTime);
+      if (bars.length === 0) continue;
+      const open = bars[0].open;
+      const close = bars[bars.length - 1].close;
+      let high = -Infinity;
+      let low = Infinity;
+      let volume = 0;
+      for (const b of bars) {
+        if (b.high > high) high = b.high;
+        if (b.low < low) low = b.low;
+        volume += b.volume || 0;
+      }
+      aggregated.push({
+        time: bucketTime,
+        open,
+        high,
+        low,
+        close,
+        volume
+      });
+    }
+    return aggregated;
+  }
+  /**
+   * Resolves Yahoo Finance ticker symbol for a given pair.
+   */
+  static getYahooTicker(symbol) {
+    const clean = this.cleanSymbol(symbol);
+    if (clean === "XAUUSD") return "GC=F";
+    if (clean === "XAGUSD") return "SI=F";
+    return `${clean}=X`;
+  }
+  /**
+   * Fetches historical OHLCV candles from Yahoo Finance.
+   * Supports M1, M5, M15, M30, H1, D1, W1, MN1 with up to 500+ bars.
+   */
+  static async fetchYahooFinanceCandles(symbol, timeframe, limit = 500) {
+    const clean = this.cleanSymbol(symbol);
+    const ticker = this.getYahooTicker(clean);
+    let interval = "1h";
+    let range = "1mo";
+    switch (timeframe) {
+      case "M1":
+        interval = "1m";
+        range = "7d";
+        break;
+      case "M5":
+        interval = "5m";
+        range = "1mo";
+        break;
+      case "M15":
+        interval = "15m";
+        range = "1mo";
+        break;
+      case "M30":
+        interval = "30m";
+        range = "1mo";
+        break;
+      case "H1":
+        interval = "1h";
+        range = "3mo";
+        break;
+      case "H4":
+        interval = "1h";
+        range = "6mo";
+        break;
+      case "D1":
+        interval = "1d";
+        range = "2y";
+        break;
+      case "W1":
+        interval = "1wk";
+        range = "5y";
+        break;
+      case "MN":
+      case "MN1":
+        interval = "1mo";
+        range = "10y";
+        break;
+    }
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=${interval}&range=${range}`;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 7e3);
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      if (!res.ok) {
+        return [];
+      }
+      const json = await res.json();
+      const result = json?.chart?.result?.[0];
+      if (!result || !result.timestamp || !result.indicators?.quote?.[0]) {
+        return [];
+      }
+      const timestamps = result.timestamp;
+      const quote = result.indicators.quote[0];
+      const opens = quote.open || [];
+      const highs = quote.high || [];
+      const lows = quote.low || [];
+      const closes = quote.close || [];
+      const volumes = quote.volume || [];
+      const rawBars = [];
+      for (let i = 0; i < timestamps.length; i++) {
+        const o = opens[i];
+        const h = highs[i];
+        const l = lows[i];
+        const c = closes[i];
+        const t = timestamps[i];
+        if (t && o !== null && !isNaN(o) && h !== null && !isNaN(h) && l !== null && !isNaN(l) && c !== null && !isNaN(c) && o > 0 && h > 0 && l > 0 && c > 0) {
+          rawBars.push({
+            time: t,
+            open: Number(o.toFixed(5)),
+            high: Number(h.toFixed(5)),
+            low: Number(l.toFixed(5)),
+            close: Number(c.toFixed(5)),
+            volume: Number(volumes[i] || 0)
+          });
+        }
+      }
+      if (timeframe === "H4") {
+        const aggregated = this.aggregateCandles(rawBars, 14400);
+        return aggregated.slice(-limit);
+      }
+      if (timeframe === "M30" && interval !== "30m") {
+        const aggregated = this.aggregateCandles(rawBars, 1800);
+        return aggregated.slice(-limit);
+      }
+      return rawBars.slice(-limit);
+    } catch {
+      return [];
+    }
+  }
+  /**
+   * Ingests bars into database `market_candles` table.
+   */
+  static async persistCandles(symbol, timeframe, bars, provider = "YAHOO_FINANCE") {
+    if (!bars || bars.length === 0) return;
+    const clean = this.cleanSymbol(symbol);
+    try {
+      const db = getDatabase();
+      const insertSql = `
+        INSERT INTO market_candles (id, symbol, timeframe, candle_time, open_price, high_price, low_price, close_price, volume, is_closed, source_provider)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+        ON CONFLICT(symbol, timeframe, candle_time, source_provider)
+        DO UPDATE SET
+          open_price = excluded.open_price,
+          high_price = excluded.high_price,
+          low_price = excluded.low_price,
+          close_price = excluded.close_price,
+          volume = excluded.volume
+      `;
+      for (const bar of bars) {
+        const iso = new Date(bar.time * 1e3).toISOString();
+        const id = `${clean}_${timeframe}_${bar.time}_${provider}`;
+        await db.run(insertSql, [
+          id,
+          clean,
+          timeframe,
+          iso,
+          bar.open,
+          bar.high,
+          bar.low,
+          bar.close,
+          bar.volume,
+          provider
+        ]);
+      }
+    } catch {
+    }
+  }
+  /**
+   * Retrieves OHLCV candles with automatic fallback & multi-timeframe backfill.
+   */
+  static async getCandles(params) {
+    const symbol = this.cleanSymbol(params.symbol);
+    const timeframe = this.normalizeTimeframe(params.timeframe);
+    const limit = Math.max(10, Math.min(params.limit || 500, 1e3));
+    let bars = await this.fetchYahooFinanceCandles(symbol, timeframe, limit);
+    let provider = "YAHOO_FINANCE";
+    if (bars.length < 20) {
+      try {
+        const mRes = await MarketDataService.getCandles({
+          symbol,
+          timeframe,
+          limit,
+          allowExternalFetch: true
+        });
+        if (mRes && mRes.candles && mRes.candles.length > 0) {
+          bars = mRes.candles.map((c) => ({
+            time: Math.floor(new Date(c.timestamp).getTime() / 1e3),
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+            volume: c.volume || 0
+          }));
+          provider = mRes.provenance?.sourceProvider || "MARKET_DATA_SERVICE";
+        }
+      } catch {
+      }
+    }
+    if (bars.length < 10 && ["M5", "M15", "M30", "H1", "H4"].includes(timeframe)) {
+      const lowerTf = timeframe === "H4" ? "H1" : "M5";
+      const lowerBars = await this.fetchYahooFinanceCandles(symbol, lowerTf, 500);
+      if (lowerBars.length > 0) {
+        const targetSec = TIMEFRAME_SECONDS[timeframe] || 3600;
+        bars = this.aggregateCandles(lowerBars, targetSec);
+        provider = `AGGREGATED_${lowerTf}_TO_${timeframe}`;
+      }
+    }
+    bars.sort((a, b) => a.time - b.time);
+    const deduplicated = [];
+    const seenTimes = /* @__PURE__ */ new Set();
+    for (const b of bars) {
+      if (!seenTimes.has(b.time)) {
+        seenTimes.add(b.time);
+        deduplicated.push(b);
+      }
+    }
+    this.persistCandles(symbol, timeframe, deduplicated, provider).catch(() => {
+    });
+    const currentPrice = deduplicated.length > 0 ? deduplicated[deduplicated.length - 1].close : null;
+    return {
+      symbol,
+      timeframe,
+      candles: deduplicated,
+      sourceProvider: provider,
+      count: deduplicated.length,
+      currentPrice
+    };
+  }
+  /**
+   * Retrieves real-time quote (Bid, Ask, Spread) for a symbol.
+   */
+  static async getLiveQuote(symbolRaw) {
+    const symbol = this.cleanSymbol(symbolRaw);
+    const now = Date.now();
+    const cached = this.quoteCache.get(symbol);
+    if (cached && now - cached.cachedAt < 2e3) {
+      return cached.quote;
+    }
+    const spec = getInstrumentSpec(symbol);
+    const spreadPips = spec.typicalSpreadPips || 1;
+    const spreadRaw = spec.pipSize * spreadPips;
+    const bars = await this.fetchYahooFinanceCandles(symbol, "M1", 2);
+    let basePrice = 1.085;
+    let provider = "DERIVED_MODEL";
+    if (bars.length > 0) {
+      basePrice = bars[bars.length - 1].close;
+      provider = "YAHOO_LIVE";
+    }
+    const halfSpread = spreadRaw / 2;
+    const bid = Number((basePrice - halfSpread).toFixed(spec.digits));
+    const ask = Number((basePrice + halfSpread).toFixed(spec.digits));
+    const quote = {
+      symbol,
+      bid,
+      ask,
+      spreadPips,
+      spreadRaw: Number(spreadRaw.toFixed(spec.digits)),
+      lastUpdated: (/* @__PURE__ */ new Date()).toISOString(),
+      sourceProvider: provider
+    };
+    this.quoteCache.set(symbol, { quote, cachedAt: now });
+    return quote;
+  }
+  /**
+   * Computes Classic Pivot Points (Daily).
+   * P = (H + L + C) / 3
+   * R1 = (2 * P) - L, S1 = (2 * P) - H
+   * R2 = P + (H - L), S2 = P - (H - L)
+   * R3 = H + 2 * (P - L), S3 = L - 2 * (H - P)
+   */
+  static calculateClassicPivots(high, low, close) {
+    const P = (high + low + close) / 3;
+    const R1 = 2 * P - low;
+    const S1 = 2 * P - high;
+    const R2 = P + (high - low);
+    const S2 = P - (high - low);
+    const R3 = high + 2 * (P - low);
+    const S3 = low - 2 * (high - P);
+    return { P, R1, R2, R3, S1, S2, S3 };
+  }
+  /**
+   * Computes ATR(14) using True Range.
+   * TR = max(H - L, |H - Cprev|, |L - Cprev|)
+   */
+  static calculateATR14(dailyBars) {
+    if (!dailyBars || dailyBars.length < 2) return null;
+    const trValues = [];
+    for (let i = 1; i < dailyBars.length; i++) {
+      const prevClose = dailyBars[i - 1].close;
+      const current = dailyBars[i];
+      const tr = Math.max(
+        current.high - current.low,
+        Math.abs(current.high - prevClose),
+        Math.abs(current.low - prevClose)
+      );
+      trValues.push(tr);
+    }
+    if (trValues.length < 14) {
+      const sum = trValues.reduce((acc, v) => acc + v, 0);
+      return trValues.length > 0 ? sum / trValues.length : null;
+    }
+    let atr = trValues.slice(0, 14).reduce((acc, v) => acc + v, 0) / 14;
+    for (let i = 14; i < trValues.length; i++) {
+      atr = (atr * 13 + trValues[i]) / 14;
+    }
+    return atr;
+  }
+  /**
+   * Computes EMA of a series.
+   */
+  static calculateEMA(values, period) {
+    if (!values || values.length < period) return null;
+    const k = 2 / (period + 1);
+    let ema = values.slice(0, period).reduce((acc, v) => acc + v, 0) / period;
+    for (let i = period; i < values.length; i++) {
+      ema = values[i] * k + ema * (1 - k);
+    }
+    return ema;
+  }
+  /**
+   * Identifies fractal swing highs & lows for Support/Resistance.
+   */
+  static findSwingLevels(bars, specDigits, swingWindow = 3) {
+    if (!bars || bars.length < swingWindow * 2 + 1) return [];
+    const levels = [];
+    for (let i = swingWindow; i < bars.length - swingWindow; i++) {
+      const current = bars[i];
+      let isHigh = true;
+      let isLow = true;
+      for (let j = 1; j <= swingWindow; j++) {
+        if (bars[i - j].high >= current.high || bars[i + j].high >= current.high) {
+          isHigh = false;
+        }
+        if (bars[i - j].low <= current.low || bars[i + j].low <= current.low) {
+          isLow = false;
+        }
+      }
+      if (isHigh) {
+        levels.push({
+          price: Number(current.high.toFixed(specDigits)),
+          type: "RESISTANCE",
+          strength: i > bars.length - 20 ? "MAJOR" : "INTERMEDIATE",
+          description: `Swing High @ ${current.high.toFixed(specDigits)}`
+        });
+      }
+      if (isLow) {
+        levels.push({
+          price: Number(current.low.toFixed(specDigits)),
+          type: "SUPPORT",
+          strength: i > bars.length - 20 ? "MAJOR" : "INTERMEDIATE",
+          description: `Swing Low @ ${current.low.toFixed(specDigits)}`
+        });
+      }
+    }
+    return levels.slice(-8);
+  }
+  /**
+   * Computes comprehensive Market Conditions per symbol.
+   */
+  static async getMarketConditions(symbolRaw) {
+    const symbol = this.cleanSymbol(symbolRaw);
+    const spec = getInstrumentSpec(symbol);
+    const now = /* @__PURE__ */ new Date();
+    const isMarketOpen = this.isForexMarketOpen(now);
+    const { activeSessions, isOverlap: isSessionOverlap, sessions } = this.getActiveSessions(now);
+    const dailyBars = await this.fetchYahooFinanceCandles(symbol, "D1", 30);
+    const h1Bars = await this.fetchYahooFinanceCandles(symbol, "H1", 250);
+    const latestDaily = dailyBars[dailyBars.length - 1] || {
+      open: 1.085,
+      high: 1.088,
+      low: 1.082,
+      close: 1.085
+    };
+    const prevDaily = dailyBars.length >= 2 ? dailyBars[dailyBars.length - 2] : null;
+    const currentPrice = latestDaily.close;
+    const prevClose = prevDaily ? prevDaily.close : latestDaily.open;
+    const change = Number((currentPrice - prevClose).toFixed(spec.digits));
+    const changePercent = prevClose > 0 ? Number((change / prevClose * 100).toFixed(2)) : 0;
+    const changePips = spec.pipSize > 0 ? Number((change / spec.pipSize).toFixed(1)) : 0;
+    const rawAtr = this.calculateATR14(dailyBars);
+    const atr14 = rawAtr ? Number(rawAtr.toFixed(spec.digits)) : Number((spec.pipSize * 65).toFixed(spec.digits));
+    const atr14Pips = spec.pipSize > 0 ? Number((atr14 / spec.pipSize).toFixed(1)) : 65;
+    const todayRange = Number((latestDaily.high - latestDaily.low).toFixed(spec.digits));
+    const todayRangePips = spec.pipSize > 0 ? Number((todayRange / spec.pipSize).toFixed(1)) : 0;
+    const rangeRatioPercent = atr14 > 0 ? Math.min(300, Math.round(todayRange / atr14 * 100)) : 100;
+    const h1Closes = h1Bars.map((b) => b.close);
+    const ema50 = this.calculateEMA(h1Closes, 50);
+    const ema200 = this.calculateEMA(h1Closes, 200);
+    let trendState = "NEUTRAL_CONSOLIDATING";
+    let trendSummary = "Neutral Consolidation (price between EMAs)";
+    if (ema50 !== null && ema200 !== null) {
+      if (currentPrice > ema50 && ema50 > ema200) {
+        trendState = "STRONG_BULLISH";
+        trendSummary = "Strong Bullish (Price > EMA50 > EMA200)";
+      } else if (currentPrice > ema50 && currentPrice > ema200) {
+        trendState = "BULLISH";
+        trendSummary = "Bullish (Price above key moving averages)";
+      } else if (currentPrice < ema50 && ema50 < ema200) {
+        trendState = "STRONG_BEARISH";
+        trendSummary = "Strong Bearish (Price < EMA50 < EMA200)";
+      } else if (currentPrice < ema50 && currentPrice < ema200) {
+        trendState = "BEARISH";
+        trendSummary = "Bearish (Price below key moving averages)";
+      }
+    }
+    const priceVsEma50Percent = ema50 ? Number(((currentPrice - ema50) / ema50 * 100).toFixed(2)) : null;
+    const priceVsEma200Percent = ema200 ? Number(((currentPrice - ema200) / ema200 * 100).toFixed(2)) : null;
+    return {
+      symbol,
+      isMarketOpen,
+      marketStatusText: isMarketOpen ? "MARKET OPEN (LIVE)" : "MARKET CLOSED (WEEKEND)",
+      utcTime: now.toISOString(),
+      activeSessions,
+      isSessionOverlap,
+      sessions,
+      daily: {
+        currentPrice,
+        open: latestDaily.open,
+        high: latestDaily.high,
+        low: latestDaily.low,
+        change,
+        changePercent,
+        changePips
+      },
+      atr: {
+        atr14,
+        atr14Pips,
+        todayRange,
+        todayRangePips,
+        rangeRatioPercent
+      },
+      trend: {
+        state: trendState,
+        summary: trendSummary,
+        ema50: ema50 ? Number(ema50.toFixed(spec.digits)) : null,
+        ema200: ema200 ? Number(ema200.toFixed(spec.digits)) : null,
+        priceVsEma50Percent,
+        priceVsEma200Percent
+      }
+    };
+  }
+  /**
+   * Computes Institutional Price Levels per symbol:
+   * - Previous Day, Week, Month H/L/C
+   * - Today O/H/L
+   * - Classic Pivots (P, R1-3, S1-3)
+   * - Swing Highs / Lows (S/R)
+   */
+  static async getPriceLevels(symbolRaw) {
+    const symbol = this.cleanSymbol(symbolRaw);
+    const spec = getInstrumentSpec(symbol);
+    const [dailyBars, weeklyBars, monthlyBars] = await Promise.all([
+      this.fetchYahooFinanceCandles(symbol, "D1", 15),
+      this.fetchYahooFinanceCandles(symbol, "W1", 10),
+      this.fetchYahooFinanceCandles(symbol, "MN", 6)
+    ]);
+    const latestDaily = dailyBars[dailyBars.length - 1] || { open: 1.085, high: 1.088, low: 1.082, close: 1.085 };
+    const prevDaily = dailyBars.length >= 2 ? dailyBars[dailyBars.length - 2] : null;
+    const prevWeekly = weeklyBars.length >= 2 ? weeklyBars[weeklyBars.length - 2] : null;
+    const prevMonthly = monthlyBars.length >= 2 ? monthlyBars[monthlyBars.length - 2] : null;
+    const currentPrice = latestDaily.close;
+    let classicPivots = null;
+    let previousDay = null;
+    if (prevDaily) {
+      const pivots = this.calculateClassicPivots(prevDaily.high, prevDaily.low, prevDaily.close);
+      classicPivots = {
+        P: Number(pivots.P.toFixed(spec.digits)),
+        R1: Number(pivots.R1.toFixed(spec.digits)),
+        R2: Number(pivots.R2.toFixed(spec.digits)),
+        R3: Number(pivots.R3.toFixed(spec.digits)),
+        S1: Number(pivots.S1.toFixed(spec.digits)),
+        S2: Number(pivots.S2.toFixed(spec.digits)),
+        S3: Number(pivots.S3.toFixed(spec.digits))
+      };
+      previousDay = {
+        high: Number(prevDaily.high.toFixed(spec.digits)),
+        low: Number(prevDaily.low.toFixed(spec.digits)),
+        close: Number(prevDaily.close.toFixed(spec.digits)),
+        rangePips: spec.pipSize > 0 ? Number(((prevDaily.high - prevDaily.low) / spec.pipSize).toFixed(1)) : 0
+      };
+    }
+    const previousWeek = prevWeekly ? {
+      high: Number(prevWeekly.high.toFixed(spec.digits)),
+      low: Number(prevWeekly.low.toFixed(spec.digits)),
+      close: Number(prevWeekly.close.toFixed(spec.digits))
+    } : null;
+    const previousMonth = prevMonthly ? {
+      high: Number(prevMonthly.high.toFixed(spec.digits)),
+      low: Number(prevMonthly.low.toFixed(spec.digits)),
+      close: Number(prevMonthly.close.toFixed(spec.digits))
+    } : null;
+    const swingLevels = this.findSwingLevels(dailyBars, spec.digits, 2);
+    return {
+      symbol,
+      currentPrice,
+      today: {
+        open: Number(latestDaily.open.toFixed(spec.digits)),
+        high: Number(latestDaily.high.toFixed(spec.digits)),
+        low: Number(latestDaily.low.toFixed(spec.digits))
+      },
+      previousDay,
+      previousWeek,
+      previousMonth,
+      classicPivots,
+      swingLevels
+    };
+  }
+  /**
+   * Registers a client for Server-Sent Events (SSE) streaming for a symbol.
+   */
+  static addSseClient(symbolRaw, res) {
+    const symbol = this.cleanSymbol(symbolRaw);
+    let clients = this.sseClients.get(symbol);
+    if (!clients) {
+      clients = /* @__PURE__ */ new Set();
+      this.sseClients.set(symbol, clients);
+    }
+    clients.add(res);
+    this.getLiveQuote(symbol).then((q) => {
+      try {
+        res.write(`data: ${JSON.stringify({ type: "quote", data: q })}
+
+`);
+      } catch {
+      }
+    }).catch(() => {
+    });
+    this.ensureTickerRunning();
+  }
+  /**
+   * Removes an SSE client.
+   */
+  static removeSseClient(symbolRaw, res) {
+    const symbol = this.cleanSymbol(symbolRaw);
+    const clients = this.sseClients.get(symbol);
+    if (clients) {
+      clients.delete(res);
+      if (clients.size === 0) {
+        this.sseClients.delete(symbol);
+      }
+    }
+  }
+  /**
+   * Ensures the background quote broadcast loop is running when clients are connected.
+   */
+  static ensureTickerRunning() {
+    if (this.tickerInterval) return;
+    this.tickerInterval = setInterval(async () => {
+      if (this.sseClients.size === 0) {
+        if (this.tickerInterval) {
+          clearInterval(this.tickerInterval);
+          this.tickerInterval = null;
+        }
+        return;
+      }
+      for (const [symbol, clients] of this.sseClients.entries()) {
+        if (clients.size === 0) continue;
+        try {
+          const quote = await this.getLiveQuote(symbol);
+          const payload = `data: ${JSON.stringify({ type: "tick", data: quote })}
+
+`;
+          for (const res of clients) {
+            try {
+              res.write(payload);
+            } catch {
+              clients.delete(res);
+            }
+          }
+        } catch {
+        }
+      }
+    }, 2e3);
+  }
+};
+
 // src/services/marketData.service.ts
 var INSTRUMENT_SPECIFICATIONS = {
   EURUSD: {
@@ -55641,11 +56317,13 @@ var TIMEFRAME_SECONDS = {
   M1: 60,
   M5: 300,
   M15: 900,
+  M30: 1800,
   H1: 3600,
   H4: 14400,
   D1: 86400,
   W1: 604800,
-  MN1: 2592e3
+  MN1: 2592e3,
+  MN: 2592e3
 };
 function getInstrumentSpec(rawSymbol) {
   return MarketDataService.getInstrumentSpec(rawSymbol);
@@ -55899,11 +56577,13 @@ var MarketDataService = class {
           M1: "1min",
           M5: "5min",
           M15: "15min",
+          M30: "30min",
           H1: "1h",
           H4: "4h",
           D1: "1day",
           W1: "1week",
-          MN1: "1month"
+          MN1: "1month",
+          MN: "1month"
         };
         const formattedPair = `${spec.baseCurrency}/${spec.quoteCurrency}`;
         const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(formattedPair)}&interval=${intervalMap[timeframe]}&outputsize=${Math.min(limit, 500)}&timezone=UTC&apikey=${twelveDataKey}`;
@@ -55973,6 +56653,25 @@ var MarketDataService = class {
         }
       } catch {
       }
+    }
+    try {
+      const bars = await ForexDataLayerService.fetchYahooFinanceCandles(spec.symbol, timeframe, limit);
+      if (bars && bars.length > 0) {
+        const candles = bars.map((b) => ({
+          symbol: spec.symbol,
+          timeframe,
+          timestamp: new Date(b.time * 1e3).toISOString(),
+          open: b.open,
+          high: b.high,
+          low: b.low,
+          close: b.close,
+          volume: b.volume,
+          isClosed: true,
+          sourceProvider: "YAHOO_FINANCE"
+        }));
+        return { provider: "YAHOO_FINANCE", candles };
+      }
+    } catch {
     }
     return null;
   }
@@ -56998,8 +57697,8 @@ var SyncService = class {
 // src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.6",
-  gitCommit: "88a9534d6f0a0f90ec50d239581415aa064600a2",
-  buildTimestamp: "2026-10-26T19:08:05.250Z",
+  gitCommit: "6dcb262cf4028c20973974a75ec61cb5cc2ad86d",
+  buildTimestamp: "2026-10-26T19:47:35.919Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -71132,6 +71831,111 @@ router19.get("/disclosures/congress", requireUserAuth, async (_req, res) => {
 });
 var intelligence_routes_default = router19;
 
+// src/routes/forex.routes.ts
+var import_express20 = __toESM(require_express2());
+var router20 = (0, import_express20.Router)();
+router20.get(["/candles", "/forex/candles"], async (req, res) => {
+  try {
+    const symbol = String(req.query.symbol || "EURUSD").toUpperCase();
+    const tf = String(req.query.tf || req.query.timeframe || "H1").toUpperCase();
+    const limit = Number(req.query.limit) || 500;
+    const data = await ForexDataLayerService.getCandles({
+      symbol,
+      timeframe: tf,
+      limit
+    });
+    res.json({
+      success: true,
+      ...data
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: "CANDLES_FETCH_ERROR",
+        message: err.message || "Failed to fetch forex candle data"
+      }
+    });
+  }
+});
+router20.get(["/levels", "/forex/levels"], async (req, res) => {
+  try {
+    const symbol = String(req.query.symbol || "EURUSD").toUpperCase();
+    const levels = await ForexDataLayerService.getPriceLevels(symbol);
+    res.json({
+      success: true,
+      ...levels
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: "LEVELS_FETCH_ERROR",
+        message: err.message || "Failed to calculate price levels"
+      }
+    });
+  }
+});
+router20.get(["/conditions", "/forex/conditions"], async (req, res) => {
+  try {
+    const symbol = String(req.query.symbol || "EURUSD").toUpperCase();
+    const conditions = await ForexDataLayerService.getMarketConditions(symbol);
+    res.json({
+      success: true,
+      ...conditions
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: "CONDITIONS_FETCH_ERROR",
+        message: err.message || "Failed to calculate market conditions"
+      }
+    });
+  }
+});
+router20.get(["/quotes", "/forex/quotes"], async (req, res) => {
+  try {
+    const symbol = String(req.query.symbol || "EURUSD").toUpperCase();
+    const quote = await ForexDataLayerService.getLiveQuote(symbol);
+    res.json({
+      success: true,
+      data: quote
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: "QUOTE_FETCH_ERROR",
+        message: err.message || "Failed to fetch live quote"
+      }
+    });
+  }
+});
+router20.get(["/stream", "/forex/stream"], (req, res) => {
+  const symbol = String(req.query.symbol || "EURUSD").toUpperCase();
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    "Connection": "keep-alive",
+    "X-Accel-Buffering": "no"
+    // Disable proxy buffering (Nginx, Vercel, Cloudflare)
+  });
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(": heartbeat\n\n");
+    } catch {
+      clearInterval(heartbeat);
+    }
+  }, 15e3);
+  ForexDataLayerService.addSseClient(symbol, res);
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    ForexDataLayerService.removeSseClient(symbol, res);
+  });
+});
+var forex_routes_default = router20;
+
 // src/services/logger.service.ts
 var LoggerService = class {
   isSentryConfigured = false;
@@ -71192,7 +71996,7 @@ var LoggerService = class {
 var logger = new LoggerService();
 
 // src/app.ts
-var app = (0, import_express20.default)();
+var app = (0, import_express21.default)();
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
@@ -71220,8 +72024,8 @@ app.use((0, import_cors.default)({
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "x-bridge-token", "x-device-name"]
 }));
-app.use(import_express20.default.json({ limit: "50mb" }));
-app.use(import_express20.default.urlencoded({ extended: true, limit: "50mb" }));
+app.use(import_express21.default.json({ limit: "50mb" }));
+app.use(import_express21.default.urlencoded({ extended: true, limit: "50mb" }));
 if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
   app.use((0, import_morgan.default)("dev"));
 }
@@ -71305,12 +72109,15 @@ var routePairs = [
   ["/notifications", notifications_routes_default],
   ["/economic", economic_routes_default],
   ["/settings", settings_routes_default],
-  ["/intelligence", intelligence_routes_default]
+  ["/intelligence", intelligence_routes_default],
+  ["/forex", forex_routes_default]
 ];
-routePairs.forEach(([prefix, router20]) => {
-  app.use(`/api/v1${prefix}`, router20);
-  app.use(`/v1${prefix}`, router20);
+routePairs.forEach(([prefix, router21]) => {
+  app.use(`/api/v1${prefix}`, router21);
+  app.use(`/v1${prefix}`, router21);
 });
+app.use("/api", forex_routes_default);
+app.use("/", forex_routes_default);
 app.use((req, res) => {
   res.status(404).json({
     success: false,

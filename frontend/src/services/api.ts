@@ -1837,6 +1837,26 @@ class ApiClient {
     return this.request(`/intelligence/candles?${query.toString()}`);
   }
 
+  async getForexCandles(params: { symbol: string; tf?: string; limit?: number }) {
+    const query = new URLSearchParams();
+    query.set('symbol', params.symbol);
+    if (params.tf) query.set('tf', params.tf);
+    if (params.limit) query.set('limit', String(params.limit));
+    return this.request(`/forex/candles?${query.toString()}`);
+  }
+
+  async getForexLevels(symbol: string) {
+    return this.request(`/forex/levels?symbol=${encodeURIComponent(symbol)}`);
+  }
+
+  async getForexConditions(symbol: string) {
+    return this.request(`/forex/conditions?symbol=${encodeURIComponent(symbol)}`);
+  }
+
+  async getForexQuote(symbol: string) {
+    return this.request(`/forex/quotes?symbol=${encodeURIComponent(symbol)}`);
+  }
+
   async ingestCandles(payload: { symbol: string; timeframe: string; candles: any[]; sourceProvider?: string }) {
     return this.request('/intelligence/candles/ingest', {
       method: 'POST',

@@ -123,3 +123,18 @@ npm run build:frontend
 - **[System Architecture & Security Model](file:///c:/Users/Gackstone_Baraka/Downloads/Alpha%20Coach/ARCHITECTURE.md)**: Details on the zero-password pairing lifecycle, MT5 deal reconstruction engine, and math formulas.
 - **[REST API Reference](file:///c:/Users/Gackstone_Baraka/Downloads/Alpha%20Coach/API.md)**: Specification for all public, dashboard, and bridge endpoints including `/health`.
 - **[Changelog](file:///c:/Users/Gackstone_Baraka/Downloads/Alpha%20Coach/CHANGELOG.md)**: Release progression and hardening history.
+
+## 📈 Live Forex Data Layer & Interactive Charting
+
+Arcade Fx includes a production-grade live Forex data layer built with TradingView Lightweight Charts:
+
+### Endpoints
+- GET /api/candles?symbol=EURUSD&tf=H1&limit=500: Retrieves time-ordered OHLCV candles formatted for Lightweight Charts with multi-timeframe backfill (M1, M5, M15, M30, H1, H4, D1, W1, MN).
+- GET /api/levels?symbol=EURUSD: Returns institutional price levels: Previous Day/Week/Month H/L/C, Today O/H/L, Classic Pivot Points (P, R1-R3, S1-S3), and fractal Swing Highs/Lows.
+- GET /api/conditions?symbol=EURUSD: Returns real-time market open/closed status, active sessions in UTC (Sydney, Tokyo, London, New York, with overlap detection), daily change and %, ATR(14) with daily range ratio, and EMA 50/200 trend classification.
+- GET /api/stream?symbol=EURUSD: Server-Sent Events (SSE) real-time stream broadcasting Bid/Ask ticks, spreads, and live candle updates.
+
+### Standalone Verification
+`ash
+node backend/scripts/test-forex-data-layer.mjs
+`

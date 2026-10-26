@@ -24,6 +24,7 @@ import notificationsRoutes from './routes/notifications.routes';
 import economicRoutes from './routes/economic.routes';
 import settingsRoutes from './routes/settings.routes';
 import intelligenceRoutes from './routes/intelligence.routes';
+import forexRoutes from './routes/forex.routes';
 
 const app = express();
 
@@ -163,13 +164,18 @@ const routePairs = [
   ['/notifications', notificationsRoutes],
   ['/economic', economicRoutes],
   ['/settings', settingsRoutes],
-  ['/intelligence', intelligenceRoutes]
+  ['/intelligence', intelligenceRoutes],
+  ['/forex', forexRoutes]
 ] as const;
 
 routePairs.forEach(([prefix, router]) => {
   app.use(`/api/v1${prefix}`, router);
   app.use(`/v1${prefix}`, router);
 });
+
+// Direct market routes (/api/candles, /api/levels, /api/conditions, /api/stream)
+app.use('/api', forexRoutes);
+app.use('/', forexRoutes);
 
 // 404 Catch-All (Always return JSON, NEVER HTML)
 app.use((req, res) => {
