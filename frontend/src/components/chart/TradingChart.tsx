@@ -29,7 +29,12 @@ import {
   Trash2,
   Type,
   Square,
-  Minus
+  Minus,
+  Plus,
+  Crosshair,
+  SlidersHorizontal,
+  ChevronDown,
+  Check
 } from 'lucide-react';
 import {
   calculateSMA,
@@ -79,6 +84,39 @@ export interface DrawingItem {
   color?: string;
 }
 
+
+export const INSTRUMENT_NAMES: Record<string, string> = {
+  EURUSD: 'Euro vs US Dollar',
+  GBPUSD: 'British Pound vs US Dollar',
+  USDJPY: 'US Dollar vs Japanese Yen',
+  USDCHF: 'US Dollar vs Swiss Franc',
+  USDCAD: 'US Dollar vs Canadian Dollar',
+  AUDUSD: 'Australian Dollar vs US Dollar',
+  NZDUSD: 'New Zealand Dollar vs US Dollar',
+  EURGBP: 'Euro vs British Pound',
+  GBPJPY: 'British Pound vs Japanese Yen',
+  XAUUSD: 'Spot Gold vs US Dollar',
+  UKOILm: 'Crude Oil Brent',
+  USOILm: 'Crude Oil WTI',
+  BTCUSD: 'Bitcoin vs US Dollar'
+};
+
+export function formatMT5Price(price: number, symbol: string): { main: string; pipette: string } {
+  if (typeof price !== 'number' || isNaN(price)) {
+    return { main: '0.0000', pipette: '0' };
+  }
+  const isJpy = symbol.toUpperCase().includes('JPY');
+  const isMetal = symbol.toUpperCase().includes('XAU') || symbol.toUpperCase().includes('XAG');
+  const isCrypto = symbol.toUpperCase().includes('BTC') || symbol.toUpperCase().includes('ETH');
+  const isOil = symbol.toUpperCase().includes('OIL');
+  const decimals = (isMetal || isCrypto) ? 2 : isOil ? 3 : isJpy ? 3 : 5;
+  const str = price.toFixed(decimals);
+  return {
+    main: str.slice(0, -1),
+    pipette: str.slice(-1)
+  };
+}
+
 export interface TradingChartProps {
   symbol?: string;
   initialTimeframe?: string;
@@ -87,6 +125,7 @@ export interface TradingChartProps {
   macroEvents?: MacroEventOverlay[];
   onTradeClick?: (tradeId: string) => void;
   showToolbar?: boolean;
+  showQuoteStrip?: boolean;
   compact?: boolean;
   className?: string;
 }
@@ -114,6 +153,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   macroEvents = [],
   onTradeClick,
   showToolbar = true,
+  showQuoteStrip = true,
   compact = false,
   className = ''
 }) => {
@@ -142,6 +182,44 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   const [showMACD, setShowMACD] = useState<boolean>(false);
   const [showVWAP, setShowVWAP] = useState<boolean>(false);
   const [showTradesOverlay, setShowTradesOverlay] = useState<boolean>(true);
+
+  // MT5 Interactive States
+  const [lotSize, setLotSize] = useState<number>(0.01);
+  const [showIndicatorMenu, setShowIndicatorMenu] = useState<boolean>(false);
+  const [showDrawingMenu, setShowDrawingMenu] = useState<boolean>(false);
+  const [isCrosshairActive, setIsCrosshairActive] = useState<boolean>(true);
+  const [showOrderPanel, setShowOrderPanel] = useState<boolean>(true);
+  const [tradeToast, setTradeToast] = useState<string | null>(null);
+
+  const handleLotChange = (delta: number) => {
+    setLotSize(prev => {
+      const next = Math.max(0.01, Math.round((prev + delta) * 100) / 100);
+      return next;
+    });
+  };
+
+  const handleExecuteQuote = (action: 'BUY' | 'SELL') => {
+    const isJpy = currentSymbol.toUpperCase().includes('JPY');
+    const isMetal = currentSymbol.toUpperCase().includes('XAU') || currentSymbol.toUpperCase().includes('XAG');
+    const isCrypto = currentSymbol.toUpperCase().includes('BTC') || currentSymbol.toUpperCase().includes('ETH');
+    const isOil = currentSymbol.toUpperCase().includes('OIL');
+    const spreadDelta = isMetal ? 0.30 : isOil ? 0.04 : isCrypto ? 12.0 : isJpy ? 0.015 : 0.00015;
+    const basePrice = (rawBars[rawBars.length - 1]?.close) || 1.0850;
+    const execPrice = action === 'BUY' ? basePrice + spreadDelta : basePrice;
+    const decimals = (isMetal || isCrypto) ? 2 : isOil ? 3 : isJpy ? 3 : 5;
+    setTradeToast(`${action} ${lotSize.toFixed(2)} ${currentSymbol} placed @ ${execPrice.toFixed(decimals)}`);
+    setTimeout(() => setTradeToast(null), 3000);
+  };
+
+  const toggleCrosshair = () => {
+    const next = !isCrosshairActive;
+    setIsCrosshairActive(next);
+    chartRef.current?.applyOptions({
+      crosshair: {
+        mode: next ? CrosshairMode.Normal : CrosshairMode.Hidden
+      }
+    });
+  };
 
   // Drawings state
   const [activeTool, setActiveTool] = useState<string | null>(null);
@@ -623,7 +701,21 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   const prevBar = rawBars[rawBars.length - 2];
   const changePips = lastBar && prevBar ? (lastBar.close - prevBar.close).toFixed(5) : '0.00000';
   const changePct = lastBar && prevBar ? (((lastBar.close - prevBar.close) / prevBar.close) * 100).toFixed(2) : '0.00';
-  const isUp = Number(changePips) >= 0;
+    const isUp = Number(changePips) >= 0;
+
+  // MT5 Bid/Ask Calculations
+  const currentPrice = lastBar ? lastBar.close : 1.0850;
+  const isJpy = currentSymbol.toUpperCase().includes('JPY');
+  const isMetal = currentSymbol.toUpperCase().includes('XAU') || currentSymbol.toUpperCase().includes('XAG');
+  const isCrypto = currentSymbol.toUpperCase().includes('BTC') || currentSymbol.toUpperCase().includes('ETH');
+  const isOil = currentSymbol.toUpperCase().includes('OIL');
+  const spreadDelta = isMetal ? 0.30 : isOil ? 0.04 : isCrypto ? 12.0 : isJpy ? 0.015 : 0.00015;
+
+  const bidPrice = currentPrice;
+  const askPrice = currentPrice + spreadDelta;
+
+  const formattedBid = formatMT5Price(bidPrice, currentSymbol);
+  const formattedAsk = formatMT5Price(askPrice, currentSymbol);
 
   return (
     <div
@@ -683,8 +775,105 @@ export const TradingChart: React.FC<TradingChartProps> = ({
             )}
           </div>
 
-          {/* Chart Controls & Indicator Toggles */}
+          {/* MT5 Top Controls & Action Buttons */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            {/* MT5 Crosshair Toggle Button */}
+            <button
+              onClick={toggleCrosshair}
+              className={`p-1.5 rounded-lg border text-xs transition ${
+                isCrosshairActive
+                  ? 'bg-brand-500/10 border-brand-500/40 text-brand-500 font-bold'
+                  : 'bg-surface border-border-subtle text-content-muted hover:text-content-primary'
+              }`}
+              title="Toggle Crosshair Mode (+)"
+            >
+              <Crosshair className="w-3.5 h-3.5" />
+            </button>
+
+            {/* MT5 Indicator 'f' Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowIndicatorMenu(!showIndicatorMenu)}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-mono font-bold transition ${
+                  showIndicatorMenu || showEMA || showSMA || showBollinger || showRSI || showVWAP
+                    ? 'bg-brand-500/10 border-brand-500/40 text-brand-500'
+                    : 'bg-surface border-border-subtle text-content-muted hover:text-content-primary'
+                }`}
+                title="MT5 Indicators Menu (f)"
+              >
+                <span className="italic font-serif font-black text-sm leading-none">f</span>
+                <ChevronDown className="w-3 h-3" />
+              </button>
+
+              {/* Indicator Dropdown Popover */}
+              {showIndicatorMenu && (
+                <div className="absolute top-full right-0 mt-1 z-30 w-44 bg-surface border border-border-subtle rounded-xl shadow-xl p-2 space-y-1 text-xs">
+                  <div className="text-[10px] font-bold text-content-muted uppercase tracking-wider px-2 py-1">Indicators</div>
+                  <button
+                    onClick={() => setShowEMA(!showEMA)}
+                    className={`w-full text-left px-2 py-1 rounded-lg flex items-center justify-between ${showEMA ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 font-bold' : 'text-content-secondary hover:bg-surface-secondary'}`}
+                  >
+                    <span>EMA (21)</span>
+                    {showEMA && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    onClick={() => setShowSMA(!showSMA)}
+                    className={`w-full text-left px-2 py-1 rounded-lg flex items-center justify-between ${showSMA ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold' : 'text-content-secondary hover:bg-surface-secondary'}`}
+                  >
+                    <span>SMA (20)</span>
+                    {showSMA && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    onClick={() => setShowBollinger(!showBollinger)}
+                    className={`w-full text-left px-2 py-1 rounded-lg flex items-center justify-between ${showBollinger ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold' : 'text-content-secondary hover:bg-surface-secondary'}`}
+                  >
+                    <span>Bollinger Bands</span>
+                    {showBollinger && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    onClick={() => setShowRSI(!showRSI)}
+                    className={`w-full text-left px-2 py-1 rounded-lg flex items-center justify-between ${showRSI ? 'bg-pink-500/10 text-pink-600 dark:text-pink-400 font-bold' : 'text-content-secondary hover:bg-surface-secondary'}`}
+                  >
+                    <span>RSI (14)</span>
+                    {showRSI && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    onClick={() => setShowVWAP(!showVWAP)}
+                    className={`w-full text-left px-2 py-1 rounded-lg flex items-center justify-between ${showVWAP ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-content-secondary hover:bg-surface-secondary'}`}
+                  >
+                    <span>VWAP</span>
+                    {showVWAP && <Check className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* MT5 Drawing Tools Button */}
+            <button
+              onClick={() => setShowDrawingMenu(!showDrawingMenu)}
+              className={`p-1.5 rounded-lg border text-xs transition ${
+                showDrawingMenu
+                  ? 'bg-brand-500/10 border-brand-500/40 text-brand-500'
+                  : 'bg-surface border-border-subtle text-content-muted hover:text-content-primary'
+              }`}
+              title="Drawing Tools & Shapes"
+            >
+              <PenTool className="w-3.5 h-3.5" />
+            </button>
+
+            {/* MT5 Quick Buy/Sell Quote Strip Toggle */}
+            <button
+              onClick={() => setShowOrderPanel(!showOrderPanel)}
+              className={`p-1.5 rounded-lg border text-xs transition ${
+                showOrderPanel
+                  ? 'bg-brand-500/10 border-brand-500/40 text-brand-500'
+                  : 'bg-surface border-border-subtle text-content-muted hover:text-content-primary'
+              }`}
+              title="Toggle Buy / Sell Quote Strip"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+            </button>
+
             {/* Chart Type Selector */}
             <select
               value={chartType}
@@ -698,55 +887,6 @@ export const TradingChart: React.FC<TradingChartProps> = ({
               <option value="area">Area</option>
               <option value="hollow">Hollow</option>
             </select>
-
-            {/* Quick Indicator Toggles */}
-            <div className="flex items-center gap-1 bg-surface border border-border-subtle rounded-lg p-0.5 text-[10px] font-mono">
-              <button
-                onClick={() => setShowEMA(!showEMA)}
-                className={`px-1.5 py-0.5 rounded transition ${
-                  showEMA ? 'bg-sky-600 text-white font-bold' : 'text-content-muted hover:text-content-primary'
-                }`}
-                title="Toggle Exponential Moving Average (21)"
-              >
-                EMA
-              </button>
-              <button
-                onClick={() => setShowSMA(!showSMA)}
-                className={`px-1.5 py-0.5 rounded transition ${
-                  showSMA ? 'bg-amber-600 text-white font-bold' : 'text-content-muted hover:text-content-primary'
-                }`}
-                title="Toggle Simple Moving Average (20)"
-              >
-                SMA
-              </button>
-              <button
-                onClick={() => setShowBollinger(!showBollinger)}
-                className={`px-1.5 py-0.5 rounded transition ${
-                  showBollinger ? 'bg-blue-600 text-white font-bold' : 'text-content-muted hover:text-content-primary'
-                }`}
-                title="Toggle Bollinger Bands"
-              >
-                BB
-              </button>
-              <button
-                onClick={() => setShowRSI(!showRSI)}
-                className={`px-1.5 py-0.5 rounded transition ${
-                  showRSI ? 'bg-pink-600 text-white font-bold' : 'text-content-muted hover:text-content-primary'
-                }`}
-                title="Toggle Relative Strength Index"
-              >
-                RSI
-              </button>
-              <button
-                onClick={() => setShowVWAP(!showVWAP)}
-                className={`px-1.5 py-0.5 rounded transition ${
-                  showVWAP ? 'bg-cyan-600 text-white font-bold' : 'text-content-muted hover:text-content-primary'
-                }`}
-                title="Toggle Volume Weighted Average Price"
-              >
-                VWAP
-              </button>
-            </div>
 
             {/* Trade Overlay Toggle */}
             {trades.length > 0 && (
@@ -821,6 +961,75 @@ export const TradingChart: React.FC<TradingChartProps> = ({
 
       {/* 3. Canvas Container */}
       <div className="relative flex-1 min-h-[360px] w-full" style={{ height: isFullscreen ? 'calc(100vh - 80px)' : height }}>
+        {/* Top-Left MT5 Chart Watermark */}
+        <div className="absolute top-3 left-3 sm:left-4 z-10 pointer-events-none select-none text-left">
+          <div className="text-sm sm:text-base font-bold font-mono text-content-primary/80 tracking-wide drop-shadow-xs">
+            {currentSymbol} · {timeframe}
+          </div>
+          <div className="text-[10px] sm:text-[11px] text-content-muted font-sans font-medium">
+            {INSTRUMENT_NAMES[currentSymbol] || 'Forex Spot / CFD'}
+          </div>
+        </div>
+
+        {/* MT5 Buy/Sell Quote Strip */}
+        {showQuoteStrip && showOrderPanel && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center bg-surface/95 dark:bg-[#0E1A33]/95 backdrop-blur-md border border-border-subtle rounded-xl p-1 shadow-lg font-mono">
+            {/* SELL Box */}
+            <button
+              onClick={() => handleExecuteQuote('SELL')}
+              className="flex flex-col items-center px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg bg-[#D12F42]/10 hover:bg-[#D12F42]/20 text-[#D12F42] border border-[#D12F42]/30 transition group select-none active:scale-95"
+              title="Sell at Market (Bid)"
+            >
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider font-sans">SELL</span>
+              <div className="flex items-baseline font-bold text-xs sm:text-sm tracking-tight">
+                <span>{formattedBid.main}</span>
+                <sup className="text-[9px] sm:text-[10px] ml-0.5 font-extrabold">{formattedBid.pipette}</sup>
+              </div>
+            </button>
+
+            {/* Lot size stepper */}
+            <div className="flex items-center px-1.5 sm:px-2 text-xs font-bold gap-1 text-content-primary">
+              <button
+                onClick={() => handleLotChange(-0.01)}
+                className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-md hover:bg-surface-secondary text-content-muted hover:text-content-primary transition text-xs sm:text-sm"
+                title="Decrease volume by 0.01"
+              >
+                -
+              </button>
+              <span className="px-1.5 py-0.5 rounded bg-surface-secondary border border-border-subtle min-w-[42px] sm:min-w-[48px] text-center text-[11px] sm:text-xs">
+                {lotSize.toFixed(2)}
+              </span>
+              <button
+                onClick={() => handleLotChange(0.01)}
+                className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-md hover:bg-surface-secondary text-content-muted hover:text-content-primary transition text-xs sm:text-sm"
+                title="Increase volume by 0.01"
+              >
+                +
+              </button>
+            </div>
+
+            {/* BUY Box */}
+            <button
+              onClick={() => handleExecuteQuote('BUY')}
+              className="flex flex-col items-center px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg bg-[#2F5BEA]/10 hover:bg-[#2F5BEA]/20 text-[#2F5BEA] border border-[#2F5BEA]/30 transition group select-none active:scale-95"
+              title="Buy at Market (Ask)"
+            >
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider font-sans">BUY</span>
+              <div className="flex items-baseline font-bold text-xs sm:text-sm tracking-tight">
+                <span>{formattedAsk.main}</span>
+                <sup className="text-[9px] sm:text-[10px] ml-0.5 font-extrabold">{formattedAsk.pipette}</sup>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* Trade Execution Toast Notification */}
+        {tradeToast && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1.5 rounded-xl bg-surface/95 dark:bg-[#0E1A33]/95 border border-brand-500/40 text-brand-500 shadow-xl text-xs font-mono animate-in fade-in zoom-in-95 duration-150 flex items-center gap-2">
+            <Check className="w-3.5 h-3.5" />
+            <span>{tradeToast}</span>
+          </div>
+        )}
         {isLoading && (
           <div className="absolute inset-0 bg-surface/80 backdrop-blur-xs z-20 flex flex-col items-center justify-center gap-2">
             <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />

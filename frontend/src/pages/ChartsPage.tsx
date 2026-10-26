@@ -107,31 +107,31 @@ export const ChartsPage: React.FC = () => {
         description="Professional multi-timeframe interactive Forex and CFD charts powered by TradingView Lightweight Charts with MT5 trade overlays and indicators."
       />
 
-      {/* Top Controls Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface border border-border-subtle p-3 rounded-2xl">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
-            <TrendingUp className="w-5 h-5" />
+      {/* Top Controls Bar - Sleek MT5 Header */}
+      <div className="flex items-center justify-between gap-2 bg-surface border border-border-subtle p-2 sm:p-3 rounded-2xl">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-1.5 sm:p-2 rounded-xl bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-content-primary flex items-center gap-2">
-              <span>Interactive Charts</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-500/10 text-brand-500 border border-brand-500/20">
+            <h1 className="text-sm sm:text-base font-bold text-content-primary flex items-center gap-1.5">
+              <span>{activeSymbol} Chart</span>
+              <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-500/10 text-brand-500 border border-brand-500/20">
                 Lightweight v4
               </span>
             </h1>
-            <p className="text-[11px] text-content-secondary">
-              Multi-timeframe charting with live MT5 execution overlays, technical indicators & drawing tools
+            <p className="hidden sm:block text-[11px] text-content-secondary">
+              MT5 live executions, technical indicators & market depth
             </p>
           </div>
         </div>
 
-        {/* Multi-Pane Layout Selector */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <div className="flex items-center bg-surface-secondary border border-border-subtle rounded-xl p-1 text-xs">
+        {/* Multi-Pane Layout Selector & Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center bg-surface-secondary border border-border-subtle rounded-xl p-0.5 sm:p-1 text-xs">
             <button
               onClick={() => setLayoutMode('single')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition ${
+              className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-lg font-medium transition ${
                 layoutMode === 'single'
                   ? 'bg-surface text-content-primary font-bold shadow-xs'
                   : 'text-content-muted hover:text-content-primary'
@@ -143,7 +143,7 @@ export const ChartsPage: React.FC = () => {
             </button>
             <button
               onClick={() => setLayoutMode('dual')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition ${
+              className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-lg font-medium transition ${
                 layoutMode === 'dual'
                   ? 'bg-surface text-content-primary font-bold shadow-xs'
                   : 'text-content-muted hover:text-content-primary'
@@ -155,7 +155,7 @@ export const ChartsPage: React.FC = () => {
             </button>
             <button
               onClick={() => setLayoutMode('quad')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition ${
+              className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-lg font-medium transition ${
                 layoutMode === 'quad'
                   ? 'bg-surface text-content-primary font-bold shadow-xs'
                   : 'text-content-muted hover:text-content-primary'
@@ -170,15 +170,15 @@ export const ChartsPage: React.FC = () => {
           <button
             onClick={loadChartOverlays}
             disabled={isLoadingTrades}
-            className="p-2 bg-surface-secondary hover:bg-surface border border-border-subtle rounded-xl text-content-muted hover:text-content-primary transition disabled:opacity-50"
+            className="p-1.5 sm:p-2 bg-surface-secondary hover:bg-surface border border-border-subtle rounded-xl text-content-muted hover:text-content-primary transition disabled:opacity-50"
             title="Refresh Trade Overlays"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoadingTrades ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLoadingTrades ? 'animate-spin' : ''}`} />
           </button>
 
           <PrimaryAction
             label={activeSymbol}
-            icon={<Search className="w-4 h-4" />}
+            icon={<Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             onClick={() => setIsSymbolPickerOpen(true)}
             title="Change active chart symbol"
           />
@@ -260,7 +260,7 @@ export const ChartsPage: React.FC = () => {
             <TradingChart
               symbol={activeSymbol}
               initialTimeframe="H1"
-              height={560}
+              height={580}
               trades={trades}
               macroEvents={macroEvents}
             />

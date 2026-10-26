@@ -27,14 +27,40 @@ import {
   SlidersHorizontal,
   ChevronLeft,
   Compass,
-  ShieldCheck
+  ShieldCheck,
+  DollarSign,
+  ArrowUpDown,
+  Calendar,
+  List,
+  Table
 } from 'lucide-react';
 
+
+export function formatMT5HistoryDate(dateStr?: string): string {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  return `${yyyy}.${mm}.${dd} ${hh}:${min}:${ss}`;
+}
+
 export const JournalPage: React.FC = () => {
-  const { selectedAccountId } = useAccounts();
+  const { selectedAccountId, selectedAccount } = useAccounts();
   const [trades, setTrades] = useState<ReconstructedTrade[]>([]);
   const [pagination, setPagination] = useState<any>({ page: 1, limit: 20, total: 0, totalPages: 1 });
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  // MT5-Inspired UI States
+  const [activeTab, setActiveTab] = useState<'POSITIONS' | 'ORDERS' | 'DEALS'>('DEALS');
+  const [viewMode, setViewMode] = useState<'dense' | 'table'>('dense');
+  const [sortAscending, setSortAscending] = useState<boolean>(false);
+  const [isSymbolModalOpen, setIsSymbolModalOpen] = useState<boolean>(false);
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState<boolean>(false);
+
 
   // Filters
   const [datePreset, setDatePreset] = useState<string>('all');
@@ -60,6 +86,52 @@ export const JournalPage: React.FC = () => {
   // Subjective review edit state
   const [reviewForm, setReviewForm] = useState<any>({});
   const [isSavingReview, setIsSavingReview] = useState<boolean>(false);
+
+    // MT5 Displayed Trades and Summary Metrics
+  const displayedTrades = React.useMemo(() => {
+    let list = [...trades];
+    if (activeTab === 'POSITIONS') {
+      list = list.filter(t => t.status === 'OPEN');
+    } else if (activeTab === 'DEALS') {
+      list = list.filter(t => t.status === 'CLOSED');
+    }
+    list.sort((a, b) => {
+      const timeA = new Date(a.close_time || a.open_time).getTime() || 0;
+      const timeB = new Date(b.close_time || b.open_time).getTime() || 0;
+      return sortAscending ? timeA - timeB : timeB - timeA;
+    });
+    return list;
+  }, [trades, activeTab, sortAscending]);
+
+  const totalProfit = React.useMemo(() => {
+    return trades.reduce((sum, t) => {
+      const isOpen = t.status === 'OPEN';
+      const pnl = isOpen ? (t.floating_profit ?? t.net_profit) : t.net_profit;
+      return sum + (Number(pnl) || 0);
+    }, 0);
+  }, [trades]);
+
+  const totalSwap = React.useMemo(() => {
+    return trades.reduce((sum, t) => sum + (Number((t as any).swap) || 0), 0);
+  }, [trades]);
+
+  const totalCommission = React.useMemo(() => {
+    return trades.reduce((sum, t) => sum + (Number((t as any).commission) || 0), 0);
+  }, [trades]);
+
+  const accountBalance = React.useMemo(() => {
+    if (selectedAccount && selectedAccount.balance !== undefined && selectedAccount.balance !== null) {
+      return Number(selectedAccount.balance);
+    }
+    return trades.length > 0 ? 1000 + totalProfit : 0;
+  }, [selectedAccount, totalProfit, trades]);
+
+  const deposit = React.useMemo(() => {
+    if (selectedAccount) {
+      return Math.max(0, accountBalance - totalProfit);
+    }
+    return 0;
+  }, [selectedAccount, accountBalance, totalProfit]);
 
   // Voice Modal
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState<boolean>(false);
@@ -215,340 +287,479 @@ export const JournalPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* 1. MT5 Android-Inspired History Header */}
+      <div className="flex items-center justify-between gap-3 bg-surface border border-border-subtle p-3 rounded-2xl shadow-xs">
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
-              <BookOpen className="w-5 h-5" />
-            </span>
-            <h1 className="text-2xl font-bold tracking-tight text-content-primary">
-              Automated Trading Journal
-            </h1>
-          </div>
-          <p className="text-xs text-content-secondary mt-1">
-            Reconstructed MT5 trade lifecycles, objective execution metrics & qualitative review logs
+          <h1 className="text-xl font-bold text-content-primary tracking-tight">History</h1>
+          <p className="text-[11px] text-content-secondary font-mono">
+            {symbolFilter ? `${symbolFilter} Trades` : 'All symbols'}
+            {datePreset !== 'all' ? ` • ${datePreset.replace('_', ' ')}` : ''}
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Symbol Filter button ($) */}
+          <button
+            onClick={() => setIsSymbolModalOpen(true)}
+            className={`p-2 rounded-xl border text-xs font-mono font-bold transition ${
+              symbolFilter
+                ? 'bg-brand-500/10 border-brand-500/40 text-brand-500'
+                : 'bg-surface-secondary border-border-subtle text-content-muted hover:text-content-primary'
+            }`}
+            title="Filter by Symbol ($)"
+          >
+            <DollarSign className="w-4 h-4" />
+          </button>
+
+          {/* Sort toggle (↑↓) */}
+          <button
+            onClick={() => setSortAscending(!sortAscending)}
+            className={`p-2 rounded-xl border text-xs font-mono font-bold transition ${
+              sortAscending
+                ? 'bg-brand-500/10 border-brand-500/40 text-brand-500'
+                : 'bg-surface-secondary border-border-subtle text-content-muted hover:text-content-primary'
+            }`}
+            title={`Sort Order: ${sortAscending ? 'Oldest First' : 'Newest First'}`}
+          >
+            <ArrowUpDown className="w-4 h-4" />
+          </button>
+
+          {/* Calendar Date Filter button */}
+          <button
+            onClick={() => setIsCalendarModalOpen(true)}
+            className={`p-2 rounded-xl border text-xs font-mono font-bold transition ${
+              datePreset !== 'all'
+                ? 'bg-brand-500/10 border-brand-500/40 text-brand-500'
+                : 'bg-surface-secondary border-border-subtle text-content-muted hover:text-content-primary'
+            }`}
+            title="Select Period / Calendar"
+          >
+            <Calendar className="w-4 h-4" />
+          </button>
+
+          {/* Voice Journal */}
           <PrimaryAction
-            label="Voice Journal"
+            label="Voice"
             icon={<Mic className="w-4 h-4" />}
             onClick={() => setIsVoiceModalOpen(true)}
+            title="Voice Journal Entry"
           />
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="framer-card p-4 space-y-3">
-        {/* Date Filter Presets */}
-        <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-border-subtle">
-          <span className="text-[11px] font-bold text-content-muted uppercase tracking-wider mr-1">Period:</span>
+      {/* 2. MT5 3-Segment Tabs */}
+      <div className="flex items-center border-b border-border-subtle bg-surface px-4 pt-1 rounded-t-2xl">
+        {(['POSITIONS', 'ORDERS', 'DEALS'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2.5 text-xs font-bold tracking-wider font-mono transition relative ${
+              activeTab === tab
+                ? 'text-[#2F5BEA]'
+                : 'text-content-muted hover:text-content-primary'
+            }`}
+          >
+            <span>{tab}</span>
+            {activeTab === tab && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2F5BEA] rounded-full" />
+            )}
+          </button>
+        ))}
+
+        {/* View mode toggle (Dense MT5 vs Detailed Table on Desktop) */}
+        <div className="ml-auto hidden sm:flex items-center gap-1 bg-surface-secondary border border-border-subtle rounded-lg p-0.5 text-xs font-mono mb-1">
+          <button
+            onClick={() => setViewMode('dense')}
+            className={`px-2 py-0.5 rounded transition flex items-center gap-1 ${
+              viewMode === 'dense' ? 'bg-surface text-[#2F5BEA] font-bold shadow-xs' : 'text-content-muted hover:text-content-primary'
+            }`}
+            title="MT5 Dense History List View"
+          >
+            <List className="w-3.5 h-3.5" />
+            <span>MT5 Dense</span>
+          </button>
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-2 py-0.5 rounded transition flex items-center gap-1 ${
+              viewMode === 'table' ? 'bg-surface text-[#2F5BEA] font-bold shadow-xs' : 'text-content-muted hover:text-content-primary'
+            }`}
+            title="Detailed Multi-Column Audit Table View"
+          >
+            <Table className="w-3.5 h-3.5" />
+            <span>Table</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3. MT5 Dot-Leader Account Summary */}
+      <div className="bg-surface border border-border-subtle rounded-2xl p-4 font-mono text-xs space-y-1.5 shadow-xs">
+        <div className="flex items-baseline justify-between">
+          <span className="text-content-muted shrink-0">Profit:</span>
+          <span className="mx-2 flex-1 border-b border-dotted border-border-subtle/80 relative -top-1" />
+          <span className={`font-bold tabular-nums shrink-0 ${totalProfit >= 0 ? 'text-[#2F5BEA]' : 'text-[#D12F42]'}`}>
+            {totalProfit.toFixed(2)}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between">
+          <span className="text-content-muted shrink-0">Deposit:</span>
+          <span className="mx-2 flex-1 border-b border-dotted border-border-subtle/80 relative -top-1" />
+          <span className="font-bold text-content-primary tabular-nums shrink-0">{deposit.toFixed(2)}</span>
+        </div>
+        <div className="flex items-baseline justify-between">
+          <span className="text-content-muted shrink-0">Swap:</span>
+          <span className="mx-2 flex-1 border-b border-dotted border-border-subtle/80 relative -top-1" />
+          <span className="font-bold text-content-primary tabular-nums shrink-0">{totalSwap.toFixed(2)}</span>
+        </div>
+        <div className="flex items-baseline justify-between">
+          <span className="text-content-muted shrink-0">Commission:</span>
+          <span className="mx-2 flex-1 border-b border-dotted border-border-subtle/80 relative -top-1" />
+          <span className="font-bold text-content-primary tabular-nums shrink-0">{totalCommission.toFixed(2)}</span>
+        </div>
+        <div className="flex items-baseline justify-between">
+          <span className="text-content-muted shrink-0">Balance:</span>
+          <span className="mx-2 flex-1 border-b border-dotted border-border-subtle/80 relative -top-1" />
+          <span className="font-bold text-content-primary tabular-nums shrink-0">{accountBalance.toFixed(2)}</span>
+        </div>
+      </div>
+
+      {/* 4. Trade History Presentation (Dense MT5 List or Audit Table) */}
+      {viewMode === 'dense' ? (
+        <div className="bg-surface border border-border-subtle rounded-2xl overflow-hidden divide-y divide-border-subtle/60 shadow-xs">
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={`skel-${i}`} className="p-4 flex items-center justify-between animate-pulse">
+                <div className="space-y-2">
+                  <div className="w-32 h-3.5 bg-surface-secondary rounded" />
+                  <div className="w-24 h-3 bg-surface-secondary rounded" />
+                </div>
+                <div className="space-y-2 text-right">
+                  <div className="w-28 h-3 bg-surface-secondary rounded ml-auto" />
+                  <div className="w-16 h-4 bg-surface-secondary rounded ml-auto" />
+                </div>
+              </div>
+            ))
+          ) : displayedTrades.length === 0 ? (
+            <div className="p-12 text-center text-content-muted text-xs font-mono">
+              No {activeTab.toLowerCase()} records match your current filter.
+            </div>
+          ) : (
+            displayedTrades.map(t => {
+              const isOpen = t.status === 'OPEN';
+              const pnl = isOpen
+                ? (t.floating_profit !== undefined && t.floating_profit !== null ? t.floating_profit : t.net_profit)
+                : t.net_profit;
+              const isWin = Number(pnl) >= 0;
+              const isBuy = t.position_type === 'BUY';
+
+              return (
+                <div
+                  key={t.id}
+                  onClick={() => openTradeDetail(t.id)}
+                  className="px-4 py-3 hover:bg-surface-secondary/70 transition cursor-pointer flex items-center justify-between font-mono group"
+                >
+                  {/* Left side: Symbol, Type & Volume, Entry -> Exit */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <span className="font-bold text-content-primary group-hover:text-brand-500 transition">
+                        {t.symbol},
+                      </span>
+                      <span className={`font-bold ${isBuy ? 'text-[#2F5BEA]' : 'text-[#D12F42]'}`}>
+                        {t.position_type.toLowerCase()} {Number(t.total_volume).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-content-muted">
+                      {t.entry_price_avg} → {isOpen ? <span className="text-[#2F5BEA] font-semibold">{t.current_price || 'Live'}</span> : (t.exit_price_avg || '—')}
+                    </div>
+                  </div>
+
+                  {/* Right side: Timestamp, Profit */}
+                  <div className="text-right space-y-1">
+                    <div className="text-[10px] text-content-muted">
+                      {formatMT5HistoryDate(t.close_time || t.open_time)}
+                    </div>
+                    <div className={`text-xs font-bold tabular-nums ${isWin ? 'text-[#2F5BEA]' : 'text-[#D12F42]'}`}>
+                      {Number(pnl || 0).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      ) : (
+        /* Detailed Multi-Column Audit Table */
+        <div className="framer-card overflow-hidden bg-surface border border-border-subtle shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-surface-secondary/70 text-content-muted font-semibold border-b border-border-subtle uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th className="px-5 py-3.5">Symbol & Ticket</th>
+                  <th className="px-4 py-3.5">Open Time</th>
+                  <th className="px-4 py-3.5">Type</th>
+                  <th className="px-4 py-3.5">Volume</th>
+                  <th className="px-4 py-3.5">Entry → Exit</th>
+                  <th className="px-4 py-3.5">S/L & T/P</th>
+                  <th className="px-4 py-3.5">Net P/L</th>
+                  <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5">Session</th>
+                  <th className="px-4 py-3.5">Review</th>
+                  <th className="px-4 py-3.5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-subtle font-mono">
+                {isLoading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={`skel-table-${i}`} className="border-b border-border-subtle/50 animate-pulse">
+                      <td className="px-4 py-3.5"><div className="w-16 h-4 bg-surface-secondary rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="w-20 h-4 bg-surface-secondary rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="w-12 h-4 bg-surface-secondary rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="w-10 h-4 bg-surface-secondary rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="w-14 h-4 bg-surface-secondary rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="w-16 h-4 bg-surface-secondary rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="w-16 h-4 bg-surface-secondary rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="w-12 h-4 bg-surface-secondary rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="w-20 h-4 bg-surface-secondary rounded" /></td>
+                      <td className="px-4 py-3.5"><div className="w-20 h-4 bg-surface-secondary rounded" /></td>
+                      <td className="px-4 py-3.5 text-right"><div className="w-12 h-4 bg-surface-secondary rounded ml-auto" /></td>
+                    </tr>
+                  ))
+                ) : displayedTrades.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="py-12 text-center text-content-muted">
+                      No trades match your criteria.
+                    </td>
+                  </tr>
+                ) : (
+                  displayedTrades.map(t => {
+                    const isOpen = t.status === 'OPEN';
+                    const pnl = isOpen ? (t.floating_profit !== undefined && t.floating_profit !== null ? t.floating_profit : t.net_profit) : t.net_profit;
+                    const isWin = Number(pnl) >= 0;
+                    const isBuy = t.position_type === 'BUY';
+
+                    return (
+                      <tr
+                        key={t.id}
+                        onClick={() => openTradeDetail(t.id)}
+                        className="hover:bg-surface-secondary/60 transition cursor-pointer group"
+                      >
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-content-primary">{t.symbol}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-surface-secondary text-[10px] text-content-muted border border-border-subtle">
+                              #{t.position_id || t.id.slice(0, 8)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-content-muted text-[11px] whitespace-nowrap">
+                          {formatMT5HistoryDate(t.open_time)}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                            isBuy
+                              ? 'bg-blue-500/10 text-[#2F5BEA] border border-blue-500/20'
+                              : 'bg-rose-500/10 text-[#D12F42] border border-rose-500/20'
+                          }`}>
+                            {t.position_type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 font-bold text-content-secondary">
+                          {Number(t.total_volume).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-4 text-content-muted whitespace-nowrap">
+                          {isOpen ? (
+                            <span>{t.entry_price_avg} → <span className="text-brand-500 font-bold">{t.current_price || 'Live'}</span></span>
+                          ) : (
+                            <span>{t.entry_price_avg} → {t.exit_price_avg || '—'}</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-content-muted text-[11px] whitespace-nowrap">
+                          <span>{t.initial_sl ? t.initial_sl : '—'} / {t.initial_tp ? t.initial_tp : '—'}</span>
+                        </td>
+                        <td className={`px-4 py-4 font-bold text-sm whitespace-nowrap ${isWin ? 'text-[#2F5BEA]' : 'text-[#D12F42]'}`}>
+                          {Number(pnl || 0).toFixed(2)}
+                        </td>
+                        <td className="px-4 py-4">
+                          {isOpen ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse mr-1" />
+                              OPEN
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-surface-secondary text-content-muted border border-border-subtle">
+                              CLOSED
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 font-sans text-content-secondary text-[11px] whitespace-nowrap">
+                          {t.session_name || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          {t.is_reviewed ? (
+                            <span className="inline-flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 font-sans font-semibold text-[11px]">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Done</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center space-x-1 text-amber-500 font-sans font-semibold text-[11px]">
+                              <AlertCircle className="w-3.5 h-3.5" />
+                              <span>Review</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <button className="p-1.5 rounded-lg text-content-muted group-hover:text-content-primary group-hover:bg-surface-secondary transition">
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Pagination Bar */}
+      {pagination.totalPages > 1 && (
+        <div className="px-4 py-3 bg-surface border border-border-subtle rounded-2xl flex items-center justify-between text-xs text-content-secondary font-mono shadow-xs">
+          <span>Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)</span>
+          <div className="flex space-x-2">
+            <button
+              disabled={pagination.page <= 1}
+              onClick={() => loadTrades(pagination.page - 1)}
+              className="framer-btn-secondary py-1 px-3 disabled:opacity-40"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 inline mr-1" />
+              Previous
+            </button>
+            <button
+              disabled={pagination.page >= pagination.totalPages}
+              onClick={() => loadTrades(pagination.page + 1)}
+              className="framer-btn-secondary py-1 px-3 disabled:opacity-40"
+            >
+              Next
+              <ChevronRight className="w-3.5 h-3.5 inline ml-1" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Symbol Filter BottomSheet ($) */}
+      <BottomSheet
+        isOpen={isSymbolModalOpen}
+        onClose={() => setIsSymbolModalOpen(false)}
+        title="Filter by Symbol"
+        subtitle="Select instrument or reset to all symbols"
+        secondaryAction={{
+          label: 'Close',
+          onClick: () => setIsSymbolModalOpen(false)
+        }}
+      >
+        <div className="space-y-2 font-mono text-xs">
+          <button
+            onClick={() => {
+              setSymbolFilter('');
+              setIsSymbolModalOpen(false);
+            }}
+            className={`w-full p-3 rounded-xl border text-left transition flex items-center justify-between ${
+              !symbolFilter
+                ? 'bg-brand-500/10 border-brand-500/40 text-brand-500 font-bold'
+                : 'bg-surface-secondary/40 border-border-subtle text-content-secondary hover:bg-surface-secondary'
+            }`}
+          >
+            <span>All Symbols</span>
+            {!symbolFilter && <CheckCircle2 className="w-4 h-4 text-brand-500" />}
+          </button>
+          {['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'AUDUSD', 'USDCAD', 'GBPJPY', 'EURJPY', 'UKOILm'].map(sym => (
+            <button
+              key={sym}
+              onClick={() => {
+                setSymbolFilter(sym);
+                setIsSymbolModalOpen(false);
+              }}
+              className={`w-full p-3 rounded-xl border text-left transition flex items-center justify-between ${
+                symbolFilter === sym
+                  ? 'bg-brand-500/10 border-brand-500/40 text-brand-500 font-bold'
+                  : 'bg-surface-secondary/40 border-border-subtle text-content-secondary hover:bg-surface-secondary'
+              }`}
+            >
+              <span>{sym}</span>
+              {symbolFilter === sym && <CheckCircle2 className="w-4 h-4 text-brand-500" />}
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
+
+      {/* Calendar Filter BottomSheet */}
+      <BottomSheet
+        isOpen={isCalendarModalOpen}
+        onClose={() => setIsCalendarModalOpen(false)}
+        title="Period / Date Filter"
+        subtitle="Select trade history time window"
+        secondaryAction={{
+          label: 'Close',
+          onClick: () => setIsCalendarModalOpen(false)
+        }}
+      >
+        <div className="space-y-2 text-xs">
           {[
             { id: 'all', label: 'All Time' },
             { id: 'today', label: 'Today' },
             { id: 'last_week', label: 'Last Week' },
             { id: 'last_month', label: 'Last Month' },
             { id: 'last_3_months', label: 'Last 3 Months' },
-            { id: 'custom', label: 'Custom Period' },
+            { id: 'custom', label: 'Custom Period' }
           ].map(preset => (
             <button
               key={preset.id}
-              onClick={() => setDatePreset(preset.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+              onClick={() => {
+                setDatePreset(preset.id);
+                if (preset.id !== 'custom') setIsCalendarModalOpen(false);
+              }}
+              className={`w-full p-3 rounded-xl border text-left transition flex items-center justify-between ${
                 datePreset === preset.id
-                  ? 'bg-brand-primary text-white shadow-sm'
-                  : 'bg-surface-secondary text-content-secondary hover:text-content-primary hover:bg-surface-secondary/80'
+                  ? 'bg-brand-500/10 border-brand-500/40 text-brand-500 font-bold'
+                  : 'bg-surface-secondary/40 border-border-subtle text-content-secondary hover:bg-surface-secondary'
               }`}
             >
-              {preset.label}
+              <span>{preset.label}</span>
+              {datePreset === preset.id && <CheckCircle2 className="w-4 h-4 text-brand-500" />}
             </button>
           ))}
 
-          {/* Custom Date Pickers */}
           {datePreset === 'custom' && (
-            <div className="flex items-center space-x-2 ml-auto animate-in fade-in">
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={e => setCustomStartDate(e.target.value)}
-                className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-lg px-2.5 py-1 focus:outline-none"
-              />
-              <span className="text-content-muted text-xs">to</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={e => setCustomEndDate(e.target.value)}
-                className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-lg px-2.5 py-1 focus:outline-none"
-              />
+            <div className="p-3 bg-surface-secondary rounded-xl border border-border-subtle space-y-2 mt-2">
+              <div className="flex items-center gap-2">
+                <span className="text-content-muted w-10">Start:</span>
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={e => setCustomStartDate(e.target.value)}
+                  className="bg-surface border border-border-subtle rounded-lg px-2 py-1 text-content-primary flex-1 focus:outline-none"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-content-muted w-10">End:</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={e => setCustomEndDate(e.target.value)}
+                  className="bg-surface border border-border-subtle rounded-lg px-2 py-1 text-content-primary flex-1 focus:outline-none"
+                />
+              </div>
+              <button
+                onClick={() => setIsCalendarModalOpen(false)}
+                className="w-full mt-2 py-2 bg-brand-500 text-white font-bold rounded-lg transition"
+              >
+                Apply Range
+              </button>
             </div>
           )}
         </div>
-
-        {/* Secondary Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Search */}
-          <div className="flex items-center space-x-2 bg-surface-secondary border border-border-subtle rounded-xl px-3 py-2 flex-1 min-w-[220px]">
-            <Search className="w-4 h-4 text-content-muted" />
-            <input
-              type="text"
-              placeholder="Search symbol, ticket, comment, notes, setup..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && loadTrades(1)}
-              className="bg-transparent text-xs text-content-primary placeholder-content-muted focus:outline-none w-full"
-            />
-          </div>
-
-          {/* Direction Filter */}
-          <select
-            value={directionFilter}
-            onChange={e => setDirectionFilter(e.target.value)}
-            className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
-          >
-            <option value="">All Directions</option>
-            <option value="BUY">BUY Only</option>
-            <option value="SELL">SELL Only</option>
-          </select>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
-          >
-            <option value="">All Statuses</option>
-            <option value="CLOSED">Closed Trades</option>
-            <option value="OPEN">Open Positions</option>
-          </select>
-
-          {/* Session Filter */}
-          <select
-            value={sessionFilter}
-            onChange={e => setSessionFilter(e.target.value)}
-            className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
-          >
-            <option value="">All Sessions</option>
-            <option value="London">London</option>
-            <option value="New York">New York</option>
-            <option value="London/NY Overlap">London/NY Overlap</option>
-            <option value="Asia">Asia</option>
-            <option value="Off-Hours">Off-Hours</option>
-          </select>
-
-          {/* Review Filter */}
-          <select
-            value={reviewedFilter}
-            onChange={e => setReviewedFilter(e.target.value)}
-            className="bg-surface-secondary border border-border-subtle text-xs text-content-primary rounded-xl px-3 py-2 focus:outline-none cursor-pointer"
-          >
-            <option value="">Review Status: All</option>
-            <option value="1">Reviewed</option>
-            <option value="0">Pending Review (+25 XP)</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Trades Table */}
-      <div className="framer-card overflow-hidden bg-surface border border-border-subtle shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-surface-secondary/70 text-content-muted font-semibold border-b border-border-subtle uppercase tracking-wider text-[11px]">
-              <tr>
-                <th className="px-5 py-3.5">Symbol & Ticket</th>
-                <th className="px-4 py-3.5">Open Time</th>
-                <th className="px-4 py-3.5">Type</th>
-                <th className="px-4 py-3.5">Volume</th>
-                <th className="px-4 py-3.5">Entry → Exit</th>
-                <th className="px-4 py-3.5">S/L & T/P</th>
-                <th className="px-4 py-3.5">Net P/L</th>
-                <th className="px-4 py-3.5">Status</th>
-                <th className="px-4 py-3.5">Session</th>
-                <th className="px-4 py-3.5">Setup / Tags</th>
-                <th className="px-4 py-3.5">Review</th>
-                <th className="px-4 py-3.5 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-subtle font-mono">
-              {isLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <tr key={`skel-${i}`} className="border-b border-border-subtle/50 animate-pulse">
-                    <td className="px-4 py-3.5"><div className="w-16 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5"><div className="w-20 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5"><div className="w-12 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5"><div className="w-10 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5"><div className="w-14 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5"><div className="w-16 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5"><div className="w-16 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5"><div className="w-12 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5"><div className="w-20 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5"><div className="w-24 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5"><div className="w-20 h-4 bg-surface-secondary rounded" /></td>
-                    <td className="px-4 py-3.5 text-right"><div className="w-12 h-4 bg-surface-secondary rounded ml-auto" /></td>
-                  </tr>
-                ))
-              ) : trades.length === 0 ? (
-                <tr>
-                  <td colSpan={12} className="py-12 text-center text-content-muted">
-                    No reconstructed trades match your criteria.
-                  </td>
-                </tr>
-              ) : (
-                trades.map(t => {
-                  const isOpen = t.status === 'OPEN';
-                  const pnl = isOpen ? (t.floating_profit !== undefined && t.floating_profit !== null ? t.floating_profit : t.net_profit) : t.net_profit;
-                  const isWin = Number(pnl) >= 0;
-                  const formattedOpenTime = t.open_time
-                    ? new Date(t.open_time).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })
-                    : '—';
-
-                  return (
-                    <tr
-                      key={t.id}
-                      onClick={() => openTradeDetail(t.id)}
-                      className="hover:bg-surface-secondary/60 transition cursor-pointer group"
-                    >
-                      {/* Symbol & MT5 Ticket */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-content-primary">{t.symbol}</span>
-                          <span className="px-1.5 py-0.5 rounded bg-surface-secondary text-[10px] text-content-muted border border-border-subtle">
-                            #{t.position_id || t.id.slice(0, 8)}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Open Time */}
-                      <td className="px-4 py-4 text-content-muted text-[11px] whitespace-nowrap">
-                        {formattedOpenTime}
-                      </td>
-
-                      {/* Type */}
-                      <td className="px-4 py-4">
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                          t.position_type === 'BUY'
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-                        }`}>
-                          {t.position_type}
-                        </span>
-                      </td>
-
-                      {/* Volume */}
-                      <td className="px-4 py-4 font-bold text-content-secondary">
-                        {Number(t.total_volume).toFixed(2)}
-                      </td>
-
-                      {/* Entry -> Exit */}
-                      <td className="px-4 py-4 text-content-muted whitespace-nowrap">
-                        {isOpen ? (
-                          <span>{t.entry_price_avg} → <span className="text-brand-500 font-bold">{t.current_price || 'Live'}</span></span>
-                        ) : (
-                          <span>{t.entry_price_avg} → {t.exit_price_avg || '—'}</span>
-                        )}
-                      </td>
-
-                      {/* S/L & T/P */}
-                      <td className="px-4 py-4 text-content-muted text-[11px] whitespace-nowrap">
-                        <span>{t.initial_sl ? t.initial_sl : '—'} / {t.initial_tp ? t.initial_tp : '—'}</span>
-                      </td>
-
-                      {/* Net P/L */}
-                      <td className={`px-4 py-4 font-bold text-sm whitespace-nowrap ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                        {isOpen && <span className="text-[10px] font-normal text-content-muted mr-1">Float:</span>}
-                        {isWin ? '+' : ''}${Number(pnl || 0).toFixed(2)}
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-4 py-4">
-                        {isOpen ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
-                            <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse mr-1" />
-                            OPEN
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-surface-secondary text-content-muted border border-border-subtle">
-                            CLOSED
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Session */}
-                      <td className="px-4 py-4 font-sans text-content-secondary text-[11px] whitespace-nowrap">
-                        {t.session_name || 'N/A'}
-                      </td>
-
-                      {/* Setup / Tags */}
-                      <td className="px-4 py-4 font-sans text-content-secondary">
-                        {t.setup_name ? (
-                          <span className="truncate max-w-[120px] inline-block font-medium">{t.setup_name}</span>
-                        ) : (
-                          <span className="text-content-muted">-</span>
-                        )}
-                      </td>
-
-                      {/* Review */}
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        {t.is_reviewed ? (
-                          <span className="inline-flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 font-sans font-semibold text-[11px]">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>Done</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center space-x-1 text-amber-500 font-sans font-semibold text-[11px] animate-pulse">
-                            <AlertCircle className="w-3.5 h-3.5" />
-                            <span>Review (+25XP)</span>
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Action */}
-                      <td className="px-4 py-4 text-right">
-                        <button className="p-1.5 rounded-lg text-content-muted group-hover:text-content-primary group-hover:bg-surface-secondary transition">
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination Bar */}
-        {pagination.totalPages > 1 && (
-          <div className="px-6 py-4 bg-surface-secondary/40 border-t border-border-subtle flex items-center justify-between text-xs text-content-secondary">
-            <span>Showing page {pagination.page} of {pagination.totalPages} ({pagination.total} total trades)</span>
-            <div className="flex space-x-2">
-              <button
-                disabled={pagination.page <= 1}
-                onClick={() => loadTrades(pagination.page - 1)}
-                className="framer-btn-secondary py-1 px-3 disabled:opacity-40"
-              >
-                <ChevronLeft className="w-3.5 h-3.5 inline mr-1" />
-                Previous
-              </button>
-              <button
-                disabled={pagination.page >= pagination.totalPages}
-                onClick={() => loadTrades(pagination.page + 1)}
-                className="framer-btn-secondary py-1 px-3 disabled:opacity-40"
-              >
-                Next
-                <ChevronRight className="w-3.5 h-3.5 inline ml-1" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Trade Review & Lifecycle Drawer Modal */}
+      </BottomSheet>
+{/* Trade Review & Lifecycle Drawer Modal */}
       {isDetailOpen && selectedTrade && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end animate-in fade-in duration-200">
           <div className="w-full max-w-2xl bg-surface border-l border-border-subtle h-full overflow-y-auto p-6 space-y-6 animate-in slide-in-from-right duration-300 shadow-2xl">
