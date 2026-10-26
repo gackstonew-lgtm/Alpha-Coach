@@ -139,8 +139,8 @@ export const LandingPage: React.FC = () => {
         {/* ========================================================================= */}
         <section className="relative w-full border-b border-border/40 bg-background overflow-hidden">
           {/* Subtle accent glow matching ArcadeFX theme */}
-          <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none -z-10" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#0B1B2B]/20 dark:bg-[#38BDF8]/5 rounded-full blur-3xl pointer-events-none -z-10" />
+          <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#2F5BEA]/10 rounded-full blur-3xl pointer-events-none -z-10" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#0B1B2B]/20 dark:bg-[#2F5BEA]/5 rounded-full blur-3xl pointer-events-none -z-10" />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -164,7 +164,7 @@ export const LandingPage: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-3.5 pt-1">
                   <Link
                     to={user ? "/dashboard" : "/register"}
-                    className="h-11 px-8 rounded-full bg-[#38BDF8] hover:bg-[#0284c7] text-[#080D14] hover:text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(56,189,248,0.4)] hover:shadow-[0_8px_24px_rgba(56,189,248,0.6)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all duration-200"
+                    className="h-11 px-8 rounded-full bg-[#2F5BEA] hover:bg-[#2449C2] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(47,91,234,0.35)] hover:shadow-[0_8px_24px_rgba(47,91,234,0.5)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all duration-200"
                   >
                     {user ? 'DASHBOARD' : 'START FREE'}
                   </Link>
@@ -180,14 +180,14 @@ export const LandingPage: React.FC = () => {
 
                 {/* 3 Feature Badges */}
                 <div className="pt-2 flex flex-wrap gap-2.5 text-xs font-semibold">
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> MT5 Sync
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#E8EEFE] text-[#2F5BEA] dark:bg-[#2F5BEA]/15 dark:text-[#5B95F5] border border-[#C9D6FB] dark:border-[#2F5BEA]/30 select-none">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#2F5BEA]" /> MT5 Sync
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> No Passwords
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#E8EEFE] text-[#2F5BEA] dark:bg-[#2F5BEA]/15 dark:text-[#5B95F5] border border-[#C9D6FB] dark:border-[#2F5BEA]/30 select-none">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#2F5BEA]" /> No Passwords
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> Offline Ready
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#E8EEFE] text-[#2F5BEA] dark:bg-[#2F5BEA]/15 dark:text-[#5B95F5] border border-[#C9D6FB] dark:border-[#2F5BEA]/30 select-none">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#2F5BEA]" /> Offline Ready
                   </span>
                 </div>
               </div>
@@ -208,7 +208,7 @@ export const LandingPage: React.FC = () => {
 
                   <div className="space-y-4">
                     <div className="p-3.5 rounded-2xl bg-surface-elevated/70 dark:bg-[#0A1522]/80 border border-border/30 flex items-start gap-3.5">
-                      <div className="w-9 h-9 rounded-xl bg-[#38BDF8]/20 flex items-center justify-center shrink-0 text-[#38BDF8]">
+                      <div className="w-9 h-9 rounded-xl bg-[#E8EEFE] dark:bg-[#2F5BEA]/20 flex items-center justify-center shrink-0 text-[#2F5BEA]">
                         <LineChart className="w-4.5 h-4.5" />
                       </div>
                       <div>
@@ -220,7 +220,7 @@ export const LandingPage: React.FC = () => {
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-surface-elevated/70 dark:bg-[#0A1522]/80 border border-border/30 flex items-start gap-3.5">
-                      <div className="w-9 h-9 rounded-xl bg-[#38BDF8]/20 flex items-center justify-center shrink-0 text-[#38BDF8]">
+                      <div className="w-9 h-9 rounded-xl bg-[#E8EEFE] dark:bg-[#2F5BEA]/20 flex items-center justify-center shrink-0 text-[#2F5BEA]">
                         <Bot className="w-4.5 h-4.5" />
                       </div>
                       <div>
@@ -232,7 +232,7 @@ export const LandingPage: React.FC = () => {
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-surface-elevated/70 dark:bg-[#0A1522]/80 border border-border/30 flex items-start gap-3.5">
-                      <div className="w-9 h-9 rounded-xl bg-[#38BDF8]/20 flex items-center justify-center shrink-0 text-[#38BDF8]">
+                      <div className="w-9 h-9 rounded-xl bg-[#E8EEFE] dark:bg-[#2F5BEA]/20 flex items-center justify-center shrink-0 text-[#2F5BEA]">
                         <Shield className="w-4.5 h-4.5" />
                       </div>
                       <div>
@@ -254,7 +254,7 @@ export const LandingPage: React.FC = () => {
         {/* ========================================================================= */}
         <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 scroll-mt-20">
           <div className="text-center max-w-3xl mx-auto space-y-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#38BDF8]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#2F5BEA]">
               Engineered For Modern Traders
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
@@ -271,11 +271,11 @@ export const LandingPage: React.FC = () => {
               return (
                 <div
                   key={idx}
-                  className="bg-surface rounded-2xl p-6 sm:p-8 border border-border hover:border-[#38BDF8]/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 flex flex-col justify-between group card-hover-interactive"
+                  className="bg-surface rounded-2xl p-6 sm:p-8 border border-border hover:border-[#C9D6FB] dark:border-[#2F5BEA]/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 flex flex-col justify-between group card-hover-interactive"
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="w-10 h-10 rounded-xl bg-[#38BDF8]/15 border border-[#38BDF8]/30 flex items-center justify-center text-[#38BDF8] group-hover:scale-105 transition-transform">
+                      <div className="w-10 h-10 rounded-xl bg-[#E8EEFE] dark:bg-[#2F5BEA]/15 border border-[#C9D6FB] dark:border-[#2F5BEA]/30 flex items-center justify-center text-[#2F5BEA] group-hover:scale-105 transition-transform">
                         <Icon className="w-5 h-5" />
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-surface-elevated border border-border text-muted-foreground">
@@ -284,7 +284,7 @@ export const LandingPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <h3 className="text-base font-extrabold text-foreground group-hover:text-[#38BDF8] transition-colors tracking-tight">
+                      <h3 className="text-base font-extrabold text-foreground group-hover:text-[#2F5BEA] transition-colors tracking-tight">
                         {feat.title}
                       </h3>
                       <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -446,7 +446,7 @@ export const LandingPage: React.FC = () => {
               <div className="pt-3">
                 <Link
                   to="/register"
-                  className="inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-[#38BDF8] hover:bg-[#0284c7] active:scale-[0.98] text-[#080D14] hover:text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(56,189,248,0.4)] transition"
+                  className="inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-[#2F5BEA] hover:bg-[#2449C2] active:scale-[0.98] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(47,91,234,0.35)] transition"
                 >
                   START FREE
                 </Link>

@@ -68,7 +68,7 @@ export const LoginPage: React.FC = () => {
       <div className="w-full lg:w-[480px] xl:w-[520px] 2xl:w-[560px] bg-surface dark:bg-[#080D14] border-r border-border flex flex-col justify-center px-6 py-10 sm:px-10 md:px-14 lg:pl-16 xl:pl-20 shrink-0 min-h-[100dvh]">
         <div className="w-full max-w-[340px] sm:max-w-[380px] mx-auto lg:mx-0">
           {/* Brand Logo Header */}
-          <Link to="/" className="inline-block mb-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] rounded-xl" aria-label="Go to Arcade Fx home">
+          <Link to="/" className="inline-block mb-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] rounded-xl" aria-label="Go to Arcade Fx home">
             <Logo size="md" />
           </Link>
 
@@ -115,7 +115,7 @@ export const LoginPage: React.FC = () => {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="e-mail"
-                className="w-full h-12 bg-surface-subtle border border-border text-foreground placeholder:text-muted-foreground rounded-xl pl-11 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#38BDF8] focus:border-[#38BDF8] transition-all shadow-xs"
+                className="w-full h-12 bg-surface-subtle border border-border text-foreground placeholder:text-muted-foreground rounded-xl pl-11 pr-4 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2F5BEA] focus:border-[#2F5BEA] transition-all shadow-xs"
               />
             </div>
 
@@ -129,12 +129,12 @@ export const LoginPage: React.FC = () => {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="password"
-                className="w-full h-12 bg-surface-subtle border border-border text-foreground placeholder:text-muted-foreground rounded-xl pl-11 pr-11 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#38BDF8] focus:border-[#38BDF8] transition-all shadow-xs"
+                className="w-full h-12 bg-surface-subtle border border-border text-foreground placeholder:text-muted-foreground rounded-xl pl-11 pr-11 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#2F5BEA] focus:border-[#2F5BEA] transition-all shadow-xs"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 p-1 text-muted-foreground hover:text-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] rounded-lg"
+                className="absolute right-3.5 p-1 text-muted-foreground hover:text-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] rounded-lg"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -148,7 +148,7 @@ export const LoginPage: React.FC = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={e => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#38BDF8] bg-surface border border-border focus:ring-2 focus:ring-[#38BDF8] accent-[#38BDF8] cursor-pointer"
+                  className="w-4 h-4 rounded text-[#2F5BEA] bg-surface border border-border focus:ring-2 focus:ring-[#2F5BEA] accent-[#2F5BEA] cursor-pointer"
                 />
                 <span>Remember session</span>
               </label>
@@ -158,7 +158,7 @@ export const LoginPage: React.FC = () => {
                   e.preventDefault();
                   alert('Password reset link has been dispatched to your email.');
                 }}
-                className="text-[#38BDF8] hover:underline font-semibold text-[11px] transition"
+                className="text-[#2F5BEA] hover:underline font-semibold text-[11px] transition"
               >
                 Forgot password?
               </Link>
@@ -169,7 +169,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 rounded-xl bg-[#38BDF8] hover:bg-[#0284c7] text-[#080D14] hover:text-white font-extrabold text-xs uppercase tracking-wider shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8]"
+                className="w-full h-12 rounded-xl bg-[#2F5BEA] hover:bg-[#2449C2] text-white font-extrabold text-xs uppercase tracking-wider shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA]"
               >
                 {isLoading ? 'LOGGING IN...' : 'LOG IN'}
               </button>
@@ -182,7 +182,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleOAuth('facebook')}
-              className="w-10 h-10 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] flex items-center justify-center text-white text-base font-bold shadow-xs hover:scale-105 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8]"
+              className="w-10 h-10 rounded-xl bg-[#1877F2] hover:bg-[#166fe5] flex items-center justify-center text-white text-base font-bold shadow-xs hover:scale-105 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA]"
               aria-label="Continue with Facebook"
             >
               f
@@ -191,7 +191,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleOAuth('google')}
-              className="w-10 h-10 rounded-xl bg-surface border border-border shadow-xs hover:bg-surface-elevated flex items-center justify-center hover:scale-105 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8]"
+              className="w-10 h-10 rounded-xl bg-surface border border-border shadow-xs hover:bg-surface-elevated flex items-center justify-center hover:scale-105 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA]"
               aria-label="Continue with Google"
             >
               <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
@@ -205,7 +205,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleOAuth('twitter')}
-              className="w-10 h-10 rounded-xl bg-surface border border-border text-foreground shadow-xs hover:bg-surface-elevated hover:scale-105 active:scale-95 flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8]"
+              className="w-10 h-10 rounded-xl bg-surface border border-border text-foreground shadow-xs hover:bg-surface-elevated hover:scale-105 active:scale-95 flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA]"
               aria-label="Continue with Twitter"
             >
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -217,7 +217,7 @@ export const LoginPage: React.FC = () => {
           {/* Switch to Sign Up */}
           <div className="pt-5 text-xs text-muted-foreground font-medium">
             New trader?{' '}
-            <Link to="/register" className="text-[#38BDF8] hover:underline font-bold transition">
+            <Link to="/register" className="text-[#2F5BEA] hover:underline font-bold transition">
               Create an account
             </Link>
           </div>
@@ -229,7 +229,7 @@ export const LoginPage: React.FC = () => {
       {/* ========================================================================= */}
       <div className="hidden lg:flex flex-1 flex-col items-center justify-center p-12 bg-gradient-to-br from-[#0B1B2B] via-[#0A1522] to-[#080D14] text-white relative overflow-hidden">
         {/* Ambient subtle glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] bg-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] bg-[#2F5BEA]/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-md text-center space-y-6">
           <div className="flex justify-center">
@@ -239,19 +239,19 @@ export const LoginPage: React.FC = () => {
             <h2 className="text-2xl xl:text-3xl font-extrabold text-white tracking-tight font-sans">
               Forex Intelligence & MT5 Journal
             </h2>
-            <p className="text-xs sm:text-sm text-[#A9BBCB] leading-relaxed max-w-sm mx-auto">
+            <p className="text-xs sm:text-sm text-[#8FA0C4] leading-relaxed max-w-sm mx-auto">
               Empirical discipline metrics, automated trade logs, and quantitative execution review built for modern traders.
             </p>
           </div>
 
           <div className="pt-2 flex flex-wrap justify-center gap-2 text-xs font-semibold">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#2F5BEA]/15 text-[#2F5BEA] border border-[#2F5BEA]/30 select-none">
               ✓ Zero Passwords Stored
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#2F5BEA]/15 text-[#2F5BEA] border border-[#2F5BEA]/30 select-none">
               ✓ Sub-Millisecond MT5 Sync
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#2F5BEA]/15 text-[#2F5BEA] border border-[#2F5BEA]/30 select-none">
               ✓ Local Bridge Security
             </span>
           </div>
