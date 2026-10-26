@@ -4,12 +4,12 @@ import json
 import requests
 
 # Ensure bridge folder is on path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'bridge'))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from alpha_coach_bridge import AlphaCoachBridge
 
-bridge = AlphaCoachBridge(api_url='https://alpha-coach-pi.vercel.app/api/v1')
+bridge = AlphaCoachBridge(api_url='https://www.arcadefx.live/api/v1')
 print("=" * 60)
-print("  META COACH — MT5 TERMINAL & CLOUD CONNECTIVITY TEST")
+print("  ARCADEX MT5 BRIDGE — TERMINAL & CLOUD CONNECTIVITY TEST")
 print("=" * 60)
 
 # 1. Local MT5 terminal check
@@ -28,18 +28,19 @@ if acc:
     print(f"   Balance:              {acc.get('balance'):.2f} {acc.get('currency')}")
     print(f"   Equity:               {acc.get('equity'):.2f} {acc.get('currency')}")
     print(f"   Account Type:         {acc.get('accountType')}")
+    print(f"   Account Mode:         {acc.get('tradeMode')} (isDemo={acc.get('isDemo')})")
 else:
     print("2. MT5 Account:           None")
 
-# 3. Meta Coach Cloud Health
+# 3. Cloud API Health
 try:
-    health_resp = requests.get('https://alpha-coach-pi.vercel.app/api/health', timeout=10)
+    health_resp = requests.get('https://www.arcadefx.live/api/health', timeout=10)
     data = health_resp.json()
-    print(f"3. Meta Coach API:       HTTP {health_resp.status_code} ({data.get('status')})")
+    print(f"3. ArcadeFX Cloud API:   HTTP {health_resp.status_code} ({data.get('status')})")
     print(f"   Database Status:       {data.get('database', {}).get('status')}")
     print(f"   Authentication:        {data.get('authentication', {}).get('authority')}")
 except Exception as e:
-    print(f"3. Meta Coach API:       Error ({e})")
+    print(f"3. ArcadeFX Cloud API:   Error ({e})")
 
 # 4. Fetch Real MT5 Deals, Orders, and Positions
 history = bridge.fetch_history(days_back=90)

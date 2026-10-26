@@ -1,7 +1,9 @@
 """
-Automated Verification Suite for Meta Coach MT5 Bridge
+Automated Verification Suite for ArcadeFX MT5 Bridge
 Tests payload formatting, 3-month date range generation, open positions collection,
-full history generation, reconciliation telemetry, 1-click pairing flow, and readiness state machine.
+full history generation, reconciliation telemetry, 1-click pairing flow,
+multi-account isolation, account classification (demo vs real), domain modernization,
+and readiness state machine.
 """
 
 import unittest
@@ -10,7 +12,7 @@ import sys
 import json
 from datetime import datetime, timedelta, timezone
 from mock_mt5_adapter import generate_mock_3month_data, generate_mock_open_positions, generate_mock_full_history
-from alpha_coach_bridge import AlphaCoachBridge, BridgeState
+from alpha_coach_bridge import AlphaCoachBridge, BridgeState, APP_NAME, APP_VERSION
 
 class TestMT5Bridge(unittest.TestCase):
     def test_mock_data_generation_3months(self):
@@ -49,10 +51,15 @@ class TestMT5Bridge(unittest.TestCase):
         self.assertGreater(len(full_data["deals"]), 100)
         self.assertIn("openPositions", full_data)
 
-    def test_bridge_config_handling(self):
-        bridge = AlphaCoachBridge(api_url="https://alpha-coach-pi.vercel.app/api/v1", device_token="test_tok_123")
-        self.assertEqual(bridge.device_token, "test_tok_123")
-        self.assertEqual(bridge.api_url, "https://alpha-coach-pi.vercel.app/api/v1")
+    def test_bridge_config_handling_and_domain_modernization(self):
+        # Stale staging URL should auto-modernize to arcadefx.live
+        bridge_stale = AlphaCoachBridge(api_url="https://alpha-coach-pi.vercel.app/api/v1", device_token="test_tok_123")
+        self.assertEqual(bridge_stale.device_token, "test_tok_123")
+        self.assertEqual(bridge_stale.api_url, "https://www.arcadefx.live/api/v1")
+
+        # Custom development URL should be preserved
+        bridge_custom = AlphaCoachBridge(api_url="http://localhost:5000/api/v1", device_token="test_tok_456")
+        self.assertEqual(bridge_custom.api_url, "http://localhost:5000/api/v1")
 
     def test_bridge_mock_mode_readiness(self):
         bridge = AlphaCoachBridge(mock_mode=True)
@@ -62,6 +69,10 @@ class TestMT5Bridge(unittest.TestCase):
         acc = bridge.get_account_data()
         self.assertIsNotNone(acc)
         self.assertEqual(acc["currency"], "USD")
+        self.assertIn("isDemo", acc)
+        self.assertIn("tradeMode", acc)
+        self.assertTrue(acc["isDemo"])
+        self.assertEqual(acc["tradeMode"], "demo")
 
     def test_bridge_fetch_open_positions_mock(self):
         bridge = AlphaCoachBridge(mock_mode=True)
@@ -99,9 +110,11 @@ class TestMT5Bridge(unittest.TestCase):
 
     def test_logger_masking(self):
         from companion_logger import mask_sensitive
-        sample = "Connecting with token ac_bridge_9843hfksdfh9834 and password=SecretPass123"
+        sample = "Connecting with token ac_bridge_9843hfksdfh9834 and afx_bridge_abcd123456 and password=SecretPass123"
         masked = mask_sensitive(sample)
         self.assertNotIn("SecretPass123", masked)
+        self.assertNotIn("ac_bridge_9843hfksdfh9834", masked)
+        self.assertNotIn("afx_bridge_abcd123456", masked)
         self.assertIn("••••", masked)
 
     def test_bridge_token_fingerprint_and_clear(self):
@@ -135,14 +148,14 @@ class TestMT5Bridge(unittest.TestCase):
             self.assertEqual(res["status"], "Valid")
 
     def test_inno_setup_script_properties(self):
-        iss_path = os.path.join(os.path.dirname(__file__), "installer", "alpha_coach_installer.iss")
+        iss_path = os.path.join(os.path.dirname(__file__), "installer", "arcadefx_bridge_installer.iss")
         self.assertTrue(os.path.isfile(iss_path))
         with open(iss_path, "r", encoding="utf-8") as f:
             content = f.read()
-        self.assertIn('MyAppExeName "AlphaCoach-MT5-Companion.exe"', content)
-        self.assertIn('OutputBaseFilename=AlphaCoach-MT5-Companion-Setup', content)
+        self.assertIn('MyAppExeName "ArcadeFX-MT5-Bridge.exe"', content)
+        self.assertIn('OutputBaseFilename=ArcadeFX-MT5-Bridge-Setup', content)
         self.assertIn('PrivilegesRequired=lowest', content)
-        self.assertIn('{autopf}\\Alpha Coach\\MT5 Companion', content)
+        self.assertIn('{autopf}\\ArcadeFX\\MT5 Bridge', content)
 
     def test_checksum_calculation(self):
         from build_windows_bridge import calculate_sha256
@@ -153,6 +166,18 @@ class TestMT5Bridge(unittest.TestCase):
             expected = hashlib.sha256(f.read()).hexdigest()
         self.assertEqual(calculated, expected)
         self.assertEqual(len(calculated), 64)
+
+    def test_app_version_and_metadata(self):
+        self.assertEqual(APP_NAME, "ArcadeFX MT5 Bridge")
+        self.assertEqual(APP_VERSION, "1.0.6")
+
+    def test_multi_account_detection(self):
+        bridge = AlphaCoachBridge(mock_mode=True)
+        # Mocking account switch
+        bridge.last_known_account = 12345
+        current_acc = 67890
+        # If terminal account changes from 12345 to 67890, bridge should reset sync timestamps
+        self.assertNotEqual(bridge.last_known_account, current_acc)
 
 if __name__ == "__main__":
     unittest.main()

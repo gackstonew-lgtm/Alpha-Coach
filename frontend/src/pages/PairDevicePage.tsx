@@ -50,7 +50,7 @@ export const PairDevicePage: React.FC = () => {
     } else {
       setIsLoading(false);
       setError({
-        message: 'No pairing session provided in URL. Please initiate pairing from the Trader\'s Edge MT5 Bridge application.',
+        message: 'No pairing session provided in URL. Please initiate pairing from the ArcadeFX MT5 Bridge application.',
         code: 'MISSING_SESSION_PARAM'
       });
     }
@@ -68,7 +68,7 @@ export const PairDevicePage: React.FC = () => {
         setRejected(true);
       } else if (data.status === 'EXPIRED') {
         setError({
-          message: 'This pairing session has expired (10-minute limit). Please restart the Trader\'s Edge MT5 Bridge to generate a fresh pairing link.',
+          message: 'This pairing session has expired (10-minute limit). Please restart the ArcadeFX MT5 Bridge to generate a fresh pairing link.',
           code: 'PAIRING_SESSION_EXPIRED'
         });
       }

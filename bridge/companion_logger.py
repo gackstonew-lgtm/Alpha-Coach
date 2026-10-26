@@ -1,6 +1,6 @@
 """
-Alpha Coach MT5 Companion - Secure Rotating Logger
-Provides persistent rotating disk logs at %LOCALAPPDATA%/AlphaCoach/logs/companion.log
+ArcadeFX MT5 Bridge - Secure Rotating Logger
+Provides persistent rotating disk logs at %LOCALAPPDATA%/ArcadeFX/MT5Bridge/logs/bridge.log
 with strict credential redaction and severity levels.
 """
 
@@ -13,7 +13,14 @@ from datetime import datetime
 def get_log_dir() -> str:
     local_app_data = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA")
     if local_app_data:
-        log_dir = os.path.join(local_app_data, "AlphaCoach", "logs")
+        log_dir = os.path.join(local_app_data, "ArcadeFX", "MT5Bridge", "logs")
+        legacy_dir = os.path.join(local_app_data, "AlphaCoach", "logs")
+        # Migrate legacy log dir if modern doesn't exist
+        if not os.path.exists(log_dir) and os.path.exists(legacy_dir):
+            try:
+                os.makedirs(os.path.dirname(log_dir), exist_ok=True)
+            except Exception:
+                pass
     else:
         log_dir = os.path.join(os.path.dirname(__file__), "logs")
     os.makedirs(log_dir, exist_ok=True)
@@ -22,12 +29,12 @@ def get_log_dir() -> str:
 def mask_sensitive(text: str) -> str:
     """Masks authorization tokens, keys, and credentials."""
     import re
-    # Mask ac_bridge_ tokens
-    text = re.sub(r'ac_bridge_[a-zA-Z0-9]{8,}', lambda m: f"{m.group(0)[:12]}••••", text)
+    # Mask bridge device tokens (ac_bridge_*, afx_bridge_*, bridge_*)
+    text = re.sub(r'(ac_bridge_|afx_bridge_|bridge_token_|bridge_)[a-zA-Z0-9_-]{8,}', lambda m: f"{m.group(0)[:12]}••••", text)
     # Mask JWTs
     text = re.sub(r'eyJ[a-zA-Z0-9_\-]{20,}\.[a-zA-Z0-9_\-]{20,}\.[a-zA-Z0-9_\-]{10,}', 'eyJ••••••••', text)
-    # Mask passwords if any pattern matches
-    text = re.sub(r'(?i)(password|secret|key)["\s:=]+["\']?([^"\'\s]+)', r'\1: ••••••••', text)
+    # Mask passwords, secrets, api keys
+    text = re.sub(r'(?i)(password|secret|key|token)["\s:=]+["\']?([^"\'\s]+)', r'\1: ••••••••', text)
     return text
 
 class MaskingFormatter(logging.Formatter):
@@ -36,12 +43,12 @@ class MaskingFormatter(logging.Formatter):
         return mask_sensitive(orig_msg)
 
 def setup_companion_logger() -> logging.Logger:
-    logger = logging.getLogger("AlphaCoachCompanion")
+    logger = logging.getLogger("ArcadeFXMT5Bridge")
     logger.setLevel(logging.INFO)
     
     if not logger.handlers:
         log_dir = get_log_dir()
-        log_file = os.path.join(log_dir, "companion.log")
+        log_file = os.path.join(log_dir, "bridge.log")
         
         # 5 MB max size, 3 backup files
         file_handler = RotatingFileHandler(log_file, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8")

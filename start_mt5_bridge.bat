@@ -1,7 +1,7 @@
 @echo off
-title Trader's Edge MT5 Terminal Bridge
+title ArcadeFX MT5 Bridge
 echo =========================================================================
-echo    TRADER'S EDGE - LOCAL MT5 DESKTOP TERMINAL SYNCHRONIZATION BRIDGE
+echo    ARCADEX - LOCAL MT5 DESKTOP TERMINAL SYNCHRONIZATION BRIDGE
 echo =========================================================================
 echo.
 echo Launching Interactive MT5 Bridge CLI...
