@@ -44,10 +44,11 @@ assert(chartsPageSrc.includes("layoutMode === 'dual'"), 'ChartsPage must support
 assert(chartsPageSrc.includes("layoutMode === 'quad'"), 'ChartsPage must support quad chart');
 console.log('✓ PASS: ChartsPage multi-pane layouts verified');
 
-// Test 5: JournalPage MT5 History Header
-console.log('Test 5: Verifying JournalPage MT5 History Header & Action Controls...');
-assert(journalPageSrc.includes('History'), 'JournalPage must have History title');
-assert(journalPageSrc.includes('All symbols'), 'JournalPage must display All symbols subtitle');
+// Test 5: JournalPage MT5 Simplified Compact Bar & Action Controls
+console.log('Test 5: Verifying JournalPage MT5 Compact Navigation & Action Controls...');
+assert(!journalPageSrc.includes('>History<'), 'JournalPage must not display History title');
+assert(!journalPageSrc.includes('All symbols'), 'JournalPage must not display All symbols subtitle');
+assert(!journalPageSrc.includes('label="Voice"') && !journalPageSrc.includes('Voice Journal Entry'), 'JournalPage must not render Voice button');
 assert(journalPageSrc.includes('setIsSymbolModalOpen'), 'JournalPage must support $ currency filter modal');
 assert(journalPageSrc.includes('setSortAscending'), 'JournalPage must support ↑↓ sort toggle');
 assert(journalPageSrc.includes('setIsCalendarModalOpen'), 'JournalPage must support calendar date filter modal');

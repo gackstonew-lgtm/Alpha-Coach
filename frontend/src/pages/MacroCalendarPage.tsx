@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { PrimaryAction } from '../components/common/PrimaryAction';
 import { SkeletonTable } from '../components/common/Skeleton';
 import { Calendar, RefreshCw, AlertTriangle, Filter, TrendingUp, AlertCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -24,19 +23,16 @@ export const MacroCalendarPage: React.FC = () => {
   const navigate = useNavigate();
   const [economicEvents, setEconomicEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [impactFilter, setImpactFilter] = useState<'ALL' | 'HIGH'>('ALL');
   const [currencyFilter, setCurrencyFilter] = useState<string>('ALL');
-  const [policySummary, setPolicySummary] = useState<string>('Global monetary policy diverging between Federal Reserve higher-for-longer regime and dovish Asian liquidity.');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadCalendarData();
   }, []);
 
-  const loadCalendarData = async (refresh: boolean = false) => {
-    if (refresh) setIsRefreshing(true);
-    else setIsLoading(true);
+  const loadCalendarData = async () => {
+    setIsLoading(true);
     setErrorMessage(null);
 
     try {
@@ -44,20 +40,10 @@ export const MacroCalendarPage: React.FC = () => {
       if (res?.events) {
         setEconomicEvents(res.events);
       }
-      // Also query workspace data for live policy divergence summary if available
-      try {
-        const wsRes = await api.getWorkspace({ symbol: 'EURUSD' });
-        if (wsRes?.workspace?.fundamentals?.policyDivergenceSummary) {
-          setPolicySummary(wsRes.workspace.fundamentals.policyDivergenceSummary);
-        }
-      } catch {
-        // Workspace summary optional
-      }
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to load economic calendar events.');
     } finally {
       setIsLoading(false);
-      setIsRefreshing(false);
     }
   };
 
@@ -72,32 +58,41 @@ export const MacroCalendarPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <MetaHead
-        title="Macro & Calendar"
-        description="G8 macroeconomic calendar, scheduled interest rate decisions, inflation, employment data releases, and policy divergence analysis."
+        title="Economic Calendar & News"
+        description="Scheduled macroeconomic releases, high-impact interest rate decisions, inflation, and employment data releases."
       />
 
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className="p-2 rounded-xl bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
-              <Calendar className="w-5 h-5" />
-            </span>
-            <h1 className="text-2xl font-bold tracking-tight text-content-primary">
-              Macro & Calendar
+      {/* Clean Page Header (Promotional text & Refresh button removed) */}
+      <div className="flex items-center justify-between gap-3 bg-surface border border-border-subtle p-3 rounded-2xl shadow-xs">
+        <div className="flex items-center space-x-2.5">
+          <span className="p-2 rounded-xl bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
+            <Calendar className="w-5 h-5" />
+          </span>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-content-primary">
+              Economic Calendar & News
             </h1>
+            <p className="text-xs text-content-secondary mt-0.5">
+              Scheduled macroeconomic releases, central bank decisions & market indicators
+            </p>
           </div>
-          <p className="text-xs text-content-secondary mt-1">
-            G8 macroeconomic releases, high-impact interest rate decisions, and central bank policy divergence
-          </p>
         </div>
 
-        <PrimaryAction
-          label={isRefreshing ? 'Refreshing...' : 'Refresh Calendar'}
-          icon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
-          onClick={() => loadCalendarData(true)}
-          loading={isRefreshing}
-        />
+        {/* Minimal Impact Legend */}
+        <div className="flex items-center gap-2.5 text-[11px] font-mono text-content-muted" aria-label="Impact level indicators">
+          <span className="flex items-center gap-1.5" title="Red: High Impact">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-rose-500/20" />
+            <span className="hidden sm:inline">High</span>
+          </span>
+          <span className="flex items-center gap-1.5" title="Orange: Medium Impact">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-500/20" />
+            <span className="hidden sm:inline">Medium</span>
+          </span>
+          <span className="flex items-center gap-1.5" title="Yellow: Low Impact">
+            <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 ring-2 ring-yellow-400/20" />
+            <span className="hidden sm:inline">Low</span>
+          </span>
+        </div>
       </div>
 
       {/* Error Notification */}
@@ -115,17 +110,6 @@ export const MacroCalendarPage: React.FC = () => {
           </button>
         </div>
       )}
-
-      {/* Policy Divergence Summary Card */}
-      <div className="p-4 bg-surface border border-border-subtle rounded-xl space-y-3">
-        <h2 className="text-base font-bold text-content-primary flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-accent-primary" />
-          <span>G8 Macroeconomic Profiles & Policy Divergence</span>
-        </h2>
-        <div className="p-3 bg-surface-secondary rounded-lg text-xs text-content-primary font-mono border border-border-subtle">
-          {policySummary}
-        </div>
-      </div>
 
       {/* Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-surface border border-border-subtle p-3 rounded-xl text-xs">
@@ -196,11 +180,17 @@ export const MacroCalendarPage: React.FC = () => {
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-content-primary font-mono">{ev.currency}</span>
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                      ev.impact === 'HIGH' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    }`}>
-                      {ev.impact}
-                    </span>
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full inline-block shrink-0 ${
+                        ev.impact === 'HIGH'
+                          ? 'bg-rose-500 ring-2 ring-rose-500/20 shadow-xs'
+                          : ev.impact === 'MEDIUM'
+                          ? 'bg-amber-500 ring-2 ring-amber-500/20 shadow-xs'
+                          : 'bg-yellow-400 ring-2 ring-yellow-400/20 shadow-xs'
+                      }`}
+                      title={`${ev.impact || 'LOW'} Impact`}
+                      aria-label={`${ev.impact || 'LOW'} Impact`}
+                    />
                     <span className="text-content-primary font-medium">{ev.title}</span>
                   </div>
                   <span className="text-[10px] text-content-muted font-mono block">

@@ -2,9 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   X,
-  ChevronDown,
   LogOut,
-  Layers,
   PanelLeftClose,
   PanelLeftOpen,
   Clock
@@ -12,7 +10,6 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import {
   PRIMARY_NAV_ITEMS,
-  MARKET_INTEL_GROUP,
   BOTTOM_NAV_ITEMS,
   NavItemConfig
 } from '../../config/navigation';
@@ -61,11 +58,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     year: 'numeric'
   });
 
-  // Market Intelligence expandable group
-  const isMarketIntelActive = MARKET_INTEL_GROUP.basePaths.some(p =>
-    location.pathname.startsWith(p)
-  );
-  const [isIntelOpen, setIsIntelOpen] = useState<boolean>(true);
 
   // Timers for hover intent
   const enterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -309,84 +301,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       {/* 2. Navigation Items List */}
       <div className="flex-1 overflow-y-auto py-2.5 space-y-1.5 text-xs font-medium no-scrollbar">
-        {/* Primary Items */}
+        {/* Primary Independent Items */}
         {PRIMARY_NAV_ITEMS.map(item => renderNavItem(item, false, isExpanded))}
-
-        {/* Expandable "Market Intelligence" Group */}
-        <div className="pt-1">
-          {!isExpanded ? (
-            <div className="flex justify-center py-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsHovered(true);
-                  setIsIntelOpen(true);
-                }}
-                aria-expanded={isIntelOpen}
-                aria-label="Market Intelligence Navigation Group"
-                title="Market Intelligence"
-                className={`group w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-95 ${
-                  isMarketIntelActive
-                    ? 'bg-[#2F5BEA] text-white ring-2 ring-[#2F5BEA] scale-105 shadow-[0_0_12px_rgba(47,91,234,0.5)]'
-                    : 'bg-transparent hover:bg-[var(--sidebar-item-hover-bg)] text-[var(--sidebar-icon)] hover:text-[var(--sidebar-icon-hover)]'
-                }`}
-              >
-                <Layers
-                  className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                    isMarketIntelActive ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--sidebar-icon-hover)]'
-                  }`}
-                />
-              </button>
-            </div>
-          ) : (
-            <div className="py-0.5">
-              <button
-                type="button"
-                onClick={() => setIsIntelOpen(!isIntelOpen)}
-                aria-expanded={isIntelOpen}
-                aria-label="Market Intelligence Navigation Group"
-                className={`w-full group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 border-0 shadow-none outline-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-[0.98] ${
-                  isMarketIntelActive
-                    ? 'bg-[#2F5BEA]/15 text-[var(--sidebar-icon-hover)] font-extrabold shadow-xs'
-                    : 'bg-transparent text-[var(--sidebar-icon)] hover:text-[var(--sidebar-icon-hover)] hover:bg-[var(--sidebar-item-hover-bg)] font-medium'
-                }`}
-              >
-                {/* Sleek left accent indicator bar if active */}
-                {isMarketIntelActive && (
-                  <span
-                    className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#2F5BEA] shadow-[0_0_8px_rgba(56,189,248,0.7)]"
-                    aria-hidden="true"
-                  />
-                )}
-
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                    <Layers
-                      className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
-                        isMarketIntelActive ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--sidebar-icon-hover)]'
-                      }`}
-                    />
-                  </div>
-                  <span className="whitespace-nowrap truncate font-heading tracking-tight">
-                    Market Intelligence
-                  </span>
-                </div>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
-                    isIntelOpen ? 'rotate-180' : ''
-                  } ${isMarketIntelActive ? 'text-[#2F5BEA]' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--sidebar-icon-hover)]'}`}
-                />
-              </button>
-
-              {/* Sub-items */}
-              {isIntelOpen && (
-                <div className="pl-3 pr-1 py-1 space-y-1 animate-in fade-in duration-150">
-                  {MARKET_INTEL_GROUP.items.map(sub => renderNavItem(sub, true, isExpanded))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
 
         {/* Divider */}
         <div className="my-2 border-t border-[var(--sidebar-divider)]" />

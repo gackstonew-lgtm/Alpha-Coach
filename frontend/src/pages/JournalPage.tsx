@@ -1,4 +1,3 @@
-import { PrimaryAction } from '../components/common/PrimaryAction';
 import { Skeleton } from '../components/common/Skeleton';
 import { BottomSheet } from '../components/common/BottomSheet';
 import React, { useState, useEffect } from 'react';
@@ -133,7 +132,8 @@ export const JournalPage: React.FC = () => {
     return 0;
   }, [selectedAccount, accountBalance, totalProfit]);
 
-  // Voice Modal
+
+  // Voice Modal State (Trade Review Drawer)
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState<boolean>(false);
   const [voiceText, setVoiceText] = useState<string>('');
   const [voiceSuggestions, setVoiceSuggestions] = useState<any | null>(null);
@@ -286,112 +286,98 @@ export const JournalPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* 1. MT5 Android-Inspired History Header */}
-      <div className="flex items-center justify-between gap-3 bg-surface border border-border-subtle p-3 rounded-2xl shadow-xs">
-        <div>
-          <h1 className="text-xl font-bold text-content-primary tracking-tight">History</h1>
-          <p className="text-[11px] text-content-secondary font-mono">
-            {symbolFilter ? `${symbolFilter} Trades` : 'All symbols'}
-            {datePreset !== 'all' ? ` • ${datePreset.replace('_', ' ')}` : ''}
-          </p>
+    <div className="space-y-2.5 sm:space-y-3 animate-in fade-in duration-300">
+      {/* 1. MT5 Android Compact Navigation & Tab Bar */}
+      <div className="flex items-center justify-between border-b border-border-subtle bg-surface px-2 sm:px-4 pt-1 rounded-t-2xl shadow-xs">
+        {/* Left: 3-Segment MT5 Tabs */}
+        <div className="flex items-center">
+          {(['POSITIONS', 'ORDERS', 'DEALS'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold tracking-wider font-mono transition relative ${
+                activeTab === tab
+                  ? 'text-[#2F5BEA]'
+                  : 'text-content-muted hover:text-content-primary'
+              }`}
+            >
+              <span>{tab}</span>
+              {activeTab === tab && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2F5BEA] rounded-full" />
+              )}
+            </button>
+          ))}
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Right: MT5 Action Controls ($, ↑↓, 📅) and Desktop Table Switcher */}
+        <div className="flex items-center gap-1 sm:gap-1.5 pb-1 sm:pb-0">
           {/* Symbol Filter button ($) */}
           <button
             onClick={() => setIsSymbolModalOpen(true)}
-            className={`p-2 rounded-xl border text-xs font-mono font-bold transition ${
+            className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl border text-xs font-mono font-bold transition ${
               symbolFilter
-                ? 'bg-brand-500/10 border-brand-500/40 text-brand-500'
+                ? 'bg-brand-500/10 border-brand-500/40 text-[#2F5BEA]'
                 : 'bg-surface-secondary border-border-subtle text-content-muted hover:text-content-primary'
             }`}
-            title="Filter by Symbol ($)"
+            title={symbolFilter ? `Symbol: ${symbolFilter}` : 'Filter by Symbol ($)'}
+            aria-label="Filter by Symbol"
           >
-            <DollarSign className="w-4 h-4" />
+            <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
           {/* Sort toggle (↑↓) */}
           <button
             onClick={() => setSortAscending(!sortAscending)}
-            className={`p-2 rounded-xl border text-xs font-mono font-bold transition ${
+            className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl border text-xs font-mono font-bold transition ${
               sortAscending
-                ? 'bg-brand-500/10 border-brand-500/40 text-brand-500'
+                ? 'bg-brand-500/10 border-brand-500/40 text-[#2F5BEA]'
                 : 'bg-surface-secondary border-border-subtle text-content-muted hover:text-content-primary'
             }`}
             title={`Sort Order: ${sortAscending ? 'Oldest First' : 'Newest First'}`}
+            aria-label="Toggle Sort Order"
           >
-            <ArrowUpDown className="w-4 h-4" />
+            <ArrowUpDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
-          {/* Calendar Date Filter button */}
+          {/* Calendar Date Filter button (📅) */}
           <button
             onClick={() => setIsCalendarModalOpen(true)}
-            className={`p-2 rounded-xl border text-xs font-mono font-bold transition ${
+            className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl border text-xs font-mono font-bold transition ${
               datePreset !== 'all'
-                ? 'bg-brand-500/10 border-brand-500/40 text-brand-500'
+                ? 'bg-brand-500/10 border-brand-500/40 text-[#2F5BEA]'
                 : 'bg-surface-secondary border-border-subtle text-content-muted hover:text-content-primary'
             }`}
-            title="Select Period / Calendar"
+            title={datePreset !== 'all' ? `Period: ${datePreset.replace('_', ' ')}` : 'Select Period / Calendar'}
+            aria-label="Select Date Period"
           >
-            <Calendar className="w-4 h-4" />
+            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
-          {/* Voice Journal */}
-          <PrimaryAction
-            label="Voice"
-            icon={<Mic className="w-4 h-4" />}
-            onClick={() => setIsVoiceModalOpen(true)}
-            title="Voice Journal Entry"
-          />
+          {/* Desktop Table Switcher */}
+          <div className="ml-1 hidden md:flex items-center gap-0.5 bg-surface-secondary border border-border-subtle rounded-lg p-0.5 text-xs font-mono">
+            <button
+              onClick={() => setViewMode('dense')}
+              className={`px-1.5 py-0.5 rounded transition ${
+                viewMode === 'dense' ? 'bg-surface text-[#2F5BEA] font-bold shadow-xs' : 'text-content-muted hover:text-content-primary'
+              }`}
+              title="MT5 Dense History List View"
+            >
+              <List className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-1.5 py-0.5 rounded transition ${
+                viewMode === 'table' ? 'bg-surface text-[#2F5BEA] font-bold shadow-xs' : 'text-content-muted hover:text-content-primary'
+              }`}
+              title="Detailed Table View"
+            >
+              <Table className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 2. MT5 3-Segment Tabs */}
-      <div className="flex items-center border-b border-border-subtle bg-surface px-4 pt-1 rounded-t-2xl">
-        {(['POSITIONS', 'ORDERS', 'DEALS'] as const).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2.5 text-xs font-bold tracking-wider font-mono transition relative ${
-              activeTab === tab
-                ? 'text-[#2F5BEA]'
-                : 'text-content-muted hover:text-content-primary'
-            }`}
-          >
-            <span>{tab}</span>
-            {activeTab === tab && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2F5BEA] rounded-full" />
-            )}
-          </button>
-        ))}
-
-        {/* View mode toggle (Dense MT5 vs Detailed Table on Desktop) */}
-        <div className="ml-auto hidden sm:flex items-center gap-1 bg-surface-secondary border border-border-subtle rounded-lg p-0.5 text-xs font-mono mb-1">
-          <button
-            onClick={() => setViewMode('dense')}
-            className={`px-2 py-0.5 rounded transition flex items-center gap-1 ${
-              viewMode === 'dense' ? 'bg-surface text-[#2F5BEA] font-bold shadow-xs' : 'text-content-muted hover:text-content-primary'
-            }`}
-            title="MT5 Dense History List View"
-          >
-            <List className="w-3.5 h-3.5" />
-            <span>MT5 Dense</span>
-          </button>
-          <button
-            onClick={() => setViewMode('table')}
-            className={`px-2 py-0.5 rounded transition flex items-center gap-1 ${
-              viewMode === 'table' ? 'bg-surface text-[#2F5BEA] font-bold shadow-xs' : 'text-content-muted hover:text-content-primary'
-            }`}
-            title="Detailed Multi-Column Audit Table View"
-          >
-            <Table className="w-3.5 h-3.5" />
-            <span>Table</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 3. MT5 Dot-Leader Account Summary */}
+      {/* 2. MT5 Dot-Leader Account Summary */}
       <div className="bg-surface border border-border-subtle rounded-2xl p-4 font-mono text-xs space-y-1.5 shadow-xs">
         <div className="flex items-baseline justify-between">
           <span className="text-content-muted shrink-0">Profit:</span>
@@ -1037,14 +1023,16 @@ export const JournalPage: React.FC = () => {
         </div>
       )}
 
-      {/* Voice Journaling Assistant Modal */}
+
+
+      {/* Trade Review Assistant Modal (for Trade Review Drawer) */}
       {isVoiceModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-surface border border-border-subtle rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Mic className="w-5 h-5 text-brand-primary animate-pulse" />
-                <h3 className="font-bold text-content-primary text-base">Voice Journal Assistant</h3>
+                <h3 className="font-bold text-content-primary text-base">Voice Review Assistant</h3>
               </div>
               <button
                 onClick={() => setIsVoiceModalOpen(false)}
@@ -1077,7 +1065,7 @@ export const JournalPage: React.FC = () => {
 
             {voiceSuggestions && (
               <div className="p-4 rounded-2xl bg-surface-secondary border border-brand-primary/30 space-y-2 text-xs animate-in fade-in">
-                <div className="font-bold text-brand-primary text-[11px] uppercase tracking-wider">Suggested Fields (Requires Confirmation):</div>
+                <div className="font-bold text-brand-primary text-[11px] uppercase tracking-wider">Suggested Fields:</div>
                 <div className="text-content-secondary"><strong>Setup:</strong> {voiceSuggestions.setupName}</div>
                 <div className="text-content-secondary"><strong>Bias:</strong> {voiceSuggestions.bias}</div>
                 <div className="text-content-secondary"><strong>Confluences:</strong> {voiceSuggestions.confluences?.join(', ')}</div>
