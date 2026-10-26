@@ -166,22 +166,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             aria-label={item.name}
             aria-current={active ? 'page' : undefined}
             title={item.name}
-            className={`group relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] active:scale-95 ${
+            className={`group relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-95 ${
               active
-                ? 'bg-[#38BDF8]/20 text-[#38BDF8] ring-2 ring-[#38BDF8] scale-105 shadow-[0_0_12px_rgba(56,189,248,0.5)]'
-                : 'bg-transparent hover:bg-white/10 text-[#A9BBCB] hover:text-white'
+                ? 'bg-[#2F5BEA] text-white ring-2 ring-[#2F5BEA] scale-105 shadow-[0_0_12px_rgba(47,91,234,0.5)]'
+                : 'bg-transparent hover:bg-white/10 text-[#8FA0C4] hover:text-white'
             }`}
           >
             <Icon
               className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                active ? 'text-[#38BDF8] stroke-[2.5]' : 'text-[#A9BBCB] group-hover:text-white'
+                active ? 'text-white stroke-[2.5]' : 'text-[#8FA0C4] group-hover:text-white'
               }`}
             />
 
             {/* Notification Badge Dot when collapsed */}
             {item.badge && (
               <span
-                className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[#E13A41] ring-2 ring-[#0B1B2B]"
+                className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[#D12F42] ring-2 ring-[#0E1A33]"
                 aria-label={`Notification: ${item.badge}`}
               />
             )}
@@ -200,18 +200,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           }}
           aria-label={item.name}
           aria-current={active ? 'page' : undefined}
-          className={`group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 border-0 shadow-none outline-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] active:scale-[0.98] ${
+          className={`group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 border-0 shadow-none outline-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-[0.98] ${
             isSubItem ? 'text-[11px] py-2' : 'text-xs py-2.5'
           } ${
             active
-              ? 'bg-[#38BDF8]/15 text-white font-extrabold shadow-xs'
-              : 'bg-transparent text-[#A9BBCB] hover:text-white hover:bg-white/5 font-medium'
+              ? 'bg-[#2F5BEA]/15 text-white font-extrabold shadow-xs'
+              : 'bg-transparent text-[#8FA0C4] hover:text-white hover:bg-white/5 font-medium'
           }`}
         >
           {/* Sleek left sky-blue accent indicator bar for active item */}
           {active && (
             <span
-              className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#38BDF8] shadow-[0_0_8px_rgba(56,189,248,0.7)]"
+              className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#2F5BEA] shadow-[0_0_8px_rgba(56,189,248,0.7)]"
               aria-hidden="true"
             />
           )}
@@ -220,7 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="w-5 h-5 flex items-center justify-center shrink-0">
               <Icon
                 className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
-                  active ? 'text-[#38BDF8] stroke-[2.5]' : 'text-[#A9BBCB] group-hover:text-white'
+                  active ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[#8FA0C4] group-hover:text-white'
                 }`}
               />
             </div>
@@ -232,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           {/* Expanded full badge pill */}
           {item.badge && (
             <span
-              className="shrink-0 ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#E13A41] text-white shadow-xs"
+              className="shrink-0 ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#D12F42] text-white shadow-xs"
             >
               {item.badge}
             </span>
@@ -252,10 +252,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {isExpanded ? (
           <div className="flex flex-col justify-center min-h-[44px] px-1 select-none animate-in fade-in duration-200">
             <div className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-white tracking-wide tabular-nums font-mono">
-              <Clock className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" aria-hidden="true" />
+              <Clock className="w-3.5 h-3.5 text-[#2F5BEA] shrink-0" aria-hidden="true" />
               <span>{formattedTime}</span>
             </div>
-            <div className="text-[10px] sm:text-[11px] font-medium text-[#A9BBCB] truncate">
+            <div className="text-[10px] sm:text-[11px] font-medium text-[#8FA0C4] truncate">
               {formattedDate}
             </div>
           </div>
@@ -268,7 +268,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 setTabletExpanded(true);
               }
             }}
-            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] rounded-full flex items-center justify-center"
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] rounded-full flex items-center justify-center"
             aria-label="Arcade Fx Dashboard"
           >
             <div className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/[0.12] border border-white/20 flex items-center justify-center shadow-xs hover:scale-105 transition-transform duration-200">
@@ -288,7 +288,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           type="button"
           onClick={onClose}
           aria-label="Close navigation"
-          className="lg:hidden p-1.5 rounded-full text-[#A9BBCB] hover:text-white hover:bg-white/10 transition"
+          className="lg:hidden p-1.5 rounded-full text-[#8FA0C4] hover:text-white hover:bg-white/10 transition"
         >
           <X className="w-5 h-5" />
         </button>
@@ -325,15 +325,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 aria-expanded={isIntelOpen}
                 aria-label="Market Intelligence Navigation Group"
                 title="Market Intelligence"
-                className={`group w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] active:scale-95 ${
+                className={`group w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-95 ${
                   isMarketIntelActive
-                    ? 'bg-[#38BDF8]/20 text-[#38BDF8] ring-2 ring-[#38BDF8] scale-105 shadow-[0_0_12px_rgba(56,189,248,0.5)]'
-                    : 'bg-transparent hover:bg-white/10 text-[#A9BBCB] hover:text-white'
+                    ? 'bg-[#2F5BEA] text-white ring-2 ring-[#2F5BEA] scale-105 shadow-[0_0_12px_rgba(47,91,234,0.5)]'
+                    : 'bg-transparent hover:bg-white/10 text-[#8FA0C4] hover:text-white'
                 }`}
               >
                 <Layers
                   className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                    isMarketIntelActive ? 'text-[#38BDF8] stroke-[2.5]' : 'text-[#A9BBCB] group-hover:text-white'
+                    isMarketIntelActive ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[#8FA0C4] group-hover:text-white'
                   }`}
                 />
               </button>
@@ -345,16 +345,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 onClick={() => setIsIntelOpen(!isIntelOpen)}
                 aria-expanded={isIntelOpen}
                 aria-label="Market Intelligence Navigation Group"
-                className={`w-full group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 border-0 shadow-none outline-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] active:scale-[0.98] ${
+                className={`w-full group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 border-0 shadow-none outline-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-[0.98] ${
                   isMarketIntelActive
-                    ? 'bg-[#38BDF8]/15 text-white font-extrabold shadow-xs'
-                    : 'bg-transparent text-[#A9BBCB] hover:text-white hover:bg-white/5 font-medium'
+                    ? 'bg-[#2F5BEA]/15 text-white font-extrabold shadow-xs'
+                    : 'bg-transparent text-[#8FA0C4] hover:text-white hover:bg-white/5 font-medium'
                 }`}
               >
                 {/* Sleek left accent indicator bar if active */}
                 {isMarketIntelActive && (
                   <span
-                    className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#38BDF8] shadow-[0_0_8px_rgba(56,189,248,0.7)]"
+                    className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#2F5BEA] shadow-[0_0_8px_rgba(56,189,248,0.7)]"
                     aria-hidden="true"
                   />
                 )}
@@ -363,7 +363,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   <div className="w-5 h-5 flex items-center justify-center shrink-0">
                     <Layers
                       className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
-                        isMarketIntelActive ? 'text-[#38BDF8] stroke-[2.5]' : 'text-[#A9BBCB] group-hover:text-white'
+                        isMarketIntelActive ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[#8FA0C4] group-hover:text-white'
                       }`}
                     />
                   </div>
@@ -374,7 +374,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
                     isIntelOpen ? 'rotate-180' : ''
-                  } ${isMarketIntelActive ? 'text-[#38BDF8]' : 'text-[#A9BBCB] group-hover:text-white'}`}
+                  } ${isMarketIntelActive ? 'text-[#2F5BEA]' : 'text-[#8FA0C4] group-hover:text-white'}`}
                 />
               </button>
 
