@@ -130,6 +130,7 @@ export const App: React.FC = () => {
           <Route path="/market-scanner" element={<Navigate to="/scanner" replace />} />
           <Route path="/disclosures" element={<Navigate to="/sec-tracker" replace />} />
           <Route path="/economic-calendar" element={<Navigate to="/macro-calendar" replace />} />
+          <Route path="/news" element={<Navigate to="/macro-calendar" replace />} />
           <Route path="/analytics" element={<Navigate to="/performance" replace />} />
           <Route path="/calendar" element={<Navigate to="/journal" replace />} />
           <Route path="/sessions" element={<Navigate to="/performance" replace />} />

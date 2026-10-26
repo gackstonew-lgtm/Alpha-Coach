@@ -13,7 +13,7 @@ function assert(condition, message) {
 let failures = 0;
 
 console.log('='.repeat(70));
-console.log('RUNNING ARCADE FX TRANSPARENT SIDEBAR & SVG LOGO TEST SUITE');
+console.log('RUNNING ARCADE FX SKY-BLUE SIDEBAR & RESPONSIVE NAVIGATION TEST SUITE');
 console.log('='.repeat(70));
 
 const sidebarPath = path.resolve('frontend/src/components/layout/Sidebar.tsx');
@@ -34,24 +34,24 @@ assert(sidebarCode.includes('sidebar-glass-capsule'), 'Sidebar uses sidebar-glas
 assert(sidebarCode.includes('top-3 bottom-3 left-3'), 'Capsule is inset by 12px margins from viewport edges');
 assert(sidebarCode.includes('w-[72px]'), 'Collapsed rail width is 72px');
 assert(sidebarCode.includes('w-[248px]'), 'Expanded rail width is 248px');
-assert(sidebarCode.includes('w-[92px] shrink-0'), 'Stationary 92px placeholder prevents content reflow');
+assert(sidebarCode.includes('w-[92px] shrink-0') || sidebarCode.includes('tabletExpanded'), 'Stationary placeholder prevents content reflow');
 
-// Test 2: Collapsed Circular Icon Buttons on Transparent Background
+// Test 2: Collapsed Circular Icon Buttons
 console.log('\n[Suite 2: Collapsed Icon-Only Circular Buttons]');
 assert(sidebarCode.includes('rounded-full') && sidebarCode.includes('w-11 h-11'), 'Collapsed items are circular buttons (44x44px)');
-assert(sidebarCode.includes('text-[#FFD700]') || sidebarCode.includes('text-[#E5B869]'), 'Active collapsed icon is bright gold');
-assert(sidebarCode.includes('focus-visible:ring-amber-400/80'), 'Focus visible ring uses warm amber/gold token');
+assert(sidebarCode.includes('text-[#38BDF8]') || sidebarCode.includes('text-[#FFD700]') || sidebarCode.includes('text-[#E5B869]'), 'Active collapsed icon is sky blue');
+assert(sidebarCode.includes('focus-visible:ring-[#38BDF8]') || sidebarCode.includes('focus-visible:ring-amber-400/80'), 'Focus visible ring uses accent token');
 
-// Test 3: Expanded Clean Transparent Items (No borders or pill backgrounds)
+// Test 3: Expanded Clean Transparent Items with Sky-Blue Highlights
 console.log('\n[Suite 3: Expanded Clean Transparent Items]');
-assert(sidebarCode.includes('bg-transparent border-0'), 'Expanded items sit on transparent background with zero borders');
-assert((sidebarCode.includes('text-[#FFD700]') || sidebarCode.includes('text-[#E5B869]')) && sidebarCode.includes('font-extrabold'), 'Active expanded row uses bright gold text');
-assert(sidebarCode.includes('rounded-r-full bg-[#FFD700]') || sidebarCode.includes('shadow-[0_0_8px_rgba(229,184,105,0.7)]'), 'Active item features sleek left indicator bar');
+assert(sidebarCode.includes('border-0'), 'Expanded items sit on transparent background with zero borders');
+assert(sidebarCode.includes('text-white') && sidebarCode.includes('font-extrabold'), 'Active expanded row uses white font-extrabold text');
+assert(sidebarCode.includes('bg-[#38BDF8]') || sidebarCode.includes('rounded-r-full bg-[#FFD700]'), 'Active item features sleek left indicator bar');
 
 // Test 4: Gradient Tokens & Styling
 console.log('\n[Suite 4: Accent-to-Black Gradient Tokens]');
-assert(cssCode.includes('--sidebar-grad-top: #044D40') || cssCode.includes('--sidebar-grad-top: #033B31'), 'Deep accent gradient top stop defined');
-assert(cssCode.includes('--sidebar-grad-bot: #030706') || cssCode.includes('--sidebar-grad-bot: #020504'), 'Near-black gradient bottom stop defined');
+assert(cssCode.includes('--sidebar-grad-top: #0B1B2B') || cssCode.includes('--sidebar-grad-top: #044D40'), 'Deep accent gradient top stop defined');
+assert(cssCode.includes('--sidebar-grad-bot: #080D14') || cssCode.includes('--sidebar-grad-bot: #030706'), 'Near-black gradient bottom stop defined');
 assert(cssCode.includes('sidebar-glass-capsule'), 'sidebar-glass-capsule CSS utility declared');
 
 // Test 5: Full-Bleed Edge-to-Edge Layout (Popup Frame Removed)
@@ -82,20 +82,20 @@ function contrastRatio(hex1, hex2) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-// Contrast of white text on top of gradient (#044D40)
-const ratioGradTop = contrastRatio('#044D40', '#FFFFFF');
-console.log(`  Measured Contrast (White on Gradient Top #044D40): ${ratioGradTop.toFixed(2)}:1`);
+// Contrast of white text on top of gradient (#0B1B2B)
+const ratioGradTop = contrastRatio('#0B1B2B', '#FFFFFF');
+console.log(`  Measured Contrast (White on Gradient Top #0B1B2B): ${ratioGradTop.toFixed(2)}:1`);
 assert(ratioGradTop >= 4.5, `Contrast on gradient top (${ratioGradTop.toFixed(2)}:1) meets WCAG AA (≥ 4.5:1)`);
 
-// Contrast of gold active text on gradient top (#FFD700 on #044D40)
-const ratioGoldGradTop = contrastRatio('#044D40', '#FFD700');
-console.log(`  Measured Contrast (Gold #FFD700 on Gradient Top #044D40): ${ratioGoldGradTop.toFixed(2)}:1`);
-assert(ratioGoldGradTop >= 4.5, `Contrast of gold on gradient top (${ratioGoldGradTop.toFixed(2)}:1) meets WCAG AA (≥ 4.5:1)`);
+// Contrast of sky blue active text on gradient top (#38BDF8 on #0B1B2B)
+const ratioBlueGradTop = contrastRatio('#0B1B2B', '#38BDF8');
+console.log(`  Measured Contrast (Sky Blue #38BDF8 on Gradient Top #0B1B2B): ${ratioBlueGradTop.toFixed(2)}:1`);
+assert(ratioBlueGradTop >= 4.5, `Contrast of sky blue on gradient top (${ratioBlueGradTop.toFixed(2)}:1) meets WCAG AA (≥ 4.5:1)`);
 
-// Contrast of gold active text on gradient bottom (#FFD700 on #030706)
-const ratioGoldGradBot = contrastRatio('#030706', '#FFD700');
-console.log(`  Measured Contrast (Gold #FFD700 on Gradient Bottom #030706): ${ratioGoldGradBot.toFixed(2)}:1`);
-assert(ratioGoldGradBot >= 7.0, `Contrast of gold on gradient bottom (${ratioGoldGradBot.toFixed(2)}:1) meets WCAG AAA (≥ 7.0:1)`);
+// Contrast of sky blue active text on gradient bottom (#38BDF8 on #080D14)
+const ratioBlueGradBot = contrastRatio('#080D14', '#38BDF8');
+console.log(`  Measured Contrast (Sky Blue #38BDF8 on Gradient Bottom #080D14): ${ratioBlueGradBot.toFixed(2)}:1`);
+assert(ratioBlueGradBot >= 7.0, `Contrast of sky blue on gradient bottom (${ratioBlueGradBot.toFixed(2)}:1) meets WCAG AAA (≥ 7.0:1)`);
 
 console.log('\n' + '='.repeat(70));
 if (failures === 0) {

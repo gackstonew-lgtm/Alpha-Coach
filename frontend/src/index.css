@@ -110,22 +110,22 @@
   --auth-link: #24C6C0;
   --auth-link-hover: #1fb3ad;
 
-  /* Floating Glass Capsule Sidebar Contract Tokens (Required by test suite) */
-  --sidebar-bg: #0A231E;
-  --sidebar-hover-bg: rgba(31, 95, 209, 0.15);
-  --sidebar-active-bg: rgba(31, 95, 209, 0.25);
-  --sidebar-active-indicator: #1f5fd1;
-  --sidebar-border: rgba(31, 95, 209, 0.18);
+  /* Floating Glass Capsule Sidebar Sky-Blue-to-Black Theme Tokens */
+  --sidebar-bg: #0B1B2B;
+  --sidebar-hover-bg: rgba(56, 189, 248, 0.08);
+  --sidebar-active-bg: rgba(56, 189, 248, 0.14);
+  --sidebar-active-indicator: #38BDF8;
+  --sidebar-border: rgba(56, 189, 248, 0.2);
   --sidebar-text: #FFFFFF;
-  --sidebar-text-muted: #9aa4b2;
-  --sidebar-icon: #8994a3;
-  --sidebar-icon-active: #1f5fd1;
+  --sidebar-text-muted: #A9BBCB;
+  --sidebar-icon: #A9BBCB;
+  --sidebar-icon-active: #38BDF8;
   --sidebar-badge: #b42318;
-  --sidebar-grad-top: #044D40;
-  --sidebar-grad-mid: #062A24;
-  --sidebar-grad-bot: #030706;
+  --sidebar-grad-top: #0B1B2B;
+  --sidebar-grad-mid: #0A1522;
+  --sidebar-grad-bot: #080D14;
   --sidebar-glass-fill: rgba(255, 255, 255, 0.08);
-  --sidebar-glass-border: rgba(255, 255, 255, 0.14);
+  --sidebar-glass-border: rgba(56, 189, 248, 0.18);
 }
 
 .dark {
@@ -212,12 +212,12 @@
   --dash-dark-card: #1c222b;
   --dash-dark-pill: #5b95f5;
 
-  /* Floating Glass Capsule Sidebar Contract Tokens (Dark variant) */
-  --sidebar-grad-top: #033B31;
-  --sidebar-grad-mid: #041F1A;
-  --sidebar-grad-bot: #020504;
+  /* Floating Glass Capsule Sidebar Tokens (Dark Sky-Blue-to-Black) */
+  --sidebar-grad-top: #081524;
+  --sidebar-grad-mid: #06101B;
+  --sidebar-grad-bot: #04080E;
   --sidebar-glass-fill: rgba(255, 255, 255, 0.07);
-  --sidebar-glass-border: rgba(255, 255, 255, 0.12);
+  --sidebar-glass-border: rgba(56, 189, 248, 0.16);
 }
 
 @layer base {

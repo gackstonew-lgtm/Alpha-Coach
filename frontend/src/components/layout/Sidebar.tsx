@@ -33,10 +33,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Expansion state
+  // Expansion state: tabletExpanded defaults to true so tablet displays expanded readable labels by default
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isFocusWithin, setIsFocusWithin] = useState<boolean>(false);
-  const [tabletExpanded, setTabletExpanded] = useState<boolean>(false);
+  const [tabletExpanded, setTabletExpanded] = useState<boolean>(true);
 
   // Market Intelligence expandable group
   const isMarketIntelActive = MARKET_INTEL_GROUP.basePaths.some(p =>
@@ -49,7 +49,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sidebarContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const isExpanded = isHovered || isFocusWithin || tabletExpanded;
+  // Expanded on desktop hover/focus, on tablet by default, or when mobile drawer is open
+  const isExpanded = isHovered || isFocusWithin || tabletExpanded || isOpen;
 
   useEffect(() => {
     return () => {
@@ -58,14 +59,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     };
   }, []);
 
-  // Keyboard navigation: Escape key collapses
+  // Keyboard navigation: Escape key collapses/closes
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (isExpanded) {
           setIsHovered(false);
           setIsFocusWithin(false);
-          setTabletExpanded(false);
           if (sidebarContainerRef.current) {
             sidebarContainerRef.current.blur();
           }
@@ -79,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isExpanded, isOpen, onClose]);
 
-  // Hover intent handlers
+  // Hover intent handlers (desktop)
   const handleMouseEnter = useCallback(() => {
     if (leaveTimerRef.current) {
       clearTimeout(leaveTimerRef.current);
@@ -120,7 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  // Nav item renderer matching reference glass styling
+  // Nav item renderer matching sky-blue-to-black theme
   const renderNavItem = (item: NavItemConfig, isSubItem: boolean = false) => {
     if (item.adminOnly && user?.role !== 'admin') {
       return null;
@@ -136,28 +136,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <NavLink
             to={item.to}
             onClick={() => {
-              setTabletExpanded(false);
               onClose();
             }}
             aria-label={item.name}
             aria-current={active ? 'page' : undefined}
             title={item.name}
-            className={`group relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 active:scale-95 ${
+            className={`group relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] active:scale-95 ${
               active
-                ? 'bg-transparent text-[#FFD700] dark:text-[#E5B869] ring-2 ring-[#FFD700] dark:ring-[#E5B869] scale-105 shadow-[0_0_12px_rgba(229,184,105,0.4)]'
-                : 'bg-transparent hover:bg-white/10 text-white/85 hover:text-white'
+                ? 'bg-[#38BDF8]/20 text-[#38BDF8] ring-2 ring-[#38BDF8] scale-105 shadow-[0_0_12px_rgba(56,189,248,0.5)]'
+                : 'bg-transparent hover:bg-white/10 text-[#A9BBCB] hover:text-white'
             }`}
           >
             <Icon
               className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                active ? 'text-[#FFD700] dark:text-[#E5B869] stroke-[2.5]' : 'text-white'
+                active ? 'text-[#38BDF8] stroke-[2.5]' : 'text-[#A9BBCB] group-hover:text-white'
               }`}
             />
 
-            {/* Red Notification Badge Dot when collapsed */}
+            {/* Notification Badge Dot when collapsed */}
             {item.badge && (
               <span
-                className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[#E13A41] ring-2 ring-[#044D40]"
+                className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[#E13A41] ring-2 ring-[#0B1B2B]"
                 aria-label={`Notification: ${item.badge}`}
               />
             )}
@@ -166,29 +165,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       );
     }
 
-    // EXPANDED: Transparent row sitting on transparent sidebar background without borders or pills
+    // EXPANDED: Clean row with white labels, sky-blue active indicator and subtle translucent background
     return (
       <div key={item.id} className="py-0.5 relative">
         <NavLink
           to={item.to}
           onClick={() => {
-            setTabletExpanded(false);
             onClose();
           }}
           aria-label={item.name}
           aria-current={active ? 'page' : undefined}
-          className={`group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 bg-transparent border-0 shadow-none outline-none transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 active:scale-[0.98] ${
+          className={`group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 border-0 shadow-none outline-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] active:scale-[0.98] ${
             isSubItem ? 'text-[11px] py-2' : 'text-xs py-2.5'
           } ${
             active
-              ? 'text-[#FFD700] dark:text-[#E5B869] font-extrabold'
-              : 'text-white/80 hover:text-white font-medium'
+              ? 'bg-[#38BDF8]/15 text-white font-extrabold shadow-xs'
+              : 'bg-transparent text-[#A9BBCB] hover:text-white hover:bg-white/5 font-medium'
           }`}
         >
-          {/* Sleek left accent indicator bar for active item */}
+          {/* Sleek left sky-blue accent indicator bar for active item */}
           {active && (
             <span
-              className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#FFD700] dark:bg-[#E5B869] shadow-[0_0_8px_rgba(229,184,105,0.7)]"
+              className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#38BDF8] shadow-[0_0_8px_rgba(56,189,248,0.7)]"
               aria-hidden="true"
             />
           )}
@@ -197,7 +195,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="w-5 h-5 flex items-center justify-center shrink-0">
               <Icon
                 className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
-                  active ? 'text-[#FFD700] dark:text-[#E5B869] stroke-[2.5]' : 'text-white/80 group-hover:text-white'
+                  active ? 'text-[#38BDF8] stroke-[2.5]' : 'text-[#A9BBCB] group-hover:text-white'
                 }`}
               />
             </div>
@@ -229,10 +227,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <NavLink
           to="/dashboard"
           onClick={() => {
-            setTabletExpanded(false);
             onClose();
           }}
-          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-full flex items-center"
+          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] rounded-full flex items-center"
           aria-label="Arcade Fx Dashboard"
         >
           {isExpanded ? (
@@ -257,12 +254,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           type="button"
           onClick={onClose}
           aria-label="Close navigation"
-          className="lg:hidden p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition"
+          className="lg:hidden p-1.5 rounded-full text-[#A9BBCB] hover:text-white hover:bg-white/10 transition"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Tablet / Touch Toggle Button (Circular arrow button matching Reference) */}
+        {/* Tablet / Touch Toggle Button */}
         {isExpanded && (
           <button
             type="button"
@@ -294,15 +291,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 aria-expanded={isIntelOpen}
                 aria-label="Market Intelligence Navigation Group"
                 title="Market Intelligence"
-                className={`group w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 active:scale-95 ${
+                className={`group w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] active:scale-95 ${
                   isMarketIntelActive
-                    ? 'bg-transparent text-[#FFD700] dark:text-[#E5B869] ring-2 ring-[#FFD700] dark:ring-[#E5B869] scale-105 shadow-[0_0_12px_rgba(229,184,105,0.4)]'
-                    : 'bg-transparent hover:bg-white/10 text-white/85 hover:text-white'
+                    ? 'bg-[#38BDF8]/20 text-[#38BDF8] ring-2 ring-[#38BDF8] scale-105 shadow-[0_0_12px_rgba(56,189,248,0.5)]'
+                    : 'bg-transparent hover:bg-white/10 text-[#A9BBCB] hover:text-white'
                 }`}
               >
                 <Layers
                   className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                    isMarketIntelActive ? 'text-[#FFD700] dark:text-[#E5B869] stroke-[2.5]' : 'text-white'
+                    isMarketIntelActive ? 'text-[#38BDF8] stroke-[2.5]' : 'text-[#A9BBCB] group-hover:text-white'
                   }`}
                 />
               </button>
@@ -314,16 +311,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 onClick={() => setIsIntelOpen(!isIntelOpen)}
                 aria-expanded={isIntelOpen}
                 aria-label="Market Intelligence Navigation Group"
-                className={`w-full group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 bg-transparent border-0 shadow-none outline-none transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80 active:scale-[0.98] ${
+                className={`w-full group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 border-0 shadow-none outline-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] active:scale-[0.98] ${
                   isMarketIntelActive
-                    ? 'text-[#FFD700] dark:text-[#E5B869] font-extrabold'
-                    : 'text-white/80 hover:text-white font-medium'
+                    ? 'bg-[#38BDF8]/15 text-white font-extrabold shadow-xs'
+                    : 'bg-transparent text-[#A9BBCB] hover:text-white hover:bg-white/5 font-medium'
                 }`}
               >
                 {/* Sleek left accent indicator bar if active */}
                 {isMarketIntelActive && (
                   <span
-                    className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#FFD700] dark:bg-[#E5B869] shadow-[0_0_8px_rgba(229,184,105,0.7)]"
+                    className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#38BDF8] shadow-[0_0_8px_rgba(56,189,248,0.7)]"
                     aria-hidden="true"
                   />
                 )}
@@ -332,7 +329,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   <div className="w-5 h-5 flex items-center justify-center shrink-0">
                     <Layers
                       className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
-                        isMarketIntelActive ? 'text-[#FFD700] dark:text-[#E5B869] stroke-[2.5]' : 'text-white/80 group-hover:text-white'
+                        isMarketIntelActive ? 'text-[#38BDF8] stroke-[2.5]' : 'text-[#A9BBCB] group-hover:text-white'
                       }`}
                     />
                   </div>
@@ -343,7 +340,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
                     isIntelOpen ? 'rotate-180' : ''
-                  } ${isMarketIntelActive ? 'text-[#FFD700] dark:text-[#E5B869]' : 'text-white/70 group-hover:text-white'}`}
+                  } ${isMarketIntelActive ? 'text-[#38BDF8]' : 'text-[#A9BBCB] group-hover:text-white'}`}
                 />
               </button>
 
@@ -383,7 +380,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             type="button"
             onClick={handleLogout}
             aria-label="Sign Out"
-            className="w-full flex items-center gap-3 min-h-[44px] rounded-full px-3.5 py-2.5 bg-rose-500/20 hover:bg-rose-500 text-rose-200 hover:text-white border border-rose-500/30 font-bold transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+            className="w-full flex items-center gap-3 min-h-[44px] rounded-xl px-3.5 py-2.5 bg-rose-500/20 hover:bg-rose-500 text-rose-200 hover:text-white border border-rose-500/30 font-bold transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span className="whitespace-nowrap font-heading tracking-tight">Sign Out</span>
@@ -398,13 +395,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* ========================================================================= */}
       {/* 1. DESKTOP FLOATING GLASS CAPSULE (HOVER-EXPAND OVERLAY)                  */}
       {/* ========================================================================= */}
-      {/* Stationary placeholder anchor maintaining layout flow (zero layout shift) */}
       <div
         className="hidden lg:block w-[92px] shrink-0 h-full pointer-events-none"
         aria-hidden="true"
       />
 
-      {/* Floating Glass Capsule Rail */}
       <aside
         ref={sidebarContainerRef}
         onMouseEnter={handleMouseEnter}
@@ -422,10 +417,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       </aside>
 
       {/* ========================================================================= */}
-      {/* 2. TABLET FLOATING CAPSULE (768px - 1023px)                               */}
+      {/* 2. TABLET FLOATING CAPSULE (768px - 1023px) — EXPANDED & READABLE BY DEFAULT */}
       {/* ========================================================================= */}
       <div
-        className="hidden md:block lg:hidden w-[92px] shrink-0 h-full pointer-events-none"
+        className={`hidden md:block lg:hidden shrink-0 h-full pointer-events-none transition-[width] duration-[240ms] ${
+          tabletExpanded ? 'w-[268px]' : 'w-[92px]'
+        }`}
         aria-hidden="true"
       />
       <aside
@@ -440,7 +437,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       </aside>
 
       {/* ========================================================================= */}
-      {/* 3. MOBILE OFF-CANVAS CAPSULE DRAWER (<768px)                              */}
+      {/* 3. MOBILE OFF-CANVAS CAPSULE DRAWER (<768px) — EXPANDED ON OPEN           */}
       {/* ========================================================================= */}
       {isOpen && (
         <div

@@ -26,7 +26,6 @@ import {
   Shield,
   Zap
 } from 'lucide-react';
-import { HeroVideo } from '../components/common/HeroVideo';
 import { Logo } from '../components/common/Logo';
 
 const SOFTWARE_APPLICATION_SCHEMA = {
@@ -136,13 +135,19 @@ export const LandingPage: React.FC = () => {
 
       <main className="flex-1 space-y-16 sm:space-y-24 pb-20">
         {/* ========================================================================= */}
-        {/* 1. HERO SECTION (EXACT TARGET MATCH: CLEAN LEFT PANEL + 4K CINEMATIC HERO) */}
+        {/* 1. HERO SECTION (ELEGANT STATIC VISUAL COMPOSITION — NO VIDEO PLAYBACK)   */}
         {/* ========================================================================= */}
         <section className="relative w-full min-h-[580px] lg:min-h-[660px] flex flex-col lg:flex-row items-stretch justify-start overflow-hidden bg-background">
           {/* Mobile & Tablet Portrait Hero Banner (< 1024px) */}
           <div className="relative w-full lg:hidden flex flex-col">
             <div className="relative w-full h-[34vh] min-h-[240px] max-h-[320px] overflow-hidden shrink-0 select-none bg-background">
-              <HeroVideo objectPosition="object-[65%_center]" cinematic={true} />
+              <img
+                src="/assets/auth-photo.jpg"
+                alt="Arcade Fx Mobile Canvas"
+                className="w-full h-full object-cover object-[65%_center]"
+                loading="eager"
+                decoding="async"
+              />
               <div className="absolute -bottom-1 left-0 right-0 h-6 overflow-hidden pointer-events-none">
                 <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-background">
                   <path d="M0,0 C150,90 350,-40 500,60 C650,140 900,10 1200,80 L1200,120 L0,120 Z" />
@@ -150,7 +155,7 @@ export const LandingPage: React.FC = () => {
               </div>
               {/* Mobile Lower Heading on Ocean */}
               <div className="absolute bottom-5 right-5 z-20 pointer-events-none select-none text-right">
-                <span className="text-sm font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                <span className="text-sm font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
                   Forex Intelligence & MT5 Journal
                 </span>
               </div>
@@ -172,7 +177,7 @@ export const LandingPage: React.FC = () => {
                 <div className="flex flex-row items-center gap-3 pt-1">
                   <Link
                     to={user ? "/dashboard" : "/register"}
-                    className="h-11 px-7 rounded-full bg-[#24C6C0] hover:bg-[#1fb3ad] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(36,198,192,0.4)] hover:shadow-[0_8px_24px_rgba(36,198,192,0.6)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all"
+                    className="h-11 px-7 rounded-full bg-[#38BDF8] hover:bg-[#0284c7] text-[#080D14] hover:text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(56,189,248,0.4)] hover:shadow-[0_8px_24px_rgba(56,189,248,0.6)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all"
                   >
                     {user ? 'DASHBOARD' : 'START FREE'}
                   </Link>
@@ -188,23 +193,29 @@ export const LandingPage: React.FC = () => {
 
                 {/* 3 Feature Badges */}
                 <div className="pt-2 flex flex-wrap gap-2 text-xs font-semibold">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/40 dark:bg-[#1BA9B0]/20 text-[#147477] dark:text-[#45c3bf] border border-[#2CC5C0]/30 select-none">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#24C6C0]" /> MT5 Sync
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> MT5 Sync
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/40 dark:bg-[#1BA9B0]/20 text-[#147477] dark:text-[#45c3bf] border border-[#2CC5C0]/30 select-none">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#24C6C0]" /> No Passwords
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> No Passwords
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#BFEFEC]/40 dark:bg-[#1BA9B0]/20 text-[#147477] dark:text-[#45c3bf] border border-[#2CC5C0]/30 select-none">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#24C6C0]" /> Offline Ready
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> Offline Ready
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Desktop Full Hero Background Video (Preserved & Enhanced 4K Cinematic Motion) */}
+          {/* Desktop Full Hero Background Static Visual */}
           <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none bg-background">
-            <HeroVideo objectPosition="object-[left_center]" cinematic={true} />
+            <img
+              src="/assets/auth-bg-full.jpg"
+              alt="Arcade Fx Trading Hero"
+              className="w-full h-full object-cover object-[left_center]"
+              loading="eager"
+              decoding="async"
+            />
           </div>
 
           {/* Desktop Bottom-Right Ocean Heading (Matching Target Composition) */}
@@ -214,8 +225,8 @@ export const LandingPage: React.FC = () => {
             </h2>
           </div>
 
-          {/* Desktop Left Content Column (Exact Match to Target Screenshot) */}
-          <div className="relative z-10 hidden lg:flex flex-col justify-center w-full lg:w-[48%] xl:w-[45%] bg-background/95 dark:bg-[#0e1217]/95 backdrop-blur-md border-r border-border/40 pl-16 xl:pl-24 2xl:pl-28 pr-8 py-16 shrink-0 min-h-[580px] lg:min-h-[660px]">
+          {/* Desktop Left Content Column (Exact Match to Target Composition) */}
+          <div className="relative z-10 hidden lg:flex flex-col justify-center w-full lg:w-[48%] xl:w-[45%] bg-background/95 dark:bg-[#080D14]/95 backdrop-blur-md border-r border-border/40 pl-16 xl:pl-24 2xl:pl-28 pr-8 py-16 shrink-0 min-h-[580px] lg:min-h-[660px]">
             <div className="w-full max-w-[440px] space-y-6">
               {/* Large Transparent ArcadeFX 3D Gold Logo */}
               <div className="flex justify-start">
@@ -231,7 +242,7 @@ export const LandingPage: React.FC = () => {
               <div className="flex items-center gap-3.5 pt-1">
                 <Link
                   to={user ? "/dashboard" : "/register"}
-                  className="h-11 px-8 rounded-full bg-[#24C6C0] hover:bg-[#1fb3ad] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(36,198,192,0.4)] hover:shadow-[0_8px_24px_rgba(36,198,192,0.6)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all duration-200"
+                  className="h-11 px-8 rounded-full bg-[#38BDF8] hover:bg-[#0284c7] text-[#080D14] hover:text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(56,189,248,0.4)] hover:shadow-[0_8px_24px_rgba(56,189,248,0.6)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all duration-200"
                 >
                   {user ? 'DASHBOARD' : 'START FREE'}
                 </Link>
@@ -247,14 +258,14 @@ export const LandingPage: React.FC = () => {
 
               {/* 3 Feature Badges */}
               <div className="pt-2 flex flex-wrap gap-2.5 text-xs font-semibold">
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#BFEFEC]/40 dark:bg-[#1BA9B0]/20 text-[#147477] dark:text-[#45c3bf] border border-[#2CC5C0]/30 select-none">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#24C6C0]" /> MT5 Sync
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> MT5 Sync
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#BFEFEC]/40 dark:bg-[#1BA9B0]/20 text-[#147477] dark:text-[#45c3bf] border border-[#2CC5C0]/30 select-none">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#24C6C0]" /> No Passwords
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> No Passwords
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#BFEFEC]/40 dark:bg-[#1BA9B0]/20 text-[#147477] dark:text-[#45c3bf] border border-[#2CC5C0]/30 select-none">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#24C6C0]" /> Offline Ready
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> Offline Ready
                 </span>
               </div>
             </div>
@@ -266,7 +277,7 @@ export const LandingPage: React.FC = () => {
         {/* ========================================================================= */}
         <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 scroll-mt-20">
           <div className="text-center max-w-3xl mx-auto space-y-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-primary">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#38BDF8]">
               Engineered For Modern Traders
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
@@ -283,11 +294,11 @@ export const LandingPage: React.FC = () => {
               return (
                 <div
                   key={idx}
-                  className="bg-surface rounded-2xl p-6 sm:p-8 border border-border hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 flex flex-col justify-between group card-hover-interactive"
+                  className="bg-surface rounded-2xl p-6 sm:p-8 border border-border hover:border-[#38BDF8]/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 flex flex-col justify-between group card-hover-interactive"
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                      <div className="w-10 h-10 rounded-xl bg-[#38BDF8]/15 border border-[#38BDF8]/30 flex items-center justify-center text-[#38BDF8] group-hover:scale-105 transition-transform">
                         <Icon className="w-5 h-5" />
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-surface-elevated border border-border text-muted-foreground">
@@ -296,7 +307,7 @@ export const LandingPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <h3 className="text-base font-extrabold text-foreground group-hover:text-primary transition-colors tracking-tight">
+                      <h3 className="text-base font-extrabold text-foreground group-hover:text-[#38BDF8] transition-colors tracking-tight">
                         {feat.title}
                       </h3>
                       <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -458,7 +469,7 @@ export const LandingPage: React.FC = () => {
               <div className="pt-3">
                 <Link
                   to="/register"
-                  className="inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-[#24C6C0] hover:bg-[#1fb3ad] active:scale-[0.98] text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(36,198,192,0.4)] transition"
+                  className="inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-[#38BDF8] hover:bg-[#0284c7] active:scale-[0.98] text-[#080D14] hover:text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(56,189,248,0.4)] transition"
                 >
                   START FREE
                 </Link>
