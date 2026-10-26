@@ -266,7 +266,7 @@ export const DashboardPage: React.FC = () => {
                     {selectedAccount?.broker_name || 'EUR/USD'}
                   </h3>
                   {/* Red LIVE Status Chip (Reference B) */}
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E13A41] text-white">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDE8EA] text-[#C42A3B] dark:bg-[#E13A41] dark:text-white">
                     <Radio className="w-2.5 h-2.5 animate-pulse" />
                     <span>LIVE</span>
                   </span>
@@ -338,24 +338,24 @@ export const DashboardPage: React.FC = () => {
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="chartTealGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--primary)" stop-opacity="0.25" />
-                    <stop offset="100%" stopColor="var(--primary)" stop-opacity="0.0" />
+                    <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#2a313c' : '#e9edf1'} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#2a313c' : '#E6EAF2'} />
                 <XAxis
                   dataKey="timestamp"
                   type="number"
                   domain={['dataMin', 'dataMax']}
                   tickFormatter={(ts) => new Date(ts).toLocaleDateString([], { month: 'numeric', day: 'numeric' })}
-                  tick={{ fontSize: 10, fill: theme === 'dark' ? '#9aa4b2' : '#566171' }}
+                  tick={{ fontSize: 10, fill: theme === 'dark' ? '#9aa4b2' : '#7C89A1' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
                   domain={['auto', 'auto']}
                   tickFormatter={(val) => `$${Number(val).toLocaleString()}`}
-                  tick={{ fontSize: 10, fill: theme === 'dark' ? '#9aa4b2' : '#566171' }}
+                  tick={{ fontSize: 10, fill: theme === 'dark' ? '#9aa4b2' : '#7C89A1' }}
                   axisLine={false}
                   tickLine={false}
                 />

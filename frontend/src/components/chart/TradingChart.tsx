@@ -507,7 +507,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
           markers.push({
             time: openTimeSec,
             position: isBuy ? 'belowBar' : 'aboveBar',
-            color: isBuy ? '#10b981' : '#f43f5e',
+            color: isBuy ? (darkTheme ? '#10b981' : '#0E9F6E') : (darkTheme ? '#f43f5e' : '#D12F42'),
             shape: isBuy ? 'arrowUp' : 'arrowDown',
             text: `${trade.direction} @ ${trade.openPrice}`
           });
@@ -515,7 +515,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
           // Entry Price Line
           const entryLine = mainSeriesRef.current!.createPriceLine({
             price: trade.openPrice,
-            color: '#3b82f6',
+            color: darkTheme ? '#3b82f6' : '#2F5BEA',
             lineWidth: 1,
             lineStyle: LineStyle.Solid,
             axisLabelVisible: true,
@@ -527,7 +527,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
           if (trade.stopLoss && trade.stopLoss > 0) {
             const slLine = mainSeriesRef.current!.createPriceLine({
               price: trade.stopLoss,
-              color: '#ef4444',
+              color: darkTheme ? '#ef4444' : '#D12F42',
               lineWidth: 1,
               lineStyle: LineStyle.Dashed,
               axisLabelVisible: true,
@@ -540,7 +540,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
           if (trade.takeProfit && trade.takeProfit > 0) {
             const tpLine = mainSeriesRef.current!.createPriceLine({
               price: trade.takeProfit,
-              color: '#10b981',
+              color: darkTheme ? '#10b981' : '#0E9F6E',
               lineWidth: 1,
               lineStyle: LineStyle.Dashed,
               axisLabelVisible: true,
