@@ -6,10 +6,10 @@ import {
   LogOut,
   Layers,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { ArcadeFxLogo } from '../common/AlphaCoachLogo';
 import {
   PRIMARY_NAV_ITEMS,
   MARKET_INTEL_GROUP,
@@ -33,10 +33,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Expansion state: tabletExpanded defaults to true so tablet displays expanded readable labels by default
+  // Desktop hover and focus intent
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isFocusWithin, setIsFocusWithin] = useState<boolean>(false);
-  const [tabletExpanded, setTabletExpanded] = useState<boolean>(true);
+  const [tabletExpanded, setTabletExpanded] = useState<boolean>(false);
+
+  // Live Local Clock & Date (User device timezone)
+  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedTime = currentDate.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+
+  const formattedDate = currentDate.toLocaleDateString(undefined, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
 
   // Market Intelligence expandable group
   const isMarketIntelActive = MARKET_INTEL_GROUP.basePaths.some(p =>
@@ -49,8 +72,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sidebarContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Expanded on desktop hover/focus, on tablet by default, or when mobile drawer is open
-  const isExpanded = isHovered || isFocusWithin || tabletExpanded || isOpen;
+  // Desktop expands strictly on pointer hover or keyboard focus
+  const isDesktopExpanded = isHovered || isFocusWithin;
+
+  // Tablet expands on tap toggle, or hover if trackpad/mouse connected
+  const isTabletExpanded = tabletExpanded || isHovered || isFocusWithin;
 
   useEffect(() => {
     return () => {
@@ -63,12 +89,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (isExpanded) {
-          setIsHovered(false);
-          setIsFocusWithin(false);
-          if (sidebarContainerRef.current) {
-            sidebarContainerRef.current.blur();
-          }
+        setIsHovered(false);
+        setIsFocusWithin(false);
+        setTabletExpanded(false);
+        if (sidebarContainerRef.current) {
+          sidebarContainerRef.current.blur();
         }
         if (isOpen) {
           onClose();
@@ -77,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isExpanded, isOpen, onClose]);
+  }, [isOpen, onClose]);
 
   // Hover intent handlers (desktop)
   const handleMouseEnter = useCallback(() => {
@@ -87,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     }
     enterTimerRef.current = setTimeout(() => {
       setIsHovered(true);
-    }, 90);
+    }, 60);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
@@ -97,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     }
     leaveTimerRef.current = setTimeout(() => {
       setIsHovered(false);
-    }, 180);
+    }, 150);
   }, []);
 
   const handleFocus = useCallback(() => {
@@ -121,7 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   };
 
   // Nav item renderer matching sky-blue-to-black theme
-  const renderNavItem = (item: NavItemConfig, isSubItem: boolean = false) => {
+  const renderNavItem = (item: NavItemConfig, isSubItem: boolean = false, isExpanded: boolean = false) => {
     if (item.adminOnly && user?.role !== 'admin') {
       return null;
     }
@@ -218,25 +243,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   };
 
   // Main interior content of the floating glass capsule
-  const capsuleContent = (
+  const renderCapsuleContent = (isExpanded: boolean) => (
     <div className="sidebar-glass-capsule flex flex-col h-full text-white select-none overflow-hidden p-2.5">
-      {/* 1. Header with Logo & Toggle Button */}
+      {/* 1. Header with Clock/Date (when expanded) or Circular Logo (when collapsed) */}
       <div className={`pb-2.5 pt-1 flex items-center border-b border-white/10 ${
         isExpanded ? 'px-2 justify-between' : 'justify-center'
       }`}>
-        <NavLink
-          to="/dashboard"
-          onClick={() => {
-            onClose();
-          }}
-          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] rounded-full flex items-center"
-          aria-label="Arcade Fx Dashboard"
-        >
-          {isExpanded ? (
-            <div className="flex items-center gap-2 px-2 py-1 bg-black/30 rounded-full border border-white/10 shadow-xs animate-in fade-in duration-200">
-              <ArcadeFxLogo size="sm" showWordmark={true} variant="dark" />
+        {isExpanded ? (
+          <div className="flex flex-col justify-center min-h-[44px] px-1 select-none animate-in fade-in duration-200">
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-white tracking-wide tabular-nums font-mono">
+              <Clock className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" aria-hidden="true" />
+              <span>{formattedTime}</span>
             </div>
-          ) : (
+            <div className="text-[10px] sm:text-[11px] font-medium text-[#A9BBCB] truncate">
+              {formattedDate}
+            </div>
+          </div>
+        ) : (
+          <NavLink
+            to="/dashboard"
+            onClick={() => {
+              onClose();
+              if (typeof window !== 'undefined' && window.innerWidth >= 768 && window.innerWidth < 1024) {
+                setTabletExpanded(true);
+              }
+            }}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] rounded-full flex items-center justify-center"
+            aria-label="Arcade Fx Dashboard"
+          >
             <div className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/[0.12] border border-white/20 flex items-center justify-center shadow-xs hover:scale-105 transition-transform duration-200">
               <img
                 src="/brand/arcade-fx-badge.png"
@@ -246,8 +280,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 className="w-6.5 h-6.5 object-contain"
               />
             </div>
-          )}
-        </NavLink>
+          </NavLink>
+        )}
 
         {/* Close Button on Mobile Drawer */}
         <button
@@ -276,7 +310,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* 2. Navigation Items List */}
       <div className="flex-1 overflow-y-auto py-2.5 space-y-1.5 text-xs font-medium no-scrollbar">
         {/* Primary Items */}
-        {PRIMARY_NAV_ITEMS.map(item => renderNavItem(item))}
+        {PRIMARY_NAV_ITEMS.map(item => renderNavItem(item, false, isExpanded))}
 
         {/* Expandable "Market Intelligence" Group */}
         <div className="pt-1">
@@ -347,7 +381,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               {/* Sub-items */}
               {isIntelOpen && (
                 <div className="pl-3 pr-1 py-1 space-y-1 animate-in fade-in duration-150">
-                  {MARKET_INTEL_GROUP.items.map(sub => renderNavItem(sub, true))}
+                  {MARKET_INTEL_GROUP.items.map(sub => renderNavItem(sub, true, isExpanded))}
                 </div>
               )}
             </div>
@@ -358,7 +392,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="my-2 border-t border-white/10" />
 
         {/* Bottom Utility Items */}
-        {BOTTOM_NAV_ITEMS.map(item => renderNavItem(item))}
+        {BOTTOM_NAV_ITEMS.map(item => renderNavItem(item, false, isExpanded))}
       </div>
 
       {/* 3. Bottom Sign Out Action */}
@@ -408,36 +442,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         onBlur={handleBlur}
         aria-label="Main Navigation"
         className={`sidebar-animated hidden lg:flex flex-col fixed top-3 bottom-3 left-3 z-40 transition-[width,box-shadow] duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          isExpanded
+          isDesktopExpanded
             ? 'w-[248px] shadow-[0_20px_50px_rgba(0,0,0,0.65)]'
             : 'w-[72px] shadow-[0_12px_36px_rgba(0,0,0,0.4)]'
         }`}
       >
-        {capsuleContent}
+        {renderCapsuleContent(isDesktopExpanded)}
       </aside>
 
       {/* ========================================================================= */}
-      {/* 2. TABLET FLOATING CAPSULE (768px - 1023px) — EXPANDED & READABLE BY DEFAULT */}
+      {/* 2. TABLET FLOATING CAPSULE (768px - 1023px) — EXPAND/COLLAPSE ON TAP     */}
       {/* ========================================================================= */}
       <div
         className={`hidden md:block lg:hidden shrink-0 h-full pointer-events-none transition-[width] duration-[240ms] ${
-          tabletExpanded ? 'w-[268px]' : 'w-[92px]'
+          isTabletExpanded ? 'w-[268px]' : 'w-[92px]'
         }`}
         aria-hidden="true"
       />
       <aside
         aria-label="Tablet Navigation"
         className={`sidebar-animated hidden md:flex lg:hidden flex-col fixed top-3 bottom-3 left-3 z-40 transition-[width,box-shadow] duration-[240ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          tabletExpanded
+          isTabletExpanded
             ? 'w-[248px] shadow-[0_20px_50px_rgba(0,0,0,0.65)]'
             : 'w-[72px] shadow-[0_12px_36px_rgba(0,0,0,0.4)]'
         }`}
       >
-        {capsuleContent}
+        {renderCapsuleContent(isTabletExpanded)}
       </aside>
 
       {/* ========================================================================= */}
-      {/* 3. MOBILE OFF-CANVAS CAPSULE DRAWER (<768px) — EXPANDED ON OPEN           */}
+      {/* 3. MOBILE OFF-CANVAS CAPSULE DRAWER (<768px)                             */}
       {/* ========================================================================= */}
       {isOpen && (
         <div
@@ -454,7 +488,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           isOpen ? 'translate-x-0' : '-translate-x-[120%]'
         }`}
       >
-        {capsuleContent}
+        {renderCapsuleContent(true)}
       </aside>
     </>
   );

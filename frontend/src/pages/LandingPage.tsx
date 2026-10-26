@@ -135,56 +135,43 @@ export const LandingPage: React.FC = () => {
 
       <main className="flex-1 space-y-16 sm:space-y-24 pb-20">
         {/* ========================================================================= */}
-        {/* 1. HERO SECTION (ELEGANT STATIC VISUAL COMPOSITION — NO VIDEO PLAYBACK)   */}
+        {/* 1. HERO SECTION (CLEAN PLAIN BACKGROUND — NO JPG ASSETS)                  */}
         {/* ========================================================================= */}
-        <section className="relative w-full min-h-[580px] lg:min-h-[660px] flex flex-col lg:flex-row items-stretch justify-start overflow-hidden bg-background">
-          {/* Mobile & Tablet Portrait Hero Banner (< 1024px) */}
-          <div className="relative w-full lg:hidden flex flex-col">
-            <div className="relative w-full h-[34vh] min-h-[240px] max-h-[320px] overflow-hidden shrink-0 select-none bg-background">
-              <img
-                src="/assets/auth-photo.jpg"
-                alt="Arcade Fx Mobile Canvas"
-                className="w-full h-full object-cover object-[65%_center]"
-                loading="eager"
-                decoding="async"
-              />
-              <div className="absolute -bottom-1 left-0 right-0 h-6 overflow-hidden pointer-events-none">
-                <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-background">
-                  <path d="M0,0 C150,90 350,-40 500,60 C650,140 900,10 1200,80 L1200,120 L0,120 Z" />
-                </svg>
-              </div>
-              {/* Mobile Lower Heading on Ocean */}
-              <div className="absolute bottom-5 right-5 z-20 pointer-events-none select-none text-right">
-                <span className="text-sm font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
-                  Forex Intelligence & MT5 Journal
-                </span>
-              </div>
-            </div>
+        <section className="relative w-full border-b border-border/40 bg-background overflow-hidden">
+          {/* Subtle accent glow matching ArcadeFX theme */}
+          <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none -z-10" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#0B1B2B]/20 dark:bg-[#38BDF8]/5 rounded-full blur-3xl pointer-events-none -z-10" />
 
-            {/* Mobile / Tablet Content under banner */}
-            <div className="bg-background px-6 py-8 sm:px-10">
-              <div className="max-w-[440px] mx-auto space-y-5 text-left">
-                {/* Large Transparent ArcadeFX Logo */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              {/* Left Column: Brand & Hero CTA */}
+              <div className="lg:col-span-7 space-y-6 text-left">
+                {/* Large Transparent ArcadeFX 3D Gold Logo */}
                 <div className="flex justify-start">
-                  <Logo size={110} className="w-auto h-24 sm:h-28 object-contain" />
+                  <Logo size={135} className="w-auto h-28 sm:h-32 lg:h-36 object-contain drop-shadow-xs" />
                 </div>
 
-                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium">
-                  Track trades, calculate risk, and journal MT5 performance.
-                </p>
+                <div className="space-y-2">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-foreground tracking-tight font-sans">
+                    Forex Intelligence & MT5 Journal
+                  </h1>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium max-w-xl">
+                    Track trades, calculate risk, and journal MT5 performance with automated execution analytics.
+                  </p>
+                </div>
 
                 {/* Target CTA Pill Buttons */}
-                <div className="flex flex-row items-center gap-3 pt-1">
+                <div className="flex flex-wrap items-center gap-3.5 pt-1">
                   <Link
                     to={user ? "/dashboard" : "/register"}
-                    className="h-11 px-7 rounded-full bg-[#38BDF8] hover:bg-[#0284c7] text-[#080D14] hover:text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(56,189,248,0.4)] hover:shadow-[0_8px_24px_rgba(56,189,248,0.6)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all"
+                    className="h-11 px-8 rounded-full bg-[#38BDF8] hover:bg-[#0284c7] text-[#080D14] hover:text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(56,189,248,0.4)] hover:shadow-[0_8px_24px_rgba(56,189,248,0.6)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all duration-200"
                   >
                     {user ? 'DASHBOARD' : 'START FREE'}
                   </Link>
                   {!user && (
                     <Link
                       to="/login"
-                      className="h-11 px-7 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold text-xs uppercase tracking-wider shadow-xs hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all"
+                      className="h-11 px-8 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold text-xs uppercase tracking-wider shadow-xs hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all duration-200"
                     >
                       LOG IN
                     </Link>
@@ -192,81 +179,71 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {/* 3 Feature Badges */}
-                <div className="pt-2 flex flex-wrap gap-2 text-xs font-semibold">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+                <div className="pt-2 flex flex-wrap gap-2.5 text-xs font-semibold">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> MT5 Sync
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> No Passwords
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> Offline Ready
                   </span>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Desktop Full Hero Background Static Visual */}
-          <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none bg-background">
-            <img
-              src="/assets/auth-bg-full.jpg"
-              alt="Arcade Fx Trading Hero"
-              className="w-full h-full object-cover object-[left_center]"
-              loading="eager"
-              decoding="async"
-            />
-          </div>
+              {/* Right Column: Clean Themed Showcase Card */}
+              <div className="lg:col-span-5 hidden lg:block">
+                <div className="rounded-3xl border border-border/60 bg-surface/70 dark:bg-[#0B1B2B]/60 backdrop-blur-md p-6 sm:p-8 shadow-xl space-y-6">
+                  <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-rose-500/80" />
+                      <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+                      <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                    </div>
+                    <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-widest font-semibold">
+                      Arcade Fx OS v1.0.6
+                    </span>
+                  </div>
 
-          {/* Desktop Bottom-Right Ocean Heading (Matching Target Composition) */}
-          <div className="hidden lg:block absolute bottom-8 right-10 xl:bottom-12 xl:right-16 z-20 pointer-events-none select-none text-right">
-            <h2 className="text-xl sm:text-2xl xl:text-3xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)] font-sans">
-              Forex Intelligence & MT5 Journal
-            </h2>
-          </div>
+                  <div className="space-y-4">
+                    <div className="p-3.5 rounded-2xl bg-surface-elevated/70 dark:bg-[#0A1522]/80 border border-border/30 flex items-start gap-3.5">
+                      <div className="w-9 h-9 rounded-xl bg-[#38BDF8]/20 flex items-center justify-center shrink-0 text-[#38BDF8]">
+                        <LineChart className="w-4.5 h-4.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-foreground">Sub-Millisecond MT5 Deal Sync</div>
+                        <div className="text-[11px] text-muted-foreground leading-normal mt-0.5">
+                          Instant execution reconstruction directly via local Python bridge.
+                        </div>
+                      </div>
+                    </div>
 
-          {/* Desktop Left Content Column (Exact Match to Target Composition) */}
-          <div className="relative z-10 hidden lg:flex flex-col justify-center w-full lg:w-[48%] xl:w-[45%] bg-background/95 dark:bg-[#080D14]/95 backdrop-blur-md border-r border-border/40 pl-16 xl:pl-24 2xl:pl-28 pr-8 py-16 shrink-0 min-h-[580px] lg:min-h-[660px]">
-            <div className="w-full max-w-[440px] space-y-6">
-              {/* Large Transparent ArcadeFX 3D Gold Logo */}
-              <div className="flex justify-start">
-                <Logo size={135} className="w-auto h-28 sm:h-32 lg:h-36 object-contain drop-shadow-xs" />
-              </div>
+                    <div className="p-3.5 rounded-2xl bg-surface-elevated/70 dark:bg-[#0A1522]/80 border border-border/30 flex items-start gap-3.5">
+                      <div className="w-9 h-9 rounded-xl bg-[#38BDF8]/20 flex items-center justify-center shrink-0 text-[#38BDF8]">
+                        <Bot className="w-4.5 h-4.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-foreground">Quantitative Discipline Engine</div>
+                        <div className="text-[11px] text-muted-foreground leading-normal mt-0.5">
+                          Empirical rule compliance analysis without manual spreadsheets.
+                        </div>
+                      </div>
+                    </div>
 
-              {/* Supporting Sentence */}
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium">
-                Track trades, calculate risk, and journal MT5 performance.
-              </p>
-
-              {/* Target CTA Pill Buttons */}
-              <div className="flex items-center gap-3.5 pt-1">
-                <Link
-                  to={user ? "/dashboard" : "/register"}
-                  className="h-11 px-8 rounded-full bg-[#38BDF8] hover:bg-[#0284c7] text-[#080D14] hover:text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_6px_20px_rgba(56,189,248,0.4)] hover:shadow-[0_8px_24px_rgba(56,189,248,0.6)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all duration-200"
-                >
-                  {user ? 'DASHBOARD' : 'START FREE'}
-                </Link>
-                {!user && (
-                  <Link
-                    to="/login"
-                    className="h-11 px-8 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold text-xs uppercase tracking-wider shadow-xs hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center transition-all duration-200"
-                  >
-                    LOG IN
-                  </Link>
-                )}
-              </div>
-
-              {/* 3 Feature Badges */}
-              <div className="pt-2 flex flex-wrap gap-2.5 text-xs font-semibold">
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> MT5 Sync
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> No Passwords
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#0369a1] dark:text-[#38BDF8] border border-[#38BDF8]/30 select-none">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#38BDF8]" /> Offline Ready
-                </span>
+                    <div className="p-3.5 rounded-2xl bg-surface-elevated/70 dark:bg-[#0A1522]/80 border border-border/30 flex items-start gap-3.5">
+                      <div className="w-9 h-9 rounded-xl bg-[#38BDF8]/20 flex items-center justify-center shrink-0 text-[#38BDF8]">
+                        <Shield className="w-4.5 h-4.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-foreground">Zero Broker Credentials Stored</div>
+                        <div className="text-[11px] text-muted-foreground leading-normal mt-0.5">
+                          Bank-grade security: your MT5 passwords never leave your local terminal.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

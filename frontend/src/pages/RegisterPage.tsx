@@ -54,7 +54,7 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full relative flex flex-col lg:flex-row items-stretch justify-start overflow-x-hidden bg-background text-foreground">
+    <div className="min-h-[100dvh] w-full flex flex-col lg:flex-row items-stretch justify-start bg-background text-foreground">
       <MetaHead
         title="Sign Up — Arcade Fx Trading OS"
         description="Create your Arcade Fx account to automate MetaTrader 5 trade journaling, evaluate setup expectancies, and maintain psychological discipline."
@@ -62,41 +62,9 @@ export const RegisterPage: React.FC = () => {
       />
 
       {/* ========================================================================= */}
-      {/* 1. DESKTOP STATIC BACKGROUND VISUAL (High-Res Static Composition)          */}
+      {/* 1. LIVE AUTH FORM COLUMN (Clean, Accessible & Trustworthy)                */}
       {/* ========================================================================= */}
-      <div className="absolute inset-0 w-full h-full hidden lg:block overflow-hidden pointer-events-none select-none bg-background">
-        <img
-          src="/assets/auth-bg-full.jpg"
-          alt="Arcade Fx Trading Canvas"
-          className="w-full h-full object-cover object-[left_center]"
-          loading="eager"
-          decoding="async"
-        />
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 2. MOBILE HERO BANNER (< 1024px)                                          */}
-      {/* ========================================================================= */}
-      <div className="relative w-full h-[32vh] min-h-[220px] max-h-[300px] lg:hidden overflow-hidden shrink-0 select-none bg-background order-first">
-        <img
-          src="/assets/auth-photo.jpg"
-          alt="Arcade Fx Mobile Canvas"
-          className="w-full h-full object-cover object-[65%_center]"
-          loading="eager"
-          decoding="async"
-        />
-        {/* Wave Edge Divider transitioning into themed background area */}
-        <div className="absolute -bottom-1 left-0 right-0 h-6 overflow-hidden pointer-events-none">
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full fill-background">
-            <path d="M0,0 C150,90 350,-40 500,60 C650,140 900,10 1200,80 L1200,120 L0,120 Z" />
-          </svg>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 3. LIVE AUTH FORM COLUMN (Clean, Accessible & Trustworthy)                */}
-      {/* ========================================================================= */}
-      <div className="relative z-10 w-full lg:w-[480px] xl:w-[520px] 2xl:w-[560px] bg-background/95 dark:bg-[#080D14]/95 lg:bg-background/90 lg:dark:bg-[#080D14]/90 backdrop-blur-md border-r border-border/40 flex flex-col justify-center px-6 py-8 sm:px-10 md:px-14 lg:pl-16 xl:pl-24 2xl:pl-28 lg:pr-8 shrink-0 min-h-[100dvh]">
+      <div className="w-full lg:w-[480px] xl:w-[520px] 2xl:w-[560px] bg-surface dark:bg-[#080D14] border-r border-border flex flex-col justify-center px-6 py-10 sm:px-10 md:px-14 lg:pl-16 xl:pl-20 shrink-0 min-h-[100dvh]">
         <div className="w-full max-w-[340px] sm:max-w-[380px] mx-auto lg:mx-0">
           {/* Brand Logo Header */}
           <Link to="/" className="inline-block mb-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] rounded-xl" aria-label="Go to Arcade Fx home">
@@ -233,6 +201,40 @@ export const RegisterPage: React.FC = () => {
             <Link to="/login" className="text-[#38BDF8] hover:underline font-bold transition">
               Log in
             </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. DESKTOP THEMED SHOWCASE PANEL (Clean Plain Gradient — No JPG Assets)   */}
+      {/* ========================================================================= */}
+      <div className="hidden lg:flex flex-1 flex-col items-center justify-center p-12 bg-gradient-to-br from-[#0B1B2B] via-[#0A1522] to-[#080D14] text-white relative overflow-hidden">
+        {/* Ambient subtle glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] bg-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-md text-center space-y-6">
+          <div className="flex justify-center">
+            <Logo size={120} className="w-auto h-24 object-contain drop-shadow-md" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl xl:text-3xl font-extrabold text-white tracking-tight font-sans">
+              Forex Intelligence & MT5 Journal
+            </h2>
+            <p className="text-xs sm:text-sm text-[#A9BBCB] leading-relaxed max-w-sm mx-auto">
+              Empirical discipline metrics, automated trade logs, and quantitative execution review built for modern traders.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-wrap justify-center gap-2 text-xs font-semibold">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+              ✓ Zero Passwords Stored
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+              ✓ Sub-Millisecond MT5 Sync
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 select-none">
+              ✓ Local Bridge Security
+            </span>
           </div>
         </div>
       </div>
