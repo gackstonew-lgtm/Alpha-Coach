@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Alpha Coach - Windows Bridge Packaging Script
-Authoritative Version: 1.0.5
-Compiles the MT5 Companion system tray application into a standalone Windows executable (.exe),
+ArcadeFX - Windows Bridge Packaging Script
+Authoritative Version: 1.0.6
+Compiles the MT5 Bridge system tray application into a standalone Windows executable (.exe),
 signs binaries (when configured), and builds a standard Inno Setup Windows installer (.exe).
 """
 
@@ -56,7 +56,7 @@ def calculate_sha256(file_path: str) -> str:
     return hasher.hexdigest()
 
 def build():
-    parser = argparse.ArgumentParser(description="Build and package Alpha Coach MT5 Companion for Windows")
+    parser = argparse.ArgumentParser(description="Build and package ArcadeFX MT5 Bridge for Windows")
     parser.add_argument("--clean", action="store_true", help="Clean build and dist directories before packaging")
     parser.add_argument("--skip-pyinstaller", action="store_true", help="Skip PyInstaller compilation step")
     parser.add_argument("--skip-installer", action="store_true", help="Skip Inno Setup compilation step")
@@ -72,14 +72,20 @@ def build():
     bridge_dir = os.path.dirname(os.path.abspath(__file__))
     dist_dir = os.path.join(bridge_dir, "dist")
     build_dir = os.path.join(bridge_dir, "build")
-    spec_file = os.path.join(bridge_dir, "AlphaCoach-MT5-Companion.spec")
-    iss_file = os.path.join(bridge_dir, "installer", "alpha_coach_installer.iss")
+    
+    spec_file = os.path.join(bridge_dir, "ArcadeFX-MT5-Bridge.spec")
+    if not os.path.exists(spec_file):
+        spec_file = os.path.join(bridge_dir, "AlphaCoach-MT5-Companion.spec")
 
-    exe_path = os.path.join(dist_dir, "AlphaCoach-MT5-Companion.exe")
-    setup_path = os.path.join(dist_dir, "AlphaCoach-MT5-Companion-Setup.exe")
+    iss_file = os.path.join(bridge_dir, "installer", "arcadefx_bridge_installer.iss")
+    if not os.path.exists(iss_file):
+        iss_file = os.path.join(bridge_dir, "installer", "alpha_coach_installer.iss")
+
+    exe_path = os.path.join(dist_dir, "ArcadeFX-MT5-Bridge.exe")
+    setup_path = os.path.join(dist_dir, "ArcadeFX-MT5-Bridge-Setup.exe")
 
     print("==================================================")
-    print("Building Alpha Coach MT5 Companion for Windows (v1.0.5)")
+    print("Building ArcadeFX MT5 Bridge for Windows (v1.0.6)")
     print("==================================================")
     print(f"Working Directory: {bridge_dir}")
     print(f"Require Signing:   {require_signing}")
@@ -166,14 +172,14 @@ def build():
     hash_exe = calculate_sha256(exe_path)
 
     checksum_file = os.path.join(dist_dir, "checksums.txt")
-    sha256_single_file = os.path.join(dist_dir, "AlphaCoach-MT5-Companion-Setup.exe.sha256")
+    sha256_single_file = os.path.join(dist_dir, "ArcadeFX-MT5-Bridge-Setup.exe.sha256")
 
     with open(checksum_file, "w", encoding="utf-8") as f:
-        f.write(f"{hash_setup}  AlphaCoach-MT5-Companion-Setup.exe\n")
-        f.write(f"{hash_exe}  AlphaCoach-MT5-Companion.exe\n")
+        f.write(f"{hash_setup}  ArcadeFX-MT5-Bridge-Setup.exe\n")
+        f.write(f"{hash_exe}  ArcadeFX-MT5-Bridge.exe\n")
 
     with open(sha256_single_file, "w", encoding="utf-8") as f:
-        f.write(f"{hash_setup}  AlphaCoach-MT5-Companion-Setup.exe\n")
+        f.write(f"{hash_setup}  ArcadeFX-MT5-Bridge-Setup.exe\n")
 
     print("\n==================================================")
     print("             PACKAGING SUCCESSFUL                 ")

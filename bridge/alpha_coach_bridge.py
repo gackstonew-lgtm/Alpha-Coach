@@ -22,11 +22,13 @@ import requests
 try:
     import MetaTrader5 as mt5
     MT5_PACKAGE_AVAILABLE = True
+    MT5_AVAILABLE = True
     MT5_PACKAGE_VERSION = getattr(mt5, '__version__', '5.0.x')
     MT5_IMPORT_ERROR = None
 except Exception as e:
     mt5 = None
     MT5_PACKAGE_AVAILABLE = False
+    MT5_AVAILABLE = False
     MT5_PACKAGE_VERSION = "Unavailable"
     MT5_IMPORT_ERROR = str(e)
 
@@ -51,13 +53,14 @@ except ImportError:
 
 from companion_logger import companion_logger
 
-__version__ = "1.0.5"
-APP_NAME = "Arcade Fx MT5 Companion"
+__version__ = "1.0.6"
+APP_VERSION = __version__
+APP_NAME = "ArcadeFX MT5 Bridge"
 GITHUB_REPO = "gackstonew-lgtm/Alpha-Coach"
 
 # Production Endpoints
-DEFAULT_PROD_WEB = os.getenv("ARCADE_FX_WEB_URL", os.getenv("ALPHA_COACH_WEB_URL", "https://www.arcadefx.live"))
-DEFAULT_PROD_API = os.getenv("ARCADE_FX_API_URL", os.getenv("ALPHA_COACH_API_URL", f"{DEFAULT_PROD_WEB}/api/v1"))
+DEFAULT_PROD_WEB = os.getenv("ARCADEFX_WEB_URL", os.getenv("ARCADE_FX_WEB_URL", os.getenv("ALPHA_COACH_WEB_URL", "https://www.arcadefx.live"))).rstrip('/')
+DEFAULT_PROD_API = os.getenv("ARCADEFX_API_URL", os.getenv("ARCADE_FX_API_URL", os.getenv("ALPHA_COACH_API_URL", f"{DEFAULT_PROD_WEB}/api/v1"))).rstrip('/')
 DEFAULT_LOCAL_API = "http://localhost:4000/api/v1"
 
 # Production Supabase Credentials (Public / Anon Client)
@@ -110,6 +113,8 @@ class AlphaCoachBridge:
         self.last_reconciliation: Optional[Dict[str, Any]] = None
         self.consecutive_failures = 0
         self.is_sync_paused = False
+        self._explicit_api_url = bool(api_url)
+        self._explicit_web_url = bool(web_url)
         self.active_device_id: Optional[str] = None
         self.active_user_id: Optional[str] = None
 
@@ -135,9 +140,23 @@ class AlphaCoachBridge:
         if platform.system() == "Windows":
             appdata = os.environ.get("APPDATA")
             if appdata:
-                path = os.path.join(appdata, "AlphaCoach")
-                os.makedirs(path, exist_ok=True)
-                return path
+                primary_path = os.path.join(appdata, "ArcadeFX", "MT5Bridge")
+                legacy_path = os.path.join(appdata, "AlphaCoach")
+                os.makedirs(primary_path, exist_ok=True)
+
+                # Seamless migration from legacy AlphaCoach folder
+                primary_cfg = os.path.join(primary_path, "bridge_config.json")
+                legacy_cfg = os.path.join(legacy_path, "bridge_config.json")
+                if not os.path.exists(primary_cfg) and os.path.exists(legacy_cfg):
+                    try:
+                        import shutil
+                        shutil.copy2(legacy_cfg, primary_cfg)
+                        companion_logger.info(f"Migrated legacy bridge configuration from {legacy_cfg} to {primary_cfg}")
+                    except Exception as mig_err:
+                        companion_logger.warning(f"Could not migrate legacy config: {mig_err}")
+                        return legacy_path
+
+                return primary_path
         path = os.path.join(os.path.dirname(__file__), "data")
         os.makedirs(path, exist_ok=True)
         return path
@@ -149,9 +168,9 @@ class AlphaCoachBridge:
                     cfg = json.load(f)
                     if not self.device_token and cfg.get('device_token'):
                         self.device_token = cfg['device_token']
-                    if cfg.get('api_url'):
+                    if not getattr(self, '_explicit_api_url', False) and cfg.get('api_url'):
                         self.api_url = cfg['api_url'].rstrip('/')
-                    if cfg.get('web_url'):
+                    if not getattr(self, '_explicit_web_url', False) and cfg.get('web_url'):
                         self.web_url = cfg['web_url'].rstrip('/')
                     if cfg.get('selected_mt5_path'):
                         self.selected_mt5_path = cfg['selected_mt5_path']
@@ -161,6 +180,20 @@ class AlphaCoachBridge:
                         self.active_user_id = cfg['active_user_id']
                     if self.device_token:
                         self.state = BridgeState.MT5_CONNECTED
+
+                # Auto-modernize stale staging domains from legacy installs
+                stale_domains = ["alpha-coach-pi.vercel.app", "alpha-coach-nine.vercel.app", "alpha-coach.vercel.app"]
+                needs_save = False
+                if any(d in self.api_url for d in stale_domains):
+                    companion_logger.info(f"Modernizing stale API endpoint {self.api_url} -> {DEFAULT_PROD_API}")
+                    self.api_url = DEFAULT_PROD_API
+                    needs_save = True
+                if any(d in self.web_url for d in stale_domains):
+                    companion_logger.info(f"Modernizing stale Web endpoint {self.web_url} -> {DEFAULT_PROD_WEB}")
+                    self.web_url = DEFAULT_PROD_WEB
+                    needs_save = True
+                if needs_save:
+                    self.save_config()
             except Exception as e:
                 companion_logger.warning(f"Error loading config file: {e}")
 
@@ -330,7 +363,10 @@ class AlphaCoachBridge:
     def get_account_data(self) -> Optional[Dict[str, Any]]:
         if self.mock_mode:
             from mock_mt5_adapter import generate_mock_3month_data
-            return generate_mock_3month_data()["accountInfo"]
+            acc_mock = dict(generate_mock_3month_data()["accountInfo"])
+            acc_mock.setdefault("isDemo", True)
+            acc_mock.setdefault("tradeMode", "demo")
+            return acc_mock
 
         if not MT5_PACKAGE_AVAILABLE or mt5 is None:
             return None
@@ -351,7 +387,9 @@ class AlphaCoachBridge:
                 "margin": float(acc.margin),
                 "freeMargin": float(acc.margin_free),
                 "marginLevel": float(acc.margin_level) if hasattr(acc, 'margin_level') else 0.0,
-                "accountType": "hedging" if getattr(acc, 'margin_mode', 0) == getattr(mt5, 'ACCOUNT_MARGIN_MODE_RETAIL_HEDGING', 0) else "netting"
+                "accountType": "hedging" if getattr(acc, 'margin_mode', 0) == getattr(mt5, 'ACCOUNT_MARGIN_MODE_RETAIL_HEDGING', 0) else "netting",
+                "isDemo": getattr(acc, 'trade_mode', 0) == getattr(mt5, 'ACCOUNT_TRADE_MODE_DEMO', 0) if hasattr(acc, 'trade_mode') else True,
+                "tradeMode": "real" if getattr(acc, 'trade_mode', -1) == getattr(mt5, 'ACCOUNT_TRADE_MODE_REAL', 2) else "demo"
             }
         except Exception as e:
             companion_logger.error(f"Error in get_account_data: {e}")
@@ -857,6 +895,12 @@ class AlphaCoachBridge:
             self.log("MT5_ERROR", "Unable to read MT5 account details.", Fore.RED)
             self.last_error_message = "Unable to read MT5 account details."
             return False
+
+        # Multi-Account Safety: Detect account switching
+        current_acc_num = account_info.get("accountNumber")
+        if hasattr(self, "_active_acc_number") and self._active_acc_number and self._active_acc_number != current_acc_num:
+            self.log("ACCOUNT_SWITCH", f"Active MT5 Account switched: #{self._active_acc_number} -> #{current_acc_num}", Fore.YELLOW)
+        self._active_acc_number = current_acc_num
 
         open_positions = self.fetch_open_positions()
         history = self.fetch_history(days_back=days_back, full_history=full_history)

@@ -1,6 +1,6 @@
 """
-Meta Coach - Windows System Tray Companion Application
-Authoritative Version: 1.0.4
+ArcadeFX MT5 Bridge - Windows System Tray Application
+Authoritative Version: 1.0.6
 Runs quietly in the Windows notification area, monitors MetaTrader 5,
 and keeps your Meta Coach trade journal synchronized in the background.
 """
@@ -173,7 +173,7 @@ class AlphaCoachTrayApp:
                 lambda *args: self.controller.toggle_pause()
             ),
             pystray.MenuItem(
-                "Re-pair with Meta Coach...",
+                "Re-pair with ArcadeFX...",
                 lambda *args: self.controller.repair_pairing()
             ),
             pystray.MenuItem(
@@ -192,7 +192,7 @@ class AlphaCoachTrayApp:
         )
 
         image = self.create_tray_image("green")
-        self.icon = pystray.Icon("AlphaCoachMT5Companion", image, f"{APP_NAME} v{__version__}", menu)
+        self.icon = pystray.Icon("ArcadeFXMT5Bridge", image, f"{APP_NAME} v{__version__}", menu)
         companion_logger.info(f"{APP_NAME} v{__version__} running in Windows System Tray.")
         self.icon.run()
 

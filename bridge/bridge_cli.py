@@ -1,5 +1,5 @@
 """
-Meta Coach - Interactive Terminal CLI Bridge
+ArcadeFX MT5 Bridge - Interactive Terminal CLI Bridge
 Allows traders to test connectivity, view detected MT5 accounts, trigger instant 3-month sync,
 run 1-click browser pairing, or run background live synchronization.
 """
@@ -8,7 +8,7 @@ import sys
 import os
 import json
 import time
-from alpha_coach_bridge import AlphaCoachBridge, MT5_AVAILABLE
+from alpha_coach_bridge import AlphaCoachBridge, MT5_PACKAGE_AVAILABLE, MT5_AVAILABLE, APP_NAME, __version__
 from mock_mt5_adapter import generate_mock_3month_data
 
 try:
@@ -29,15 +29,16 @@ except ImportError:
 
 def print_banner():
     print(Fore.CYAN + Style.BRIGHT + r"""
-   _____ _________________________     _________                     .__     
-  /     \\_   _____/\__    ___/  _  \   \_   ___ \  _________    ____ |  |__  
- /  \ /  \|    __)_   |    | /  /_\  \  /    \  \/ /  _ \__  \ _/ ___\|  |  \ 
-/    Y    \        \  |    |/    |    \ \     \___(  <_> ) __ \\  \___|   Y  \
-\____|__  /_______  /  |____|\____|__  /  \______  /\____(____  /\___  >___|  /
-        \/        \/                 \/          \/           \/     \/     \/ 
+   _____                      .___       ___________      
+  /  _  \_______ ____ _____  __| _/____  \_   _____/__  ___
+ /  /_\  \_  __ \__  \\__  \ / __ |/ __ \  |    __) \  \/  /
+/    |    \  | \// __ \_/ __ \ /_/ \  ___/  |     \   >    < 
+\____|__  /__|  (____  (____  \____ |\___  > \___  /  /__/\_ \
+        \/           \/     \/     \/    \/      \/         \/
+       =========================================================
+       ARCADEFX MT5 BRIDGE — AUTOMATED TRADING JOURNAL OS
+       =========================================================
     """ + Style.RESET_ALL)
-    print(Fore.GREEN + "       AUTOMATED MT5 TRADING JOURNAL & PERFORMANCE OS BRIDGE" + Style.RESET_ALL)
-    print(Fore.BLUE + "=================================================================" + Style.RESET_ALL)
 
 def main_menu():
     bridge = AlphaCoachBridge()
@@ -48,12 +49,13 @@ def main_menu():
 
         ready, msg = bridge.check_mt5_readiness()
         print(f"\n{Style.BRIGHT}System Status:{Style.RESET_ALL}")
+        print(f"  Application:    {Fore.CYAN}{APP_NAME} (v{__version__}){Style.RESET_ALL}")
         print(f"  Backend API:    {Fore.CYAN}{bridge.api_url}{Style.RESET_ALL}")
         print(f"  Device Token:   {Fore.GREEN + (bridge.device_token[:12] + '••••') if bridge.device_token else Fore.YELLOW + 'NOT CONFIGURED (Pairing Required) ⚠️'}{Style.RESET_ALL}")
         print(f"  MT5 Readiness:  {Fore.GREEN + msg if ready else Fore.YELLOW + msg}{Style.RESET_ALL}")
 
         print(f"\n{Style.BRIGHT}Available Actions:{Style.RESET_ALL}")
-        print(f"  [1] 🚀 {Fore.GREEN}1-Click Browser Authorization (Connect to Meta Coach Account){Style.RESET_ALL}")
+        print(f"  [1] 🚀 {Fore.GREEN}1-Click Browser Authorization (Connect to ArcadeFX Account){Style.RESET_ALL}")
         print(f"  [2] ⚡ {Fore.CYAN}Sync Real MT5 Terminal (Previous 3 Months + Open Positions){Style.RESET_ALL}")
         print(f"  [3] 🔄 {Fore.MAGENTA}Start Background Auto-Sync Daemon (30s interval){Style.RESET_ALL}")
         print(f"  [4] 🧪 {Fore.YELLOW}Seed Authentic 3-Month Multi-Asset Dataset (Verification Mode){Style.RESET_ALL}")
@@ -82,7 +84,7 @@ def main_menu():
         elif choice == '4':
             print(f"\n{Fore.YELLOW}[Action] Generating 3-Month Realistic MT5 Data (184 positions, scale-ins, partials, commissions)...{Style.RESET_ALL}")
             mock_data = generate_mock_3month_data()
-            print(f"{Fore.CYAN}Connecting and synchronizing payload to Meta Coach...{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}Connecting and synchronizing payload to ArcadeFX...{Style.RESET_ALL}")
             payload = {
                 "accountInfo": mock_data["accountInfo"],
                 "deals": mock_data["deals"],
@@ -98,37 +100,29 @@ def main_menu():
             print(f"API URL: {bridge.api_url}")
             print(f"Web URL: {bridge.web_url}")
             print(f"Token: {'Configured' if bridge.device_token else 'Not configured'}")
-            print(f"MT5 Readiness: {msg}")
-            installations = bridge.detect_mt5_installations()
-            print(f"Found MT5 Terminals: {installations if installations else 'None'}")
+            print(f"Config File: {bridge.config_file}")
+            print(f"MT5 Adapter Available: {MT5_PACKAGE_AVAILABLE}")
+            installs = bridge.detect_mt5_installations()
+            print(f"Detected MT5 Terminals: {len(installs)}")
+            for p in installs:
+                print(f"  - {p}")
             input(f"\n{Fore.BLUE}Press Enter to return to menu...{Style.RESET_ALL}")
 
         elif choice == '6':
-            print(f"\n[1] Enter Manual Token\n[2] Change API URL\n[3] Change Web URL")
-            sub = input("Choose setting: ").strip()
-            if sub == '1':
-                t = input("Enter Token: ").strip()
-                if t:
-                    bridge.device_token = t
-                    bridge.save_config()
-                    print(f"{Fore.GREEN}Token saved.{Style.RESET_ALL}")
-            elif sub == '2':
-                u = input("Enter API URL: ").strip()
-                if u:
-                    bridge.api_url = u.rstrip('/')
-                    bridge.save_config()
-                    print(f"{Fore.GREEN}API URL saved.{Style.RESET_ALL}")
-            elif sub == '3':
-                w = input("Enter Web URL: ").strip()
-                if w:
-                    bridge.web_url = w.rstrip('/')
-                    bridge.save_config()
-                    print(f"{Fore.GREEN}Web URL saved.{Style.RESET_ALL}")
-            time.sleep(1)
+            print(f"\n{Style.BRIGHT}=== Manual Configuration ==={Style.RESET_ALL}")
+            new_api = input(f"Enter API URL [current: {bridge.api_url}]: ").strip()
+            if new_api:
+                bridge.api_url = new_api
+            new_token = input(f"Enter Device Token [current: {bridge.get_masked_token()}]: ").strip()
+            if new_token:
+                bridge.device_token = new_token
+            bridge.save_config()
+            print(f"{Fore.GREEN}Configuration saved.{Style.RESET_ALL}")
+            input(f"\n{Fore.BLUE}Press Enter to return to menu...{Style.RESET_ALL}")
 
         elif choice == '0':
-            print(f"\n{Fore.GREEN}Thank you for using Meta Coach! Exiting...{Style.RESET_ALL}\n")
-            sys.exit(0)
+            print(f"\n{Fore.GREEN}Exiting {APP_NAME}. Good trading!{Style.RESET_ALL}")
+            break
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main_menu()
