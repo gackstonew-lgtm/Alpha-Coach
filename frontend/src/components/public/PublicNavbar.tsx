@@ -41,31 +41,26 @@ export const PublicNavbar: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full transition-all duration-200 bg-background/80 backdrop-blur-md border-b border-border-subtle">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+      {/* Sleek Compact Dark Translucent Header Matching Visual Target */}
+      <header className="sticky top-0 z-50 w-full transition-all duration-200 bg-[#07090e]/85 backdrop-blur-md border-b border-white/10 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-3 group focus:outline-none" aria-label="Arcade Fx home">
-            <Logo size="md" />
+            <Logo size="sm" />
           </Link>
 
-          {/* Desktop Navigation Links (QC NetCore Reference Style) */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+          {/* Desktop Centered Navigation Links (Target Composition) */}
+          <nav className="hidden md:flex items-center space-x-1 lg:space-x-3">
             <a
               href="/#features"
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/80 hover:text-white hover:bg-white/5 transition-colors"
             >
               Features
-            </a>
-            <a
-              href="/#pricing"
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Pricing
             </a>
             <Link
               to="/methodology"
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                location.pathname === '/methodology' ? 'text-primary font-bold bg-primary/10' : 'text-muted-foreground hover:text-foreground'
+                location.pathname === '/methodology' ? 'text-white font-bold bg-white/10' : 'text-white/80 hover:text-white hover:bg-white/5'
               }`}
             >
               Methodology
@@ -73,7 +68,7 @@ export const PublicNavbar: React.FC = () => {
             <Link
               to="/security"
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                location.pathname === '/security' ? 'text-primary font-bold bg-primary/10' : 'text-muted-foreground hover:text-foreground'
+                location.pathname === '/security' ? 'text-white font-bold bg-white/10' : 'text-white/80 hover:text-white hover:bg-white/5'
               }`}
             >
               Security
@@ -81,47 +76,53 @@ export const PublicNavbar: React.FC = () => {
             <Link
               to="/faq"
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                location.pathname === '/faq' ? 'text-primary font-bold bg-primary/10' : 'text-muted-foreground hover:text-foreground'
+                location.pathname === '/faq' ? 'text-white font-bold bg-white/10' : 'text-white/80 hover:text-white hover:bg-white/5'
               }`}
             >
               FAQ
             </Link>
+            <Link
+              to="/terms"
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                location.pathname === '/terms' ? 'text-white font-bold bg-white/10' : 'text-white/80 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              Legal
+            </Link>
           </nav>
 
-          {/* Action Buttons & Theme Switcher (QC NetCore Reference Style) */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Action Buttons & Theme Switcher (Target Composition) */}
+          <div className="hidden md:flex items-center gap-4">
             <button
               onClick={toggleTheme}
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               aria-label="Toggle visual theme"
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface border border-border text-foreground flex items-center justify-center hover:bg-surface-elevated hover:border-primary/50 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 shadow-xs cursor-pointer"
+              className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer"
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-foreground" />}
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Sun className="w-4 h-4 text-amber-300" />}
             </button>
 
             {user ? (
               <Link
                 to="/dashboard"
-                className="py-2.5 px-4 rounded-xl bg-primary hover:bg-primary-hover hover:-translate-y-0.5 active:scale-[0.98] text-primary-foreground text-xs font-bold transition-all duration-200 shadow-xs flex items-center gap-1.5"
+                className="py-1.5 px-4 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground text-xs font-bold transition shadow-xs flex items-center gap-1.5"
               >
-                <LayoutDashboard className="w-4 h-4" />
+                <LayoutDashboard className="w-3.5 h-3.5" />
                 <span>Open Terminal</span>
-                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             ) : (
               <>
                 <Link
                   to="/login"
-                  className="py-2.5 px-4 rounded-xl bg-surface border border-border hover:border-primary/50 hover:bg-surface-elevated hover:-translate-y-0.5 active:scale-[0.98] text-foreground text-xs font-bold transition-all duration-200"
+                  className="text-xs font-semibold text-white/85 hover:text-white transition px-2 py-1"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
-                  className="py-2.5 px-4 rounded-xl bg-primary hover:bg-primary-hover hover:-translate-y-0.5 active:scale-[0.98] text-primary-foreground text-xs font-bold transition-all duration-200 shadow-xs flex items-center gap-1.5"
+                  className="py-1.5 px-4 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition shadow-xs"
                 >
-                  <span>Start Free</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  Get Started
                 </Link>
               </>
             )}
@@ -132,14 +133,14 @@ export const PublicNavbar: React.FC = () => {
             <button
               onClick={toggleTheme}
               aria-label="Toggle visual theme"
-              className="w-9 h-9 rounded-xl bg-surface border border-border text-foreground flex items-center justify-center hover:bg-surface-elevated transition-colors"
+              className="w-9 h-9 rounded-xl bg-white/10 border border-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-foreground" />}
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Sun className="w-4 h-4 text-amber-300" />}
             </button>
             <button
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open menu"
-              className="w-9 h-9 rounded-xl bg-surface border border-border text-foreground flex items-center justify-center hover:bg-surface-elevated transition-colors"
+              className="w-9 h-9 rounded-xl bg-white/10 border border-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -221,6 +222,14 @@ export const PublicNavbar: React.FC = () => {
             </div>
             <div className="divide-y divide-border/60">
               <a
+                href="/#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between py-2.5 px-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition"
+              >
+                <span>Features</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+              </a>
+              <a
                 href="/#pricing"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-between py-2.5 px-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition"
@@ -249,46 +258,35 @@ export const PublicNavbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Sheet Footer: Language & Account / CTA */}
-        <div className="p-4 border-t border-border bg-surface-subtle space-y-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-            <span className="flex items-center gap-1.5 font-medium">
-              <Globe className="w-3.5 h-3.5 text-primary" />
-              <span>English (US)</span>
-            </span>
-            <span className="text-[11px] font-mono">v1.0.4</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            {user ? (
+        {/* Sheet Footer: Primary Actions */}
+        <div className="p-4 border-t border-border bg-surface-subtle space-y-2">
+          {user ? (
+            <Link
+              to="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full h-11 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Go to Terminal</span>
+            </Link>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
               <Link
-                to="/dashboard"
+                to="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="col-span-2 py-3 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground text-xs font-bold text-center transition"
+                className="w-full h-10 rounded-xl bg-surface border border-border text-foreground hover:bg-surface-elevated font-semibold text-xs flex items-center justify-center transition"
               >
-                <LayoutDashboard className="w-4 h-4 inline mr-1.5" />
-                <span>Dashboard</span>
+                Sign In
               </Link>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 px-3 rounded-xl bg-surface border border-border text-foreground hover:bg-surface-elevated text-center text-xs font-bold transition flex items-center justify-center gap-1.5"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  <span>Log in</span>
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 px-3 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground text-center text-xs font-bold transition flex items-center justify-center gap-1.5"
-                >
-                  Start Free
-                </Link>
-              </>
-            )}
-          </div>
+              <Link
+                to="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full h-10 rounded-xl bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-xs flex items-center justify-center transition shadow-xs"
+              >
+                Get Started
+              </Link>
+            </div>
+          )}
         </div>
       </aside>
     </>

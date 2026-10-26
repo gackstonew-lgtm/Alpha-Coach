@@ -365,3 +365,33 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+
+/* ========================================================================= */
+/* 4K CINEMATIC HERO MOTION & COLOR ENHANCEMENT                              */
+/* ========================================================================= */
+@keyframes cinematic-drift {
+  0% {
+    transform: scale(1.008) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.025) translate3d(-0.4%, -0.25%, 0);
+  }
+  100% {
+    transform: scale(1.008) translate3d(0, 0, 0);
+  }
+}
+
+.hero-cinematic-video {
+  animation: cinematic-drift 24s ease-in-out infinite alternate;
+  will-change: transform, filter;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  filter: contrast(1.04) brightness(1.01) saturate(1.07);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-cinematic-video {
+    animation: none !important;
+  }
+}
