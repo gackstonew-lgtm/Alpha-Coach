@@ -6,19 +6,11 @@ import { PerformanceOverview } from '../types';
 import {
   TrendingUp,
   TrendingDown,
-  Award,
-  ShieldCheck,
-  Target,
-  BarChart3,
   Layers,
   ChevronRight,
   Plus,
-  RefreshCw,
-  Clock,
   Radio,
-  ArrowUpRight,
-  ArrowDownRight,
-  ExternalLink
+  BarChart3
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -27,14 +19,31 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid,
-  ReferenceLine
+  CartesianGrid
 } from 'recharts';
 import { Link, useNavigate } from 'react-router-dom';
 import { MarketSessionsStrip } from '../components/dashboard/MarketSessionsStrip';
-import { PrimaryAction } from '../components/common/PrimaryAction';
-import { SkeletonMetricCard, SkeletonChart, SkeletonTile, SkeletonTable } from '../components/common/Skeleton';
+import { SkeletonMetricCard, SkeletonChart, SkeletonTable } from '../components/common/Skeleton';
 import { BottomSheet } from '../components/common/BottomSheet';
+
+interface WatchlistItem {
+  code: string;
+  ticker: string;
+  name: string;
+  price?: string | null;
+  change?: string | null;
+  isPositive?: boolean | null;
+  status: 'live' | 'unavailable';
+}
+
+const INITIAL_WATCHLIST: WatchlistItem[] = [
+  { code: 'EUR', ticker: 'EURUSD', name: 'Euro / US Dollar', status: 'unavailable' },
+  { code: 'GBP', ticker: 'GBPUSD', name: 'British Pound / USD', status: 'unavailable' },
+  { code: 'XAU', ticker: 'XAUUSD', name: 'Gold / US Dollar', status: 'unavailable' },
+  { code: 'USD', ticker: 'USDJPY', name: 'US Dollar / Yen', status: 'unavailable' },
+  { code: 'BTC', ticker: 'BTCUSD', name: 'Bitcoin / US Dollar', status: 'unavailable' },
+  { code: 'US3', ticker: 'US30', name: 'Dow Jones Index', status: 'unavailable' }
+];
 
 export const DashboardPage: React.FC = () => {
   const { selectedAccountId, selectedAccount, accounts, isLoadingAccounts } = useAccounts();
@@ -44,7 +53,6 @@ export const DashboardPage: React.FC = () => {
   const [overview, setOverview] = useState<PerformanceOverview | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
-  const [riskMonitor, setRiskMonitor] = useState<any>(null);
   const [chartMode, setChartMode] = useState<'cumulative' | 'equity'>('cumulative');
   const [activeTimeframe, setActiveTimeframe] = useState<string>('1 Week');
 
@@ -52,52 +60,77 @@ export const DashboardPage: React.FC = () => {
   const [selectedTradeDetail, setSelectedTradeDetail] = useState<any | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState<boolean>(false);
 
-  // Watchlist Add Sheet
+  // Watchlist items & Add Sheet
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(INITIAL_WATCHLIST);
   const [isWatchlistSheetOpen, setIsWatchlistSheetOpen] = useState<boolean>(false);
   const [newSymbolInput, setNewSymbolInput] = useState<string>('');
 
-  // Watchlist items (persisted in local state)
-  const [watchlist, setWatchlist] = useState<Array<{ ticker: string; name: string; price: string; change: string; isPositive: boolean }>>([
-    { ticker: 'EURUSD', name: 'Euro / US Dollar', price: '1.08450', change: '+0.42%', isPositive: true },
-    { ticker: 'GBPUSD', name: 'British Pound / USD', price: '1.29820', change: '-0.18%', isPositive: false },
-    { ticker: 'XAUUSD', name: 'Gold / US Dollar', price: '$2,748.50', change: '+1.24%', isPositive: true },
-    { ticker: 'USDJPY', name: 'US Dollar / Yen', price: '152.400', change: '+0.85%', isPositive: true },
-    { ticker: 'BTCUSD', name: 'Bitcoin / US Dollar', price: '$68,450', change: '+3.15%', isPositive: true },
-    { ticker: 'US30', name: 'Dow Jones Index', price: '42,380.0', change: '-0.28%', isPositive: false }
-  ]);
-
-  // Account Balance & Equity computations
-  const hasAccounts = accounts.length > 0;
-  const isAccountDataReady = !isLoadingAccounts && (selectedAccountId === 'ALL' ? hasAccounts : !!selectedAccount);
-
-  const { displayBalance, displayEquity } = useMemo(() => {
-    if (!isAccountDataReady) {
+  // 1. REAL MT5 ACCOUNT BALANCE & LAST-SYNC COMPUTATION
+  const balanceInfo = useMemo(() => {
+    if (isLoadingAccounts) {
       return {
-        displayBalance: '$0.00',
-        displayEquity: '$0.00'
+        status: 'loading',
+        formattedBalance: 'Syncing...',
+        lastSyncLabel: 'Checking MT5 terminal...'
+      };
+    }
+
+    if (accounts.length === 0) {
+      return {
+        status: 'disconnected',
+        formattedBalance: 'Unavailable',
+        lastSyncLabel: 'No MT5 account connected'
       };
     }
 
     if (selectedAccountId !== 'ALL' && selectedAccount) {
-      const bal = Number(selectedAccount.balance) || 0;
-      const eq = Number(selectedAccount.equity ?? selectedAccount.balance) || 0;
+      const bal = Number(selectedAccount.balance);
+      if (isNaN(bal)) {
+        return {
+          status: 'unavailable',
+          formattedBalance: 'Unavailable',
+          lastSyncLabel: 'Awaiting first MT5 sync'
+        };
+      }
+      const curr = selectedAccount.currency || 'USD';
+      const currSymbol = curr === 'USD' ? '$' : `${curr} `;
+      const syncTime = selectedAccount.last_synced_at
+        ? `Synced ${new Date(selectedAccount.last_synced_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        : 'Live Connected';
+
       return {
-        displayBalance: `$${bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        displayEquity: `$${eq.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        status: 'connected',
+        formattedBalance: `${currSymbol}${bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        lastSyncLabel: syncTime
       };
     }
 
+    // ALL accounts aggregated balance
     const totalBal = accounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
-    const totalEq = accounts.reduce((sum, a) => sum + (Number(a.equity ?? a.balance) || 0), 0);
+    const latestSync = accounts.reduce<string | undefined>((latest, a) => {
+      if (!a.last_synced_at) return latest;
+      if (!latest) return a.last_synced_at;
+      return new Date(a.last_synced_at) > new Date(latest) ? a.last_synced_at : latest;
+    }, undefined);
+
+    const syncTime = latestSync
+      ? `Synced ${new Date(latestSync).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      : 'Live Connected';
+
     return {
-      displayBalance: `$${totalBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      displayEquity: `$${totalEq.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      status: 'connected',
+      formattedBalance: `$${totalBal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      lastSyncLabel: syncTime
     };
-  }, [isAccountDataReady, isLoadingAccounts, selectedAccountId, selectedAccount, accounts]);
+  }, [accounts, selectedAccountId, selectedAccount, isLoadingAccounts]);
 
   useEffect(() => {
     loadDashboardData();
   }, [selectedAccountId, accounts.length]);
+
+  useEffect(() => {
+    loadWatchlistQuotes();
+  }, []);
 
   const loadDashboardData = async () => {
     try {
@@ -106,45 +139,67 @@ export const DashboardPage: React.FC = () => {
         api.getAnalytics({ accountId: selectedAccountId }),
         api.getTrades({ accountId: selectedAccountId, limit: 8 })
       ]);
-      setOverview(analyticsRes.overview);
-      setRecentTrades(tradesRes.trades || []);
-
-      if (selectedAccountId && selectedAccountId !== 'ALL') {
-        const monRes = await api.getRiskMonitor(selectedAccountId);
-        setRiskMonitor(monRes.monitor);
-      } else if (accounts.length > 0) {
-        const monRes = await api.getRiskMonitor(accounts[0].id);
-        setRiskMonitor(monRes.monitor);
-      }
+      setOverview(analyticsRes?.overview || null);
+      setRecentTrades(tradesRes?.trades || []);
     } catch (err) {
-      console.error('Failed to load dashboard:', err);
+      console.error('Failed to load dashboard data:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Attempt to fetch real candle quotes for watchlist instruments
+  const loadWatchlistQuotes = async () => {
+    try {
+      const updated = await Promise.all(
+        INITIAL_WATCHLIST.map(async (item) => {
+          try {
+            const res = await api.getCandles({
+              symbol: item.ticker,
+              timeframe: 'H1',
+              limit: 2,
+              allowExternalFetch: false
+            });
+            if (res && res.candles && res.candles.length > 0) {
+              const lastCandle = res.candles[res.candles.length - 1];
+              const prevCandle = res.candles.length > 1 ? res.candles[res.candles.length - 2] : lastCandle;
+              const closePrice = Number(lastCandle.close);
+              const prevClose = Number(prevCandle.close) || closePrice;
+              const pctChange = prevClose !== 0 ? ((closePrice - prevClose) / prevClose) * 100 : 0;
+              const isPos = pctChange >= 0;
+              return {
+                ...item,
+                price: closePrice > 1000 ? `$${closePrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : closePrice.toFixed(4),
+                change: `${isPos ? '+' : ''}${pctChange.toFixed(2)}%`,
+                isPositive: isPos,
+                status: 'live' as const
+              };
+            }
+          } catch {
+            // Live quote feed unavailable for this symbol
+          }
+          return {
+            ...item,
+            price: null,
+            change: null,
+            isPositive: null,
+            status: 'unavailable' as const
+          };
+        })
+      );
+      setWatchlist(updated);
+    } catch {
+      // Keep unavailable state
     }
   };
 
   const netProfit = overview?.netProfit || 0;
   const isPositiveNet = netProfit >= 0;
 
-  // Transform equityCurve into continuous time-series chartData
+  // Real MT5 cumulative PnL or equity curve series
   const chartData = useMemo(() => {
     if (!overview?.equityCurve || overview.equityCurve.length === 0) {
-      // Mocked high-fidelity baseline points for visual completeness
-      const now = Date.now();
-      const points = [];
-      let base = 5000;
-      for (let i = 0; i <= 24; i++) {
-        const ts = now - (24 - i) * 3600 * 1000 * 6;
-        base += (Math.sin(i * 0.7) * 45 + Math.cos(i * 0.4) * 30 + 15);
-        points.push({
-          date: new Date(ts).toISOString(),
-          timestamp: ts,
-          cumulativeProfit: Number((base - 5000).toFixed(2)),
-          equity: Number(base.toFixed(2)),
-          symbol: 'EURUSD'
-        });
-      }
-      return points;
+      return [];
     }
 
     return overview.equityCurve.map((point, index) => {
@@ -155,139 +210,170 @@ export const DashboardPage: React.FC = () => {
         timestamp: ts
       };
     });
-  }, [overview?.equityCurve, chartMode]);
-
-  // Portfolio items (Reference B)
-  const portfolioItems = useMemo(() => {
-    if (accounts.length > 0) {
-      return accounts.slice(0, 4).map(acc => ({
-        id: acc.id,
-        name: acc.broker_name || 'MT5 Terminal',
-        symbol: `Acct ····${acc.account_number ? acc.account_number.slice(-4) : '0000'}`,
-        value: `$${Number(acc.balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-        change: `${(Number(acc.equity || acc.balance) >= Number(acc.balance) ? '+' : '')}${(((Number(acc.equity || acc.balance) - Number(acc.balance)) / (Number(acc.balance) || 1)) * 100).toFixed(2)}%`,
-        isPositive: Number(acc.equity || acc.balance) >= Number(acc.balance),
-        sparkline: [30, 32, 28, 35, 34, 40, 38, 42]
-      }));
-    }
-
-    return [
-      { id: '1', name: 'EUR / USD', symbol: 'Euro Spot', value: '$1,240.45', change: '+1.85%', isPositive: true, sparkline: [20, 25, 22, 28, 32, 30, 35] },
-      { id: '2', name: 'GBP / USD', symbol: 'Pound Spot', value: '$840.10', change: '-0.10%', isPositive: false, sparkline: [35, 32, 34, 30, 28, 26, 25] },
-      { id: '3', name: 'XAU / USD', symbol: 'Gold Spot', value: '$2,150.80', change: '+2.40%', isPositive: true, sparkline: [15, 18, 22, 26, 30, 35, 42] },
-      { id: '4', name: 'USD / JPY', symbol: 'Yen Spot', value: '$650.00', change: '+0.85%', isPositive: true, sparkline: [25, 26, 24, 28, 27, 30, 32] }
-    ];
-  }, [accounts]);
+  }, [overview?.equityCurve]);
 
   const handleAddSymbol = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSymbolInput.trim()) return;
     const clean = newSymbolInput.trim().toUpperCase();
+    const code = clean.slice(0, 3);
     setWatchlist(prev => [
-      { ticker: clean, name: `${clean} Instrument`, price: '1.00000', change: '+0.00%', isPositive: true },
+      {
+        code,
+        ticker: clean,
+        name: `${clean} Market Instrument`,
+        price: null,
+        change: null,
+        isPositive: null,
+        status: 'unavailable'
+      },
       ...prev
     ]);
     setNewSymbolInput('');
     setIsWatchlistSheetOpen(false);
   };
 
+  if (isLoading && !overview) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <SkeletonMetricCard key={i} />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div className="lg:col-span-8"><SkeletonChart /></div>
+          <div className="lg:col-span-4"><SkeletonMetricCard /></div>
+        </div>
+        <SkeletonTable />
+      </div>
+    );
+  }
+
+  const hasConnectedAccounts = accounts.length > 0;
+
   return (
     <div className="space-y-6">
       {/* ========================================================================= */}
-      {/* 1. "MY PORTFOLIO" CAROUSEL ROW (REFERENCE B)                              */}
+      {/* 1. TOP-LEVEL PERFORMANCE ANALYTICS (MOVED TO TOP OF DASHBOARD)            */}
       {/* ========================================================================= */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-extrabold text-foreground tracking-tight">
-            My Portfolio
-          </h2>
-          <button
-            type="button"
-            onClick={() => navigate('/performance')}
-            className="w-7 h-7 rounded-full bg-surface border border-border shadow-xs flex items-center justify-center text-muted-foreground hover:text-foreground transition"
-            title="View Full Performance"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Horizontal Portfolio Cards */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,250px),1fr))] gap-4">
-          {portfolioItems.map((item) => (
-            <div
-              key={item.id}
-              className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs flex flex-col justify-between animate-in fade-in duration-200"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-xs font-bold text-foreground">{item.name}</h3>
-                  <p className="text-[11px] text-muted-foreground">{item.symbol}</p>
-                </div>
-                {/* Mini Visual Sparkline Indicator */}
-                <div className={`w-12 h-6 flex items-center justify-end ${item.isPositive ? 'text-profit' : 'text-loss'}`}>
-                  {item.isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                </div>
-              </div>
-
-              <div className="mt-3 flex items-baseline justify-between pt-2 border-t border-border">
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Total Return</span>
-                  <span className={`text-xs font-bold ${item.isPositive ? 'text-profit' : 'text-loss'}`}>
-                    {item.change} {item.isPositive ? '↑' : '↓'}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">Value</span>
-                  <span className="text-xs font-bold text-foreground font-mono tabular-nums">
-                    {item.value}
-                  </span>
-                </div>
+      <section aria-label="Core Quantitative Edge Metrics">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,250px),1fr))]">
+          {/* Card 1: Net Realized P/L */}
+          <div className="card-hover-interactive bg-surface rounded-2xl p-4 sm:p-5 border border-border shadow-xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Net Realized P/L
+              </span>
+              <div className={`text-xl sm:text-2xl font-black mt-1 font-mono tabular-nums ${isPositiveNet ? 'text-profit' : 'text-loss'}`}>
+                {netProfit >= 0 ? `+$${netProfit.toFixed(2)}` : `-$${Math.abs(netProfit).toFixed(2)}`}
               </div>
             </div>
-          ))}
+            <div className="text-[11px] text-muted-foreground mt-3 pt-2 border-t border-border-subtle flex items-center justify-between">
+              <span>{overview?.totalTrades || 0} reconstructed deals</span>
+              <span className={`text-[10px] font-bold ${isPositiveNet ? 'text-profit' : 'text-loss'}`}>
+                {isPositiveNet ? 'Profitable' : 'Drawdown'}
+              </span>
+            </div>
+          </div>
+
+          {/* Card 2: Win Rate */}
+          <div className="card-hover-interactive bg-surface rounded-2xl p-4 sm:p-5 border border-border shadow-xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Win Rate
+              </span>
+              <div className="text-xl sm:text-2xl font-black mt-1 text-foreground font-mono tabular-nums">
+                {(overview?.winRate || 0).toFixed(1)}%
+              </div>
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-3 pt-2 border-t border-border-subtle flex items-center justify-between">
+              <span>{overview?.winningTrades || 0}W / {overview?.losingTrades || 0}L</span>
+              <span className="text-[10px] font-semibold text-muted-foreground">Historical Deals</span>
+            </div>
+          </div>
+
+          {/* Card 3: Profit Factor */}
+          <div className="card-hover-interactive bg-surface rounded-2xl p-4 sm:p-5 border border-border shadow-xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Profit Factor
+              </span>
+              <div className="text-xl sm:text-2xl font-black mt-1 text-foreground font-mono tabular-nums">
+                {(overview?.profitFactor || 0).toFixed(2)}
+              </div>
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-3 pt-2 border-t border-border-subtle flex items-center justify-between">
+              <span>Expectancy: ${(overview?.expectancy || 0).toFixed(2)}</span>
+              <span className="text-[10px] font-semibold text-muted-foreground">Gross Ratio</span>
+            </div>
+          </div>
+
+          {/* Card 4: Max Drawdown */}
+          <div className="card-hover-interactive bg-surface rounded-2xl p-4 sm:p-5 border border-border shadow-xs flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Max Drawdown
+              </span>
+              <div className={`text-xl sm:text-2xl font-black mt-1 font-mono tabular-nums ${overview?.maxDrawdownPct ? 'text-loss' : 'text-foreground'}`}>
+                {(overview?.maxDrawdownPct || 0).toFixed(1)}%
+              </div>
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-3 pt-2 border-t border-border-subtle flex items-center justify-between">
+              <span>Peak: ${(overview?.maxDrawdownAmount || 0).toFixed(2)}</span>
+              <span className="text-[10px] font-semibold text-muted-foreground">Equity Dip</span>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ========================================================================= */}
-      {/* 2. TWO-COLUMN MAIN COCKPIT (REFERENCE B: CHART + WATCHLIST)               */}
+      {/* 2. TWO-COLUMN MAIN COCKPIT (CHART: MY PNL TREND + WATCHLIST)               */}
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* LEFT COLUMN: MAIN INTERACTIVE CHART CARD (REFERENCE B) */}
+        {/* LEFT COLUMN: MAIN INTERACTIVE CHART CARD */}
         <section className="lg:col-span-8 card-hover-interactive bg-surface rounded-2xl p-5 sm:p-6 border border-border shadow-xs space-y-5">
-          {/* Header Row: Symbol + LIVE chip + Price + Timestamp */}
+          {/* Header Row: Title "My PNL Trend" + Real MT5 Account Balance */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-accent-tint text-primary dark:bg-surface-elevated dark:text-primary flex items-center justify-center font-bold text-xs">
-                FX
+              <div className="w-10 h-10 rounded-xl bg-accent-tint text-primary dark:bg-surface-elevated dark:text-primary flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                <TrendingUp className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-extrabold text-foreground">
-                    {selectedAccount?.broker_name || 'EUR/USD'}
-                  </h3>
-                  {/* Red LIVE Status Chip (Reference B) */}
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FDE8EA] text-[#C42A3B] dark:bg-[#E13A41] dark:text-white">
-                    <Radio className="w-2.5 h-2.5 animate-pulse" />
-                    <span>LIVE</span>
-                  </span>
+                  <h2 className="text-base sm:text-lg font-extrabold text-foreground tracking-tight">
+                    My PNL Trend
+                  </h2>
+                  {hasConnectedAccounts && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-live-bg text-live-text">
+                      <Radio className="w-2.5 h-2.5 animate-pulse" />
+                      <span>LIVE</span>
+                    </span>
+                  )}
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {selectedAccount ? `Account ····${selectedAccount.account_number.slice(-4)}` : 'Euro vs US Dollar'}
+                <p className="text-xs text-muted-foreground">
+                  {selectedAccountId !== 'ALL' && selectedAccount
+                    ? `${selectedAccount.broker_name || 'MT5'} ····${selectedAccount.account_number.slice(-4)} (${selectedAccount.currency || 'USD'})`
+                    : accounts.length > 0
+                    ? `Consolidated MT5 Portfolio (${accounts.length} ${accounts.length === 1 ? 'Account' : 'Accounts'})`
+                    : 'Awaiting MT5 Terminal Connection'}
                 </p>
               </div>
             </div>
 
+            {/* Real MT5 Account Balance display */}
             <div className="text-left sm:text-right">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                MT5 Balance
+              </span>
               <div className="text-xl sm:text-2xl font-black text-foreground font-mono tabular-nums tracking-tight">
-                {displayEquity}
+                {balanceInfo.formattedBalance}
               </div>
               <p className="text-[10px] text-muted-foreground">
-                Updated {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {balanceInfo.lastSyncLabel}
               </p>
             </div>
           </div>
 
-          {/* Timeframe Pills Row (QC NetCore Active Pill) */}
+          {/* Timeframe Pills Row & Mode Toggle */}
           <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-border">
             <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
               {['1 Day', '1 Week', '1 Month', '3 Month', '6 Month', '1 Year', 'All'].map((tf) => {
@@ -310,7 +396,7 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* Chart Mode Toggle */}
-            <div className="flex items-center gap-1 bg-surface-elevated p-0.5 rounded-xl text-[11px] font-semibold text-muted-foreground dark:text-slate-300">
+            <div className="flex items-center gap-1 bg-surface-elevated p-0.5 rounded-xl text-[11px] font-semibold text-muted-foreground">
               <button
                 type="button"
                 onClick={() => setChartMode('cumulative')}
@@ -332,78 +418,76 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Area Chart (QC NetCore Primary Gradient) */}
+          {/* Main Area Chart */}
           <div className="h-72 sm:h-80 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="chartTealGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#2a313c' : '#E6EAF2'} />
-                <XAxis
-                  dataKey="timestamp"
-                  type="number"
-                  domain={['dataMin', 'dataMax']}
-                  tickFormatter={(ts) => new Date(ts).toLocaleDateString([], { month: 'numeric', day: 'numeric' })}
-                  tick={{ fontSize: 10, fill: theme === 'dark' ? '#9aa4b2' : '#7C89A1' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  domain={['auto', 'auto']}
-                  tickFormatter={(val) => `$${Number(val).toLocaleString()}`}
-                  tick={{ fontSize: 10, fill: theme === 'dark' ? '#9aa4b2' : '#7C89A1' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      const val = chartMode === 'cumulative' ? data.cumulativeProfit : data.equity;
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="chartTealGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#2a313c' : '#E6EAF2'} />
+                  <XAxis
+                    dataKey="timestamp"
+                    type="number"
+                    domain={['dataMin', 'dataMax']}
+                    tickFormatter={(ts) => new Date(ts).toLocaleDateString([], { month: 'numeric', day: 'numeric' })}
+                    tick={{ fontSize: 10, fill: theme === 'dark' ? '#9aa4b2' : '#7C89A1' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    domain={['auto', 'auto']}
+                    tickFormatter={(val) => `$${Number(val).toLocaleString()}`}
+                    tick={{ fontSize: 10, fill: theme === 'dark' ? '#9aa4b2' : '#7C89A1' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload || !payload.length) return null;
+                      const d = payload[0].payload;
+                      const val = Number(chartMode === 'cumulative' ? d.cumulativeProfit : d.equity) || 0;
                       return (
-                        <div className="bg-surface text-foreground px-3 py-2 rounded-xl text-xs shadow-xl border border-border font-mono">
-                          <div className="text-[10px] text-muted-foreground">
-                            {new Date(data.timestamp || data.date).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                          <div className="font-bold text-sm text-primary mt-0.5">
-                            ${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </div>
+                        <div className="bg-surface border border-border p-2.5 rounded-xl shadow-lg text-xs space-y-1">
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(d.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                          </p>
+                          <p className={`font-mono font-bold ${val >= 0 ? 'text-profit' : 'text-loss'}`}>
+                            {chartMode === 'cumulative' ? 'Cumulative P/L: ' : 'Equity: '}
+                            ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
                         </div>
                       );
-                    }
-                    return null;
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey={chartMode === 'cumulative' ? 'cumulativeProfit' : 'equity'}
-                  stroke="var(--primary)"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#chartTealGradient)"
-                  isAnimationActive={true}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-primary" />
-              <span>Real-Time MT5 Tick Engine Sync</span>
-            </span>
-            <Link to="/charts" className="text-primary hover:underline font-semibold flex items-center gap-1">
-              <span>Open Advanced Multi-Timeframe Charts</span>
-              <ExternalLink className="w-3 h-3" />
-            </Link>
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey={chartMode === 'cumulative' ? 'cumulativeProfit' : 'equity'}
+                    stroke="var(--primary)"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#chartTealGradient)"
+                    isAnimationActive={true}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-surface-elevated/40 rounded-xl border border-dashed border-border text-muted-foreground space-y-2">
+                <BarChart3 className="w-8 h-8 text-muted-foreground/60" />
+                <p className="text-xs font-bold text-foreground">No Deal History Synchronized Yet</p>
+                <p className="text-[11px] max-w-sm">
+                  Connect your MT5 terminal via the Companion Bridge to automatically stream executed trades and render your real PnL growth curve.
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* RIGHT COLUMN: "MY WATCHLIST" CARD (REFERENCE B) */}
+        {/* RIGHT COLUMN: CIRCULAR MARKET-PAIR WATCHLIST */}
         <section className="lg:col-span-4 card-hover-interactive bg-surface rounded-2xl p-5 sm:p-6 border border-border shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-extrabold text-foreground tracking-tight">
@@ -419,34 +503,50 @@ export const DashboardPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="divide-y divide-[#EDF0F6] dark:divide-slate-800">
-            {watchlist.map((item, idx) => (
+          {/* Circular Market-Pair Items */}
+          <div className="space-y-1 divide-y divide-[#EDF0F6] dark:divide-slate-800">
+            {watchlist.map((item) => (
               <div
-                key={idx}
-                className="py-3 flex items-center justify-between hover:bg-surface-elevated px-2 rounded-xl transition cursor-pointer"
+                key={item.ticker}
                 onClick={() => navigate(`/charts?symbol=${item.ticker}`)}
+                className="pt-2.5 pb-2.5 first:pt-0 flex items-center justify-between hover:bg-surface-elevated px-2 rounded-xl transition cursor-pointer group"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-surface-elevated flex items-center justify-center text-[10px] font-black text-foreground">
-                    {item.ticker.slice(0, 3)}
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Distinct Circular Market-Pair Badge */}
+                  <div className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-accent-tint text-primary dark:bg-surface-elevated dark:text-primary border border-accent-border/40 dark:border-border flex items-center justify-center font-black text-xs font-mono shadow-xs group-hover:scale-105 group-hover:border-primary transition-all shrink-0">
+                    {item.code}
                   </div>
-                  <div>
-                    <div className="text-xs font-bold text-foreground leading-tight">
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-foreground font-mono leading-tight group-hover:text-primary transition-colors">
                       {item.ticker}
                     </div>
-                    <div className="text-[10px] text-muted-foreground leading-tight">
+                    <div className="text-[10px] text-muted-foreground leading-tight truncate max-w-[130px] sm:max-w-[170px]">
                       {item.name}
                     </div>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div className="text-xs font-bold text-foreground font-mono tabular-nums">
-                    {item.price}
-                  </div>
-                  <div className={`text-[10px] font-bold ${item.isPositive ? 'text-profit' : 'text-loss'}`}>
-                    {item.change}
-                  </div>
+                {/* Price & Change: reliable live quote or clear Unavailable indicator */}
+                <div className="text-right shrink-0">
+                  {item.price ? (
+                    <>
+                      <div className="text-xs font-bold text-foreground font-mono tabular-nums">
+                        {item.price}
+                      </div>
+                      <div className={`text-[10px] font-bold font-mono ${item.isPositive ? 'text-profit' : 'text-loss'}`}>
+                        {item.change}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-right">
+                      <span className="text-[11px] font-semibold text-muted-foreground block">
+                        Unavailable
+                      </span>
+                      <span className="text-[9px] text-muted-foreground/70 block">
+                        No Live Feed
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -466,56 +566,13 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. BELOW THE FOLD: SESSIONS, EDGE METRICS & RECENT TRADES                 */}
+      {/* 3. ACTIVE FOREX SESSIONS & RECENT EXECUTED TRADES                         */}
       {/* ========================================================================= */}
       <section className="space-y-6 pt-2">
-        {/* Global Forex Market Sessions Strip */}
+        {/* Simplified Active Forex Market Sessions Strip */}
         <MarketSessionsStrip />
 
-        {/* 4 Core Quantitative Edge Tiles */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Net Realized P/L</span>
-            <div className={`text-lg font-extrabold mt-1 font-mono tabular-nums ${isPositiveNet ? 'text-profit' : 'text-loss'}`}>
-              {netProfit >= 0 ? `+$${netProfit.toFixed(2)}` : `-$${Math.abs(netProfit).toFixed(2)}`}
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-              <span>{overview?.totalTrades || 0} reconstructed deals</span>
-            </div>
-          </div>
-
-          <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Win Rate</span>
-            <div className="text-lg font-extrabold mt-1 text-foreground font-mono tabular-nums">
-              {(overview?.winRate || 0).toFixed(1)}%
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">
-              {overview?.winningTrades || 0}W / {overview?.losingTrades || 0}L
-            </div>
-          </div>
-
-          <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Profit Factor</span>
-            <div className="text-lg font-extrabold mt-1 text-foreground font-mono tabular-nums">
-              {(overview?.profitFactor || 0).toFixed(2)}
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">
-              Expectancy: ${(overview?.expectancy || 0).toFixed(2)}
-            </div>
-          </div>
-
-          <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Max Drawdown</span>
-            <div className="text-lg font-extrabold mt-1 text-rose-500 dark:text-rose-400 font-mono tabular-nums">
-              {(overview?.maxDrawdownPct || 0).toFixed(1)}%
-            </div>
-            <div className="text-[10px] text-muted-foreground mt-1">
-              Peak: ${(overview?.maxDrawdownAmount || 0).toFixed(2)}
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Trades Table (Matching Reference B Clean Card Style) */}
+        {/* Recent Trades Table */}
         <div className="card-hover-interactive bg-surface rounded-2xl p-5 border border-border shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-extrabold text-foreground tracking-tight">
@@ -570,7 +627,7 @@ export const DashboardPage: React.FC = () => {
                         <td className="py-2.5 px-3 font-mono">{t.volume}</td>
                         <td className="py-2.5 px-3 font-mono">{t.open_price}</td>
                         <td className="py-2.5 px-3 font-mono">{t.close_price || '—'}</td>
-                        <td className={`py-2.5 px-3 text-right font-mono font-bold ${isWin ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+                        <td className={`py-2.5 px-3 text-right font-mono font-bold ${isWin ? 'text-profit' : 'text-loss'}`}>
                           {profit >= 0 ? `+$${profit.toFixed(2)}` : `-$${Math.abs(profit).toFixed(2)}`}
                         </td>
                       </tr>
@@ -653,7 +710,7 @@ export const DashboardPage: React.FC = () => {
 
             <div className="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-border">
               <span className="font-medium text-muted-foreground">Realized Profit / Loss</span>
-              <span className={`text-base font-extrabold font-mono ${Number(selectedTradeDetail.profit) >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
+              <span className={`text-base font-extrabold font-mono ${Number(selectedTradeDetail.profit) >= 0 ? 'text-profit' : 'text-loss'}`}>
                 ${Number(selectedTradeDetail.profit || 0).toFixed(2)}
               </span>
             </div>
@@ -676,3 +733,5 @@ export const DashboardPage: React.FC = () => {
     </div>
   );
 };
+
+export default DashboardPage;
