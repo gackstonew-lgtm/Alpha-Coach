@@ -8,32 +8,114 @@ export default {
   theme: {
     extend: {
       colors: {
-        page: 'var(--bg-page)',
-        canvas: 'var(--bg-canvas)',
+        // Reference QC NetCore Semantic Design System Tokens (https://billing.quantumcode.co.ke)
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        card: {
+          DEFAULT: 'var(--card)',
+          foreground: 'var(--card-foreground)',
+          inner: 'var(--card-inner)'
+        },
+        popover: {
+          DEFAULT: 'var(--popover)',
+          foreground: 'var(--popover-foreground)'
+        },
         surface: {
-          DEFAULT: 'var(--bg-surface)',
-          secondary: 'var(--bg-surface-secondary)',
-          elevated: 'var(--bg-surface-elevated)',
-          hover: 'var(--bg-surface-hover)'
+          DEFAULT: 'var(--surface)',
+          subtle: 'var(--surface-subtle)',
+          elevated: 'var(--surface-elevated)',
+          secondary: 'var(--surface-secondary)',
+          hover: 'var(--surface-hover)'
+        },
+        primary: {
+          DEFAULT: 'var(--primary)',
+          foreground: 'var(--primary-foreground)',
+          hover: 'var(--primary-hover)',
+          soft: 'var(--primary-soft)'
+        },
+        muted: {
+          DEFAULT: 'var(--muted)',
+          foreground: 'var(--muted-foreground)'
+        },
+        success: {
+          DEFAULT: 'var(--success)',
+          foreground: 'var(--success-foreground)',
+          soft: 'var(--success-soft)'
+        },
+        warning: {
+          DEFAULT: 'var(--warning)',
+          soft: 'var(--warning-soft)'
+        },
+        danger: {
+          DEFAULT: 'var(--danger)',
+          soft: 'var(--danger-soft)'
+        },
+        destructive: {
+          DEFAULT: 'var(--destructive)',
+          foreground: 'var(--destructive-foreground)'
+        },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          foreground: 'var(--accent-foreground)',
+          primary: 'var(--primary)',
+          hover: 'var(--primary-hover)',
+          subtle: 'var(--primary-soft)',
+          glow: 'var(--ring)'
         },
         border: {
+          DEFAULT: 'var(--border)',
           subtle: 'var(--border-subtle)',
           strong: 'var(--border-strong)',
           focus: 'var(--border-focus)'
         },
+        input: 'var(--input)',
+        ring: 'var(--ring)',
+
+        // Backwards-compatible aliases for existing ArcadeFx components
+        page: 'var(--background)',
+        canvas: 'var(--background)',
         content: {
-          primary: 'var(--text-primary)',
+          primary: 'var(--foreground)',
           secondary: 'var(--text-secondary)',
-          muted: 'var(--text-muted)',
+          muted: 'var(--muted-foreground)',
           subtle: 'var(--text-subtle)'
         },
-        accent: {
-          primary: 'var(--accent-primary)',
-          hover: 'var(--accent-hover)',
-          subtle: 'var(--accent-subtle)',
-          glow: 'var(--accent-glow)',
-          contrast: 'var(--accent-contrast)'
+        brand: {
+          DEFAULT: 'var(--primary)',
+          primary: 'var(--primary)',
+          hover: 'var(--primary-hover)',
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: 'var(--primary)',
+          600: 'var(--primary-hover)',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+          950: '#172554'
         },
+        dash: {
+          canvas: 'var(--background)',
+          main: 'var(--background)',
+          surface: 'var(--surface)',
+          darkCard: 'var(--surface-elevated)',
+          pillActive: 'var(--primary)',
+          chipGreen: 'var(--success-soft)',
+          chipGreenText: 'var(--success)',
+          badgeRed: 'var(--danger)',
+          line: 'var(--primary)'
+        },
+        trade: {
+          profit: 'var(--trade-profit)',
+          loss: 'var(--trade-loss)',
+          win: 'var(--trade-profit)',
+          breakeven: 'var(--muted-foreground)',
+          gold: '#eab308'
+        },
+
+        // Floating Glass Capsule Sidebar Contract Tokens (Preserved for test-sidebar-contract)
         sidebar: {
           DEFAULT: 'var(--sidebar-bg)',
           hover: 'var(--sidebar-hover-bg)',
@@ -46,21 +128,8 @@ export default {
           'icon-active': 'var(--sidebar-icon-active)',
           badge: 'var(--sidebar-badge)'
         },
-        // Reference Primary Accent Family (Teal-Green / Turquoise)
-        brand: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#3FAE96', // Reference B Chart Line & Primary
-          600: '#14B8A6',
-          700: '#0f766e',
-          800: '#115e59',
-          900: '#134e4a',
-          950: '#042f2e'
-        },
-        // Reference A Auth Tokens
+
+        // Auth Artwork Specific Tokens
         auth: {
           heading: 'var(--auth-heading)',
           input: 'var(--auth-input-bg)',
@@ -70,53 +139,29 @@ export default {
           checkbox: 'var(--auth-checkbox)',
           link: 'var(--auth-link)',
           linkHover: 'var(--auth-link-hover)'
-        },
-        // Reference B Dashboard Specifics
-        dash: {
-          canvas: 'var(--bg-page)',
-          main: 'var(--bg-canvas)',
-          surface: 'var(--bg-surface)',
-          darkCard: 'var(--dash-dark-card)',
-          pillActive: 'var(--dash-dark-pill)',
-          chipGreen: 'var(--chip-green-bg)',
-          chipGreenText: 'var(--chip-green-text)',
-          badgeRed: 'var(--badge-red)',
-          line: 'var(--accent-primary)'
-        },
-        // Supporting Red Accent (Alerts, risk, destructive)
-        danger: {
-          DEFAULT: '#E5484D',
-          light: '#E5484D',
-          dark: '#f87171',
-          hover: '#c53030',
-          subtle: 'rgba(229, 72, 77, 0.12)'
-        },
-        // Financial Data Semantics (Reference B)
-        trade: {
-          win: '#22A06B',      // Reference B Positive Green
-          loss: '#E5484D',     // Reference B Negative Red
-          breakeven: '#8E8E93',
-          gold: '#eab308'
         }
       },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
         heading: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace']
+        mono: ['ui-monospace', 'SFMono-Regular', '"Cascadia Mono"', 'Menlo', 'Consolas', 'monospace']
       },
       borderRadius: {
-        'xl': '0.875rem', // 14px
-        '2xl': '1rem',    // 16px (Reference cards)
-        '3xl': '1.5rem',  // 24px (Reference B app frame)
-        '4xl': '2rem',
+        'sm': '0.25rem',
+        'md': '0.375rem',
+        'lg': '0.5rem',
+        'xl': '0.75rem',
+        '2xl': '1rem',
+        '3xl': '1.5rem',
         'pill': '9999px'
       },
       boxShadow: {
+        'card': 'var(--shadow-card)',
+        'pop': 'var(--shadow-pop)',
         'framer': 'var(--card-shadow)',
         'framer-hover': 'var(--card-shadow-hover)',
-        'app-frame': 'var(--frame-shadow)',
-        'teal-glow': '0 0 24px -4px rgba(63, 174, 150, 0.35)',
-        'auth-btn': '0 4px 14px 0 rgba(30, 216, 205, 0.35)'
+        'xs': '0 1px 2px rgba(16, 24, 40, 0.05)',
+        'blue-glow': '0 0 24px -4px rgba(31, 95, 209, 0.35)'
       }
     },
   },

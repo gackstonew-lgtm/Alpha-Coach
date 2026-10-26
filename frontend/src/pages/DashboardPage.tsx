@@ -198,13 +198,13 @@ export const DashboardPage: React.FC = () => {
       {/* ========================================================================= */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-extrabold text-[#121212] dark:text-white tracking-tight">
+          <h2 className="text-base font-extrabold text-foreground tracking-tight">
             My Portfolio
           </h2>
           <button
             type="button"
             onClick={() => navigate('/performance')}
-            className="w-7 h-7 rounded-full bg-white dark:bg-[#19191C] border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white transition"
+            className="w-7 h-7 rounded-full bg-surface border border-border shadow-xs flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white transition"
             title="View Full Performance"
           >
             <ChevronRight className="w-4 h-4" />
@@ -216,15 +216,15 @@ export const DashboardPage: React.FC = () => {
           {portfolioItems.map((item) => (
             <div
               key={item.id}
-              className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs flex flex-col justify-between animate-in fade-in duration-200"
+              className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs flex flex-col justify-between animate-in fade-in duration-200"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-xs font-bold text-[#121212] dark:text-white">{item.name}</h3>
+                  <h3 className="text-xs font-bold text-foreground">{item.name}</h3>
                   <p className="text-[11px] text-slate-400">{item.symbol}</p>
                 </div>
                 {/* Mini Visual Sparkline Indicator */}
-                <div className={`w-12 h-6 flex items-center justify-end ${item.isPositive ? 'text-[#22A06B]' : 'text-[#E5484D]'}`}>
+                <div className={`w-12 h-6 flex items-center justify-end ${item.isPositive ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
                   {item.isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                 </div>
               </div>
@@ -232,7 +232,7 @@ export const DashboardPage: React.FC = () => {
               <div className="mt-3 flex items-baseline justify-between pt-2 border-t border-slate-50 dark:border-slate-800/60">
                 <div>
                   <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Total Return</span>
-                  <span className={`text-xs font-bold ${item.isPositive ? 'text-[#22A06B]' : 'text-[#E5484D]'}`}>
+                  <span className={`text-xs font-bold ${item.isPositive ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
                     {item.change} {item.isPositive ? '↑' : '↓'}
                   </span>
                 </div>
@@ -253,16 +253,16 @@ export const DashboardPage: React.FC = () => {
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* LEFT COLUMN: MAIN INTERACTIVE CHART CARD (REFERENCE B) */}
-        <section className="lg:col-span-8 card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-5 sm:p-6 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs space-y-5">
+        <section className="lg:col-span-8 card-hover-interactive bg-surface rounded-2xl p-5 sm:p-6 border border-border shadow-xs space-y-5">
           {/* Header Row: Symbol + LIVE chip + Price + Timestamp */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#F6F7FB] dark:bg-[#25252B] flex items-center justify-center font-bold text-xs text-[#3FAE96]">
+              <div className="w-9 h-9 rounded-xl bg-surface-elevated flex items-center justify-center font-bold text-xs text-primary">
                 FX
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-extrabold text-[#121212] dark:text-white">
+                  <h3 className="text-sm sm:text-base font-extrabold text-foreground">
                     {selectedAccount?.broker_name || 'EUR/USD'}
                   </h3>
                   {/* Red LIVE Status Chip (Reference B) */}
@@ -278,7 +278,7 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             <div className="text-left sm:text-right">
-              <div className="text-xl sm:text-2xl font-black text-[#121212] dark:text-white font-mono tabular-nums tracking-tight">
+              <div className="text-xl sm:text-2xl font-black text-foreground font-mono tabular-nums tracking-tight">
                 {displayEquity}
               </div>
               <p className="text-[10px] text-slate-400">
@@ -310,12 +310,12 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {/* Chart Mode Toggle */}
-            <div className="flex items-center gap-1 bg-[#F6F7FB] dark:bg-[#25252B] p-0.5 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+            <div className="flex items-center gap-1 bg-surface-elevated p-0.5 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300">
               <button
                 type="button"
                 onClick={() => setChartMode('cumulative')}
                 className={`px-2.5 py-1 rounded-lg transition ${
-                  chartMode === 'cumulative' ? 'bg-white dark:bg-[#19191C] text-slate-900 dark:text-white shadow-xs font-bold' : ''
+                  chartMode === 'cumulative' ? 'bg-surface text-slate-900 dark:text-white shadow-xs font-bold' : ''
                 }`}
               >
                 P&L
@@ -324,7 +324,7 @@ export const DashboardPage: React.FC = () => {
                 type="button"
                 onClick={() => setChartMode('equity')}
                 className={`px-2.5 py-1 rounded-lg transition ${
-                  chartMode === 'equity' ? 'bg-white dark:bg-[#19191C] text-slate-900 dark:text-white shadow-xs font-bold' : ''
+                  chartMode === 'equity' ? 'bg-surface text-slate-900 dark:text-white shadow-xs font-bold' : ''
                 }`}
               >
                 Equity
@@ -369,7 +369,7 @@ export const DashboardPage: React.FC = () => {
                           <div className="text-[10px] text-slate-400">
                             {new Date(data.timestamp || data.date).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </div>
-                          <div className="font-bold text-sm text-[#3FAE96] mt-0.5">
+                          <div className="font-bold text-sm text-primary mt-0.5">
                             ${Number(val).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </div>
                         </div>
@@ -396,7 +396,7 @@ export const DashboardPage: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-[#3FAE96]" />
               <span>Real-Time MT5 Tick Engine Sync</span>
             </span>
-            <Link to="/charts" className="text-[#3FAE96] hover:underline font-semibold flex items-center gap-1">
+            <Link to="/charts" className="text-primary hover:underline font-semibold flex items-center gap-1">
               <span>Open Advanced Multi-Timeframe Charts</span>
               <ExternalLink className="w-3 h-3" />
             </Link>
@@ -404,15 +404,15 @@ export const DashboardPage: React.FC = () => {
         </section>
 
         {/* RIGHT COLUMN: "MY WATCHLIST" CARD (REFERENCE B) */}
-        <section className="lg:col-span-4 card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-5 sm:p-6 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs space-y-4">
+        <section className="lg:col-span-4 card-hover-interactive bg-surface rounded-2xl p-5 sm:p-6 border border-border shadow-xs space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-extrabold text-[#121212] dark:text-white tracking-tight">
+            <h2 className="text-base font-extrabold text-foreground tracking-tight">
               My watchlist
             </h2>
             <button
               type="button"
               onClick={() => setIsWatchlistSheetOpen(true)}
-              className="w-7 h-7 rounded-full bg-[#F6F7FB] dark:bg-[#25252B] text-slate-700 dark:text-slate-200 hover:bg-[#3FAE96] hover:text-white flex items-center justify-center transition shadow-xs"
+              className="w-7 h-7 rounded-full bg-surface-elevated text-slate-700 dark:text-slate-200 hover:bg-[#3FAE96] hover:text-white flex items-center justify-center transition shadow-xs"
               title="Add Symbol to Watchlist"
             >
               <Plus className="w-4 h-4" />
@@ -427,11 +427,11 @@ export const DashboardPage: React.FC = () => {
                 onClick={() => navigate(`/charts?symbol=${item.ticker}`)}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#F6F7FB] dark:bg-[#25252B] flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-slate-300">
+                  <div className="w-8 h-8 rounded-full bg-surface-elevated flex items-center justify-center text-[10px] font-black text-slate-700 dark:text-slate-300">
                     {item.ticker.slice(0, 3)}
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-[#121212] dark:text-white leading-tight">
+                    <div className="text-xs font-bold text-foreground leading-tight">
                       {item.ticker}
                     </div>
                     <div className="text-[10px] text-slate-400 leading-tight">
@@ -444,7 +444,7 @@ export const DashboardPage: React.FC = () => {
                   <div className="text-xs font-bold text-slate-900 dark:text-white font-mono tabular-nums">
                     {item.price}
                   </div>
-                  <div className={`text-[10px] font-bold ${item.isPositive ? 'text-[#22A06B]' : 'text-[#E5484D]'}`}>
+                  <div className={`text-[10px] font-bold ${item.isPositive ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
                     {item.change}
                   </div>
                 </div>
@@ -474,9 +474,9 @@ export const DashboardPage: React.FC = () => {
 
         {/* 4 Core Quantitative Edge Tiles */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
+          <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Net Realized P/L</span>
-            <div className={`text-lg font-extrabold mt-1 font-mono tabular-nums ${isPositiveNet ? 'text-[#22A06B]' : 'text-[#E5484D]'}`}>
+            <div className={`text-lg font-extrabold mt-1 font-mono tabular-nums ${isPositiveNet ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
               {netProfit >= 0 ? `+$${netProfit.toFixed(2)}` : `-$${Math.abs(netProfit).toFixed(2)}`}
             </div>
             <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
@@ -484,7 +484,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
+          <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Win Rate</span>
             <div className="text-lg font-extrabold mt-1 text-slate-900 dark:text-white font-mono tabular-nums">
               {(overview?.winRate || 0).toFixed(1)}%
@@ -494,7 +494,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
+          <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Profit Factor</span>
             <div className="text-lg font-extrabold mt-1 text-slate-900 dark:text-white font-mono tabular-nums">
               {(overview?.profitFactor || 0).toFixed(2)}
@@ -504,9 +504,9 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-4 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs">
+          <div className="card-hover-interactive bg-surface rounded-2xl p-4 border border-border shadow-xs">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Max Drawdown</span>
-            <div className="text-lg font-extrabold mt-1 text-[#E5484D] font-mono tabular-nums">
+            <div className="text-lg font-extrabold mt-1 text-rose-500 dark:text-rose-400 font-mono tabular-nums">
               {(overview?.maxDrawdownPct || 0).toFixed(1)}%
             </div>
             <div className="text-[10px] text-slate-400 mt-1">
@@ -516,12 +516,12 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Recent Trades Table (Matching Reference B Clean Card Style) */}
-        <div className="card-hover-interactive bg-white dark:bg-[#19191C] rounded-2xl p-5 border border-[#EBECEF] dark:border-[#2C2C32] shadow-xs space-y-4">
+        <div className="card-hover-interactive bg-surface rounded-2xl p-5 border border-border shadow-xs space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-[#121212] dark:text-white tracking-tight">
+            <h3 className="text-sm font-extrabold text-foreground tracking-tight">
               Recent Executed Trades
             </h3>
-            <Link to="/journal" className="text-xs font-semibold text-[#3FAE96] hover:underline flex items-center gap-1">
+            <Link to="/journal" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
               <span>View Full Trading Journal</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </Link>
@@ -562,7 +562,7 @@ export const DashboardPage: React.FC = () => {
                         <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white">{t.symbol}</td>
                         <td className="py-2.5 px-3">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            t.action === 'BUY' ? 'bg-emerald-500/10 text-[#22A06B]' : 'bg-rose-500/10 text-[#E5484D]'
+                            t.action === 'BUY' ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-500 dark:text-rose-400'
                           }`}>
                             {t.action}
                           </span>
@@ -570,7 +570,7 @@ export const DashboardPage: React.FC = () => {
                         <td className="py-2.5 px-3 font-mono">{t.volume}</td>
                         <td className="py-2.5 px-3 font-mono">{t.open_price}</td>
                         <td className="py-2.5 px-3 font-mono">{t.close_price || '—'}</td>
-                        <td className={`py-2.5 px-3 text-right font-mono font-bold ${isWin ? 'text-[#22A06B]' : 'text-[#E5484D]'}`}>
+                        <td className={`py-2.5 px-3 text-right font-mono font-bold ${isWin ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
                           {profit >= 0 ? `+$${profit.toFixed(2)}` : `-$${Math.abs(profit).toFixed(2)}`}
                         </td>
                       </tr>
@@ -651,9 +651,9 @@ export const DashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3.5 bg-white dark:bg-[#19191C] rounded-xl border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-slate-200 dark:border-slate-800">
               <span className="font-medium text-slate-500">Realized Profit / Loss</span>
-              <span className={`text-base font-extrabold font-mono ${Number(selectedTradeDetail.profit) >= 0 ? 'text-[#22A06B]' : 'text-[#E5484D]'}`}>
+              <span className={`text-base font-extrabold font-mono ${Number(selectedTradeDetail.profit) >= 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
                 ${Number(selectedTradeDetail.profit || 0).toFixed(2)}
               </span>
             </div>

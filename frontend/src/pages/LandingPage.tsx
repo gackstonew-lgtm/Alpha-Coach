@@ -20,7 +20,11 @@ import {
   Calendar,
   Scale,
   TrendingUp,
-  FileText
+  FileText,
+  CreditCard,
+  Check,
+  Shield,
+  Zap
 } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
 import { HeroVideo } from '../components/common/HeroVideo';
@@ -260,23 +264,23 @@ export const LandingPage: React.FC = () => {
               return (
                 <div
                   key={idx}
-                  className="bg-white dark:bg-[#19191C] rounded-2xl p-6 border border-[#EBECEF] dark:border-[#2C2C32] shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
+                  className="bg-surface rounded-3xl p-6 sm:p-8 border border-border hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 flex flex-col justify-between group card-hover-interactive"
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="w-10 h-10 rounded-xl bg-[#F6F7FB] dark:bg-[#232328] flex items-center justify-center text-[#3FAE96] dark:text-[#48B89F] group-hover:scale-110 transition-transform">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
                         <Icon className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-surface-elevated border border-border text-muted-foreground">
                         {feat.badge}
                       </span>
                     </div>
 
                     <div>
-                      <h3 className="text-base font-bold text-[#121212] dark:text-white group-hover:text-[#3FAE96] dark:group-hover:text-[#48B89F] transition-colors">
+                      <h3 className="text-base font-extrabold text-foreground group-hover:text-primary transition-colors tracking-tight">
                         {feat.title}
                       </h3>
-                      <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">
                         {feat.description}
                       </p>
                     </div>
@@ -287,11 +291,144 @@ export const LandingPage: React.FC = () => {
           </div>
         </section>
 
+                {/* ========================================================================= */}
+        {/* 3. TRANSPARENT TRADING PLATFORM PRICING (MATCHING billing.quantumcode.co.ke/#pricing) */}
         {/* ========================================================================= */}
-        {/* 3. CALL TO ACTION BANNER                                                  */}
+        <section id="pricing" className="py-16 md:py-24 bg-surface border-t border-border scroll-mt-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20">
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Transparent Trading Platform Pricing</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-foreground tracking-tight">
+                Simple Pricing That Scales With Your Trading
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Align platform costs directly with your active MetaTrader 5 accounts and journaling operations.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+              {/* 1. Free Starter */}
+              <div className="w-full p-6 sm:p-8 rounded-3xl bg-surface-subtle border border-border hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-8">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-sm">
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Demo & Practice</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-extrabold text-foreground tracking-tight">Free Starter</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-1 min-h-[40px]">
+                      For discretionary and demo traders exploring automated MT5 performance analytics.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-border">
+                    <div className="text-4xl sm:text-5xl font-extrabold text-foreground tracking-tight">$0</div>
+                    <div className="text-xs font-bold text-muted-foreground mt-1.5">free forever · 1 active MT5 terminal</div>
+                  </div>
+                  <ul className="space-y-2.5 pt-2 text-xs text-muted-foreground font-semibold">
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>1 Local MT5 Terminal Bridge</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>Automated Trade Journaling</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>Core PnL & Win Rate Metrics</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>Zero-Password Local Security</span></li>
+                  </ul>
+                </div>
+                <Link
+                  to="/register"
+                  className="w-full py-3.5 px-5 rounded-xl bg-surface border border-border hover:border-primary/50 hover:bg-surface-elevated hover:-translate-y-0.5 active:scale-[0.98] text-foreground text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  <span>Start free trial</span>
+                  <ArrowRight className="w-4 h-4 text-primary" />
+                </Link>
+              </div>
+
+              {/* 2. Pro Trader (Featured Plan) */}
+              <div className="w-full p-6 sm:p-8 rounded-3xl bg-surface-subtle border-2 border-primary/50 shadow-xs hover:-translate-y-1 hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-8 relative">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold uppercase tracking-wider shadow-xs">
+                    Most Popular
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                      <TrendingUp className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-primary uppercase tracking-wider">Live & Prop Firm</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-extrabold text-foreground tracking-tight">Pro Trader</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-1 min-h-[40px]">
+                      For active live and funded traders requiring multi-account sync and risk guardrails.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-border">
+                    <div className="text-4xl sm:text-5xl font-extrabold text-foreground tracking-tight">$29</div>
+                    <div className="text-xs font-bold text-muted-foreground mt-1.5">per month · billed monthly</div>
+                  </div>
+                  <ul className="space-y-2.5 pt-2 text-xs text-muted-foreground font-semibold">
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span className="text-foreground font-bold">Unlimited MT5 Accounts & Terminals</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>Real-Time Risk Guardian Alerts</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>AI Coach Execution Breakdown</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>Market Scanner Structure Detection</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>Full Historical Export (CSV/JSON)</span></li>
+                  </ul>
+                </div>
+                <Link
+                  to="/register"
+                  className="w-full py-3.5 px-5 rounded-xl bg-primary hover:bg-primary-hover hover:-translate-y-0.5 active:scale-[0.98] text-primary-foreground text-xs sm:text-sm font-bold transition-all duration-200 shadow-xs flex items-center justify-center gap-2"
+                >
+                  <span>Start Pro trial</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              {/* 3. Institutional / Enterprise */}
+              <div className="w-full p-6 sm:p-8 rounded-3xl bg-surface-subtle border border-border hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-8">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-surface border border-border text-primary flex items-center justify-center font-bold text-sm">
+                      <Shield className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Trading Desks</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-extrabold text-foreground tracking-tight">Institutional</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-1 min-h-[40px]">
+                      For prop desk managers, multi-trader teams, and institutional fleet deployments.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t border-border">
+                    <div className="text-4xl sm:text-5xl font-extrabold text-foreground tracking-tight">Custom</div>
+                    <div className="text-xs font-bold text-muted-foreground mt-1.5">volume deployment · SLA included</div>
+                  </div>
+                  <ul className="space-y-2.5 pt-2 text-xs text-muted-foreground font-semibold">
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>Dedicated Cloud Bridge Relays</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>Multi-Trader Permission Controls</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>Webhook & REST API Direct Feed</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span>Dedicated 24/7 Priority Support</span></li>
+                  </ul>
+                </div>
+                <Link
+                  to="/register"
+                  className="w-full py-3.5 px-5 rounded-xl bg-surface border border-border hover:border-primary/50 hover:bg-surface-elevated hover:-translate-y-0.5 active:scale-[0.98] text-foreground text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  <span>Contact Enterprise</span>
+                  <ArrowRight className="w-4 h-4 text-primary" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================================= */}
+        {/* 4. CALL TO ACTION BANNER                                                  */}
         {/* ========================================================================= */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-[#121212] dark:bg-[#19191C] rounded-3xl p-8 sm:p-12 text-center text-white space-y-6 shadow-2xl relative overflow-hidden border border-white/10">
+          <div className="bg-surface rounded-3xl p-8 sm:p-12 text-center text-foreground space-y-6 shadow-sm relative overflow-hidden border border-border">
             <div className="relative z-10 max-w-2xl mx-auto space-y-3">
               <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
                 Track Your Trading Edge

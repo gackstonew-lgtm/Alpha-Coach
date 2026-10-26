@@ -3,403 +3,336 @@
 @tailwind utilities;
 
 :root {
-  /* REFERENCE B: Canvas & Workspace */
-  --bg-page: #F0F0F0;          /* Outer canvas surrounding app frame */
-  --bg-canvas: #F5F6F8;        /* Main dashboard canvas */
-  --bg-surface: #FFFFFF;       /* Sidebar, cards, containers */
-  --bg-surface-secondary: #F6F7FB; /* Active nav pill, hover states */
-  --bg-surface-elevated: #FFFFFF;
-  --bg-surface-hover: #F0F2F6;
+  /* ========================================================================= */
+  /* REFERENCE DESIGN SYSTEM TOKENS — LIGHT MODE                               */
+  /* Exact sampled values from https://billing.quantumcode.co.ke/#pricing      */
+  /* ========================================================================= */
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
 
-  /* Card and Frame Radii */
-  --radius-frame: 1.5rem;      /* 24px outer frame */
-  --radius-card: 1rem;         /* 16px cards */
-  --radius-pill: 9999px;       /* Pill buttons / inputs */
-  --radius-sm: 0.5rem;         /* 8px chips */
+  /* Surfaces & Canvas */
+  --background: #f4f6f8;
+  --foreground: #131820;
+  --card: #ffffff;
+  --card-foreground: #131820;
+  --card-inner: #f1f3f6;
+  --popover: #ffffff;
+  --popover-foreground: #131820;
+  --surface: #ffffff;
+  --surface-subtle: #f8f9fb;
+  --surface-elevated: #eef1f4;
+  --surface-secondary: #dfe4ea;
+  --surface-hover: #f0f2f6;
 
-  /* Borders & Dividers */
-  --border-subtle: #EBECEF;
-  --border-strong: #D1D5DB;
-  --border-focus: #3FAE96;
+  /* Primary Brand Accent (Enterprise Electric Blue) */
+  --primary: #1f5fd1;
+  --primary-foreground: #ffffff;
+  --primary-hover: #194fb0;
+  --primary-soft: #e8f0fd;
 
-  /* Typography Scale */
-  --text-primary: #121212;     /* Dark charcoal/black */
-  --text-secondary: #4A4A4A;   /* Medium grey */
-  --text-muted: #8E8E93;       /* Secondary grey labels */
-  --text-subtle: #AEAEB2;
+  /* Text & Muted Hierarchy */
+  --muted: #eef1f4;
+  --muted-foreground: #566171;
+  --text-primary: #131820;
+  --text-secondary: #424b57;
+  --text-muted: #566171;
+  --text-subtle: #8994a3;
 
-  /* REFERENCE B: Core Financial Accents */
-  --dash-dark-card: #191919;
-  --dash-dark-pill: #121212;
-  --accent-primary: #3FAE96;   /* Chart line green-teal */
-  --accent-hover: #349A84;
-  --accent-subtle: rgba(63, 174, 150, 0.12);
-  --accent-glow: rgba(63, 174, 150, 0.25);
-  --accent-contrast: #FFFFFF;
+  /* Status & Financial Semantics */
+  --success: #15803d;
+  --success-foreground: #ffffff;
+  --success-soft: #e6f4ec;
+  --warning: #a85b00;
+  --warning-soft: #fdf1dc;
+  --danger: #b42318;
+  --danger-soft: #fdebe9;
+  --info: #1f5fd1;
+  --info-soft: #e8f0fd;
+  --accent: #1f5fd1;
+  --accent-foreground: #ffffff;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
 
-  /* Gains & Losses */
-  --trade-profit: #22A06B;     /* Reference B gain green */
-  --trade-loss: #E5484D;       /* Reference B loss red */
-  --chip-green-bg: #1B3B2B;
-  --chip-green-text: #22A06B;
-  --badge-red: #E13A41;
+  /* Trading Gains & Losses */
+  --trade-profit: #15803d;
+  --trade-loss: #b42318;
+  --chip-green-bg: #e6f4ec;
+  --chip-green-text: #15803d;
+  --badge-red: #b42318;
 
-  /* AUTH SOURCE ARTWORK DESIGN TOKENS (Sampled from auth-source.jpg) */
+  /* Borders & Focus Rings */
+  --border: #dde2e8;
+  --border-subtle: #e9edf1;
+  --border-strong: #c3cbd5;
+  --border-focus: #1f5fd1;
+  --input: #ffffff;
+  --ring: rgba(31, 95, 209, 0.35);
+
+  /* Shadows & Elevation */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-pop: 0 8px 24px rgba(16, 24, 40, 0.12);
+  --card-shadow: 0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --card-shadow-hover: 0 10px 25px -5px rgba(16, 24, 40, 0.1), 0 8px 10px -6px rgba(16, 24, 40, 0.05);
+  --frame-shadow: 0 20px 40px -15px rgba(16, 24, 40, 0.08);
+
+  /* Radii */
+  --radius: 0.5rem;
+  --radius-card: 1rem;
+  --radius-frame: 1.5rem;
+  --radius-pill: 9999px;
+  --radius-sm: 0.25rem;
+
+  /* Aliases for Existing ArcadeFx Components */
+  --bg-page: #f4f6f8;
+  --bg-canvas: #f4f6f8;
+  --bg-surface: #ffffff;
+  --bg-surface-secondary: #f8f9fb;
+  --bg-surface-elevated: #eef1f4;
+  --bg-surface-hover: #f0f2f6;
+  --accent-primary: #1f5fd1;
+  --accent-hover: #194fb0;
+  --accent-subtle: rgba(31, 95, 209, 0.12);
+  --accent-glow: rgba(31, 95, 209, 0.25);
+  --accent-contrast: #ffffff;
+  --dash-dark-card: #eef1f4;
+  --dash-dark-pill: #1f5fd1;
+
+  /* Auth Artwork Specific Tokens */
   --auth-card-bg: #FFFFFF;
   --auth-heading: #0F1B4D;
   --auth-input-bg: #BFEFEC;
   --auth-input-text: #0F1B4D;
   --auth-input-placeholder: #458B89;
-  --auth-btn-primary: #2CC5C0;
-  --auth-btn-hover: #1BA9B0;
-  --auth-btn-start: #2CC5C0;
-  --auth-btn-end: #1BA9B0;
+  --auth-btn-primary: #24C6C0;
+  --auth-btn-hover: #1fb3ad;
   --auth-btn-text: #FFFFFF;
-  --auth-btn-text-contrast: #FFFFFF;
-  --auth-checkbox: #25BAC0;
-  --auth-link: #1BA9B0;
-  --auth-link-hover: #2CC5C0;
-  --auth-teal-glow: rgba(44, 197, 192, 0.4);
+  --auth-checkbox: #24C6C0;
+  --auth-link: #24C6C0;
+  --auth-link-hover: #1fb3ad;
 
-  /* Water Aerial Theme */
-  --water-navy: #003859;
-  --water-teal-deep: #03737E;
-  --water-turquoise: #149B9E;
-  --water-bright: #38BAC0;
-
-  /* Sidebar Accent-Derived Tokens (Teal Hue Family) */
+  /* Floating Glass Capsule Sidebar Contract Tokens (Required by test suite) */
   --sidebar-bg: #0A231E;
-  --sidebar-hover-bg: rgba(63, 174, 150, 0.15);
-  --sidebar-active-bg: rgba(63, 174, 150, 0.25);
-  --sidebar-active-indicator: #3FAE96;
-  --sidebar-border: rgba(63, 174, 150, 0.18);
+  --sidebar-hover-bg: rgba(31, 95, 209, 0.15);
+  --sidebar-active-bg: rgba(31, 95, 209, 0.25);
+  --sidebar-active-indicator: #1f5fd1;
+  --sidebar-border: rgba(31, 95, 209, 0.18);
   --sidebar-text: #FFFFFF;
-  --sidebar-text-muted: #9AD9CC;
-  --sidebar-icon: #81CAB9;
-  --sidebar-icon-active: #3FAE96;
-  --sidebar-badge: #E13A41;
-  /* Reference Floating Glass Capsule Sidebar Tokens */
+  --sidebar-text-muted: #9aa4b2;
+  --sidebar-icon: #8994a3;
+  --sidebar-icon-active: #1f5fd1;
+  --sidebar-badge: #b42318;
   --sidebar-grad-top: #044D40;
   --sidebar-grad-mid: #062A24;
   --sidebar-grad-bot: #030706;
   --sidebar-glass-fill: rgba(255, 255, 255, 0.08);
   --sidebar-glass-border: rgba(255, 255, 255, 0.14);
-  --sidebar-glass-hover: #FFFFFF;
-  --sidebar-active-fill: #FFFFFF;
-  --sidebar-active-ink: #062A24;
-  --sidebar-glow: rgba(63, 174, 150, 0.35);
-
-  /* Shadows */
-  --card-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.04), 0 1px 3px 0 rgba(0, 0, 0, 0.02);
-  --card-shadow-hover: 0 12px 28px -6px rgba(0, 0, 0, 0.08), 0 4px 10px -4px rgba(0, 0, 0, 0.03);
-  --frame-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 .dark {
-  /* Clean Dark Mode variant derived from Reference B's #191919 and #121212 */
-  --bg-page: #0B0B0C;
-  --bg-canvas: #121214;
-  --bg-surface: #19191C;
-  --bg-surface-secondary: #232328;
-  --bg-surface-elevated: #28282E;
-  --bg-surface-hover: #303038;
+  /* ========================================================================= */
+  /* REFERENCE DESIGN SYSTEM TOKENS — DARK MODE                                */
+  /* Exact sampled values from https://billing.quantumcode.co.ke/.dark         */
+  /* ========================================================================= */
+  --background: #0e1217;
+  --foreground: #e7eaef;
+  --card: #151a21;
+  --card-foreground: #e7eaef;
+  --card-inner: #1b212a;
+  --popover: #151a21;
+  --popover-foreground: #e7eaef;
+  --surface: #151a21;
+  --surface-subtle: #11161c;
+  --surface-elevated: #1c222b;
+  --surface-secondary: #2a313c;
+  --surface-hover: #222a36;
 
-  --border-subtle: #2C2C32;
-  --border-strong: #3F3F48;
-  --border-focus: #48B89F;
+  /* Primary Brand Accent (Luminous Sapphire Blue) */
+  --primary: #5b95f5;
+  --primary-foreground: #0a1220;
+  --primary-hover: #7aa9f7;
+  --primary-soft: #16233b;
 
-  --text-primary: #FFFFFF;
-  --text-secondary: #D1D5DB;
-  --text-muted: #9CA3AF;
-  --text-subtle: #6B7280;
+  /* Text & Muted Hierarchy */
+  --muted: #1c222b;
+  --muted-foreground: #9aa4b2;
+  --text-primary: #e7eaef;
+  --text-secondary: #c2cbd6;
+  --text-muted: #9aa4b2;
+  --text-subtle: #6b7787;
 
-  --dash-dark-card: #0D0D0E;
-  --dash-dark-pill: #FFFFFF;
-  --accent-primary: #48B89F;
-  --accent-hover: #5ECAB2;
-  --accent-subtle: rgba(72, 184, 159, 0.16);
-  --accent-glow: rgba(72, 184, 159, 0.35);
-  --accent-contrast: #0B0B0C;
+  /* Status & Financial Semantics */
+  --success: #4cc38a;
+  --success-foreground: #06140d;
+  --success-soft: #11261c;
+  --warning: #e5a93d;
+  --warning-soft: #2a2110;
+  --danger: #f27470;
+  --danger-soft: #2d1514;
+  --info: #5b95f5;
+  --info-soft: #16233b;
+  --accent: #5b95f5;
+  --accent-foreground: #0a1220;
+  --destructive: #f27470;
+  --destructive-foreground: #1a0a09;
 
-  --trade-profit: #34D399;
-  --trade-loss: #F87171;
-  --chip-green-bg: #132E22;
-  --chip-green-text: #34D399;
-  --badge-red: #F87171;
+  /* Trading Gains & Losses */
+  --trade-profit: #4cc38a;
+  --trade-loss: #f27470;
+  --chip-green-bg: #11261c;
+  --chip-green-text: #4cc38a;
+  --badge-red: #f27470;
 
-  --auth-card-bg: #19191C;
-  --auth-heading: #FFFFFF;
-  --auth-input-bg: #1B3537;
-  --auth-input-text: #C4FAF8;
-  --auth-btn-primary: #1ED8CD;
-  --auth-btn-hover: #19C2B8;
-  --auth-btn-text: #052728;
-  --auth-btn-text-contrast: #052728;
-  --auth-checkbox: #38BAC0;
-  --auth-link: #38BAC0;
-  --auth-link-hover: #72E4E9;
+  /* Borders & Focus Rings */
+  --border: #2a313c;
+  --border-subtle: #1f2630;
+  --border-strong: #3a4350;
+  --border-focus: #5b95f5;
+  --input: #151a21;
+  --ring: rgba(91, 149, 245, 0.45);
 
-  --water-navy: #001F33;
-  --water-teal-deep: #02454B;
-  --water-turquoise: #0B6B6D;
-  --water-bright: #1E878C;
+  /* Shadows & Elevation */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --card-shadow-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  --frame-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
 
-  /* Sidebar Accent-Derived Tokens (Teal Hue Family) */
-  --sidebar-bg: #061513;
-  --sidebar-hover-bg: rgba(72, 184, 159, 0.15);
-  --sidebar-active-bg: rgba(72, 184, 159, 0.28);
-  --sidebar-active-indicator: #48B89F;
-  --sidebar-border: rgba(72, 184, 159, 0.18);
-  --sidebar-text: #FFFFFF;
-  --sidebar-text-muted: #8DD3C4;
-  --sidebar-icon: #79C7B6;
-  --sidebar-icon-active: #48B89F;
-  --sidebar-badge: #F87171;
-  /* Reference Floating Glass Capsule Sidebar Tokens */
+  /* Aliases for Existing ArcadeFx Components in Dark Mode */
+  --bg-page: #0e1217;
+  --bg-canvas: #0e1217;
+  --bg-surface: #151a21;
+  --bg-surface-secondary: #11161c;
+  --bg-surface-elevated: #1c222b;
+  --bg-surface-hover: #222a36;
+  --accent-primary: #5b95f5;
+  --accent-hover: #7aa9f7;
+  --accent-subtle: rgba(91, 149, 245, 0.16);
+  --accent-glow: rgba(91, 149, 245, 0.35);
+  --accent-contrast: #0a1220;
+  --dash-dark-card: #1c222b;
+  --dash-dark-pill: #5b95f5;
+
+  /* Floating Glass Capsule Sidebar Contract Tokens (Dark variant) */
   --sidebar-grad-top: #033B31;
   --sidebar-grad-mid: #041F1A;
   --sidebar-grad-bot: #020504;
   --sidebar-glass-fill: rgba(255, 255, 255, 0.07);
   --sidebar-glass-border: rgba(255, 255, 255, 0.12);
-  --sidebar-glass-hover: #FFFFFF;
-  --sidebar-active-fill: #FFFFFF;
-  --sidebar-active-ink: #041F1A;
-  --sidebar-glow: rgba(72, 184, 159, 0.35);
-
-  --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-  --card-shadow-hover: 0 16px 36px -6px rgba(0, 0, 0, 0.8), 0 0 20px 0 rgba(72, 184, 159, 0.15);
-  --frame-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.9), 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
   * {
-    @apply border-border-subtle transition-colors duration-150;
+    @apply border-border transition-colors duration-150;
   }
 
   body {
-    background-color: var(--bg-page);
-    color: var(--text-primary);
-    font-family: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
     overflow-x: hidden;
-    letter-spacing: -0.012em;
+    letter-spacing: -0.015em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     font-weight: 700;
   }
 
   code, pre, .font-mono, .tabular-nums {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
   }
-}
 
-/* Reference A Torn Edge Clip-Path & Filter */
-.torn-paper-card {
-  position: relative;
-  background-color: var(--auth-card-bg);
-  border-top-left-radius: 1.25rem;
-  border-bottom-left-radius: 1.25rem;
-  filter: drop-shadow(18px 0 24px rgba(0, 30, 45, 0.32));
-}
-
-@media (min-width: 1024px) {
-  .torn-edge-right {
-    clip-path: polygon(
-      0% 0%,
-      88% 0%,
-      91% 2%,
-      89% 5%,
-      93% 8%,
-      90% 12%,
-      94% 15%,
-      91% 19%,
-      95% 23%,
-      92% 27%,
-      96% 31%,
-      93% 36%,
-      97% 41%,
-      94% 46%,
-      98% 51%,
-      93% 56%,
-      97% 61%,
-      92% 66%,
-      96% 71%,
-      93% 76%,
-      98% 81%,
-      94% 86%,
-      97% 91%,
-      92% 95%,
-      95% 98%,
-      90% 100%,
-      0% 100%
-    );
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
   }
 }
 
-@media (max-width: 1023px) {
-  .torn-edge-bottom {
-    clip-path: polygon(
-      0% 0%,
-      100% 0%,
-      100% 88%,
-      97% 91%,
-      94% 89%,
-      91% 93%,
-      87% 90%,
-      83% 94%,
-      79% 91%,
-      74% 95%,
-      70% 92%,
-      65% 96%,
-      60% 93%,
-      55% 97%,
-      50% 94%,
-      45% 98%,
-      40% 93%,
-      35% 97%,
-      30% 92%,
-      25% 96%,
-      20% 93%,
-      15% 98%,
-      10% 94%,
-      5% 97%,
-      0% 90%
-    );
-  }
-}
-
-/* Reference Primary Buttons */
+/* ========================================================================= */
+/* REFERENCE BUTTON UTILITIES (Matching QC NetCore)                           */
+/* ========================================================================= */
 .btn-primary,
-.btn-auth-primary {
+.hostinger-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: var(--auth-btn-primary);
-  color: var(--auth-btn-text) !important;
+  background-color: var(--primary);
+  color: var(--primary-foreground) !important;
   font-weight: 700;
-  font-size: 0.875rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 0.75rem 1.75rem;
-  border-radius: 9999px;
-  border: none;
-  box-shadow: 0 4px 14px rgba(30, 216, 205, 0.35);
+  font-size: 0.8125rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   user-select: none;
 }
 
 .btn-primary:hover,
-.btn-auth-primary:hover {
-  background-color: var(--auth-btn-hover);
+.hostinger-btn-primary:hover {
+  background-color: var(--primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(30, 216, 205, 0.45);
+  box-shadow: 0 4px 12px rgba(31, 95, 209, 0.25);
 }
 
-.btn-dash-primary {
+.btn-primary:active,
+.hostinger-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary,
+.hostinger-btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: var(--accent-primary);
-  color: #FFFFFF !important;
-  font-weight: 600;
-  font-size: 0.875rem;
+  background-color: var(--surface);
+  color: var(--foreground) !important;
+  font-weight: 700;
+  font-size: 0.8125rem;
   padding: 0.625rem 1.25rem;
   border-radius: 0.75rem;
-  border: 1px solid transparent;
-  box-shadow: 0 2px 10px rgba(63, 174, 150, 0.25);
+  border: 1px solid var(--border);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
+  user-select: none;
 }
 
-.btn-dash-primary:hover {
-  background-color: var(--accent-hover);
+.btn-secondary:hover,
+.hostinger-btn-secondary:hover {
+  background-color: var(--surface-elevated);
+  border-color: rgba(31, 95, 209, 0.5);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(63, 174, 150, 0.35);
 }
 
-/* Reference A Aqua Pill Input */
-.input-auth-pill {
-  width: 100%;
-  background-color: var(--auth-input-bg);
-  color: var(--auth-input-text);
-  border-radius: 9999px;
-  border: 2px solid transparent;
-  padding: 0.75rem 1.25rem 0.75rem 2.85rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  outline: none;
-  transition: all 0.2s ease;
+.btn-secondary:active,
+.hostinger-btn-secondary:active {
+  transform: scale(0.98);
 }
 
-.input-auth-pill::placeholder {
-  color: var(--auth-input-text);
-  opacity: 0.75;
+/* ========================================================================= */
+/* REFERENCE CARD & SURFACE UTILITIES                                        */
+/* ========================================================================= */
+.card-hover-interactive {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease;
 }
 
-.input-auth-pill:focus {
-  border-color: var(--auth-checkbox);
-  box-shadow: 0 0 0 3px rgba(64, 190, 179, 0.2);
-}
-
-/* Reference B Dashboard App Frame Container */
-.app-frame-container {
-  background-color: var(--bg-page);
-  min-height: 100vh;
-  padding: 1.5rem;
-  display: flex;
-  justify-content: center;
-}
-
-@media (max-width: 1023px) {
-  .app-frame-container {
-    padding: 0;
+@media (hover: hover) and (pointer: fine) {
+  .card-hover-interactive:hover {
+    transform: translateY(-3px);
+    border-color: rgba(31, 95, 209, 0.4);
+    box-shadow: 0 10px 25px -5px rgba(16, 24, 40, 0.08), 0 8px 10px -6px rgba(16, 24, 40, 0.04);
+  }
+  .dark .card-hover-interactive:hover {
+    border-color: rgba(91, 149, 245, 0.4);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
   }
 }
 
-.app-frame {
-  background-color: var(--bg-canvas);
-  border-radius: var(--radius-frame);
-  box-shadow: var(--frame-shadow);
-  width: 100%;
-  max-width: 1536px;
-  display: flex;
-  overflow: hidden;
-  position: relative;
-}
-
-@media (max-width: 1023px) {
-  .app-frame {
-    border-radius: 0;
-    box-shadow: none;
-  }
-}
-
-/* Custom Scrollbar for Portfolio Carousel */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Reduced Motion Overrides for Hover-Expand Sidebar */
-@media (prefers-reduced-motion: reduce) {
-  .sidebar-animated,
-  .sidebar-label,
-  .sidebar-logo-fade {
-    transition: none !important;
-    animation: none !important;
-    transform: none !important;
-  }
-}
-
-/* Floating Glass Capsule Sidebar */
+/* Floating Glass Capsule Sidebar (Contract Test Compatibility) */
 .sidebar-glass-capsule {
   background: linear-gradient(180deg, var(--sidebar-grad-top) 0%, var(--sidebar-grad-mid) 45%, var(--sidebar-grad-bot) 100%);
   border: 1px solid var(--sidebar-glass-border);
@@ -407,16 +340,28 @@
   border-radius: 28px;
 }
 
-/* Stylish Card Hover Utility */
-@media (hover: hover) and (pointer: fine) {
-  .card-hover-interactive {
-    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+/* Reduced Motion Overrides */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  .card-hover-interactive:hover {
-    transform: translateY(-4px) scale(1.008);
-    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.12), 0 0 1px 1px rgba(63, 174, 150, 0.25);
+  .card-hover-interactive:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    transform: none !important;
   }
-  .dark .card-hover-interactive:hover {
-    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(72, 184, 159, 0.3);
-  }
+}
+
+/* Custom Scrollbar for Carousel & Lists */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
