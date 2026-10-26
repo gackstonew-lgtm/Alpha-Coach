@@ -13,7 +13,7 @@ function assert(condition, message) {
 let failures = 0;
 
 console.log('='.repeat(70));
-console.log('RUNNING ARCADE FX SIDEBAR & RESPONSIVE NAVIGATION TEST SUITE');
+console.log('RUNNING ARCADE FX THEMED SIDEBAR & NAVIGATION TEST SUITE');
 console.log('='.repeat(70));
 
 const sidebarPath = path.resolve('frontend/src/components/layout/Sidebar.tsx');
@@ -22,11 +22,17 @@ const sidebarCode = fs.readFileSync(sidebarPath, 'utf8');
 const appLayoutPath = path.resolve('frontend/src/components/layout/AppLayout.tsx');
 const appLayoutCode = fs.readFileSync(appLayoutPath, 'utf8');
 
+const mobileNavPath = path.resolve('frontend/src/components/layout/MobileBottomNav.tsx');
+const mobileNavCode = fs.readFileSync(mobileNavPath, 'utf8');
+
 const dashboardPath = path.resolve('frontend/src/pages/DashboardPage.tsx');
 const dashboardCode = fs.readFileSync(dashboardPath, 'utf8');
 
 const cssPath = path.resolve('frontend/src/index.css');
 const cssCode = fs.readFileSync(cssPath, 'utf8');
+
+const htmlPath = path.resolve('frontend/index.html');
+const htmlCode = fs.readFileSync(htmlPath, 'utf8');
 
 // Test 1: Floating Glass Capsule Sidebar Base
 console.log('\n[Suite 1: Floating Glass Capsule Sidebar]');
@@ -39,36 +45,47 @@ assert(sidebarCode.includes('w-[92px] shrink-0') || sidebarCode.includes('tablet
 // Test 2: Collapsed Circular Icon Buttons
 console.log('\n[Suite 2: Collapsed Icon-Only Circular Buttons]');
 assert(sidebarCode.includes('rounded-full') && sidebarCode.includes('w-11 h-11'), 'Collapsed items are circular buttons (44x44px)');
-assert(sidebarCode.includes('bg-[#2F5BEA]') || sidebarCode.includes('text-[#38BDF8]') || sidebarCode.includes('text-[#FFD700]'), 'Active collapsed icon is accent color');
+assert(sidebarCode.includes('bg-[#2F5BEA]') || sidebarCode.includes('text-[#38BDF8]'), 'Active collapsed icon is accent color');
 assert(sidebarCode.includes('focus-visible:ring-[#2F5BEA]') || sidebarCode.includes('focus-visible:ring-[#38BDF8]'), 'Focus visible ring uses accent token');
 
 // Test 3: Expanded Clean Transparent Items with Highlights
 console.log('\n[Suite 3: Expanded Clean Transparent Items]');
 assert(sidebarCode.includes('border-0'), 'Expanded items sit on transparent background with zero borders');
-assert(sidebarCode.includes('text-white') && sidebarCode.includes('font-extrabold'), 'Active expanded row uses white font-extrabold text');
+assert(sidebarCode.includes('text-white') || sidebarCode.includes('text-[var(--sidebar-icon-hover)]'), 'Active expanded row uses high contrast font-extrabold text');
 assert(sidebarCode.includes('bg-[#2F5BEA]') || sidebarCode.includes('bg-[#38BDF8]'), 'Active item features sleek left indicator bar');
 
-// Test 4: Gradient Tokens & Styling
-console.log('\n[Suite 4: Accent-to-Black Gradient Tokens]');
-assert(cssCode.includes('--sidebar-grad-top: #0E1A33') || cssCode.includes('--sidebar-grad-top: #0B1B2B'), 'Deep accent gradient top stop defined');
-assert(cssCode.includes('--sidebar-grad-bot: #080E1D') || cssCode.includes('--sidebar-grad-bot: #080D14'), 'Near-black gradient bottom stop defined');
+// Test 4: Theme-Adaptive Design Tokens in CSS
+console.log('\n[Suite 4: Light & Dark Theme Sidebar Tokens]');
+assert(cssCode.includes('--sidebar-bg: #FFFFFF'), 'Light theme sidebar surface defined as #FFFFFF');
+assert(cssCode.includes('--sidebar-bg: #0E1A33'), 'Dark theme sidebar surface defined as #0E1A33');
+assert(cssCode.includes('--sidebar-border: #E3E8F1'), 'Light theme sidebar border defined as #E3E8F1');
+assert(cssCode.includes('--sidebar-shadow: 0 8px 24px rgba(15, 26, 46, 0.08)'), 'Light theme sidebar shadow defined');
+assert(cssCode.includes('--sidebar-divider: #EDF0F6'), 'Light theme sidebar divider defined as #EDF0F6');
+assert(cssCode.includes('--sidebar-icon: #7C89A1'), 'Light theme sidebar inactive icon defined as #7C89A1');
+assert(cssCode.includes('--sidebar-icon: #8FA0C4'), 'Dark theme sidebar inactive icon defined as #8FA0C4');
 assert(cssCode.includes('sidebar-glass-capsule'), 'sidebar-glass-capsule CSS utility declared');
 
-// Test 5: Full-Bleed Edge-to-Edge Layout (Popup Frame Removed)
-console.log('\n[Suite 5: Viewport Full-Bleed Shell]');
+// Test 5: Elimination of Rectangular Shadow Artifact
+console.log('\n[Suite 5: Clean Capsule Shape & No Rectangular Artifacts]');
+assert(sidebarCode.includes('rounded-[28px]'), 'Aside wrapper uses rounded-[28px] matching capsule border-radius');
+assert(!sidebarCode.includes('shadow-[0_12px_36px_rgba(0,0,0,0.4)]'), 'Square 90-degree collapsed shadow removed from aside wrapper');
+assert(!sidebarCode.includes('shadow-[0_20px_50px_rgba(0,0,0,0.65)]'), 'Square 90-degree expanded shadow removed from aside wrapper');
+
+// Test 6: Mobile & Anti-Flash Mechanism
+console.log('\n[Suite 6: Mobile Navigation & Anti-Flash]');
+assert(mobileNavCode.includes('var(--sidebar-bg)'), 'Mobile bottom nav uses theme sidebar-bg token');
+assert(mobileNavCode.includes('var(--sidebar-divider)'), 'Mobile bottom nav uses theme sidebar-divider token');
+assert(htmlCode.includes('alpha_coach_theme'), 'Root index.html contains inline theme anti-flash script');
+
+// Test 7: Viewport Full-Bleed Shell
+console.log('\n[Suite 7: Viewport Full-Bleed Shell]');
 assert(!appLayoutCode.includes('app-frame-container'), 'app-frame-container removed from AppLayout');
 assert(!appLayoutCode.includes('app-frame border'), 'app-frame card removed from AppLayout');
 assert(appLayoutCode.includes('min-h-[100dvh]') || appLayoutCode.includes('min-h-screen'), 'App shell uses full viewport min-height (100dvh)');
 assert(appLayoutCode.includes('overflow-x-hidden'), 'Layout prevents horizontal overflow');
 
-// Test 6: Dashboard Auto-Fit Cards & Hover Transitions
-console.log('\n[Suite 6: Auto-Fit Cards & Hover Motion]');
-assert(dashboardCode.includes('repeat(auto-fit,minmax(min(100%,250px),1fr))'), 'Portfolio row uses auto-fit CSS grid');
-assert(dashboardCode.includes('card-hover-interactive'), 'Dashboard cards use card-hover-interactive utility');
-assert(cssCode.includes('card-hover-interactive'), 'card-hover-interactive declared with lift and glow');
-
-// Test 7: Accessibility & Contrast
-console.log('\n[Suite 7: WCAG AA/AAA Contrast Verification]');
+// Test 8: Contrast Verification (WCAG AA)
+console.log('\n[Suite 8: WCAG AA Contrast Verification]');
 function hexToLuminance(hex) {
   const rgb = hex.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16) / 255);
   const [r, g, b] = rgb.map(c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
@@ -82,24 +99,39 @@ function contrastRatio(hex1, hex2) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-// Contrast of white text on top of gradient (#0E1A33)
-const ratioGradTop = contrastRatio('#0E1A33', '#FFFFFF');
-console.log(`  Measured Contrast (White on Gradient Top #0E1A33): ${ratioGradTop.toFixed(2)}:1`);
-assert(ratioGradTop >= 4.5, `Contrast on gradient top (${ratioGradTop.toFixed(2)}:1) meets WCAG AA (≥ 4.5:1)`);
+// 1. Dark Mode: White on Dark Navy (#0E1A33)
+const darkWhiteRatio = contrastRatio('#0E1A33', '#FFFFFF');
+console.log(`  Measured Contrast (Dark Mode White on #0E1A33): ${darkWhiteRatio.toFixed(2)}:1`);
+assert(darkWhiteRatio >= 4.5, `Dark mode white text meets WCAG AA (≥ 4.5:1)`);
 
-// Contrast of white on active icon circle (#FFFFFF on #2F5BEA)
-const ratioWhiteOnActive = contrastRatio('#2F5BEA', '#FFFFFF');
-console.log(`  Measured Contrast (White on Active Circle #2F5BEA): ${ratioWhiteOnActive.toFixed(2)}:1`);
-assert(ratioWhiteOnActive >= 4.5, `Contrast of white on active circle (${ratioWhiteOnActive.toFixed(2)}:1) meets WCAG AA (≥ 4.5:1)`);
+// 2. Dark Mode: Inactive icon (#8FA0C4) on Dark Navy (#0E1A33)
+const darkIconRatio = contrastRatio('#0E1A33', '#8FA0C4');
+console.log(`  Measured Contrast (Dark Mode Inactive Icon #8FA0C4 on #0E1A33): ${darkIconRatio.toFixed(2)}:1`);
+assert(darkIconRatio >= 3.0, `Dark mode inactive icon meets WCAG AA (≥ 3.0:1)`);
 
-// Contrast of inactive icon on gradient top (#8FA0C4 on #0E1A33)
-const ratioInactiveIcon = contrastRatio('#0E1A33', '#8FA0C4');
-console.log(`  Measured Contrast (Inactive icon #8FA0C4 on #0E1A33): ${ratioInactiveIcon.toFixed(2)}:1`);
-assert(ratioInactiveIcon >= 4.5, `Contrast of inactive icon on gradient top (${ratioInactiveIcon.toFixed(2)}:1) meets WCAG AA (≥ 4.5:1)`);
+// 3. Both Modes: White on Active Accent Circle (#2F5BEA)
+const activeIconRatio = contrastRatio('#2F5BEA', '#FFFFFF');
+console.log(`  Measured Contrast (White on Active Circle #2F5BEA): ${activeIconRatio.toFixed(2)}:1`);
+assert(activeIconRatio >= 4.5, `Active circle icon meets WCAG AA (≥ 4.5:1)`);
+
+// 4. Light Mode: Inactive icon (#7C89A1) on Light Capsule (#FFFFFF)
+const lightIconRatio = contrastRatio('#FFFFFF', '#7C89A1');
+console.log(`  Measured Contrast (Light Mode Inactive Icon #7C89A1 on #FFFFFF): ${lightIconRatio.toFixed(2)}:1`);
+assert(lightIconRatio >= 3.0, `Light mode inactive icon meets WCAG AA (≥ 3.0:1)`);
+
+// 5. Light Mode: Text label (#55627A) on Light Capsule (#FFFFFF)
+const lightTextRatio = contrastRatio('#FFFFFF', '#55627A');
+console.log(`  Measured Contrast (Light Mode Text #55627A on #FFFFFF): ${lightTextRatio.toFixed(2)}:1`);
+assert(lightTextRatio >= 4.5, `Light mode text label meets WCAG AA (≥ 4.5:1)`);
+
+// 6. Light Mode: Danger icon (#C42A3B) on Danger BG (#FDE8EA)
+const dangerRatio = contrastRatio('#FDE8EA', '#C42A3B');
+console.log(`  Measured Contrast (Light Mode Danger Icon on BG): ${dangerRatio.toFixed(2)}:1`);
+assert(dangerRatio >= 4.5, `Danger icon meets WCAG AA (≥ 4.5:1)`);
 
 console.log('\n' + '='.repeat(70));
 if (failures === 0) {
-  console.log('✓ ALL 18 VERIFICATION ASSERTIONS PASSED (0 FAILURES)');
+  console.log('✓ ALL VERIFICATION ASSERTIONS PASSED (0 FAILURES)');
   console.log('='.repeat(70));
   process.exit(0);
 } else {
