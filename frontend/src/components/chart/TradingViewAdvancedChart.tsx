@@ -1,15 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   RefreshCw,
-  AlertTriangle,
   ExternalLink,
   ShieldAlert,
   Maximize2,
-  Minimize2,
-  TrendingUp,
-  Activity
+  Minimize2
 } from 'lucide-react';
-import { resolveTradingViewSymbol, TradingViewInstrument } from '../../config/tradingViewSymbols';
+import { resolveTradingViewSymbol } from '../../config/tradingViewSymbols';
 
 export interface TradingViewAdvancedChartProps {
   symbol: string;
@@ -21,7 +18,12 @@ export interface TradingViewAdvancedChartProps {
   onSymbolChange?: (newSymbol: string) => void;
 }
 
-export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> = ({
+const TV_EMBED_SCRIPT_SRC = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+const TV_IFRAME_BASE_URL = 'https://www.tradingview-widget.com/embed-widget/advanced-chart/';
+const WIDGET_TIMEOUT_MS = 15000;
+const DIRECT_IFRAME_FALLBACK_MS = 5000;
+
+export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> = React.memo(({
   symbol,
   interval = '60',
   theme = 'dark',
@@ -30,70 +32,72 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
   allowSymbolChange = true
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const isReadyRef = useRef<boolean>(false);
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasError, setHasError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
 
-  // Resolve TradingView qualified symbol
+  // Resolve TradingView exchange-qualified symbol (e.g., XAUUSD -> OANDA:XAUUSD)
   const resolved = resolveTradingViewSymbol(symbol);
   const activeTvSymbol = resolved.tvSymbol;
+  const resolvedTheme = theme === 'light' ? 'light' : 'dark';
 
-  const initWidget = useCallback(() => {
+  const handleRetry = useCallback(() => {
+    setRetryCount((prev) => prev + 1);
+  }, []);
+
+  useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    let isCancelled = false;
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+    let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
+    let mutationObserver: MutationObserver | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+    let hasMountedWidget = false;
+    let cspViolationReason: string | null = null;
+
+    isReadyRef.current = false;
     setIsLoading(true);
     setHasError(false);
     setErrorMessage(null);
 
-    // Completely clear existing contents to prevent duplicate scripts or orphaned iframes
-    container.innerHTML = '';
+    const markWidgetReady = () => {
+      if (isCancelled || isReadyRef.current) return;
+      isReadyRef.current = true;
+      if (fallbackTimer) {
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+      if (timeoutTimer) {
+        clearTimeout(timeoutTimer);
+        timeoutTimer = null;
+      }
+      setIsLoading(false);
+      setHasError(false);
+      setErrorMessage(null);
+    };
 
-    // Create wrapper container elements as documented by TradingView
-    const widgetContainer = document.createElement('div');
-    widgetContainer.className = 'tradingview-widget-container';
-    widgetContainer.style.height = '100%';
-    widgetContainer.style.width = '100%';
+    const handleCspViolation = (event: SecurityPolicyViolationEvent) => {
+      const blocked = event.blockedURI || '';
+      if (blocked.includes('tradingview')) {
+        cspViolationReason = `Content Security Policy blocked resource (${blocked} via ${event.violatedDirective}).`;
+      }
+    };
 
-    const widgetInner = document.createElement('div');
-    widgetInner.className = 'tradingview-widget-container__widget';
-    widgetInner.style.height = 'calc(100% - 32px)';
-    widgetInner.style.width = '100%';
+    window.addEventListener('securitypolicyviolation', handleCspViolation);
 
-    const copyright = document.createElement('div');
-    copyright.className = 'tradingview-widget-copyright';
-    copyright.style.height = '32px';
-    copyright.style.lineHeight = '32px';
-    copyright.style.textAlign = 'center';
-    copyright.style.fontSize = '11px';
-    copyright.style.color = '#787b86';
-
-    const copyrightLink = document.createElement('a');
-    copyrightLink.href = `https://www.tradingview.com/symbols/${encodeURIComponent(activeTvSymbol)}/`;
-    copyrightLink.rel = 'noopener nofollow';
-    copyrightLink.target = '_blank';
-    copyrightLink.style.color = '#2962FF';
-    copyrightLink.style.textDecoration = 'none';
-    copyrightLink.innerText = `${activeTvSymbol} Chart by TradingView`;
-
-    copyright.appendChild(copyrightLink);
-    widgetContainer.appendChild(widgetInner);
-    widgetContainer.appendChild(copyright);
-
-    // TradingView Advanced Chart script configuration
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.async = true;
-
-    const widgetConfig = {
+    const buildWidgetConfig = () => ({
       autosize: true,
       symbol: activeTvSymbol,
       interval: interval,
       timezone: 'Etc/UTC',
-      theme: theme === 'dark' ? 'dark' : 'light',
+      theme: resolvedTheme,
       style: '1',
       locale: 'en',
       enable_publishing: false,
@@ -105,55 +109,212 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
       save_image: true,
       details: true,
       hotlist: false
-    };
+    });
 
-    script.textContent = JSON.stringify(widgetConfig);
+    const attachIframeLoadHandler = (iframe: HTMLIFrameElement) => {
+      if (iframe.dataset.arcadefxAttached === 'true') return;
+      iframe.dataset.arcadefxAttached = 'true';
 
-    script.onerror = () => {
-      setIsLoading(false);
-      setHasError(true);
-      setErrorMessage(
-        'Failed to load TradingView script. Please check your network connection or disable ad-blockers blocking s3.tradingview.com.'
-      );
-    };
+      iframe.addEventListener('load', () => {
+        markWidgetReady();
+      });
 
-    widgetContainer.appendChild(script);
-    container.appendChild(widgetContainer);
-
-    // Timeout check: Verify that an iframe successfully renders within 7 seconds
-    const timeoutTimer = setTimeout(() => {
-      const iframe = widgetInner.querySelector('iframe');
-      if (!iframe) {
-        // If no iframe has rendered and no content exists, show helpful fallback
-        const isStillEmpty = widgetInner.childNodes.length === 0;
-        if (isStillEmpty) {
-          setIsLoading(false);
-          setHasError(true);
-          setErrorMessage(
-            'Chart widget response timed out. Content from s3.tradingview.com may be blocked by client privacy extensions or network filters.'
-          );
-        } else {
-          setIsLoading(false);
+      // Fallback in case the iframe load event already fired before listener attachment
+      try {
+        if (iframe.getAttribute('src')?.includes('tradingview')) {
+          setTimeout(() => {
+            if (!isCancelled && !isReadyRef.current && container.contains(iframe)) {
+              markWidgetReady();
+            }
+          }, 1500);
         }
+      } catch {
+        // Ignore cross-origin frame inspection errors
+      }
+    };
+
+    const mountDirectIframeFallback = (widgetContainer: HTMLDivElement) => {
+      if (isCancelled || isReadyRef.current) return;
+      // Only mount fallback if embed-widget-advanced-chart.js hasn't created an iframe yet
+      const existingIframe = widgetContainer.querySelector('iframe');
+      if (existingIframe) {
+        attachIframeLoadHandler(existingIframe);
+        return;
+      }
+
+      const config = {
+        ...buildWidgetConfig(),
+        width: '100%',
+        height: '100%',
+        utm_source: typeof window !== 'undefined' ? window.location.hostname : 'arcadefx.live',
+        utm_medium: 'widget_new',
+        utm_campaign: 'advanced-chart'
+      };
+
+      const iframe = document.createElement('iframe');
+      iframe.title = 'advanced chart TradingView widget';
+      iframe.lang = 'en';
+      iframe.frameBorder = '0';
+      iframe.allowFullscreen = true;
+      iframe.scrolling = 'no';
+      iframe.style.cssText =
+        'user-select: none; box-sizing: border-box; display: block; height: calc(100% - 32px); width: 100%;';
+      iframe.src = `${TV_IFRAME_BASE_URL}?locale=en#${encodeURIComponent(JSON.stringify(config))}`;
+
+      attachIframeLoadHandler(iframe);
+
+      const placeholder = widgetContainer.querySelector('.tradingview-widget-container__widget');
+      if (placeholder && placeholder.parentElement === widgetContainer) {
+        widgetContainer.replaceChild(iframe, placeholder);
       } else {
+        widgetContainer.insertBefore(iframe, widgetContainer.firstChild);
+      }
+    };
+
+    const mountWidget = () => {
+      if (isCancelled || hasMountedWidget) return;
+      hasMountedWidget = true;
+
+      // Clear any previous DOM nodes before mounting single widget instance
+      container.innerHTML = '';
+
+      // Create official TradingView container hierarchy
+      const widgetContainer = document.createElement('div');
+      widgetContainer.className = 'tradingview-widget-container';
+      widgetContainer.style.height = '100%';
+      widgetContainer.style.width = '100%';
+
+      const widgetInner = document.createElement('div');
+      widgetInner.className = 'tradingview-widget-container__widget';
+      widgetInner.style.height = 'calc(100% - 32px)';
+      widgetInner.style.width = '100%';
+
+      const copyright = document.createElement('div');
+      copyright.className = 'tradingview-widget-copyright';
+      copyright.style.height = '32px';
+      copyright.style.lineHeight = '32px';
+      copyright.style.textAlign = 'center';
+      copyright.style.fontSize = '11px';
+      copyright.style.color = '#787b86';
+
+      const copyrightLink = document.createElement('a');
+      copyrightLink.href = `https://www.tradingview.com/symbols/${encodeURIComponent(activeTvSymbol)}/`;
+      copyrightLink.rel = 'noopener nofollow';
+      copyrightLink.target = '_blank';
+      copyrightLink.style.color = '#2962FF';
+      copyrightLink.style.textDecoration = 'none';
+      copyrightLink.textContent = `${activeTvSymbol} Chart by TradingView`;
+
+      copyright.appendChild(copyrightLink);
+      widgetContainer.appendChild(widgetInner);
+      widgetContainer.appendChild(copyright);
+      container.appendChild(widgetContainer);
+
+      // Observe widgetContainer (NOT widgetInner, because TradingView's script replaces widgetInner with iframe)
+      mutationObserver = new MutationObserver(() => {
+        if (isCancelled) return;
+        const injectedIframe = widgetContainer.querySelector('iframe');
+        if (injectedIframe) {
+          attachIframeLoadHandler(injectedIframe);
+        }
+      });
+
+      mutationObserver.observe(widgetContainer, {
+        childList: true,
+        subtree: true
+      });
+
+      // Inject official TradingView Advanced Chart embed script
+      const script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = TV_EMBED_SCRIPT_SRC;
+      script.async = true;
+      script.textContent = JSON.stringify(buildWidgetConfig());
+
+      script.onerror = () => {
+        if (isCancelled || isReadyRef.current) return;
+        // If s3.tradingview.com script is blocked by an extension, fall back to direct TradingView widget iframe
+        mountDirectIframeFallback(widgetContainer);
+      };
+
+      widgetContainer.appendChild(script);
+
+      // If the external loader script hasn't injected an iframe after 5s, trigger direct iframe fallback
+      fallbackTimer = setTimeout(() => {
+        if (isCancelled || isReadyRef.current) return;
+        const iframe = widgetContainer.querySelector('iframe');
+        if (!iframe) {
+          mountDirectIframeFallback(widgetContainer);
+        } else {
+          attachIframeLoadHandler(iframe);
+        }
+      }, DIRECT_IFRAME_FALLBACK_MS);
+
+      // Final timeout check: only show error if no iframe has rendered after full timeout
+      timeoutTimer = setTimeout(() => {
+        if (isCancelled || isReadyRef.current) return;
+        const iframe = widgetContainer.querySelector('iframe');
+        if (iframe && iframe.getAttribute('src')?.includes('tradingview')) {
+          // Iframe is present in widgetContainer; dismiss loading overlay so chart is interactive
+          markWidgetReady();
+          return;
+        }
+
         setIsLoading(false);
-      }
-    }, 4500);
+        setHasError(true);
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+          setErrorMessage(
+            'Your browser appears to be offline. Please reconnect to the internet and retry.'
+          );
+        } else if (cspViolationReason) {
+          setErrorMessage(cspViolationReason);
+        } else {
+          setErrorMessage(
+            'Unable to reach TradingView chart servers (s3.tradingview.com / tradingview-widget.com). Please check your network connection or privacy extensions and retry.'
+          );
+        }
+      }, WIDGET_TIMEOUT_MS);
+    };
+
+    // Ensure container has measurable dimensions before mounting the widget
+    const rect = container.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      mountWidget();
+    } else if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height: h } = entry.contentRect;
+          if (width > 0 && h > 0 && !hasMountedWidget) {
+            resizeObserver?.disconnect();
+            resizeObserver = null;
+            mountWidget();
+            break;
+          }
+        }
+      });
+      resizeObserver.observe(container);
+      // Safety fallback in case ResizeObserver doesn't fire (e.g. headless test environments)
+      setTimeout(() => {
+        if (!isCancelled && !hasMountedWidget) {
+          resizeObserver?.disconnect();
+          resizeObserver = null;
+          mountWidget();
+        }
+      }, 150);
+    } else {
+      mountWidget();
+    }
 
     return () => {
-      clearTimeout(timeoutTimer);
+      isCancelled = true;
+      window.removeEventListener('securitypolicyviolation', handleCspViolation);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      if (timeoutTimer) clearTimeout(timeoutTimer);
+      if (mutationObserver) mutationObserver.disconnect();
+      if (resizeObserver) resizeObserver.disconnect();
+      container.innerHTML = '';
     };
-  }, [activeTvSymbol, interval, theme, allowSymbolChange]);
-
-  useEffect(() => {
-    const cleanup = initWidget();
-    return () => {
-      if (cleanup) cleanup();
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-      }
-    };
-  }, [initWidget]);
+  }, [activeTvSymbol, interval, resolvedTheme, allowSymbolChange, retryCount]);
 
   // Fullscreen toggle
   const toggleFullscreen = () => {
@@ -188,7 +349,8 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
       {/* Top Chart Header Toolbar */}
       <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 bg-surface/90 backdrop-blur-md border border-border-subtle p-1 rounded-xl shadow-xs">
         <button
-          onClick={initWidget}
+          type="button"
+          onClick={handleRetry}
           title="Reload TradingView Chart"
           className="p-1.5 text-content-muted hover:text-content-primary hover:bg-surface-secondary rounded-lg transition"
         >
@@ -196,6 +358,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
         </button>
 
         <button
+          type="button"
           onClick={toggleFullscreen}
           title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Chart'}
           className="p-1.5 text-content-muted hover:text-content-primary hover:bg-surface-secondary rounded-lg transition"
@@ -238,12 +401,13 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
               TradingView Chart Unavailable
             </h3>
             <p className="text-xs text-content-secondary leading-relaxed">
-              {errorMessage || `Unable to load data for ${activeTvSymbol}. Please verify the symbol is supported or disable ad-blockers.`}
+              {errorMessage || `Unable to load data for ${activeTvSymbol}. Please verify your connection or disable ad-blockers.`}
             </p>
           </div>
           <div className="flex items-center gap-2 pt-2">
             <button
-              onClick={initWidget}
+              type="button"
+              onClick={handleRetry}
               className="px-3 py-1.5 rounded-xl bg-accent-primary hover:bg-accent-primary/90 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -270,4 +434,6 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
       />
     </div>
   );
-};
+});
+
+TradingViewAdvancedChart.displayName = 'TradingViewAdvancedChart';
