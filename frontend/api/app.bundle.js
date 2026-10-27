@@ -57697,8 +57697,8 @@ var SyncService = class {
 // src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.6",
-  gitCommit: "5ad7614895b926278a2f102e0e6d1dfcd84abb4e",
-  buildTimestamp: "2026-10-26T20:21:34.677Z",
+  gitCommit: "9c728b30fe2d4fc0ffad8803a9ef1cf788d0eee5",
+  buildTimestamp: "2026-10-27T06:47:18.514Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -57952,6 +57952,10 @@ router3.delete("/bridge/devices/:id", requireUserAuth, async (req, res) => {
       requestId: reqId
     });
   }
+});
+router3.get("/bridge/download", (req, res) => {
+  const downloadUrl = "https://github.com/gackstonew-lgtm/Alpha-Coach/releases/latest/download/ArcadeFX-MT5-Bridge-Setup.exe";
+  return res.redirect(302, downloadUrl);
 });
 router3.get("/status", requireBridgeOrUserAuth, async (req, res) => {
   const reqId = req.requestId || v4_default();

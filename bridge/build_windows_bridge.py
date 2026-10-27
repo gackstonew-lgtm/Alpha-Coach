@@ -174,12 +174,31 @@ def build():
     checksum_file = os.path.join(dist_dir, "checksums.txt")
     sha256_single_file = os.path.join(dist_dir, "ArcadeFX-MT5-Bridge-Setup.exe.sha256")
 
+    # Backward compatibility aliases for legacy release consumers
+    legacy_setup_path = os.path.join(dist_dir, "AlphaCoach-MT5-Companion-Setup.exe")
+    legacy_exe_path = os.path.join(dist_dir, "AlphaCoach-MT5-Companion.exe")
+    legacy_sha256_single_file = os.path.join(dist_dir, "AlphaCoach-MT5-Companion-Setup.exe.sha256")
+
+    try:
+        shutil.copy2(setup_path, legacy_setup_path)
+        shutil.copy2(exe_path, legacy_exe_path)
+    except Exception as copy_err:
+        print(f"[WARNING] Could not create legacy alias copies: {copy_err}")
+
     with open(checksum_file, "w", encoding="utf-8") as f:
         f.write(f"{hash_setup}  ArcadeFX-MT5-Bridge-Setup.exe\n")
         f.write(f"{hash_exe}  ArcadeFX-MT5-Bridge.exe\n")
+        f.write(f"{hash_setup}  AlphaCoach-MT5-Companion-Setup.exe\n")
+        f.write(f"{hash_exe}  AlphaCoach-MT5-Companion.exe\n")
 
     with open(sha256_single_file, "w", encoding="utf-8") as f:
         f.write(f"{hash_setup}  ArcadeFX-MT5-Bridge-Setup.exe\n")
+
+    try:
+        with open(legacy_sha256_single_file, "w", encoding="utf-8") as f:
+            f.write(f"{hash_setup}  AlphaCoach-MT5-Companion-Setup.exe\n")
+    except Exception as legacy_sha_err:
+        pass
 
     print("\n==================================================")
     print("             PACKAGING SUCCESSFUL                 ")

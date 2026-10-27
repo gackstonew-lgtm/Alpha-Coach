@@ -292,6 +292,12 @@ router.delete('/bridge/devices/:id', requireUserAuth, async (req: AuthenticatedR
 import { BUILD_INFO } from '../buildInfo';
 import { getDatabaseAsync } from '../db/db';
 
+// Public companion download endpoint - redirects to canonical release asset
+router.get('/bridge/download', (req, res) => {
+  const downloadUrl = 'https://github.com/gackstonew-lgtm/Alpha-Coach/releases/latest/download/ArcadeFX-MT5-Bridge-Setup.exe';
+  return res.redirect(302, downloadUrl);
+});
+
 // MT5 Bridge Status & Verification Endpoint
 router.get('/status', requireBridgeOrUserAuth, async (req: AuthenticatedRequest, res) => {
   const reqId = req.requestId || uuidv4();

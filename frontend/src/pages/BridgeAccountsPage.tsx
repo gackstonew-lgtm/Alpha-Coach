@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BRIDGE_DOWNLOAD_CONFIG } from '../config/download';
 import { useAccounts } from '../context/AccountContext';
 import { api } from '../services/api';
 import {
@@ -172,7 +173,7 @@ export const BridgeAccountsPage: React.FC = () => {
             </p>
           </div>
           <a
-            href="https://github.com/gackstonew-lgtm/Alpha-Coach/releases/latest/download/ArcadeFX-MT5-Bridge-Setup.exe"
+            href={BRIDGE_DOWNLOAD_CONFIG.primaryDownloadUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="framer-btn-primary px-4 py-2.5 flex items-center gap-2 text-xs shrink-0"

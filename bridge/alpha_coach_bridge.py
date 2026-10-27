@@ -243,7 +243,7 @@ class AlphaCoachBridge:
                 rel = resp.json()
                 latest_tag = rel.get("tag_name", "").lstrip("v")
                 if latest_tag and latest_tag > __version__:
-                    download_url = f"https://github.com/{GITHUB_REPO}/releases/latest/download/AlphaCoach-MT5-Companion-Setup.exe"
+                    download_url = f"https://github.com/{GITHUB_REPO}/releases/latest/download/ArcadeFX-MT5-Bridge-Setup.exe"
                     return True, f"New version {latest_tag} available!", download_url
                 return False, f"You are running the latest version (v{__version__})", None
             return False, "No update information available.", None
