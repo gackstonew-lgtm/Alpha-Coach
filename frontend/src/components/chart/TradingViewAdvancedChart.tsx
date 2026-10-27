@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   RefreshCw,
   ExternalLink,
@@ -7,6 +7,7 @@ import {
   Minimize2
 } from 'lucide-react';
 import { resolveTradingViewSymbol } from '../../config/tradingViewSymbols';
+import { resolveTradingViewStudies, TradingViewChartStyle } from '../../utils/chartWorkspaceStorage';
 
 export interface TradingViewAdvancedChartProps {
   symbol: string;
@@ -15,6 +16,9 @@ export interface TradingViewAdvancedChartProps {
   height?: number | string;
   className?: string;
   allowSymbolChange?: boolean;
+  studies?: string[];
+  chartStyle?: TradingViewChartStyle;
+  hideSideToolbar?: boolean;
   onSymbolChange?: (newSymbol: string) => void;
 }
 
@@ -27,9 +31,12 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
   symbol,
   interval = '60',
   theme = 'dark',
-  height = 580,
+  height = '100%',
   className = '',
-  allowSymbolChange = true
+  allowSymbolChange = true,
+  studies = [],
+  chartStyle = '1',
+  hideSideToolbar = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -45,6 +52,10 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
   const resolved = resolveTradingViewSymbol(symbol);
   const activeTvSymbol = resolved.tvSymbol;
   const resolvedTheme = theme === 'light' ? 'light' : 'dark';
+
+  // Stable serialized studies key so effect only re-runs when selected studies actually change
+  const resolvedStudies = useMemo(() => resolveTradingViewStudies(studies), [studies]);
+  const studiesKey = useMemo(() => resolvedStudies.join(','), [resolvedStudies]);
 
   const handleRetry = useCallback(() => {
     setRetryCount((prev) => prev + 1);
@@ -92,24 +103,36 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
 
     window.addEventListener('securitypolicyviolation', handleCspViolation);
 
-    const buildWidgetConfig = () => ({
-      autosize: true,
-      symbol: activeTvSymbol,
-      interval: interval,
-      timezone: 'Etc/UTC',
-      theme: resolvedTheme,
-      style: '1',
-      locale: 'en',
-      enable_publishing: false,
-      allow_symbol_change: allowSymbolChange,
-      calendar: false,
-      support_host: 'https://www.tradingview.com',
-      hide_side_toolbar: false,
-      withdateranges: true,
-      save_image: true,
-      details: true,
-      hotlist: false
-    });
+    // Show TradingView's native right-hand instrument details panel on desktop (>= 1024px),
+    // and collapse it on mobile/tablet so candlesticks use 100% of the screen width.
+    const isDesktopViewport = typeof window !== 'undefined' ? window.innerWidth >= 1024 : true;
+
+    const buildWidgetConfig = () => {
+      const cfg: Record<string, unknown> = {
+        autosize: true,
+        symbol: activeTvSymbol,
+        interval: interval,
+        timezone: 'Etc/UTC',
+        theme: resolvedTheme,
+        style: chartStyle || '1',
+        locale: 'en',
+        enable_publishing: false,
+        allow_symbol_change: allowSymbolChange,
+        calendar: false,
+        support_host: 'https://www.tradingview.com',
+        hide_side_toolbar: hideSideToolbar,
+        withdateranges: true,
+        save_image: true,
+        details: isDesktopViewport,
+        hotlist: false
+      };
+
+      if (resolvedStudies.length > 0) {
+        cfg.studies = resolvedStudies;
+      }
+
+      return cfg;
+    };
 
     const attachIframeLoadHandler = (iframe: HTMLIFrameElement) => {
       if (iframe.dataset.arcadefxAttached === 'true') return;
@@ -158,7 +181,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
       iframe.allowFullscreen = true;
       iframe.scrolling = 'no';
       iframe.style.cssText =
-        'user-select: none; box-sizing: border-box; display: block; height: calc(100% - 32px); width: 100%;';
+        'user-select: none; box-sizing: border-box; display: block; height: calc(100% - 28px); width: 100%;';
       iframe.src = `${TV_IFRAME_BASE_URL}?locale=en#${encodeURIComponent(JSON.stringify(config))}`;
 
       attachIframeLoadHandler(iframe);
@@ -186,13 +209,13 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
 
       const widgetInner = document.createElement('div');
       widgetInner.className = 'tradingview-widget-container__widget';
-      widgetInner.style.height = 'calc(100% - 32px)';
+      widgetInner.style.height = 'calc(100% - 28px)';
       widgetInner.style.width = '100%';
 
       const copyright = document.createElement('div');
       copyright.className = 'tradingview-widget-copyright';
-      copyright.style.height = '32px';
-      copyright.style.lineHeight = '32px';
+      copyright.style.height = '28px';
+      copyright.style.lineHeight = '28px';
       copyright.style.textAlign = 'center';
       copyright.style.fontSize = '11px';
       copyright.style.color = '#787b86';
@@ -314,7 +337,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
       if (resizeObserver) resizeObserver.disconnect();
       container.innerHTML = '';
     };
-  }, [activeTvSymbol, interval, resolvedTheme, allowSymbolChange, retryCount]);
+  }, [activeTvSymbol, interval, resolvedTheme, allowSymbolChange, chartStyle, hideSideToolbar, studiesKey, retryCount]);
 
   // Fullscreen toggle
   const toggleFullscreen = () => {
@@ -341,13 +364,13 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
   return (
     <div
       ref={wrapperRef}
-      className={`relative w-full rounded-2xl overflow-hidden border border-border-subtle bg-surface shadow-xs transition-all ${
+      className={`relative w-full h-full min-w-0 min-h-[420px] sm:min-h-[500px] rounded-2xl overflow-hidden border border-border-subtle bg-surface shadow-xs transition-all ${
         isFullscreen ? 'fixed inset-0 z-50 rounded-none border-none' : ''
       } ${className}`}
-      style={{ height: containerHeight, minHeight: '380px' }}
+      style={{ height: containerHeight }}
     >
       {/* Top Chart Header Toolbar */}
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 bg-surface/90 backdrop-blur-md border border-border-subtle p-1 rounded-xl shadow-xs">
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-surface/90 backdrop-blur-md border border-border-subtle p-1 rounded-xl shadow-xs">
         <button
           type="button"
           onClick={handleRetry}
@@ -429,7 +452,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
       {/* Native TradingView Widget Container */}
       <div
         ref={containerRef}
-        className="w-full h-full"
+        className="w-full h-full min-w-0 min-h-0"
         style={{ height: '100%', width: '100%' }}
       />
     </div>

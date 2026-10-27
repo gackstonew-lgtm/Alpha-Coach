@@ -48,6 +48,7 @@ import {
   OHLCVBar
 } from '../../utils/indicatorMath';
 import { api } from '../../services/api';
+import { loadChartWorkspace, saveChartWorkspace, loadSymbolDrawings, saveSymbolDrawings } from '../../utils/chartWorkspaceStorage';
 
 export type ChartType = 'candlestick' | 'heikin_ashi' | 'bar' | 'line' | 'area' | 'hollow';
 
@@ -178,27 +179,29 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   const [liveQuote, setLiveQuote] = useState<{ bid: number; ask: number; spreadPips: number; lastUpdated?: string } | null>(null);
   const [connectionState, setConnectionState] = useState<"CONNECTING" | "LIVE" | "POLLING" | "CLOSED">("CONNECTING");
 
-  // Institutional Price Levels & Toggles
+  const initialWorkspace = useMemo(() => loadChartWorkspace().mt5Indicators, []);
+
+  // Institutional Price Levels & Toggles (persisted across sessions)
   const [priceLevels, setPriceLevels] = useState<any>(null);
   const [showLevelsMenu, setShowLevelsMenu] = useState<boolean>(false);
-  const [showClassicPivots, setShowClassicPivots] = useState<boolean>(false);
-  const [showPreviousHL, setShowPreviousHL] = useState<boolean>(false);
-  const [showSwingSR, setShowSwingSR] = useState<boolean>(false);
+  const [showClassicPivots, setShowClassicPivots] = useState<boolean>(initialWorkspace.showClassicPivots);
+  const [showPreviousHL, setShowPreviousHL] = useState<boolean>(initialWorkspace.showPreviousHL);
+  const [showSwingSR, setShowSwingSR] = useState<boolean>(initialWorkspace.showSwingSR);
 
   // Market Conditions State
   const [marketConditions, setMarketConditions] = useState<any>(null);
 
-  // Indicators toggle state
-  const [showSMA, setShowSMA] = useState<boolean>(false);
-  const [showEMA, setShowEMA] = useState<boolean>(true);
-  const [showBollinger, setShowBollinger] = useState<boolean>(false);
-  const [showRSI, setShowRSI] = useState<boolean>(false);
-  const [showMACD, setShowMACD] = useState<boolean>(false);
-  const [showVWAP, setShowVWAP] = useState<boolean>(false);
-  const [showTradesOverlay, setShowTradesOverlay] = useState<boolean>(true);
+  // Indicators toggle state (persisted across sessions)
+  const [showSMA, setShowSMA] = useState<boolean>(initialWorkspace.showSMA);
+  const [showEMA, setShowEMA] = useState<boolean>(initialWorkspace.showEMA);
+  const [showBollinger, setShowBollinger] = useState<boolean>(initialWorkspace.showBollinger);
+  const [showRSI, setShowRSI] = useState<boolean>(initialWorkspace.showRSI);
+  const [showMACD, setShowMACD] = useState<boolean>(initialWorkspace.showMACD);
+  const [showVWAP, setShowVWAP] = useState<boolean>(initialWorkspace.showVWAP);
+  const [showTradesOverlay, setShowTradesOverlay] = useState<boolean>(initialWorkspace.showTradesOverlay);
 
   // MT5 Interactive States
-  const [lotSize, setLotSize] = useState<number>(0.01);
+  const [lotSize, setLotSize] = useState<number>(initialWorkspace.lotSize || 0.01);
   const [showIndicatorMenu, setShowIndicatorMenu] = useState<boolean>(false);
   const [showDrawingMenu, setShowDrawingMenu] = useState<boolean>(false);
   const [isCrosshairActive, setIsCrosshairActive] = useState<boolean>(true);
@@ -235,35 +238,64 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     });
   };
 
-  // Drawings state
+  // Drawings state (persisted per symbol in localStorage + cookies)
   const [activeTool, setActiveTool] = useState<string | null>(null);
-  const [drawings, setDrawings] = useState<DrawingItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(`chart_drawings_${propSymbol}`);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [drawings, setDrawings] = useState<DrawingItem[]>(() => loadSymbolDrawings(propSymbol));
 
   // Track theme changes (dark vs light mode tokens)
   const isDark = document.documentElement.classList.contains('dark');
 
-  // Sync prop changes
+  // Sync prop changes and load saved drawings for the newly selected symbol
   useEffect(() => {
     if (propSymbol && propSymbol !== currentSymbol) {
       setCurrentSymbol(propSymbol);
+      setDrawings(loadSymbolDrawings(propSymbol));
     }
   }, [propSymbol]);
 
-  // Save drawings to localStorage as local fallback
   useEffect(() => {
-    try {
-      localStorage.setItem(`chart_drawings_${currentSymbol}`, JSON.stringify(drawings));
-    } catch {
-      // storage quota or unavailable
-    }
+    setDrawings(loadSymbolDrawings(currentSymbol));
+  }, [currentSymbol]);
+
+  // Save drawings to localStorage & browser cookie
+  useEffect(() => {
+    saveSymbolDrawings(currentSymbol, drawings);
   }, [drawings, currentSymbol]);
+
+  // Persist MT5 indicator & chart settings to workspace storage & cookie
+  useEffect(() => {
+    saveChartWorkspace({
+      mt5Indicators: {
+        showEMA,
+        showSMA,
+        showBollinger,
+        showRSI,
+        showMACD,
+        showVWAP,
+        showTradesOverlay,
+        showClassicPivots,
+        showPreviousHL,
+        showSwingSR,
+        chartType,
+        timeframe,
+        lotSize
+      }
+    });
+  }, [
+    showEMA,
+    showSMA,
+    showBollinger,
+    showRSI,
+    showMACD,
+    showVWAP,
+    showTradesOverlay,
+    showClassicPivots,
+    showPreviousHL,
+    showSwingSR,
+    chartType,
+    timeframe,
+    lotSize
+  ]);
 
   // 1. Fetch Candle Data
   const loadCandles = useCallback(async () => {
@@ -757,6 +789,23 @@ export const TradingChart: React.FC<TradingChartProps> = ({
       });
     }
 
+    // 7. User Persisted Drawings (Support/Resistance Price Lines & Annotations)
+    if (drawings.length > 0 && mainSeriesRef.current) {
+      drawings.forEach((d) => {
+        if (d.p1 && typeof d.p1.price === 'number' && !isNaN(d.p1.price)) {
+          const dLine = mainSeriesRef.current!.createPriceLine({
+            price: d.p1.price,
+            color: d.color || '#f59e0b',
+            lineWidth: 2,
+            lineStyle: LineStyle.Solid,
+            axisLabelVisible: true,
+            title: d.text || 'Level'
+          });
+          priceLinesRef.current.push(dLine);
+        }
+      });
+    }
+
     if (markers.length > 0 && mainSeriesRef.current) {
       markers.sort((a, b) => Number(a.time) - Number(b.time));
       mainSeriesRef.current.setMarkers(markers);
@@ -765,6 +814,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     // Fit Content to screen
     chart.timeScale().fitContent();
   }, [
+    drawings,
     rawBars,
     chartType,
     showSMA,
@@ -1009,18 +1059,101 @@ export const TradingChart: React.FC<TradingChartProps> = ({
               )}
             </div>
 
-            {/* MT5 Drawing Tools Button */}
-            <button
-              onClick={() => setShowDrawingMenu(!showDrawingMenu)}
-              className={`p-1.5 rounded-lg border text-xs transition ${
-                showDrawingMenu
-                  ? 'bg-brand-500/10 border-brand-500/40 text-brand-500'
-                  : 'bg-surface border-border-subtle text-content-muted hover:text-content-primary'
-              }`}
-              title="Drawing Tools & Shapes"
-            >
-              <PenTool className="w-3.5 h-3.5" />
-            </button>
+            {/* MT5 Drawing Tools Button & Persisted Drawings Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowDrawingMenu(!showDrawingMenu)}
+                className={`p-1.5 rounded-lg border text-xs transition flex items-center gap-1 ${
+                  showDrawingMenu || drawings.length > 0
+                    ? 'bg-brand-500/10 border-brand-500/40 text-brand-500 font-bold'
+                    : 'bg-surface border-border-subtle text-content-muted hover:text-content-primary'
+                }`}
+                title="Drawing Tools & Saved Levels"
+              >
+                <PenTool className="w-3.5 h-3.5" />
+                {drawings.length > 0 && <span className="text-[10px] font-mono">{drawings.length}</span>}
+              </button>
+
+              {showDrawingMenu && (
+                <div className="absolute top-full right-0 mt-1 z-30 w-56 bg-surface border border-border-subtle rounded-xl shadow-xl p-2 space-y-1.5 text-xs">
+                  <div className="text-[10px] font-bold text-content-muted uppercase tracking-wider px-2 py-0.5">
+                    Saved Drawings ({currentSymbol})
+                  </div>
+                  <button
+                    onClick={() => {
+                      const base = lastBar ? lastBar.close : 1.085;
+                      setDrawings((prev) => [
+                        ...prev,
+                        {
+                          id: `sr_${Date.now()}`,
+                          type: 'horizontal',
+                          p1: { time: Date.now(), price: Number((base * 0.998).toFixed(5)) },
+                          text: 'Support Zone',
+                          color: '#10b981'
+                        }
+                      ]);
+                      setShowDrawingMenu(false);
+                    }}
+                    className="w-full text-left px-2 py-1.5 rounded-lg text-emerald-400 hover:bg-surface-secondary flex items-center justify-between font-medium"
+                  >
+                    <span>+ Add Support Line</span>
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const base = lastBar ? lastBar.close : 1.085;
+                      setDrawings((prev) => [
+                        ...prev,
+                        {
+                          id: `res_${Date.now()}`,
+                          type: 'horizontal',
+                          p1: { time: Date.now(), price: Number((base * 1.002).toFixed(5)) },
+                          text: 'Resistance Zone',
+                          color: '#f43f5e'
+                        }
+                      ]);
+                      setShowDrawingMenu(false);
+                    }}
+                    className="w-full text-left px-2 py-1.5 rounded-lg text-rose-400 hover:bg-surface-secondary flex items-center justify-between font-medium"
+                  >
+                    <span>+ Add Resistance Line</span>
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const base = lastBar ? lastBar.close : 1.085;
+                      setDrawings((prev) => [
+                        ...prev,
+                        {
+                          id: `key_${Date.now()}`,
+                          type: 'horizontal',
+                          p1: { time: Date.now(), price: Number(base.toFixed(5)) },
+                          text: 'Key Level',
+                          color: '#f59e0b'
+                        }
+                      ]);
+                      setShowDrawingMenu(false);
+                    }}
+                    className="w-full text-left px-2 py-1.5 rounded-lg text-amber-400 hover:bg-surface-secondary flex items-center justify-between font-medium"
+                  >
+                    <span>+ Mark Current Price</span>
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                  {drawings.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setDrawings([]);
+                        setShowDrawingMenu(false);
+                      }}
+                      className="w-full text-left px-2 py-1.5 rounded-lg text-content-muted hover:text-rose-400 hover:bg-surface-secondary flex items-center justify-between border-t border-border-subtle pt-1.5"
+                    >
+                      <span>Clear Drawings ({drawings.length})</span>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* MT5 Quick Buy/Sell Quote Strip Toggle */}
             <button
