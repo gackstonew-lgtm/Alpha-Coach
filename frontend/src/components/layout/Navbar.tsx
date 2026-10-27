@@ -1,42 +1,86 @@
-import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useAccounts } from '../../context/AccountContext';
-import { useSettings } from '../../context/SettingsContext';
 import { useTheme } from '../../context/ThemeContext';
 import { api } from '../../services/api';
+import { PRIMARY_NAV_ITEMS, BOTTOM_NAV_ITEMS } from '../../config/navigation';
+import { SUPPORTED_INSTRUMENTS } from '../../config/tradingViewSymbols';
 import {
   Bell,
-  Mail,
   Search,
-  ChevronDown,
-  RefreshCw,
-  LogOut,
-  Layers,
-  Radio,
   Settings,
   Sun,
   Moon,
-  Menu
+  Menu,
+  X,
+  TrendingUp,
+  ArrowRight
 } from 'lucide-react';
 
-export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSidebar }) => {
-  const { user, logout } = useAuth();
-  const { accounts, selectedAccountId, setSelectedAccountId, refreshAccounts } = useAccounts();
-  const { privacyMode } = useSettings();
+export interface NavbarProps {
+  isSidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({
+  isSidebarOpen = false,
+  onToggleSidebar
+}) => {
+  const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
-  const [showUserDropdown, setShowUserDropdown] = useState<boolean>(false);
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) {
       loadNotifications();
     }
   }, [user]);
+
+  // Close notifications popover on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [showNotifications]);
+
+  // Global keyboard shortcut (Ctrl+K / Cmd+K) and Escape handler for Search & Notifications
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      } else if (e.key === 'Escape') {
+        setIsSearchOpen(false);
+        setShowNotifications(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (isSearchOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 40);
+    } else {
+      setSearchQuery('');
+    }
+  }, [isSearchOpen]);
 
   const loadNotifications = async () => {
     try {
@@ -48,223 +92,291 @@ export const Navbar: React.FC<{ onToggleSidebar?: () => void }> = ({ onToggleSid
     }
   };
 
-  const handleQuickSync = async () => {
-    try {
-      setIsSyncing(true);
-      await refreshAccounts();
-      await loadNotifications();
-      setTimeout(() => setIsSyncing(false), 800);
-    } catch {
-      setIsSyncing(false);
-    }
-  };
-
   const markAllRead = async () => {
     try {
       await api.markAllNotificationsRead();
       setUnreadCount(0);
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: 1 })));
     } catch {
       // ignore
     }
   };
 
-  const displayName = user?.first_name
-    ? `${user.first_name} ${user.last_name || ''}`.trim()
-    : (user?.email?.split('@')[0] || 'Trader');
+  // Searchable navigation pages & market symbols
+  const allNavDestinations = useMemo(() => {
+    return [...PRIMARY_NAV_ITEMS, ...BOTTOM_NAV_ITEMS].filter(
+      (item) => !item.adminOnly || user?.role === 'admin'
+    );
+  }, [user?.role]);
+
+  const filteredPages = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return allNavDestinations;
+    return allNavDestinations.filter(
+      (item) =>
+        item.name.toLowerCase().includes(q) ||
+        item.to.toLowerCase().includes(q)
+    );
+  }, [allNavDestinations, searchQuery]);
+
+  const filteredSymbols = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return SUPPORTED_INSTRUMENTS.slice(0, 8);
+    return SUPPORTED_INSTRUMENTS.filter(
+      (inst) =>
+        inst.symbol.toLowerCase().includes(q) ||
+        inst.name.toLowerCase().includes(q) ||
+        inst.exchange.toLowerCase().includes(q)
+    ).slice(0, 10);
+  }, [searchQuery]);
+
+  const isSettingsActive = location.pathname.startsWith('/settings');
+
+  // Shared rounded-square header control styling matching Reference Image 2
+  const headerButtonClass =
+    'w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl bg-surface hover:bg-surface-secondary border border-border text-content-primary flex items-center justify-center transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-95';
 
   return (
-    <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md px-4 sm:px-6 lg:px-8 py-3.5 border-b border-border transition-colors">
-      <div className="flex items-center justify-between gap-4 max-w-[1400px] mx-auto">
-        {/* Left: Mobile Menu Trigger + Search Input */}
-        <div className="flex items-center gap-3 flex-1 max-w-md">
-          {/* Mobile hamburger menu */}
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            aria-label="Toggle navigation menu"
-            className="lg:hidden p-2 rounded-xl text-muted-foreground hover:text-foreground bg-surface hover:bg-surface-elevated border border-border transition shadow-xs"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
-          {/* Search Pill */}
-          <div className="relative w-full max-w-[340px]">
-            <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              readOnly
-              onClick={() => {
-                const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, metaKey: true });
-                window.dispatchEvent(event);
-              }}
-              placeholder="Press 'K' to search symbols and pages"
-              className="w-full bg-surface border border-border text-foreground hover:bg-surface-elevated rounded-xl pl-9 pr-4 py-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer shadow-xs transition"
-            />
-          </div>
-
-          {/* Account Selector Pill */}
-          {accounts.length > 0 && (
-            <div className="hidden xl:flex items-center gap-2 bg-surface border border-border text-foreground hover:bg-surface-elevated rounded-xl px-3 py-1.5 shadow-xs">
-              <Layers className="w-3.5 h-3.5 text-primary shrink-0" />
-              <select
-                value={selectedAccountId}
-                onChange={e => setSelectedAccountId(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-foreground focus:outline-none cursor-pointer max-w-[150px] truncate"
-              >
-                <option value="ALL" className="bg-surface text-foreground">All MT5 Accounts</option>
-                {accounts.map(acc => (
-                  <option key={acc.id} value={acc.id} className="bg-surface text-foreground">
-                    {acc.broker_name || 'MT5'} ••••{acc.account_number.slice(-4)} ({privacyMode ? '••••' : `$${Number(acc.balance).toLocaleString()}`})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-
-        {/* Right: Actions, Badges & User Profile */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Quick MT5 Sync Button */}
-          <button
-            type="button"
-            onClick={handleQuickSync}
-            disabled={isSyncing}
-            className="p-2 rounded-xl bg-surface border border-border text-muted-foreground hover:text-foreground hover:bg-surface-elevated shadow-xs transition active:scale-95 disabled:opacity-50"
-            title="Synchronize MT5 deals"
-          >
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-primary' : ''}`} />
-          </button>
-
-          {/* Theme Toggle (Light/Dark Mode) */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Toggle theme mode"
-            className="p-2 rounded-xl bg-surface border border-border text-muted-foreground hover:text-foreground hover:bg-surface-elevated shadow-xs transition"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-muted-foreground" />}
-          </button>
-
-          {/* Mail / Inbox Icon */}
-          <button
-            type="button"
-            onClick={() => alert('Arcade Fx Market Reports & Announcements Inbox is up to date.')}
-            className="p-2 rounded-xl bg-surface border border-border text-muted-foreground hover:text-foreground hover:bg-surface-elevated shadow-xs transition relative"
-            aria-label="Open messages"
-          >
-            <Mail className="w-4 h-4" />
-          </button>
-
-          {/* Notification Bell with Badge */}
-          <div className="relative">
+    <>
+      <header
+        style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+        className="sticky top-0 z-30 bg-background border-b border-border px-3 sm:px-6 lg:px-8 py-2.5 transition-colors duration-150"
+      >
+        <div className="flex items-center justify-between gap-3 w-full">
+          {/* LEFT SIDE: 1. Menu Button & 2. Search Button */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* 1. Menu Button */}
             <button
               type="button"
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 rounded-xl bg-surface border border-border text-muted-foreground hover:text-foreground hover:bg-surface-elevated shadow-xs transition relative"
-              aria-label="Open notifications"
+              onClick={onToggleSidebar}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isSidebarOpen}
+              title="Toggle navigation menu"
+              className={`${headerButtonClass} ${
+                isSidebarOpen ? 'border-primary text-primary bg-accent-subtle' : ''
+              }`}
             >
-              <Bell className="w-4 h-4" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger ring-2 ring-surface animate-pulse" />
+              <Menu className="w-5 h-5 stroke-[1.85]" />
+            </button>
+
+            {/* 2. Search Button */}
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              aria-label="Open global search"
+              aria-expanded={isSearchOpen}
+              title="Search pages and market symbols (Ctrl+K)"
+              className={`${headerButtonClass} ${
+                isSearchOpen ? 'border-primary text-primary bg-accent-subtle' : ''
+              }`}
+            >
+              <Search className="w-5 h-5 stroke-[1.85]" />
+            </button>
+          </div>
+
+          {/* RIGHT SIDE: 3. Notifications, 4. Theme Toggle & 5. Settings */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* 3. Notifications Button */}
+            <div className="relative" ref={notificationRef}>
+              <button
+                type="button"
+                onClick={() => setShowNotifications((prev) => !prev)}
+                aria-label="Open notifications"
+                aria-expanded={showNotifications}
+                title="Notifications"
+                className={`${headerButtonClass} relative ${
+                  showNotifications ? 'border-primary text-primary bg-accent-subtle' : ''
+                }`}
+              >
+                <Bell className="w-5 h-5 stroke-[1.85]" />
+                {unreadCount > 0 && (
+                  <span
+                    aria-label={`${unreadCount} unread notifications`}
+                    className="absolute top-2 right-2 w-2 h-2 rounded-full bg-danger ring-2 ring-surface"
+                  />
+                )}
+              </button>
+
+              {/* Notification Panel */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1.5rem)] bg-popover border border-border text-popover-foreground rounded-2xl shadow-pop z-50 p-4 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between pb-3 border-b border-border">
+                    <h4 className="text-xs font-bold text-content-primary">Notifications</h4>
+                    {unreadCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={markAllRead}
+                        className="text-[11px] font-semibold text-primary hover:underline"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto divide-y divide-border py-1">
+                    {notifications.length === 0 ? (
+                      <div className="py-6 text-center text-xs text-content-secondary">
+                        No new notifications. MT5 sync active.
+                      </div>
+                    ) : (
+                      notifications.map((n, idx) => (
+                        <div key={idx} className="py-2.5 text-xs space-y-0.5">
+                          <div className="font-semibold text-content-primary">{n.title}</div>
+                          <div className="text-[11px] text-content-secondary">{n.message}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 4. Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className={headerButtonClass}
+            >
+              {theme === 'dark' ? (
+                <Moon className="w-5 h-5 stroke-[1.85] text-content-primary" />
+              ) : (
+                <Moon className="w-5 h-5 stroke-[1.85] text-content-primary" />
               )}
             </button>
 
-            {/* Notification Dropdown */}
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-surface border border-border text-foreground rounded-2xl shadow-xl z-50 p-4 animate-in fade-in slide-in-from-top-2">
-                <div className="flex items-center justify-between pb-3 border-b border-border">
-                  <h4 className="text-xs font-bold text-foreground">Notifications</h4>
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={markAllRead}
-                      className="text-[11px] font-semibold text-primary hover:underline"
-                    >
-                      Mark all read
-                    </button>
-                  )}
-                </div>
-
-                <div className="max-h-60 overflow-y-auto divide-y divide-border py-1">
-                  {notifications.length === 0 ? (
-                    <div className="py-6 text-center text-xs text-muted-foreground">
-                      No new notifications. MT5 sync active.
-                    </div>
-                  ) : (
-                    notifications.map((n, idx) => (
-                      <div key={idx} className="py-2.5 text-xs space-y-0.5">
-                        <div className="font-semibold text-foreground">{n.title}</div>
-                        <div className="text-[11px] text-muted-foreground">{n.message}</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* User Profile Avatar & Name */}
-          <div className="relative">
+            {/* 5. Settings Button */}
             <button
               type="button"
-              onClick={() => setShowUserDropdown(!showUserDropdown)}
-              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-surface border border-border text-foreground hover:bg-surface-elevated shadow-xs transition focus:outline-none"
+              onClick={() => navigate('/settings')}
+              aria-label="Open settings"
+              aria-current={isSettingsActive ? 'page' : undefined}
+              title="Settings"
+              className={`${headerButtonClass} ${
+                isSettingsActive ? 'border-primary text-primary bg-accent-subtle' : ''
+              }`}
             >
-              <div className="w-7 h-7 rounded-full bg-accent-tint text-primary dark:bg-surface-elevated dark:text-foreground border border-accent-border/40 dark:border-border flex items-center justify-center text-xs font-bold shrink-0">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
-              <span className="hidden md:inline-block text-xs font-bold text-foreground max-w-[120px] truncate">
-                {displayName}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              <Settings className="w-5 h-5 stroke-[1.85]" />
             </button>
-
-            {/* User Dropdown Menu */}
-            {showUserDropdown && (
-              <div className="absolute right-0 mt-2 w-52 bg-surface border border-border text-foreground rounded-2xl shadow-xl z-50 p-2 text-xs animate-in fade-in duration-150">
-                <div className="px-3 py-2 border-b border-border">
-                  <div className="font-bold text-foreground truncate">{displayName}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{user?.email}</div>
-                </div>
-
-                <div className="py-1">
-                  <NavLink
-                    to="/settings"
-                    onClick={() => setShowUserDropdown(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition"
-                  >
-                    <Settings className="w-4 h-4 text-muted-foreground" />
-                    <span>Settings & Security</span>
-                  </NavLink>
-                  <NavLink
-                    to="/bridge"
-                    onClick={() => setShowUserDropdown(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition"
-                  >
-                    <Radio className="w-4 h-4 text-muted-foreground" />
-                    <span>MT5 Companion Bridge</span>
-                  </NavLink>
-                </div>
-
-                <div className="pt-1 border-t border-border">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setShowUserDropdown(false);
-                      if (logout) await logout();
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-danger hover:bg-danger/10 font-semibold transition"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Global Search Modal (Pages & Live Chart Symbols) */}
+      {isSearchOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-start justify-center pt-16 sm:pt-24 px-3"
+          onClick={() => setIsSearchOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Global Search"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg bg-popover border border-border rounded-2xl shadow-pop overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+          >
+            {/* Search Input Header */}
+            <div className="flex items-center gap-2.5 px-3.5 py-3 border-b border-border bg-surface">
+              <Search className="w-4 h-4 text-content-secondary shrink-0" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search pages, tools, or symbols (e.g. XAUUSD, EURUSD, Coach)..."
+                className="flex-1 bg-transparent text-xs sm:text-sm text-content-primary placeholder:text-content-secondary focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(false)}
+                aria-label="Close search"
+                className="p-1 rounded-lg text-content-secondary hover:text-content-primary hover:bg-surface-secondary transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Search Results Body */}
+            <div className="max-h-[65vh] overflow-y-auto p-3 space-y-4">
+              {/* Navigation Destinations */}
+              {filteredPages.length > 0 && (
+                <div className="space-y-1">
+                  <div className="px-2 text-[10px] font-mono uppercase tracking-wider text-content-secondary font-bold">
+                    Application Pages
+                  </div>
+                  <div className="space-y-0.5">
+                    {filteredPages.map((page) => {
+                      const Icon = page.icon;
+                      return (
+                        <button
+                          key={page.id}
+                          type="button"
+                          onClick={() => {
+                            setIsSearchOpen(false);
+                            navigate(page.to);
+                          }}
+                          className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs text-content-primary hover:bg-surface-secondary transition"
+                        >
+                          <span className="flex items-center gap-2.5 font-medium">
+                            <Icon className="w-4 h-4 text-primary shrink-0" />
+                            <span>{page.name}</span>
+                          </span>
+                          <ArrowRight className="w-3.5 h-3.5 text-content-secondary" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Market Symbols (Jump to Live Chart) */}
+              {filteredSymbols.length > 0 && (
+                <div className="space-y-1">
+                  <div className="px-2 text-[10px] font-mono uppercase tracking-wider text-content-secondary font-bold">
+                    Live Chart Instruments
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                    {filteredSymbols.map((inst) => (
+                      <button
+                        key={inst.symbol}
+                        type="button"
+                        onClick={() => {
+                          setIsSearchOpen(false);
+                          navigate(`/charts?symbol=${encodeURIComponent(inst.symbol)}`);
+                        }}
+                        className="flex items-center justify-between px-2.5 py-2 rounded-xl border border-border bg-surface hover:bg-surface-secondary text-left transition"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <TrendingUp className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="text-xs font-bold font-mono text-content-primary">
+                              {inst.symbol}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-content-secondary truncate">
+                            {inst.name}
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-surface-secondary text-content-secondary border border-border shrink-0">
+                          {inst.exchange}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {filteredPages.length === 0 && filteredSymbols.length === 0 && (
+                <div className="py-8 text-center text-xs text-content-secondary">
+                  No matching pages or instruments found for &ldquo;{searchQuery}&rdquo;.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
