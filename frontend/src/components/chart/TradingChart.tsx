@@ -48,6 +48,7 @@ import {
   OHLCVBar
 } from '../../utils/indicatorMath';
 import { api } from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 import { loadChartWorkspace, saveChartWorkspace, loadSymbolDrawings, saveSymbolDrawings } from '../../utils/chartWorkspaceStorage';
 
 export type ChartType = 'candlestick' | 'heikin_ashi' | 'bar' | 'line' | 'area' | 'hollow';
@@ -242,8 +243,9 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [drawings, setDrawings] = useState<DrawingItem[]>(() => loadSymbolDrawings(propSymbol));
 
-  // Track theme changes (dark vs light mode tokens)
-  const isDark = document.documentElement.classList.contains('dark');
+  // Subscribe to centralized ThemeContext for instant light/dark synchronization
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   // Sync prop changes and load saved drawings for the newly selected symbol
   useEffect(() => {
@@ -448,17 +450,18 @@ export const TradingChart: React.FC<TradingChartProps> = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Theme color palette mapping
-    const darkTheme = document.documentElement.classList.contains('dark');
+    // TradingView-aligned Light & Dark theme color palette
+    const darkTheme = theme === 'dark';
     const colors = {
-      bg: darkTheme ? '#0a0d12' : '#ffffff',
-      textColor: darkTheme ? '#94a3b8' : '#64748b',
-      gridColor: darkTheme ? 'rgba(23, 29, 41, 0.6)' : 'rgba(226, 232, 240, 0.6)',
-      crosshair: darkTheme ? 'rgba(96, 165, 250, 0.4)' : 'rgba(37, 99, 235, 0.4)',
-      up: '#10b981', // trade.win
-      down: '#f43f5e', // trade.loss
-      volumeUp: 'rgba(16, 185, 129, 0.35)',
-      volumeDown: 'rgba(244, 63, 94, 0.35)'
+      bg: darkTheme ? '#000000' : '#ffffff',
+      textColor: darkTheme ? '#d1d4dc' : '#131722',
+      gridColor: darkTheme ? '#1c1f26' : '#e6e8ef',
+      borderColor: darkTheme ? '#2a2e39' : '#e0e3eb',
+      crosshair: darkTheme ? 'rgba(120, 123, 134, 0.55)' : 'rgba(106, 109, 120, 0.45)',
+      up: '#089981',
+      down: '#f23645',
+      volumeUp: 'rgba(8, 153, 129, 0.35)',
+      volumeDown: 'rgba(242, 54, 69, 0.35)'
     };
 
     // Dispose old chart instance
@@ -484,14 +487,14 @@ export const TradingChart: React.FC<TradingChartProps> = ({
         horzLine: { color: colors.crosshair, width: 1, style: LineStyle.Dashed }
       },
       rightPriceScale: {
-        borderColor: colors.gridColor,
+        borderColor: colors.borderColor,
         scaleMargins: {
           top: 0.1,
           bottom: 0.2
         }
       },
       timeScale: {
-        borderColor: colors.gridColor,
+        borderColor: colors.borderColor,
         timeVisible: true,
         secondsVisible: false
       },
@@ -553,20 +556,42 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     };
   }, []);
 
+  // Dynamically synchronize Lightweight Chart layout, grid, and axes when theme changes without recreating chart
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const darkTheme = theme === 'dark';
+    chartRef.current.applyOptions({
+      layout: {
+        background: { type: ColorType.Solid, color: darkTheme ? '#000000' : '#ffffff' },
+        textColor: darkTheme ? '#d1d4dc' : '#131722'
+      },
+      grid: {
+        vertLines: { color: darkTheme ? '#1c1f26' : '#e6e8ef' },
+        horzLines: { color: darkTheme ? '#1c1f26' : '#e6e8ef' }
+      },
+      rightPriceScale: {
+        borderColor: darkTheme ? '#2a2e39' : '#e0e3eb'
+      },
+      timeScale: {
+        borderColor: darkTheme ? '#2a2e39' : '#e0e3eb'
+      }
+    });
+  }, [theme]);
+
   // 3. Render / Update Main Price Series & Overlays
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart || rawBars.length === 0) return;
 
-    const darkTheme = document.documentElement.classList.contains('dark');
+    const darkTheme = theme === 'dark';
     const colors = {
-      up: '#10b981',
-      down: '#f43f5e',
-      line: '#3b82f6',
-      areaTop: 'rgba(59, 130, 246, 0.4)',
-      areaBottom: 'rgba(59, 130, 246, 0.02)',
-      volumeUp: 'rgba(16, 185, 129, 0.35)',
-      volumeDown: 'rgba(244, 63, 94, 0.35)'
+      up: '#089981',
+      down: '#f23645',
+      line: '#2962ff',
+      areaTop: 'rgba(41, 98, 255, 0.35)',
+      areaBottom: 'rgba(41, 98, 255, 0.02)',
+      volumeUp: 'rgba(8, 153, 129, 0.35)',
+      volumeDown: 'rgba(242, 54, 69, 0.35)'
     };
 
     // Remove existing main and indicator series
@@ -829,7 +854,8 @@ export const TradingChart: React.FC<TradingChartProps> = ({
     priceLevels,
     trades,
     macroEvents,
-    currentSymbol
+    currentSymbol,
+    theme
   ]);
 
   // Snapshot / Export PNG
@@ -1267,7 +1293,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
 
         {/* MT5 Buy/Sell Quote Strip */}
         {showQuoteStrip && showOrderPanel && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center bg-surface/95 dark:bg-[#0E1A33]/95 backdrop-blur-md border border-border-subtle rounded-xl p-1 shadow-lg font-mono">
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center bg-surface/95 dark:bg-[#131722]/95 backdrop-blur-md border border-border-subtle rounded-xl p-1 shadow-lg font-mono">
             {/* SELL Box */}
             <button
               onClick={() => handleExecuteQuote('SELL')}
@@ -1319,7 +1345,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
 
         {/* Trade Execution Toast Notification */}
         {tradeToast && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1.5 rounded-xl bg-surface/95 dark:bg-[#0E1A33]/95 border border-brand-500/40 text-brand-500 shadow-xl text-xs font-mono animate-in fade-in zoom-in-95 duration-150 flex items-center gap-2">
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1.5 rounded-xl bg-surface/95 dark:bg-[#131722]/95 border border-brand-500/40 text-brand-500 shadow-xl text-xs font-mono animate-in fade-in zoom-in-95 duration-150 flex items-center gap-2">
             <Check className="w-3.5 h-3.5" />
             <span>{tradeToast}</span>
           </div>

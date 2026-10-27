@@ -8,9 +8,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Reference QC NetCore Semantic Design System Tokens (https://billing.quantumcode.co.ke)
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
+        // TradingView-Inspired Semantic Design System Tokens
+        background: 'var(--app-background)',
+        foreground: 'var(--text-primary)',
+        'chart-bg': 'var(--chart-background)',
+        'chart-grid': 'var(--chart-grid)',
+        candle: {
+          bullish: 'var(--candle-bullish)',
+          bearish: 'var(--candle-bearish)'
+        },
         card: {
           DEFAULT: 'var(--card)',
           foreground: 'var(--card-foreground)',
@@ -22,6 +28,7 @@ export default {
         },
         surface: {
           DEFAULT: 'var(--surface)',
+          primary: 'var(--surface-primary)',
           subtle: 'var(--surface-subtle)',
           elevated: 'var(--surface-elevated)',
           secondary: 'var(--surface-secondary)',
@@ -64,14 +71,14 @@ export default {
           border: 'var(--accent-border)',
           glow: 'var(--ring)'
         },
-        profit: 'var(--profit)',
-        loss: 'var(--loss)',
+        profit: 'var(--candle-bullish)',
+        loss: 'var(--candle-bearish)',
         live: {
           bg: 'var(--live-badge-bg)',
           text: 'var(--live-badge-text)',
         },
         border: {
-          DEFAULT: 'var(--border)',
+          DEFAULT: 'var(--border-color)',
           subtle: 'var(--border-subtle)',
           strong: 'var(--border-strong)',
           focus: 'var(--border-focus)'
@@ -79,13 +86,13 @@ export default {
         input: 'var(--input)',
         ring: 'var(--ring)',
 
-        // Backwards-compatible aliases for existing ArcadeFx components
-        page: 'var(--background)',
-        canvas: 'var(--background)',
+        // Backwards-compatible aliases for existing Arcade FX components
+        page: 'var(--app-background)',
+        canvas: 'var(--app-background)',
         content: {
-          primary: 'var(--foreground)',
+          primary: 'var(--text-primary)',
           secondary: 'var(--text-secondary)',
-          muted: 'var(--muted-foreground)',
+          muted: 'var(--text-muted)',
           subtle: 'var(--text-subtle)'
         },
         brand: {
@@ -105,25 +112,25 @@ export default {
           950: '#172554'
         },
         dash: {
-          canvas: 'var(--background)',
-          main: 'var(--background)',
+          canvas: 'var(--app-background)',
+          main: 'var(--app-background)',
           surface: 'var(--surface)',
           darkCard: 'var(--surface-elevated)',
           pillActive: 'var(--primary)',
           chipGreen: 'var(--success-soft)',
-          chipGreenText: 'var(--success)',
-          badgeRed: 'var(--danger)',
+          chipGreenText: 'var(--candle-bullish)',
+          badgeRed: 'var(--candle-bearish)',
           line: 'var(--primary)'
         },
         trade: {
-          profit: 'var(--trade-profit)',
-          loss: 'var(--trade-loss)',
-          win: 'var(--trade-profit)',
+          profit: 'var(--candle-bullish)',
+          loss: 'var(--candle-bearish)',
+          win: 'var(--candle-bullish)',
           breakeven: 'var(--muted-foreground)',
           gold: '#eab308'
         },
 
-        // Floating Glass Capsule Sidebar Tokens (Light & Dark Theme Matched)
+        // Sidebar Tokens (Light & Dark Theme Matched)
         sidebar: {
           DEFAULT: 'var(--sidebar-bg)',
           bg: 'var(--sidebar-bg)',
@@ -177,8 +184,8 @@ export default {
         'pop': 'var(--shadow-pop)',
         'framer': 'var(--card-shadow)',
         'framer-hover': 'var(--card-shadow-hover)',
-        'xs': '0 1px 2px rgba(16, 24, 40, 0.05)',
-        'blue-glow': '0 0 24px -4px rgba(31, 95, 209, 0.35)'
+        'xs': '0 1px 2px rgba(19, 23, 34, 0.04)',
+        'blue-glow': '0 0 24px -4px rgba(41, 98, 255, 0.35)'
       }
     },
   },

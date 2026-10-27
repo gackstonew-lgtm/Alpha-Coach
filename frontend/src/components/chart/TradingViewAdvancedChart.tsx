@@ -27,6 +27,28 @@ const TV_IFRAME_BASE_URL = 'https://www.tradingview-widget.com/embed-widget/adva
 const WIDGET_TIMEOUT_MS = 15000;
 const DIRECT_IFRAME_FALLBACK_MS = 5000;
 
+// TradingView Reference Palette Constants
+export const TV_THEME_PALETTE = {
+  light: {
+    backgroundColor: '#FFFFFF',
+    gridColor: '#E6E8EF',
+    textColor: '#131722',
+    secondaryTextColor: '#6A6D78',
+    borderColor: '#E0E3EB',
+    candleBullish: '#089981',
+    candleBearish: '#F23645'
+  },
+  dark: {
+    backgroundColor: '#000000',
+    gridColor: '#1C1F26',
+    textColor: '#D1D4DC',
+    secondaryTextColor: '#787B86',
+    borderColor: '#2A2E39',
+    candleBullish: '#089981',
+    candleBearish: '#F23645'
+  }
+} as const;
+
 export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> = React.memo(({
   symbol,
   interval = '60',
@@ -52,6 +74,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
   const resolved = resolveTradingViewSymbol(symbol);
   const activeTvSymbol = resolved.tvSymbol;
   const resolvedTheme = theme === 'light' ? 'light' : 'dark';
+  const activePalette = TV_THEME_PALETTE[resolvedTheme];
 
   // Stable serialized studies key so effect only re-runs when selected studies actually change
   const resolvedStudies = useMemo(() => resolveTradingViewStudies(studies), [studies]);
@@ -116,6 +139,8 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
         theme: resolvedTheme,
         style: chartStyle || '1',
         locale: 'en',
+        backgroundColor: activePalette.backgroundColor,
+        gridColor: activePalette.gridColor,
         enable_publishing: false,
         allow_symbol_change: allowSymbolChange,
         calendar: false,
@@ -206,11 +231,13 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
       widgetContainer.className = 'tradingview-widget-container';
       widgetContainer.style.height = '100%';
       widgetContainer.style.width = '100%';
+      widgetContainer.style.backgroundColor = activePalette.backgroundColor;
 
       const widgetInner = document.createElement('div');
       widgetInner.className = 'tradingview-widget-container__widget';
       widgetInner.style.height = 'calc(100% - 28px)';
       widgetInner.style.width = '100%';
+      widgetInner.style.backgroundColor = activePalette.backgroundColor;
 
       const copyright = document.createElement('div');
       copyright.className = 'tradingview-widget-copyright';
@@ -218,7 +245,9 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
       copyright.style.lineHeight = '28px';
       copyright.style.textAlign = 'center';
       copyright.style.fontSize = '11px';
-      copyright.style.color = '#787b86';
+      copyright.style.color = activePalette.secondaryTextColor;
+      copyright.style.backgroundColor = activePalette.backgroundColor;
+      copyright.style.borderTop = `1px solid ${activePalette.borderColor}`;
 
       const copyrightLink = document.createElement('a');
       copyrightLink.href = `https://www.tradingview.com/symbols/${encodeURIComponent(activeTvSymbol)}/`;
@@ -337,7 +366,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
       if (resizeObserver) resizeObserver.disconnect();
       container.innerHTML = '';
     };
-  }, [activeTvSymbol, interval, resolvedTheme, allowSymbolChange, chartStyle, hideSideToolbar, studiesKey, retryCount]);
+  }, [activeTvSymbol, interval, resolvedTheme, activePalette, allowSymbolChange, chartStyle, hideSideToolbar, studiesKey, retryCount]);
 
   // Fullscreen toggle
   const toggleFullscreen = () => {
@@ -364,18 +393,18 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
   return (
     <div
       ref={wrapperRef}
-      className={`relative w-full h-full min-w-0 min-h-[420px] sm:min-h-[500px] rounded-2xl overflow-hidden border border-border-subtle bg-surface shadow-xs transition-all ${
+      className={`relative w-full h-full min-w-0 min-h-[420px] sm:min-h-[500px] rounded-xl overflow-hidden border border-border bg-chart-bg transition-colors duration-150 ${
         isFullscreen ? 'fixed inset-0 z-50 rounded-none border-none' : ''
       } ${className}`}
       style={{ height: containerHeight }}
     >
       {/* Top Chart Header Toolbar */}
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-surface/90 backdrop-blur-md border border-border-subtle p-1 rounded-xl shadow-xs">
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-surface/90 backdrop-blur-md border border-border p-1 rounded-lg shadow-xs">
         <button
           type="button"
           onClick={handleRetry}
           title="Reload TradingView Chart"
-          className="p-1.5 text-content-muted hover:text-content-primary hover:bg-surface-secondary rounded-lg transition"
+          className="p-1.5 text-content-secondary hover:text-content-primary hover:bg-surface-secondary rounded-md transition"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-accent-primary' : ''}`} />
         </button>
@@ -384,7 +413,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
           type="button"
           onClick={toggleFullscreen}
           title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Chart'}
-          className="p-1.5 text-content-muted hover:text-content-primary hover:bg-surface-secondary rounded-lg transition"
+          className="p-1.5 text-content-secondary hover:text-content-primary hover:bg-surface-secondary rounded-md transition"
         >
           {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
         </button>
@@ -394,7 +423,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
           target="_blank"
           rel="noopener noreferrer"
           title="Open in TradingView"
-          className="p-1.5 text-content-muted hover:text-accent-primary hover:bg-surface-secondary rounded-lg transition"
+          className="p-1.5 text-content-secondary hover:text-accent-primary hover:bg-surface-secondary rounded-md transition"
         >
           <ExternalLink className="w-3.5 h-3.5" />
         </a>
@@ -402,12 +431,12 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
 
       {/* Loading Skeleton */}
       {isLoading && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-surface/85 backdrop-blur-sm pointer-events-none transition-opacity duration-300">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-chart-bg/90 backdrop-blur-xs pointer-events-none transition-opacity duration-300">
           <RefreshCw className="w-8 h-8 animate-spin text-accent-primary mb-3" />
           <div className="text-xs font-mono font-bold text-content-primary flex items-center gap-1.5">
             <span>Loading {activeTvSymbol} Candlesticks...</span>
           </div>
-          <p className="text-[11px] text-content-muted mt-1 font-mono">
+          <p className="text-[11px] text-content-secondary mt-1 font-mono">
             Connecting to TradingView live market data feed
           </p>
         </div>
@@ -415,7 +444,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
 
       {/* Error Fallback Banner */}
       {hasError && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-surface text-center space-y-3">
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 bg-chart-bg text-center space-y-3">
           <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
             <ShieldAlert className="w-8 h-8" />
           </div>
@@ -440,7 +469,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
               href={`https://www.tradingview.com/symbols/${encodeURIComponent(activeTvSymbol)}/`}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-1.5 rounded-xl bg-surface-secondary hover:bg-surface border border-border-subtle text-content-secondary text-xs font-medium flex items-center gap-1.5 transition"
+              className="px-3 py-1.5 rounded-xl bg-surface-secondary hover:bg-surface border border-border text-content-secondary text-xs font-medium flex items-center gap-1.5 transition"
             >
               <span>View on TradingView</span>
               <ExternalLink className="w-3 h-3" />
@@ -452,7 +481,7 @@ export const TradingViewAdvancedChart: React.FC<TradingViewAdvancedChartProps> =
       {/* Native TradingView Widget Container */}
       <div
         ref={containerRef}
-        className="w-full h-full min-w-0 min-h-0"
+        className="w-full h-full min-w-0 min-h-0 bg-chart-bg"
         style={{ height: '100%', width: '100%' }}
       />
     </div>

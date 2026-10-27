@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read tradingViewSymbols.ts, ChartsPage.tsx, TradingViewAdvancedChart.tsx, TradingChart.tsx, and chartWorkspaceStorage.ts
+// Read tradingViewSymbols.ts, ChartsPage.tsx, TradingViewAdvancedChart.tsx, TradingChart.tsx, chartWorkspaceStorage.ts, index.css, ThemeContext.tsx
 const symbolsTsPath = path.join(__dirname, '../src/config/tradingViewSymbols.ts');
 const fileContent = fs.readFileSync(symbolsTsPath, 'utf8');
 
@@ -22,7 +22,13 @@ const mt5ChartContent = fs.readFileSync(mt5ChartPath, 'utf8');
 const workspaceStoragePath = path.join(__dirname, '../src/utils/chartWorkspaceStorage.ts');
 const workspaceStorageContent = fs.readFileSync(workspaceStoragePath, 'utf8');
 
-console.log('Testing TradingView Full-Workspace Chart Expansion, Market Catalog Removal & Session Persistence...');
+const indexCssPath = path.join(__dirname, '../src/index.css');
+const indexCssContent = fs.readFileSync(indexCssPath, 'utf8');
+
+const themeContextPath = path.join(__dirname, '../src/context/ThemeContext.tsx');
+const themeContextContent = fs.readFileSync(themeContextPath, 'utf8');
+
+console.log('Testing TradingView Full-Workspace Chart, Market Catalog Removal, Session Persistence & Light/Dark Theme Tokens...');
 
 // 1. Verify Default Instrument is Gold (XAUUSD)
 assert.ok(fileContent.includes("DEFAULT_INSTRUMENT_SYMBOL = 'XAUUSD'"), 'Default symbol must be XAUUSD');
@@ -129,4 +135,42 @@ assert.ok(
 );
 assert.ok(tvChartContent.includes('resolveTradingViewStudies'), 'Must pass persisted studies to TradingView widget');
 
-console.log('✓ All 12 Full-Workspace Chart Expansion, Market Catalog Removal & Session Persistence checks passed!');
+// 13. Verify Centralized TradingView Light & Dark Theme Tokens in index.css, ThemeContext, and Chart Components
+const requiredCssTokens = [
+  '--app-background: #ffffff',
+  '--chart-background: #ffffff',
+  '--surface-secondary: #f0f3fa',
+  '--text-primary: #131722',
+  '--text-secondary: #6a6d78',
+  '--border-color: #e0e3eb',
+  '--chart-grid: #e6e8ef',
+  '--candle-bullish: #089981',
+  '--candle-bearish: #f23645',
+  '--app-background: #000000',
+  '--chart-background: #000000',
+  '--surface-secondary: #131722',
+  '--text-primary: #d1d4dc',
+  '--text-secondary: #787b86',
+  '--border-color: #2a2e39',
+  '--chart-grid: #1c1f26'
+];
+for (const token of requiredCssTokens) {
+  assert.ok(indexCssContent.toLowerCase().includes(token), `index.css must define TradingView token: ${token}`);
+}
+
+assert.ok(tvChartContent.includes('TV_THEME_PALETTE'), 'TradingViewAdvancedChart must define TV_THEME_PALETTE');
+assert.ok(
+  tvChartContent.includes('backgroundColor: activePalette.backgroundColor') &&
+    tvChartContent.includes('gridColor: activePalette.gridColor'),
+  'TradingViewAdvancedChart must pass explicit backgroundColor and gridColor to TradingView widget'
+);
+assert.ok(
+  mt5ChartContent.includes('useTheme()') && mt5ChartContent.includes('#089981') && mt5ChartContent.includes('#f23645'),
+  'TradingChart must synchronize with useTheme() and use TradingView candle colors (#089981 / #f23645)'
+);
+assert.ok(
+  themeContextContent.includes("root.setAttribute('data-theme'"),
+  'ThemeContext must synchronize both .dark class and data-theme attribute'
+);
+
+console.log('✓ All 13 TradingView Chart, Workspace Persistence & Light/Dark Theme checks passed!');
