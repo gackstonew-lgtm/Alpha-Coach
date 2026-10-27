@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read tradingViewSymbols.ts, ChartsPage.tsx, TradingViewAdvancedChart.tsx, TradingChart.tsx, chartWorkspaceStorage.ts, index.css, ThemeContext.tsx
+// Read tradingViewSymbols.ts, ChartsPage.tsx, TradingViewAdvancedChart.tsx, TradingChart.tsx, chartWorkspaceStorage.ts, index.css, ThemeContext.tsx, MobileBottomNav.tsx, Navbar.tsx
 const symbolsTsPath = path.join(__dirname, '../src/config/tradingViewSymbols.ts');
 const fileContent = fs.readFileSync(symbolsTsPath, 'utf8');
 
@@ -28,7 +28,13 @@ const indexCssContent = fs.readFileSync(indexCssPath, 'utf8');
 const themeContextPath = path.join(__dirname, '../src/context/ThemeContext.tsx');
 const themeContextContent = fs.readFileSync(themeContextPath, 'utf8');
 
-console.log('Testing TradingView Full-Workspace Chart, Market Catalog Removal, Session Persistence & Light/Dark Theme Tokens...');
+const mobileNavPath = path.join(__dirname, '../src/components/layout/MobileBottomNav.tsx');
+const mobileNavContent = fs.readFileSync(mobileNavPath, 'utf8');
+
+const navbarPath = path.join(__dirname, '../src/components/layout/Navbar.tsx');
+const navbarContent = fs.readFileSync(navbarPath, 'utf8');
+
+console.log('Testing TradingView Charts, Workspace Persistence, Light/Dark Themes & Responsive Navigation/Header...');
 
 // 1. Verify Default Instrument is Gold (XAUUSD)
 assert.ok(fileContent.includes("DEFAULT_INSTRUMENT_SYMBOL = 'XAUUSD'"), 'Default symbol must be XAUUSD');
@@ -173,4 +179,37 @@ assert.ok(
   'ThemeContext must synchronize both .dark class and data-theme attribute'
 );
 
-console.log('✓ All 13 TradingView Chart, Workspace Persistence & Light/Dark Theme checks passed!');
+// 14. Verify Mobile/Tablet Bottom Navigation (Home, Charts, Coach, News, Journal in exact order, no More, no backdrop-blur)
+const homeIdx = mobileNavContent.indexOf("label: 'Home'");
+const chartsIdx = mobileNavContent.indexOf("label: 'Charts'");
+const coachIdx = mobileNavContent.indexOf("label: 'Coach'");
+const newsIdx = mobileNavContent.indexOf("label: 'News'");
+const journalIdx = mobileNavContent.indexOf("label: 'Journal'");
+assert.ok(
+  homeIdx > -1 && chartsIdx > homeIdx && coachIdx > chartsIdx && newsIdx > coachIdx && journalIdx > newsIdx,
+  'MobileBottomNav must render Home, Charts, Coach, News, and Journal in exact order'
+);
+assert.ok(mobileNavContent.includes("to: '/ai-coach'"), 'Coach tab must route to /ai-coach');
+assert.ok(mobileNavContent.includes("to: '/journal'"), 'Journal tab must route to /journal');
+assert.ok(!mobileNavContent.includes('<span>More</span>'), 'More tab must be replaced by Journal');
+assert.ok(!mobileNavContent.includes('backdrop-blur'), 'MobileBottomNav must not use backdrop-blur glassmorphism');
+assert.ok(mobileNavContent.includes("backdropFilter: 'none'"), 'MobileBottomNav must explicitly disable backdropFilter');
+
+// 15. Verify Header Redesign (Menu, Search on left; Notifications, Theme Toggle, Settings on right; no backdrop-blur)
+const menuBtnIdx = navbarContent.indexOf('aria-label="Toggle navigation menu"');
+const searchBtnIdx = navbarContent.indexOf('aria-label="Open global search"');
+const notifBtnIdx = navbarContent.indexOf('aria-label="Open notifications"');
+const themeBtnIdx = navbarContent.indexOf('onClick={toggleTheme}');
+const settingsBtnIdx = navbarContent.indexOf('aria-label="Open settings"');
+assert.ok(
+  menuBtnIdx > -1 &&
+    searchBtnIdx > menuBtnIdx &&
+    notifBtnIdx > searchBtnIdx &&
+    themeBtnIdx > notifBtnIdx &&
+    settingsBtnIdx > themeBtnIdx,
+  'Navbar must render Menu, Search, Notifications, Theme Toggle, and Settings in exact order'
+);
+assert.ok(!navbarContent.includes('backdrop-blur'), 'Navbar must not use backdrop-blur glassmorphism');
+assert.ok(navbarContent.includes('aria-label="Global Search"'), 'Navbar must include functional Global Search dialog');
+
+console.log('✓ All 15 TradingView Chart, Workspace Persistence, Theme & Responsive Navigation/Header checks passed!');

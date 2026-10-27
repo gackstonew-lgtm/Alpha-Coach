@@ -64,11 +64,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sidebarContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Desktop expands strictly on pointer hover or keyboard focus
-  const isDesktopExpanded = isHovered || isFocusWithin;
+  // Desktop expands on Header Menu toggle (isOpen), pointer hover, or keyboard focus
+  const isDesktopExpanded = isOpen || isHovered || isFocusWithin;
 
-  // Tablet expands on tap toggle, or hover if trackpad/mouse connected
-  const isTabletExpanded = tabletExpanded || isHovered || isFocusWithin;
+  // Tablet expands on Header Menu toggle (isOpen), tap toggle, or hover/focus
+  const isTabletExpanded = isOpen || tabletExpanded || isHovered || isFocusWithin;
 
   useEffect(() => {
     return () => {
@@ -158,9 +158,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             aria-label={item.name}
             aria-current={active ? 'page' : undefined}
             title={item.name}
-            className={`group relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-95 ${
+            className={`group relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] active:scale-95 ${
               active
-                ? 'bg-[#2F5BEA] text-white ring-2 ring-[#2F5BEA] scale-105 shadow-[0_0_12px_rgba(47,91,234,0.5)]'
+                ? 'bg-[var(--primary)] text-white ring-2 ring-[var(--primary)] scale-105 shadow-[0_0_12px_rgba(47,91,234,0.5)]'
                 : 'bg-transparent hover:bg-[var(--sidebar-item-hover-bg)] text-[var(--sidebar-icon)] hover:text-[var(--sidebar-icon-hover)]'
             }`}
           >
@@ -192,18 +192,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           }}
           aria-label={item.name}
           aria-current={active ? 'page' : undefined}
-          className={`group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 border-0 shadow-none outline-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] active:scale-[0.98] ${
+          className={`group relative flex items-center justify-between min-h-[44px] rounded-xl px-3.5 border-0 shadow-none outline-none transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] active:scale-[0.98] ${
             isSubItem ? 'text-[11px] py-2' : 'text-xs py-2.5'
           } ${
             active
-              ? 'bg-[#2F5BEA]/15 text-[var(--sidebar-icon-hover)] font-extrabold shadow-xs'
+              ? 'bg-[var(--primary)]/15 text-[var(--sidebar-icon-hover)] font-extrabold shadow-xs'
               : 'bg-transparent text-[var(--sidebar-icon)] hover:text-[var(--sidebar-icon-hover)] hover:bg-[var(--sidebar-item-hover-bg)] font-medium'
           }`}
         >
           {/* Sleek left sky-blue accent indicator bar for active item */}
           {active && (
             <span
-              className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#2F5BEA] shadow-[0_0_8px_rgba(56,189,248,0.7)]"
+              className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[var(--primary)] shadow-[0_0_8px_rgba(56,189,248,0.7)]"
               aria-hidden="true"
             />
           )}
@@ -212,7 +212,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="w-5 h-5 flex items-center justify-center shrink-0">
               <Icon
                 className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
-                  active ? 'text-[#2F5BEA] stroke-[2.5]' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--sidebar-icon-hover)]'
+                  active ? 'text-[var(--primary)] stroke-[2.5]' : 'text-[var(--sidebar-icon)] group-hover:text-[var(--sidebar-icon-hover)]'
                 }`}
               />
             </div>
@@ -244,7 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {isExpanded ? (
           <div className="flex flex-col justify-center min-h-[44px] px-1 select-none animate-in fade-in duration-200">
             <div className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold text-[var(--sidebar-icon-hover)] tracking-wide tabular-nums font-mono">
-              <Clock className="w-3.5 h-3.5 text-[#2F5BEA] shrink-0" aria-hidden="true" />
+              <Clock className="w-3.5 h-3.5 text-[var(--primary)] shrink-0" aria-hidden="true" />
               <span>{formattedTime}</span>
             </div>
             <div className="text-[10px] sm:text-[11px] font-medium text-[var(--sidebar-icon)] truncate">
@@ -260,7 +260,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 setTabletExpanded(true);
               }
             }}
-            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA] rounded-full flex items-center justify-center"
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] rounded-full flex items-center justify-center"
             aria-label="Arcade Fx Dashboard"
           >
             <div className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[var(--sidebar-bg)] border border-[var(--sidebar-logo-ring)] flex items-center justify-center shadow-xs hover:scale-105 transition-all duration-200">
@@ -389,7 +389,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div
           onClick={onClose}
           aria-hidden="true"
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 md:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/60 z-50 md:hidden animate-in fade-in duration-200"
         />
       )}
       <aside
