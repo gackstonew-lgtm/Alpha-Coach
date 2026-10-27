@@ -1,7 +1,7 @@
 {
   "buildVersion": "1.0.6",
-  "gitCommit": "442345bf054a875cd2fbbeebea4841d0258867da",
-  "buildTimestamp": "2026-10-27T10:48:23.118Z",
+  "gitCommit": "fd0e34aa275354c8bc3249821e8878162df91f5f",
+  "buildTimestamp": "2026-10-27T11:20:29.559Z",
   "backendSource": "backend/src",
   "target": "node18",
   "generatedBy": "scripts/build-api-bundle.js"

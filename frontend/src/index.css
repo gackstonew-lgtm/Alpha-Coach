@@ -2,96 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root,
+[data-theme="light"] {
   /* ========================================================================= */
-  /* ARCADE FX DESIGN SYSTEM TOKENS — LIGHT MODE (MOCKUP ALIGNED)               */
+  /* ARCADE FX — TRADINGVIEW-INSPIRED LIGHT THEME TOKENS (REFERENCE IMAGE 1)   */
   /* ========================================================================= */
   --font-sans: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
 
-  /* Surfaces */
-  --background: #F3F5F9;
-  --bg-page: #F3F5F9;
-  --bg-canvas: #F3F5F9;
+  /* Core TradingView Semantic Tokens */
+  --app-background: #ffffff;
+  --chart-background: #ffffff;
+  --surface-primary: #ffffff;
+  --surface-secondary: #f0f3fa;
+  --text-primary: #131722;
+  --text-secondary: #6a6d78;
+  --border-color: #e0e3eb;
+  --chart-grid: #e6e8ef;
+  --candle-bullish: #089981;
+  --candle-bearish: #f23645;
 
-  --card: #FFFFFF;
-  --card-foreground: #0F1A2E;
-  --bg-card: #FFFFFF;
-  --surface: #FFFFFF;
-  --bg-surface: #FFFFFF;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F1A2E;
+  /* Application Shell & Surfaces */
+  --background: #ffffff;
+  --bg-page: #ffffff;
+  --bg-canvas: #ffffff;
 
-  --border: #E3E8F1;
-  --border-card: #E3E8F1;
-  --border-strong: #D1D8E5;
-  --border-subtle: #EDF0F6;
-  --divider: #EDF0F6;
+  --card: #ffffff;
+  --card-foreground: #131722;
+  --bg-card: #ffffff;
+  --surface: #ffffff;
+  --bg-surface: #ffffff;
+  --popover: #ffffff;
+  --popover-foreground: #131722;
 
-  --surface-subtle: #EEF1F7;
-  --surface-elevated: #EEF1F7;
-  --surface-secondary: #EEF1F7;
-  --surface-hover: #E6EBF4;
-  --card-inner: #EEF1F7;
-  --input: #FFFFFF;
+  --border: #e0e3eb;
+  --border-card: #e0e3eb;
+  --border-strong: #d1d4dc;
+  --border-subtle: #ebeff5;
+  --divider: #e0e3eb;
 
-  /* Text Hierarchy */
-  --foreground: #0F1A2E;
-  --text-primary: #0F1A2E;
-  --text-secondary: #55627A;
-  --text-muted: #7C89A1;
-  --text-subtle: #7C89A1;
-  --muted: #EEF1F7;
-  --muted-foreground: #7C89A1;
+  --surface-subtle: #f8f9fd;
+  --surface-elevated: #f0f3fa;
+  --surface-hover: #e0e3eb;
+  --card-inner: #f0f3fa;
+  --input: #ffffff;
 
-  /* Accent (Single Primary Accent) */
-  --primary: #2F5BEA;
-  --primary-foreground: #FFFFFF;
-  --primary-hover: #2449C2;
-  --primary-soft: #E8EEFE;
-  --accent: #2F5BEA;
-  --accent-foreground: #FFFFFF;
-  --accent-primary: #2F5BEA;
-  --accent-hover: #2449C2;
-  --accent-tint: #E8EEFE;
-  --accent-subtle: #E8EEFE;
-  --accent-border: #C9D6FB;
-  --accent-glow: rgba(47, 91, 234, 0.25);
-  --accent-contrast: #FFFFFF;
-  --border-focus: #2F5BEA;
-  --ring: rgba(47, 91, 234, 0.35);
+  /* Typography Hierarchy */
+  --foreground: #131722;
+  --text-muted: #787b86;
+  --text-subtle: #9598a1;
+  --muted: #f0f3fa;
+  --muted-foreground: #6a6d78;
 
-  /* Semantic (Performance Only) */
-  --profit: #0E9F6E;
-  --trade-profit: #0E9F6E;
-  --success: #0E9F6E;
-  --success-foreground: #FFFFFF;
-  --success-soft: #E6F8F0;
-  --chip-green-bg: #E6F8F0;
-  --chip-green-text: #0E9F6E;
+  /* Primary Interface Accent (TradingView Restrained Blue) */
+  --primary: #2962ff;
+  --primary-foreground: #ffffff;
+  --primary-hover: #1e53e5;
+  --primary-soft: #e3f2fd;
+  --accent: #2962ff;
+  --accent-foreground: #ffffff;
+  --accent-primary: #2962ff;
+  --accent-hover: #1e53e5;
+  --accent-tint: rgba(41, 98, 255, 0.1);
+  --accent-subtle: rgba(41, 98, 255, 0.1);
+  --accent-border: rgba(41, 98, 255, 0.3);
+  --accent-glow: rgba(41, 98, 255, 0.25);
+  --accent-contrast: #ffffff;
+  --border-focus: #2962ff;
+  --ring: rgba(41, 98, 255, 0.35);
 
-  --loss: #D12F42;
-  --trade-loss: #D12F42;
-  --danger: #D12F42;
-  --destructive: #D12F42;
-  --danger-soft: #FDE8EA;
-  --destructive-foreground: #FFFFFF;
+  /* Financial & Candlestick Semantics (TradingView Bullish Teal & Bearish Red) */
+  --profit: #089981;
+  --trade-profit: #089981;
+  --success: #089981;
+  --success-foreground: #ffffff;
+  --success-soft: rgba(8, 153, 129, 0.12);
+  --chip-green-bg: rgba(8, 153, 129, 0.12);
+  --chip-green-text: #089981;
 
-  --live-badge-bg: #FDE8EA;
-  --live-badge-text: #C42A3B;
-  --badge-red: #D12F42;
+  --loss: #f23645;
+  --trade-loss: #f23645;
+  --danger: #f23645;
+  --destructive: #f23645;
+  --danger-soft: rgba(242, 54, 69, 0.12);
+  --destructive-foreground: #ffffff;
 
-  --warning: #A85B00;
-  --warning-soft: #FDF1DC;
-  --info: #2F5BEA;
-  --info-soft: #E8EEFE;
+  --live-badge-bg: rgba(242, 54, 69, 0.12);
+  --live-badge-text: #f23645;
+  --badge-red: #f23645;
 
-  /* Shadows & Elevation */
-  --shadow-card: 0 1px 3px rgba(15, 26, 46, 0.04), 0 1px 2px rgba(15, 26, 46, 0.02);
-  --shadow-pop: 0 8px 24px rgba(15, 26, 46, 0.08);
-  --card-shadow: 0 1px 3px rgba(15, 26, 46, 0.05), 0 1px 2px rgba(15, 26, 46, 0.03);
-  --card-shadow-hover: 0 10px 25px -5px rgba(15, 26, 46, 0.08), 0 8px 10px -6px rgba(15, 26, 46, 0.04);
-  --frame-shadow: 0 20px 40px -15px rgba(15, 26, 46, 0.06);
+  --warning: #f57c00;
+  --warning-soft: rgba(245, 124, 0, 0.12);
+  --info: #2962ff;
+  --info-soft: rgba(41, 98, 255, 0.12);
+
+  /* Restrained Shadows & Elevation */
+  --shadow-card: 0 1px 2px rgba(19, 23, 34, 0.04);
+  --shadow-pop: 0 6px 20px rgba(19, 23, 34, 0.08);
+  --card-shadow: 0 1px 2px rgba(19, 23, 34, 0.04);
+  --card-shadow-hover: 0 6px 16px rgba(19, 23, 34, 0.07);
+  --frame-shadow: 0 12px 28px rgba(19, 23, 34, 0.06);
 
   /* Radii */
   --radius: 0.5rem;
@@ -100,161 +110,191 @@
   --radius-pill: 9999px;
   --radius-sm: 0.25rem;
 
-  /* Aliases for Components */
-  --dash-dark-card: #EEF1F7;
-  --dash-dark-pill: #2F5BEA;
+  /* Component Aliases */
+  --dash-dark-card: #f0f3fa;
+  --dash-dark-pill: #2962ff;
 
-  /* Auth Artwork Specific Tokens */
-  --auth-card-bg: #FFFFFF;
-  --auth-heading: #0F1A2E;
-  --auth-input-bg: #EEF1F7;
-  --auth-input-text: #0F1A2E;
-  --auth-input-placeholder: #7C89A1;
-  --auth-btn-primary: #2F5BEA;
-  --auth-btn-hover: #2449C2;
-  --auth-btn-text: #FFFFFF;
-  --auth-checkbox: #2F5BEA;
-  --auth-link: #2F5BEA;
-  --auth-link-hover: #2449C2;
+  /* Auth Surface Tokens */
+  --auth-card-bg: #ffffff;
+  --auth-heading: #131722;
+  --auth-input-bg: #f0f3fa;
+  --auth-input-text: #131722;
+  --auth-input-placeholder: #787b86;
+  --auth-btn-primary: #2962ff;
+  --auth-btn-hover: #1e53e5;
+  --auth-btn-text: #ffffff;
+  --auth-checkbox: #2962ff;
+  --auth-link: #2962ff;
+  --auth-link-hover: #1e53e5;
 
-  /* Sidebar Tokens — Light Glass Capsule */
-  --sidebar-bg: #FFFFFF;
-  --sidebar-border: #E3E8F1;
-  --sidebar-shadow: 0 8px 24px rgba(15, 26, 46, 0.08);
-  --sidebar-divider: #EDF0F6;
-  --sidebar-icon: #7C89A1;
-  --sidebar-icon-hover: #0F1A2E;
-  --sidebar-item-hover-bg: #F0F3F9;
-  --sidebar-text: #55627A;
-  --sidebar-active-bg: #2F5BEA;
-  --sidebar-active-icon: #FFFFFF;
-  --sidebar-logo-ring: #E3E8F1;
-  --sidebar-danger-bg: #FDE8EA;
-  --sidebar-danger-icon: #C42A3B;
+  /* Sidebar Tokens — Clean Neutral White TradingView Surface */
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e0e3eb;
+  --sidebar-shadow: 0 4px 16px rgba(19, 23, 34, 0.06);
+  --sidebar-divider: #e0e3eb;
+  --sidebar-icon: #6a6d78;
+  --sidebar-icon-hover: #131722;
+  --sidebar-item-hover-bg: #f0f3fa;
+  --sidebar-text: #131722;
+  --sidebar-active-bg: #2962ff;
+  --sidebar-active-icon: #ffffff;
+  --sidebar-logo-ring: #e0e3eb;
+  --sidebar-danger-bg: rgba(242, 54, 69, 0.1);
+  --sidebar-danger-icon: #f23645;
 
-  /* Backward compatibility & gradient fallback */
-  --sidebar-hover-bg: #F0F3F9;
-  --sidebar-active-indicator: #2F5BEA;
-  --sidebar-text-muted: #7C89A1;
-  --sidebar-icon-active: #FFFFFF;
-  --sidebar-badge: #C42A3B;
-  --sidebar-grad-top: #FFFFFF;
-  --sidebar-grad-mid: #FFFFFF;
-  --sidebar-grad-bot: #FFFFFF;
-  --sidebar-glass-fill: rgba(255, 255, 255, 0.95);
-  --sidebar-glass-border: #E3E8F1;
+  --sidebar-hover-bg: #f0f3fa;
+  --sidebar-active-indicator: #2962ff;
+  --sidebar-text-muted: #6a6d78;
+  --sidebar-icon-active: #ffffff;
+  --sidebar-badge: #f23645;
+  --sidebar-grad-top: #ffffff;
+  --sidebar-grad-mid: #ffffff;
+  --sidebar-grad-bot: #ffffff;
+  --sidebar-glass-fill: rgba(255, 255, 255, 0.98);
+  --sidebar-glass-border: #e0e3eb;
 }
 
-.dark {
+.dark,
+[data-theme="dark"] {
   /* ========================================================================= */
-  /* REFERENCE DESIGN SYSTEM TOKENS — DARK MODE                                */
-  /* Exact sampled values from https://billing.quantumcode.co.ke/.dark         */
+  /* ARCADE FX — TRADINGVIEW-INSPIRED DARK THEME TOKENS (REFERENCE IMAGE 2)    */
   /* ========================================================================= */
-  --background: #0e1217;
-  --foreground: #e7eaef;
-  --card: #151a21;
-  --card-foreground: #e7eaef;
-  --card-inner: #1b212a;
-  --popover: #151a21;
-  --popover-foreground: #e7eaef;
-  --surface: #151a21;
-  --surface-subtle: #11161c;
-  --surface-elevated: #1c222b;
-  --surface-secondary: #2a313c;
-  --surface-hover: #222a36;
 
-  /* Primary Brand Accent (Luminous Sapphire Blue) */
-  --primary: #5b95f5;
-  --primary-foreground: #0a1220;
-  --primary-hover: #7aa9f7;
-  --primary-soft: #16233b;
+  /* Core TradingView Semantic Tokens */
+  --app-background: #000000;
+  --chart-background: #000000;
+  --surface-primary: #000000;
+  --surface-secondary: #131722;
+  --text-primary: #d1d4dc;
+  --text-secondary: #787b86;
+  --border-color: #2a2e39;
+  --chart-grid: #1c1f26;
+  --candle-bullish: #089981;
+  --candle-bearish: #f23645;
 
-  /* Text & Muted Hierarchy */
-  --muted: #1c222b;
-  --muted-foreground: #9aa4b2;
-  --text-primary: #e7eaef;
-  --text-secondary: #c2cbd6;
-  --text-muted: #9aa4b2;
-  --text-subtle: #6b7787;
+  /* Application Shell & Pure-Black / Charcoal Surfaces */
+  --background: #000000;
+  --foreground: #d1d4dc;
+  --card: #0a0d12;
+  --card-foreground: #d1d4dc;
+  --card-inner: #131722;
+  --popover: #131722;
+  --popover-foreground: #d1d4dc;
+  --surface: #0a0d12;
+  --surface-subtle: #05070a;
+  --surface-elevated: #131722;
+  --surface-hover: #1e222d;
 
-  /* Status & Financial Semantics */
-  --success: #4cc38a;
-  --success-foreground: #06140d;
-  --success-soft: #11261c;
-  --warning: #e5a93d;
-  --warning-soft: #2a2110;
-  --danger: #f27470;
-  --danger-soft: #2d1514;
-  --info: #5b95f5;
-  --info-soft: #16233b;
-  --accent: #5b95f5;
-  --accent-foreground: #0a1220;
-  --destructive: #f27470;
-  --destructive-foreground: #1a0a09;
+  /* Primary Interface Accent (TradingView Blue) */
+  --primary: #2962ff;
+  --primary-foreground: #ffffff;
+  --primary-hover: #1e53e5;
+  --primary-soft: rgba(41, 98, 255, 0.16);
 
-  /* Trading Gains & Losses */
-  --trade-profit: #4cc38a;
-  --trade-loss: #f27470;
-  --chip-green-bg: #11261c;
-  --chip-green-text: #4cc38a;
-  --badge-red: #f27470;
+  /* Typography & Muted Hierarchy */
+  --muted: #131722;
+  --muted-foreground: #787b86;
+  --text-muted: #787b86;
+  --text-subtle: #5d606b;
+
+  /* Status & Candlestick Semantics (TradingView Teal & Red) */
+  --profit: #089981;
+  --trade-profit: #089981;
+  --success: #089981;
+  --success-foreground: #ffffff;
+  --success-soft: rgba(8, 153, 129, 0.16);
+  --chip-green-bg: rgba(8, 153, 129, 0.16);
+  --chip-green-text: #089981;
+
+  --loss: #f23645;
+  --trade-loss: #f23645;
+  --danger: #f23645;
+  --danger-soft: rgba(242, 54, 69, 0.16);
+  --destructive: #f23645;
+  --destructive-foreground: #ffffff;
+  --badge-red: #f23645;
+  --live-badge-bg: rgba(242, 54, 69, 0.16);
+  --live-badge-text: #f23645;
+
+  --warning: #f57c00;
+  --warning-soft: rgba(245, 124, 0, 0.16);
+  --info: #2962ff;
+  --info-soft: rgba(41, 98, 255, 0.16);
+  --accent: #2962ff;
+  --accent-foreground: #ffffff;
 
   /* Borders & Focus Rings */
-  --border: #2a313c;
-  --border-subtle: #1f2630;
-  --border-strong: #3a4350;
-  --border-focus: #5b95f5;
-  --input: #151a21;
-  --ring: rgba(91, 149, 245, 0.45);
+  --border: #2a2e39;
+  --border-card: #2a2e39;
+  --border-subtle: #1e222d;
+  --border-strong: #363a45;
+  --divider: #2a2e39;
+  --border-focus: #2962ff;
+  --input: #131722;
+  --ring: rgba(41, 98, 255, 0.45);
 
   /* Shadows & Elevation */
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
-  --card-shadow-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-  --frame-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.75);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+  --card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.75);
+  --frame-shadow: 0 16px 32px rgba(0, 0, 0, 0.8);
 
-  /* Aliases for Existing ArcadeFx Components in Dark Mode */
-  --bg-page: #0e1217;
-  --bg-canvas: #0e1217;
-  --bg-surface: #151a21;
-  --bg-surface-secondary: #11161c;
-  --bg-surface-elevated: #1c222b;
-  --bg-surface-hover: #222a36;
-  --accent-primary: #5b95f5;
-  --accent-hover: #7aa9f7;
-  --accent-subtle: rgba(91, 149, 245, 0.16);
-  --accent-glow: rgba(91, 149, 245, 0.35);
-  --accent-contrast: #0a1220;
-  --dash-dark-card: #1c222b;
-  --dash-dark-pill: #5b95f5;
+  /* Aliases for Existing Arcade FX Components in Dark Mode */
+  --bg-page: #000000;
+  --bg-canvas: #000000;
+  --bg-surface: #0a0d12;
+  --bg-surface-secondary: #131722;
+  --bg-surface-elevated: #131722;
+  --bg-surface-hover: #1e222d;
+  --accent-primary: #2962ff;
+  --accent-hover: #1e53e5;
+  --accent-tint: rgba(41, 98, 255, 0.16);
+  --accent-subtle: rgba(41, 98, 255, 0.16);
+  --accent-border: rgba(41, 98, 255, 0.35);
+  --accent-glow: rgba(41, 98, 255, 0.35);
+  --accent-contrast: #ffffff;
+  --dash-dark-card: #131722;
+  --dash-dark-pill: #2962ff;
 
-  /* Sidebar Tokens — Dark Navy Capsule */
-  --sidebar-bg: #0E1A33;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --sidebar-divider: rgba(255, 255, 255, 0.08);
-  --sidebar-icon: #8FA0C4;
-  --sidebar-icon-hover: #FFFFFF;
-  --sidebar-item-hover-bg: rgba(255, 255, 255, 0.08);
-  --sidebar-text: #C9D3EA;
-  --sidebar-active-bg: #2F5BEA;
-  --sidebar-active-icon: #FFFFFF;
-  --sidebar-logo-ring: #2F4373;
-  --sidebar-danger-bg: #3A1F2B;
-  --sidebar-danger-icon: #FF8A9A;
+  /* Auth Surface Tokens in Dark Mode */
+  --auth-card-bg: #0a0d12;
+  --auth-heading: #d1d4dc;
+  --auth-input-bg: #131722;
+  --auth-input-text: #d1d4dc;
+  --auth-input-placeholder: #787b86;
+  --auth-btn-primary: #2962ff;
+  --auth-btn-hover: #1e53e5;
+  --auth-btn-text: #ffffff;
+  --auth-checkbox: #2962ff;
+  --auth-link: #2962ff;
+  --auth-link-hover: #1e53e5;
 
-  /* Backward compatibility & gradient tokens */
-  --sidebar-hover-bg: rgba(255, 255, 255, 0.08);
-  --sidebar-active-indicator: #2F5BEA;
-  --sidebar-text-muted: #8FA0C4;
-  --sidebar-icon-active: #FFFFFF;
-  --sidebar-badge: #FF8A9A;
-  --sidebar-grad-top: #0E1A33;
-  --sidebar-grad-mid: #0B152B;
-  --sidebar-grad-bot: #080E1D;
-  --sidebar-glass-fill: rgba(255, 255, 255, 0.07);
-  --sidebar-glass-border: rgba(255, 255, 255, 0.08);
+  /* Sidebar Tokens — TradingView Near-Black / Charcoal Surface */
+  --sidebar-bg: #0a0d12;
+  --sidebar-border: #2a2e39;
+  --sidebar-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
+  --sidebar-divider: #1e222d;
+  --sidebar-icon: #787b86;
+  --sidebar-icon-hover: #d1d4dc;
+  --sidebar-item-hover-bg: #131722;
+  --sidebar-text: #d1d4dc;
+  --sidebar-active-bg: #2962ff;
+  --sidebar-active-icon: #ffffff;
+  --sidebar-logo-ring: #2a2e39;
+  --sidebar-danger-bg: rgba(242, 54, 69, 0.15);
+  --sidebar-danger-icon: #f23645;
+
+  --sidebar-hover-bg: #131722;
+  --sidebar-active-indicator: #2962ff;
+  --sidebar-text-muted: #787b86;
+  --sidebar-icon-active: #ffffff;
+  --sidebar-badge: #f23645;
+  --sidebar-grad-top: #0a0d12;
+  --sidebar-grad-mid: #05070a;
+  --sidebar-grad-bot: #000000;
+  --sidebar-glass-fill: rgba(10, 13, 18, 0.96);
+  --sidebar-glass-border: #2a2e39;
 }
 
 @layer base {
@@ -263,8 +303,8 @@
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: var(--app-background);
+    color: var(--text-primary);
     font-family: var(--font-sans);
     overflow-x: hidden;
     letter-spacing: -0.015em;
@@ -287,7 +327,7 @@
 }
 
 /* ========================================================================= */
-/* REFERENCE BUTTON UTILITIES (Matching QC NetCore)                           */
+/* BUTTON UTILITIES                                                          */
 /* ========================================================================= */
 .btn-primary,
 .hostinger-btn-primary {
@@ -302,7 +342,7 @@
   padding: 0.625rem 1.25rem;
   border-radius: 0.75rem;
   border: 1px solid transparent;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  box-shadow: 0 1px 2px rgba(19, 23, 34, 0.05);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   user-select: none;
@@ -312,7 +352,7 @@
 .hostinger-btn-primary:hover {
   background-color: var(--primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(31, 95, 209, 0.25);
+  box-shadow: 0 4px 12px rgba(41, 98, 255, 0.25);
 }
 
 .btn-primary:active,
@@ -341,7 +381,7 @@
 .btn-secondary:hover,
 .hostinger-btn-secondary:hover {
   background-color: var(--surface-elevated);
-  border-color: rgba(31, 95, 209, 0.5);
+  border-color: var(--primary);
   transform: translateY(-1px);
 }
 
@@ -351,7 +391,7 @@
 }
 
 /* ========================================================================= */
-/* REFERENCE CARD & SURFACE UTILITIES                                        */
+/* CARD & SURFACE UTILITIES                                                  */
 /* ========================================================================= */
 .card-hover-interactive {
   transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease;
@@ -359,17 +399,13 @@
 
 @media (hover: hover) and (pointer: fine) {
   .card-hover-interactive:hover {
-    transform: translateY(-3px);
-    border-color: rgba(31, 95, 209, 0.4);
-    box-shadow: 0 10px 25px -5px rgba(16, 24, 40, 0.08), 0 8px 10px -6px rgba(16, 24, 40, 0.04);
-  }
-  .dark .card-hover-interactive:hover {
-    border-color: rgba(91, 149, 245, 0.4);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+    border-color: var(--primary);
+    box-shadow: var(--card-shadow-hover);
   }
 }
 
-/* Floating Glass Capsule Sidebar — Light Mode flat glassy capsule & Dark Mode navy gradient */
+/* Sidebar Surface — TradingView Neutral White in Light Mode & Pure Charcoal-Black in Dark Mode */
 .sidebar-glass-capsule {
   background: var(--sidebar-bg);
   border: 1px solid var(--sidebar-border);
@@ -379,7 +415,7 @@
 }
 
 .dark .sidebar-glass-capsule {
-  background: linear-gradient(180deg, var(--sidebar-grad-top) 0%, var(--sidebar-grad-mid) 45%, var(--sidebar-grad-bot) 100%);
+  background: var(--sidebar-bg);
   border: 1px solid var(--sidebar-border);
   box-shadow: var(--sidebar-shadow);
 }
@@ -409,7 +445,6 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
 
 /* ========================================================================= */
 /* 4K CINEMATIC HERO MOTION & COLOR ENHANCEMENT                              */
