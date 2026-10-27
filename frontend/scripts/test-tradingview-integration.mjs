@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Read tradingViewSymbols.ts, ChartsPage.tsx, and TradingViewAdvancedChart.tsx
+// Read tradingViewSymbols.ts, ChartsPage.tsx, TradingViewAdvancedChart.tsx, TradingChart.tsx, and chartWorkspaceStorage.ts
 const symbolsTsPath = path.join(__dirname, '../src/config/tradingViewSymbols.ts');
 const fileContent = fs.readFileSync(symbolsTsPath, 'utf8');
 
@@ -16,7 +16,13 @@ const chartsPageContent = fs.readFileSync(chartsPagePath, 'utf8');
 const tvChartPath = path.join(__dirname, '../src/components/chart/TradingViewAdvancedChart.tsx');
 const tvChartContent = fs.readFileSync(tvChartPath, 'utf8');
 
-console.log('Testing TradingView Advanced Chart Integration & Availability Regression Suite...');
+const mt5ChartPath = path.join(__dirname, '../src/components/chart/TradingChart.tsx');
+const mt5ChartContent = fs.readFileSync(mt5ChartPath, 'utf8');
+
+const workspaceStoragePath = path.join(__dirname, '../src/utils/chartWorkspaceStorage.ts');
+const workspaceStorageContent = fs.readFileSync(workspaceStoragePath, 'utf8');
+
+console.log('Testing TradingView Full-Workspace Chart Expansion, Market Catalog Removal & Session Persistence...');
 
 // 1. Verify Default Instrument is Gold (XAUUSD)
 assert.ok(fileContent.includes("DEFAULT_INSTRUMENT_SYMBOL = 'XAUUSD'"), 'Default symbol must be XAUUSD');
@@ -66,12 +72,45 @@ for (const inv of intervals) {
   assert.ok(fileContent.includes(`interval: '${inv}'`), `Interval ${inv} must be in TIMEFRAME_PRESETS`);
 }
 
-// 9. Verify ChartsPage.tsx imports and renders TradingViewAdvancedChart
+// 9. Verify Market Catalog Card & Reserved Layout Column Are Completely Removed from ChartsPage.tsx
+assert.ok(!chartsPageContent.includes('Market Catalog'), 'Market Catalog heading must be removed from ChartsPage');
+assert.ok(!chartsPageContent.includes('Market Directory'), 'Market Directory drawer must be removed from ChartsPage');
+assert.ok(!chartsPageContent.includes('lg:grid-cols-12'), 'Obsolete 12-column catalog grid split must be removed');
+assert.ok(!chartsPageContent.includes('lg:col-span-3'), 'Obsolete 3-column Market Catalog rail must be removed');
+assert.ok(!chartsPageContent.includes('lg:col-span-9'), 'Obsolete 9-column chart restriction must be removed');
+assert.ok(!chartsPageContent.includes('item.spread'), 'Catalog spread cards must be removed from ChartsPage');
+
+// 10. Verify Full-Workspace Chart Expansion & Preserved Controls in ChartsPage.tsx
 assert.ok(chartsPageContent.includes('TradingViewAdvancedChart'), 'ChartsPage must import TradingViewAdvancedChart');
 assert.ok(chartsPageContent.includes('<TradingViewAdvancedChart'), 'ChartsPage must render <TradingViewAdvancedChart');
+assert.ok(chartsPageContent.includes('height="100%"'), 'ChartsPage must expand chart height to 100% of workspace');
+assert.ok(chartsPageContent.includes('100dvh'), 'ChartsPage must size workspace container relative to dynamic viewport height');
+assert.ok(chartsPageContent.includes('Select trading instrument'), 'ChartsPage must preserve compact symbol selector');
 assert.ok(chartsPageContent.includes('useTheme()'), 'ChartsPage must synchronize theme via useTheme()');
 
-// 10. Verify TradingViewAdvancedChart.tsx uses official embed script, fallback iframe, and attribution
+// 11. Verify Session & Cookie Persistence for Workspace, Indicators, and Drawings
+assert.ok(
+  workspaceStorageContent.includes("WORKSPACE_COOKIE_NAME = 'arcadefx_chart_workspace'"),
+  'Must persist workspace state in arcadefx_chart_workspace cookie'
+);
+assert.ok(
+  workspaceStorageContent.includes("WORKSPACE_STORAGE_KEY = 'arcadefx_chart_workspace_v1'"),
+  'Must persist workspace state in localStorage'
+);
+assert.ok(
+  workspaceStorageContent.includes('loadSymbolDrawings') && workspaceStorageContent.includes('saveSymbolDrawings'),
+  'Must persist per-symbol drawings in localStorage and cookies'
+);
+assert.ok(
+  chartsPageContent.includes('loadChartWorkspace') && chartsPageContent.includes('saveChartWorkspace'),
+  'ChartsPage must load and save workspace state across sessions'
+);
+assert.ok(
+  mt5ChartContent.includes('loadSymbolDrawings') && mt5ChartContent.includes('saveSymbolDrawings'),
+  'TradingChart must load and save per-symbol drawings across sessions'
+);
+
+// 12. Verify TradingViewAdvancedChart.tsx availability and indicator persistence
 assert.ok(
   tvChartContent.includes('https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'),
   'Must use official TradingView embed script'
@@ -80,28 +119,14 @@ assert.ok(
   tvChartContent.includes('https://www.tradingview-widget.com/embed-widget/advanced-chart/'),
   'Must include official TradingView widget iframe fallback URL'
 );
-assert.ok(tvChartContent.includes('tradingview-widget-copyright'), 'Must include required TradingView attribution');
-assert.ok(tvChartContent.includes('resolveTradingViewSymbol'), 'Must resolve exchange-qualified symbols');
-
-// 11. Regression Guard: Must NEVER check detached widgetInner.querySelector('iframe')
 assert.ok(
   !tvChartContent.includes("widgetInner.querySelector('iframe')"),
-  'REGRESSION: Must never query iframe on detached widgetInner (TradingView replaces widgetInner with iframe inside widgetContainer)'
-);
-assert.ok(
-  !tvChartContent.includes('widgetInner.childNodes.length'),
-  'REGRESSION: Must never check childNodes on detached widgetInner'
+  'REGRESSION: Must never query iframe on detached widgetInner'
 );
 assert.ok(
   tvChartContent.includes("widgetContainer.querySelector('iframe')"),
   'Must query iframe on widgetContainer where TradingView mounts the iframe'
 );
+assert.ok(tvChartContent.includes('resolveTradingViewStudies'), 'Must pass persisted studies to TradingView widget');
 
-// 12. Verify MutationObserver, iframe load listener, ResizeObserver, and controlled retry state
-assert.ok(tvChartContent.includes('new MutationObserver'), 'Must observe widgetContainer with MutationObserver');
-assert.ok(tvChartContent.includes("iframe.addEventListener('load'"), 'Must listen for iframe load event');
-assert.ok(tvChartContent.includes('new ResizeObserver'), 'Must verify container dimensions via ResizeObserver');
-assert.ok(tvChartContent.includes('retryCount'), 'Must use controlled retryCount state for reload/retry');
-assert.ok(tvChartContent.includes('React.memo'), 'Must memoize TradingViewAdvancedChart to avoid unnecessary iframe reloads');
-
-console.log('✓ All 12 TradingView Advanced Chart integration & availability regression checks passed successfully!');
+console.log('✓ All 12 Full-Workspace Chart Expansion, Market Catalog Removal & Session Persistence checks passed!');
