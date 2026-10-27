@@ -29,6 +29,7 @@ import { MarketScannerService } from '../services/marketScanner.service';
 import { MonteCarloService } from '../services/monteCarlo.service';
 import { BrokerExecutionService } from '../services/brokerExecution.service';
 import { SECDisclosuresService } from '../services/secDisclosures.service';
+import { ForexNewsCalendarService } from '../services/providers/forexNewsCalendar.service';
 
 const router = Router();
 
@@ -328,18 +329,55 @@ router.post('/smc/analyze', requireUserAuth, async (req: AuthenticatedRequest, r
   }
 });
 
-// 6. Module E — Economic Calendar & Macroeconomic Intelligence Endpoints
+// 6. Module E — Economic Calendar, Forex News & Macroeconomic Intelligence Endpoints
 router.get('/fundamentals/calendar', requireUserAuth, async (req: AuthenticatedRequest, res) => {
   try {
-    const events = await FundamentalAnalysisService.getCalendarEvents({
+    const calendarData = await ForexNewsCalendarService.getLiveEconomicCalendar({
       currency: req.query.currency ? String(req.query.currency) : undefined,
       impact: req.query.impact as any,
-      category: req.query.category as any,
-      status: req.query.status as any,
+      timeframe: req.query.timeframe as any,
       startDate: req.query.startDate ? String(req.query.startDate) : undefined,
-      endDate: req.query.endDate ? String(req.query.endDate) : undefined
+      endDate: req.query.endDate ? String(req.query.endDate) : undefined,
+      category: req.query.category as any,
+      limit: req.query.limit ? Number(req.query.limit) : undefined
     });
-    res.json({ success: true, events });
+    res.json({
+      success: true,
+      events: calendarData.events,
+      total: calendarData.total,
+      nextHighImpactEvent: calendarData.nextHighImpactEvent,
+      lastUpdated: calendarData.lastUpdated
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.get('/fundamentals/news', requireUserAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const newsData = await ForexNewsCalendarService.getLiveForexNews({
+      currency: req.query.currency ? String(req.query.currency) : undefined,
+      impact: req.query.impact as any,
+      category: req.query.category ? String(req.query.category) : undefined,
+      query: req.query.q ? String(req.query.q) : undefined,
+      limit: req.query.limit ? Number(req.query.limit) : 30
+    });
+    res.json({
+      success: true,
+      ...newsData
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.get('/fundamentals/macro-summary', requireUserAuth, async (_req: AuthenticatedRequest, res) => {
+  try {
+    const summary = await ForexNewsCalendarService.getMacroSummary();
+    res.json({
+      success: true,
+      summary
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

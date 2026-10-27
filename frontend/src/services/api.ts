@@ -1878,16 +1878,31 @@ class ApiClient {
     });
   }
 
-  async getEconomicCalendar(filters: { currency?: string; impact?: string; category?: string; status?: string; startDate?: string; endDate?: string; limit?: number } = {}) {
+  async getEconomicCalendar(filters: { currency?: string; impact?: string; timeframe?: string; category?: string; status?: string; startDate?: string; endDate?: string; limit?: number } = {}) {
     const query = new URLSearchParams();
     if (filters.currency) query.set('currency', filters.currency);
     if (filters.impact) query.set('impact', filters.impact);
+    if (filters.timeframe) query.set('timeframe', filters.timeframe);
     if (filters.category) query.set('category', filters.category);
     if (filters.status) query.set('status', filters.status);
     if (filters.limit) query.set('limit', String(filters.limit));
     if (filters.startDate) query.set('startDate', filters.startDate);
     if (filters.endDate) query.set('endDate', filters.endDate);
     return this.request(`/intelligence/fundamentals/calendar?${query.toString()}`);
+  }
+
+  async getForexNews(filters: { currency?: string; impact?: string; category?: string; q?: string; limit?: number } = {}) {
+    const query = new URLSearchParams();
+    if (filters.currency) query.set('currency', filters.currency);
+    if (filters.impact) query.set('impact', filters.impact);
+    if (filters.category) query.set('category', filters.category);
+    if (filters.q) query.set('q', filters.q);
+    if (filters.limit) query.set('limit', String(filters.limit));
+    return this.request(`/intelligence/fundamentals/news?${query.toString()}`);
+  }
+
+  async getMacroSummary() {
+    return this.request('/intelligence/fundamentals/macro-summary');
   }
 
   async upsertEconomicCalendarEvent(payload: any) {
