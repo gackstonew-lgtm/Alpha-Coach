@@ -477,7 +477,7 @@ export const DashboardPage: React.FC = () => {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-surface-elevated/40 rounded-xl border border-dashed border-border text-muted-foreground space-y-2">
-                <BarChart3 className="w-8 h-8 text-muted-foreground/60" />
+                <BarChart3 className="w-8 h-8 text-content-muted" />
                 <p className="text-xs font-bold text-foreground">No Deal History Synchronized Yet</p>
                 <p className="text-[11px] max-w-sm">
                   Connect your MT5 terminal via the Companion Bridge to automatically stream executed trades and render your real PnL growth curve.
@@ -542,7 +542,7 @@ export const DashboardPage: React.FC = () => {
                       <span className="text-[11px] font-semibold text-muted-foreground block">
                         Unavailable
                       </span>
-                      <span className="text-[9px] text-muted-foreground/70 block">
+                      <span className="text-[9px] text-content-muted block">
                         No Live Feed
                       </span>
                     </div>

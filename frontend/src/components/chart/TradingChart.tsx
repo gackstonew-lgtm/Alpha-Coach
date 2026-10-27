@@ -1359,7 +1359,7 @@ export const TradingChart: React.FC<TradingChartProps> = ({
 
         {!isLoading && rawBars.length === 0 && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center text-xs text-content-muted space-y-2">
-            <Info className="w-8 h-8 text-content-muted/60" />
+            <Info className="w-8 h-8 text-content-secondary" />
             <p className="font-medium text-content-primary">No OHLCV history stored for {currentSymbol} ({timeframe})</p>
             <p className="max-w-md text-[11px]">
               Sync trade history through the MT5 Desktop Bridge, connect a market data key, or upload CSV bars in Strategy Lab.

@@ -91,9 +91,18 @@ export default {
         canvas: 'var(--app-background)',
         content: {
           primary: 'var(--text-primary)',
+          heading: 'var(--text-heading)',
+          body: 'var(--text-body)',
           secondary: 'var(--text-secondary)',
           muted: 'var(--text-muted)',
-          subtle: 'var(--text-subtle)'
+          subtle: 'var(--text-subtle)',
+          label: 'var(--text-label)',
+          input: 'var(--text-input)',
+          placeholder: 'var(--text-placeholder)',
+          nav: 'var(--text-nav)',
+          table: 'var(--text-table)',
+          disabled: 'var(--text-disabled)',
+          link: 'var(--text-link)'
         },
         brand: {
           DEFAULT: 'var(--primary)',

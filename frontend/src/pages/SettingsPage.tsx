@@ -710,7 +710,7 @@ export const SettingsPage: React.FC = () => {
                                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500">Archived</span>
                                 )}
                                 {isHidden && (
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-500/10 text-slate-400">Hidden</span>
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-surface-secondary text-content-secondary border border-border">Hidden</span>
                                 )}
                               </div>
                               <div className="text-xs text-content-muted font-mono">

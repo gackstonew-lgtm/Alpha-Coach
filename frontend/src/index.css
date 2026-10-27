@@ -16,7 +16,18 @@
   --surface-primary: #ffffff;
   --surface-secondary: #f0f3fa;
   --text-primary: #131722;
-  --text-secondary: #6a6d78;
+  --text-heading: #111827;
+  --text-body: #1f2937;
+  --text-secondary: #374151;
+  --text-muted: #374151;
+  --text-subtle: #4b5563;
+  --text-label: #374151;
+  --text-input: #111827;
+  --text-placeholder: #4b5563;
+  --text-nav: #1f2937;
+  --text-table: #1f2937;
+  --text-disabled: #6b7280;
+  --text-link: #1d4ed8;
   --border-color: #e0e3eb;
   --chart-grid: #e6e8ef;
   --candle-bullish: #089981;
@@ -47,12 +58,10 @@
   --card-inner: #f0f3fa;
   --input: #ffffff;
 
-  /* Typography Hierarchy */
+  /* Typography Hierarchy — High-Contrast Light Mode (WCAG 2.2 AA/AAA) */
   --foreground: #131722;
-  --text-muted: #787b86;
-  --text-subtle: #9598a1;
   --muted: #f0f3fa;
-  --muted-foreground: #6a6d78;
+  --muted-foreground: #374151;
 
   /* Primary Interface Accent (TradingView Restrained Blue) */
   --primary: #2962ff;
@@ -116,26 +125,26 @@
 
   /* Auth Surface Tokens */
   --auth-card-bg: #ffffff;
-  --auth-heading: #131722;
+  --auth-heading: #111827;
   --auth-input-bg: #f0f3fa;
-  --auth-input-text: #131722;
-  --auth-input-placeholder: #787b86;
+  --auth-input-text: #111827;
+  --auth-input-placeholder: #4b5563;
   --auth-btn-primary: #2962ff;
   --auth-btn-hover: #1e53e5;
   --auth-btn-text: #ffffff;
   --auth-checkbox: #2962ff;
-  --auth-link: #2962ff;
-  --auth-link-hover: #1e53e5;
+  --auth-link: #1d4ed8;
+  --auth-link-hover: #1e40af;
 
   /* Sidebar Tokens — Clean Neutral White TradingView Surface */
   --sidebar-bg: #ffffff;
   --sidebar-border: #e0e3eb;
   --sidebar-shadow: 0 4px 16px rgba(19, 23, 34, 0.06);
   --sidebar-divider: #e0e3eb;
-  --sidebar-icon: #6a6d78;
-  --sidebar-icon-hover: #131722;
+  --sidebar-icon: #374151;
+  --sidebar-icon-hover: #111827;
   --sidebar-item-hover-bg: #f0f3fa;
-  --sidebar-text: #131722;
+  --sidebar-text: #1f2937;
   --sidebar-active-bg: #2962ff;
   --sidebar-active-icon: #ffffff;
   --sidebar-logo-ring: #e0e3eb;
@@ -144,7 +153,7 @@
 
   --sidebar-hover-bg: #f0f3fa;
   --sidebar-active-indicator: #2962ff;
-  --sidebar-text-muted: #6a6d78;
+  --sidebar-text-muted: #374151;
   --sidebar-icon-active: #ffffff;
   --sidebar-badge: #f23645;
   --sidebar-grad-top: #ffffff;
@@ -166,7 +175,18 @@
   --surface-primary: #000000;
   --surface-secondary: #131722;
   --text-primary: #d1d4dc;
-  --text-secondary: #787b86;
+  --text-heading: #f3f4f6;
+  --text-body: #d1d4dc;
+  --text-secondary: #9ca3af;
+  --text-muted: #8a919e;
+  --text-subtle: #787b86;
+  --text-label: #9ca3af;
+  --text-input: #f3f4f6;
+  --text-placeholder: #787b86;
+  --text-nav: #d1d4dc;
+  --text-table: #d1d4dc;
+  --text-disabled: #5d606b;
+  --text-link: #5b95f5;
   --border-color: #2a2e39;
   --chart-grid: #1c1f26;
   --candle-bullish: #089981;
@@ -193,9 +213,7 @@
 
   /* Typography & Muted Hierarchy */
   --muted: #131722;
-  --muted-foreground: #787b86;
-  --text-muted: #787b86;
-  --text-subtle: #5d606b;
+  --muted-foreground: #8a919e;
 
   /* Status & Candlestick Semantics (TradingView Teal & Red) */
   --profit: #089981;
@@ -311,8 +329,37 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
+    color: var(--text-heading);
     letter-spacing: -0.025em;
     font-weight: 700;
+  }
+
+  p {
+    color: inherit;
+  }
+
+  label {
+    color: var(--text-label);
+  }
+
+  input,
+  select,
+  textarea {
+    color: var(--text-input);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-placeholder);
+    opacity: 1;
+  }
+
+  th {
+    color: var(--text-secondary);
+  }
+
+  td {
+    color: var(--text-table);
   }
 
   code, pre, .font-mono, .tabular-nums {
@@ -324,6 +371,11 @@
     outline: 2px solid var(--primary);
     outline-offset: 2px;
   }
+}
+
+.placeholder-content-muted::placeholder {
+  color: var(--text-placeholder) !important;
+  opacity: 1 !important;
 }
 
 /* ========================================================================= */

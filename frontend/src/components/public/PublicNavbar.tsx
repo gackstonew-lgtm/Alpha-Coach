@@ -208,7 +208,7 @@ export const PublicNavbar: React.FC = () => {
                         <div className="text-[11px] text-muted-foreground">{prod.desc}</div>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
+                    <ChevronRight className="w-4 h-4 text-content-secondary" />
                   </Link>
                 );
               })}
@@ -227,7 +227,7 @@ export const PublicNavbar: React.FC = () => {
                 className="flex items-center justify-between py-2.5 px-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition"
               >
                 <span>Features</span>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+                <ChevronRight className="w-4 h-4 text-content-secondary" />
               </a>
               <a
                 href="/#pricing"
@@ -235,7 +235,7 @@ export const PublicNavbar: React.FC = () => {
                 className="flex items-center justify-between py-2.5 px-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-surface-elevated transition"
               >
                 <span>Pricing Plans</span>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+                <ChevronRight className="w-4 h-4 text-content-secondary" />
               </a>
               {resourceLinks.map((link) => {
                 const Icon = link.icon;
@@ -250,7 +250,7 @@ export const PublicNavbar: React.FC = () => {
                       <Icon className="w-4 h-4 text-muted-foreground" />
                       <span>{link.name}</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+                    <ChevronRight className="w-4 h-4 text-content-secondary" />
                   </Link>
                 );
               })}

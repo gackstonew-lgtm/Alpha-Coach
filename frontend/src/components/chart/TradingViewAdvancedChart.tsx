@@ -33,7 +33,7 @@ export const TV_THEME_PALETTE = {
     backgroundColor: '#FFFFFF',
     gridColor: '#E6E8EF',
     textColor: '#131722',
-    secondaryTextColor: '#6A6D78',
+    secondaryTextColor: '#374151',
     borderColor: '#E0E3EB',
     candleBullish: '#089981',
     candleBearish: '#F23645'

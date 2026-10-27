@@ -147,7 +147,17 @@ const requiredCssTokens = [
   '--chart-background: #ffffff',
   '--surface-secondary: #f0f3fa',
   '--text-primary: #131722',
-  '--text-secondary: #6a6d78',
+  '--text-heading: #111827',
+  '--text-body: #1f2937',
+  '--text-secondary: #374151',
+  '--text-muted: #374151',
+  '--text-subtle: #4b5563',
+  '--text-label: #374151',
+  '--text-input: #111827',
+  '--text-placeholder: #4b5563',
+  '--text-nav: #1f2937',
+  '--text-table: #1f2937',
+  '--text-disabled: #6b7280',
   '--border-color: #e0e3eb',
   '--chart-grid: #e6e8ef',
   '--candle-bullish: #089981',
@@ -156,7 +166,8 @@ const requiredCssTokens = [
   '--chart-background: #000000',
   '--surface-secondary: #131722',
   '--text-primary: #d1d4dc',
-  '--text-secondary: #787b86',
+  '--text-secondary: #9ca3af',
+  '--text-muted: #8a919e',
   '--border-color: #2a2e39',
   '--chart-grid: #1c1f26'
 ];
@@ -212,4 +223,59 @@ assert.ok(
 assert.ok(!navbarContent.includes('backdrop-blur'), 'Navbar must not use backdrop-blur glassmorphism');
 assert.ok(navbarContent.includes('aria-label="Global Search"'), 'Navbar must include functional Global Search dialog');
 
-console.log('✓ All 15 TradingView Chart, Workspace Persistence, Theme & Responsive Navigation/Header checks passed!');
+// 16. Verify High-Contrast Light-Mode Typography Hierarchy & WCAG 2.2 AA Contrast Ratios (>= 4.5:1)
+function srgbToLinear(c) {
+  const s = c / 255;
+  return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+}
+function luminance(hex) {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  return 0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
+}
+function contrastRatio(fg, bg) {
+  const l1 = luminance(fg);
+  const l2 = luminance(bg);
+  const brightest = Math.max(l1, l2);
+  const darkest = Math.min(l1, l2);
+  return (brightest + 0.05) / (darkest + 0.05);
+}
+
+const lightModeTextTokens = [
+  { name: '--text-primary', hex: '#131722', minRatio: 15.0 },
+  { name: '--text-heading', hex: '#111827', minRatio: 15.0 },
+  { name: '--text-body', hex: '#1f2937', minRatio: 12.0 },
+  { name: '--text-secondary', hex: '#374151', minRatio: 7.0 },
+  { name: '--text-muted', hex: '#374151', minRatio: 7.0 },
+  { name: '--text-label', hex: '#374151', minRatio: 7.0 },
+  { name: '--text-input', hex: '#111827', minRatio: 15.0 },
+  { name: '--text-placeholder', hex: '#4b5563', minRatio: 4.5 },
+  { name: '--text-subtle', hex: '#4b5563', minRatio: 4.5 },
+  { name: '--text-nav', hex: '#1f2937', minRatio: 12.0 },
+  { name: '--text-table', hex: '#1f2937', minRatio: 12.0 },
+  { name: '--text-disabled', hex: '#6b7280', minRatio: 4.5 }
+];
+
+for (const token of lightModeTextTokens) {
+  const ratioWhite = contrastRatio(token.hex, '#FFFFFF');
+  const ratioSecondary = contrastRatio(token.hex, '#F0F3FA');
+  assert.ok(
+    ratioWhite >= token.minRatio,
+    `Light-mode ${token.name} (${token.hex}) must have >= ${token.minRatio}:1 contrast on #FFFFFF (got ${ratioWhite.toFixed(2)}:1)`
+  );
+  if (token.name !== '--text-disabled') {
+    assert.ok(
+      ratioSecondary >= 4.5,
+      `Light-mode ${token.name} (${token.hex}) must exceed WCAG AA 4.5:1 contrast on #F0F3FA (got ${ratioSecondary.toFixed(2)}:1)`
+    );
+  }
+}
+
+assert.ok(
+  tvChartContent.includes("secondaryTextColor: '#374151'"),
+  'TradingViewAdvancedChart light palette must use #374151 for high-contrast secondaryTextColor'
+);
+
+console.log('✓ All 16 TradingView Chart, Workspace Persistence, Theme, Navigation & Light-Mode Typography Contrast checks passed!');
