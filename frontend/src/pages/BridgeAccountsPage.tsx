@@ -172,15 +172,20 @@ export const BridgeAccountsPage: React.FC = () => {
               Install the companion application to automatically synchronize your complete trade history and live open positions.
             </p>
           </div>
-          <a
-            href={BRIDGE_DOWNLOAD_CONFIG.primaryDownloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="framer-btn-primary px-4 py-2.5 flex items-center gap-2 text-xs shrink-0"
-          >
-            <Download className="w-4 h-4" />
-            <span>Download for Windows</span>
-          </a>
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <a
+              href={BRIDGE_DOWNLOAD_CONFIG.primaryDownloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="framer-btn-primary px-4 py-2.5 flex items-center gap-2 text-xs"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download for Windows</span>
+            </a>
+            <span className="text-[10px] text-content-muted font-mono">
+              v{BRIDGE_DOWNLOAD_CONFIG.version} (64-bit) • {BRIDGE_DOWNLOAD_CONFIG.fileSize}
+            </span>
+          </div>
         </div>
 
         {/* 4 Step Process */}
@@ -205,9 +210,9 @@ export const BridgeAccountsPage: React.FC = () => {
               </span>
               <Download className="w-4 h-4 text-content-muted" />
             </div>
-            <h3 className="font-bold text-content-primary">Install Companion App</h3>
+            <h3 className="font-bold text-content-primary">Install Desktop Bridge</h3>
             <p className="text-content-secondary text-[11px] leading-relaxed">
-              Download and run the ArcadeFX MT5 Bridge on the Windows machine where MetaTrader 5 is installed.
+              Run the verified installer ({BRIDGE_DOWNLOAD_CONFIG.installerFilename}) on the Windows PC running MetaTrader 5.
             </p>
           </div>
 

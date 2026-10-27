@@ -50,6 +50,7 @@ a = Analysis(
 pyz = PYZ(a.pure)
 
 version_path = os.path.join(SPECPATH, 'file_version_info.txt') if os.path.exists(os.path.join(SPECPATH, 'file_version_info.txt')) else None
+manifest_path = os.path.join(SPECPATH, 'app.manifest') if os.path.exists(os.path.join(SPECPATH, 'app.manifest')) else None
 
 exe = EXE(
     pyz,
@@ -72,4 +73,5 @@ exe = EXE(
     entitlements_file=None,
     icon=icon_path if os.path.exists(icon_path) else None,
     version=version_path,
+    manifest=manifest_path,
 )
