@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useAccounts } from '../context/AccountContext';
 import { api } from '../services/api';
 import { ReconstructedTrade } from '../types';
-import { TradingChart } from '../components/chart/TradingChart';
 import {
   BookOpen,
   Search,

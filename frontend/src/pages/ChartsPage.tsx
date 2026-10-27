@@ -1,6 +1,4 @@
-import { PrimaryAction } from '../components/common/PrimaryAction';
-import { BottomSheet } from '../components/common/BottomSheet';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   TrendingUp,
@@ -17,42 +15,93 @@ import {
   Clock,
   RefreshCw,
   Search,
-  Filter
+  Filter,
+  SlidersHorizontal,
+  ChevronDown,
+  Sparkles,
+  ExternalLink
 } from 'lucide-react';
-import { TradingChart, TradeOverlayData } from '../components/chart/TradingChart';
+import { PrimaryAction } from '../components/common/PrimaryAction';
+import { BottomSheet } from '../components/common/BottomSheet';
 import { MetaHead } from '../components/common/MetaHead';
 import { useAccounts } from '../context/AccountContext';
+import { useTheme } from '../context/ThemeContext';
 import { api } from '../services/api';
-
-const WATCHLIST_SYMBOLS = [
-  { symbol: 'EURUSD', name: 'Euro / US Dollar', spread: '0.8', category: 'Major' },
-  { symbol: 'GBPUSD', name: 'British Pound / US Dollar', spread: '1.0', category: 'Major' },
-  { symbol: 'USDJPY', name: 'US Dollar / Japanese Yen', spread: '0.9', category: 'Major' },
-  { symbol: 'XAUUSD', name: 'Spot Gold / US Dollar', spread: '1.8', category: 'Metals' },
-  { symbol: 'AUDUSD', name: 'Aussie / US Dollar', spread: '1.1', category: 'Major' },
-  { symbol: 'USDCAD', name: 'US Dollar / Loonie', spread: '1.2', category: 'Major' },
-  { symbol: 'GBPJPY', name: 'Pound / Yen Cross', spread: '1.8', category: 'Cross' },
-  { symbol: 'EURJPY', name: 'Euro / Yen Cross', spread: '1.5', category: 'Cross' }
-];
+import {
+  TradingViewAdvancedChart
+} from '../components/chart/TradingViewAdvancedChart';
+import {
+  TradingChart,
+  TradeOverlayData
+} from '../components/chart/TradingChart';
+import {
+  SUPPORTED_INSTRUMENTS,
+  TIMEFRAME_PRESETS,
+  DEFAULT_INSTRUMENT_SYMBOL,
+  DEFAULT_TIMEFRAME_INTERVAL,
+  MarketCategory,
+  resolveTradingViewSymbol,
+  TradingViewInstrument
+} from '../config/tradingViewSymbols';
 
 export const ChartsPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const paramSymbol = searchParams.get('symbol');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { theme } = useTheme();
   const { selectedAccountId } = useAccounts();
-  const [activeSymbol, setActiveSymbol] = useState<string>(paramSymbol || 'EURUSD');
-  const [isSymbolPickerOpen, setIsSymbolPickerOpen] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (paramSymbol && paramSymbol !== activeSymbol) {
-      setActiveSymbol(paramSymbol);
-    }
-  }, [paramSymbol]);
+  // Active Symbol and Timeframe Interval (from URL or Defaults)
+  const initialSymbol = searchParams.get('symbol') || DEFAULT_INSTRUMENT_SYMBOL;
+  const initialInterval = searchParams.get('interval') || DEFAULT_TIMEFRAME_INTERVAL;
+
+  const [activeSymbol, setActiveSymbol] = useState<string>(initialSymbol);
+  const [activeInterval, setActiveInterval] = useState<string>(initialInterval);
+
+  // Chart Engine Mode: TradingView Advanced Chart (Default) vs MT5 Trade Overlays
+  const [engineMode, setEngineMode] = useState<'tradingview' | 'mt5_overlay'>('tradingview');
+
+  // Multi-pane Layout Mode
   const [layoutMode, setLayoutMode] = useState<'single' | 'dual' | 'quad'>('single');
-  const [dualSymbol, setDualSymbol] = useState<string>('GBPUSD');
+  const [dualSymbol, setDualSymbol] = useState<string>('EURUSD');
+
+  // Watchlist & Search State
+  const [isSymbolPickerOpen, setIsSymbolPickerOpen] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<MarketCategory>('ALL');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Overlays (from MT5 bridge)
   const [trades, setTrades] = useState<TradeOverlayData[]>([]);
   const [macroEvents, setMacroEvents] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoadingTrades, setIsLoadingTrades] = useState<boolean>(true);
+
+  // Sync state with URL params
+  useEffect(() => {
+    const urlSym = searchParams.get('symbol');
+    const urlInt = searchParams.get('interval');
+    if (urlSym && urlSym !== activeSymbol) {
+      setActiveSymbol(urlSym);
+    }
+    if (urlInt && urlInt !== activeInterval) {
+      setActiveInterval(urlInt);
+    }
+  }, [searchParams]);
+
+  const updateSymbol = (sym: string) => {
+    setActiveSymbol(sym);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('symbol', sym);
+      return next;
+    });
+  };
+
+  const updateInterval = (intv: string) => {
+    setActiveInterval(intv);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('interval', intv);
+      return next;
+    });
+  };
 
   // Load User's MT5 Trades & Economic Events
   useEffect(() => {
@@ -94,44 +143,130 @@ export const ChartsPage: React.FC = () => {
     }
   };
 
-  const filteredWatchlist = WATCHLIST_SYMBOLS.filter(
-    (item) =>
-      item.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Resolved metadata for active symbol
+  const activeMeta = useMemo(() => {
+    return resolveTradingViewSymbol(activeSymbol);
+  }, [activeSymbol]);
+
+  // Filtered market catalog
+  const filteredInstruments = useMemo(() => {
+    return SUPPORTED_INSTRUMENTS.filter((inst) => {
+      // Category match
+      if (selectedCategory !== 'ALL' && inst.category !== selectedCategory) {
+        return false;
+      }
+      // Query match
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          inst.symbol.toLowerCase().includes(q) ||
+          inst.name.toLowerCase().includes(q) ||
+          inst.exchange.toLowerCase().includes(q) ||
+          inst.tvSymbol.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [selectedCategory, searchQuery]);
+
+  // Active timeframe label
+  const activeTimeframeLabel = useMemo(() => {
+    const found = TIMEFRAME_PRESETS.find(p => p.interval === activeInterval);
+    return found ? found.label : activeInterval;
+  }, [activeInterval]);
 
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
       <MetaHead
-        title="Interactive Charts"
-        description="Professional multi-timeframe interactive Forex and CFD charts powered by TradingView Lightweight Charts with MT5 trade overlays and indicators."
+        title={`${activeSymbol} Live Chart — TradingView Advanced Charts`}
+        description={`Real-time interactive candlestick charts for ${activeSymbol} powered by TradingView Advanced Chart widgets with indicators, timeframes, and MT5 synchronization.`}
       />
 
-      {/* Top Controls Bar - Sleek MT5 Header */}
-      <div className="flex items-center justify-between gap-2 bg-surface border border-border-subtle p-2 sm:p-3 rounded-2xl">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="p-1.5 sm:p-2 rounded-xl bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
-            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
+      {/* Top Controls Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface border border-border-subtle p-3 rounded-2xl shadow-xs">
+        {/* Left: Active Instrument Badge & Engine Mode Switcher */}
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-accent-primary/10 text-accent-primary border border-accent-primary/20 shrink-0">
+            <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-sm sm:text-base font-bold text-content-primary flex items-center gap-1.5">
-              <span>{activeSymbol} Chart</span>
-              <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-500/10 text-brand-500 border border-brand-500/20">
-                Lightweight v4
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base sm:text-lg font-bold text-content-primary tracking-tight font-mono">
+                {activeSymbol}
+              </h1>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-accent-primary/10 text-accent-primary border border-accent-primary/20">
+                {activeMeta.instrument ? activeMeta.instrument.exchange : 'TradingView'}
               </span>
-            </h1>
-            <p className="hidden sm:block text-[11px] text-content-secondary">
-              MT5 live executions, technical indicators & market depth
-            </p>
+              <span className="text-[11px] text-content-muted hidden md:inline">
+                {activeMeta.instrument?.name || 'Live Candlesticks'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-content-secondary mt-0.5 font-mono">
+              <span>Interval: <strong className="text-content-primary">{activeTimeframeLabel}</strong></span>
+              <span>•</span>
+              <span className="flex items-center gap-1 text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Live Feed</span>
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Multi-Pane Layout Selector & Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="flex items-center bg-surface-secondary border border-border-subtle rounded-xl p-0.5 sm:p-1 text-xs">
+        {/* Right: Engine Switcher, Timeframe Presets, Layouts & Symbol Button */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Engine Selector: TradingView Advanced vs MT5 Overlays */}
+          <div className="flex items-center bg-surface-secondary border border-border-subtle rounded-xl p-1 text-xs">
+            <button
+              onClick={() => setEngineMode('tradingview')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition ${
+                engineMode === 'tradingview'
+                  ? 'bg-accent-primary text-white shadow-xs'
+                  : 'text-content-muted hover:text-content-primary'
+              }`}
+              title="Official TradingView Advanced Chart with indicators and drawings"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">TradingView</span>
+            </button>
+            <button
+              onClick={() => setEngineMode('mt5_overlay')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold transition ${
+                engineMode === 'mt5_overlay'
+                  ? 'bg-accent-primary text-white shadow-xs'
+                  : 'text-content-muted hover:text-content-primary'
+              }`}
+              title="ArcadeFX MT5 Trade Execution & SL/TP Markers"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">MT5 Trades</span>
+            </button>
+          </div>
+
+          {/* Timeframe Presets (TradingView Engine) */}
+          {engineMode === 'tradingview' && (
+            <div className="hidden md:flex items-center bg-surface-secondary border border-border-subtle rounded-xl p-0.5 text-xs font-mono">
+              {TIMEFRAME_PRESETS.map((tf) => (
+                <button
+                  key={tf.interval}
+                  onClick={() => updateInterval(tf.interval)}
+                  className={`px-2 py-1 rounded-lg font-medium transition ${
+                    activeInterval === tf.interval
+                      ? 'bg-surface text-accent-primary font-bold shadow-xs'
+                      : 'text-content-muted hover:text-content-primary'
+                  }`}
+                  title={tf.longLabel}
+                >
+                  {tf.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Layout Mode Toggles */}
+          <div className="flex items-center bg-surface-secondary border border-border-subtle rounded-xl p-0.5 text-xs">
             <button
               onClick={() => setLayoutMode('single')}
-              className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-lg font-medium transition ${
+              className={`p-1.5 rounded-lg transition ${
                 layoutMode === 'single'
                   ? 'bg-surface text-content-primary font-bold shadow-xs'
                   : 'text-content-muted hover:text-content-primary'
@@ -139,11 +274,10 @@ export const ChartsPage: React.FC = () => {
               title="Single Chart View"
             >
               <Square className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Single</span>
             </button>
             <button
               onClick={() => setLayoutMode('dual')}
-              className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-lg font-medium transition ${
+              className={`p-1.5 rounded-lg transition ${
                 layoutMode === 'dual'
                   ? 'bg-surface text-content-primary font-bold shadow-xs'
                   : 'text-content-muted hover:text-content-primary'
@@ -151,11 +285,10 @@ export const ChartsPage: React.FC = () => {
               title="Dual Split View"
             >
               <Columns className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Dual</span>
             </button>
             <button
               onClick={() => setLayoutMode('quad')}
-              className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-lg font-medium transition ${
+              className={`p-1.5 rounded-lg transition ${
                 layoutMode === 'quad'
                   ? 'bg-surface text-content-primary font-bold shadow-xs'
                   : 'text-content-muted hover:text-content-primary'
@@ -163,78 +296,108 @@ export const ChartsPage: React.FC = () => {
               title="4-Grid Multi-Timeframe View"
             >
               <Grid className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Quad</span>
             </button>
           </div>
 
-          <button
-            onClick={loadChartOverlays}
-            disabled={isLoadingTrades}
-            className="p-1.5 sm:p-2 bg-surface-secondary hover:bg-surface border border-border-subtle rounded-xl text-content-muted hover:text-content-primary transition disabled:opacity-50"
-            title="Refresh Trade Overlays"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLoadingTrades ? 'animate-spin' : ''}`} />
-          </button>
-
+          {/* Symbol Selector Button */}
           <PrimaryAction
             label={activeSymbol}
-            icon={<Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+            icon={<Search className="w-3.5 h-3.5" />}
             onClick={() => setIsSymbolPickerOpen(true)}
-            title="Change active chart symbol"
+            title="Search and select market instrument"
           />
         </div>
       </div>
 
+      {/* Mobile / Tablet Horizontal Timeframe Bar */}
+      {engineMode === 'tradingview' && (
+        <div className="flex md:hidden items-center gap-1 overflow-x-auto pb-1 bg-surface border border-border-subtle p-2 rounded-xl text-xs font-mono">
+          <span className="text-[10px] text-content-muted uppercase shrink-0 mr-1">Timeframe:</span>
+          {TIMEFRAME_PRESETS.map((tf) => (
+            <button
+              key={tf.interval}
+              onClick={() => updateInterval(tf.interval)}
+              className={`px-2.5 py-1 rounded-lg font-medium shrink-0 transition ${
+                activeInterval === tf.interval
+                  ? 'bg-accent-primary text-white font-bold'
+                  : 'bg-surface-secondary text-content-muted hover:text-content-primary'
+              }`}
+            >
+              {tf.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Main Workspace Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Left Watchlist Rail (Desktop only: 3 cols) */}
-        <div className="hidden lg:flex lg:col-span-3 flex-col bg-surface border border-border-subtle rounded-2xl overflow-hidden p-3 space-y-3">
+        {/* Left Market Directory Rail (Desktop: 3 cols) */}
+        <div className="hidden lg:flex lg:col-span-3 flex-col bg-surface border border-border-subtle rounded-2xl overflow-hidden p-3.5 space-y-3">
           <div className="flex items-center justify-between pb-2 border-b border-border-subtle">
             <span className="text-xs font-bold uppercase tracking-wider text-content-muted font-mono">
-              Market Watchlist
+              Market Catalog
             </span>
-            <span className="text-[10px] text-content-muted font-mono">10 Pairs</span>
+            <span className="text-[10px] text-content-muted font-mono">
+              {filteredInstruments.length} Available
+            </span>
           </div>
 
-          {/* Watchlist Search */}
+          {/* Market Search Input */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-content-muted absolute left-2.5 top-2.5" />
             <input
               type="text"
-              placeholder="Search currency or metal..."
+              placeholder="Search Gold, EURUSD, BTC, S&P..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface-secondary border border-border-subtle rounded-xl pl-8 pr-3 py-1.5 text-xs text-content-primary focus:outline-none focus:border-brand-500 font-mono"
+              className="w-full bg-surface-secondary border border-border-subtle rounded-xl pl-8 pr-3 py-1.5 text-xs text-content-primary focus:outline-none focus:border-accent-primary font-mono placeholder-content-muted"
             />
           </div>
 
-          {/* Symbol Cards */}
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1">
+            {(['ALL', 'METALS', 'FOREX_MAJORS', 'INDICES', 'CRYPTO'] as MarketCategory[]).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-2 py-0.5 rounded text-[10px] font-mono shrink-0 transition ${
+                  selectedCategory === cat
+                    ? 'bg-accent-primary text-white font-bold'
+                    : 'bg-surface-secondary text-content-muted hover:text-content-primary'
+                }`}
+              >
+                {cat === 'FOREX_MAJORS' ? 'MAJORS' : cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Scrollable Instrument List */}
           <div className="flex-1 overflow-y-auto space-y-1.5 max-h-[640px] pr-1">
-            {filteredWatchlist.map((item) => {
+            {filteredInstruments.map((item) => {
               const isSelected = activeSymbol === item.symbol;
               return (
                 <div
                   key={item.symbol}
-                  onClick={() => setActiveSymbol(item.symbol)}
+                  onClick={() => updateSymbol(item.symbol)}
                   className={`p-2.5 rounded-xl border cursor-pointer transition flex items-center justify-between group ${
                     isSelected
-                      ? 'bg-brand-500/10 border-brand-500/40 text-brand-500 shadow-xs'
+                      ? 'bg-accent-primary/10 border-accent-primary/40 text-accent-primary shadow-xs'
                       : 'bg-surface-secondary/40 border-border-subtle hover:bg-surface-secondary text-content-secondary hover:text-content-primary'
                   }`}
                 >
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-bold font-mono text-xs text-content-primary group-hover:text-brand-500 transition">
+                      <span className="font-bold font-mono text-xs text-content-primary group-hover:text-accent-primary transition">
                         {item.symbol}
                       </span>
-                      <span className="text-[9px] px-1 py-0.2 rounded bg-surface border border-border-subtle text-content-muted uppercase">
-                        {item.category}
+                      <span className="text-[9px] px-1 py-0.2 rounded bg-surface border border-border-subtle text-content-muted uppercase font-mono">
+                        {item.exchange}
                       </span>
                     </div>
-                    <p className="text-[10px] text-content-muted truncate max-w-[130px]">{item.name}</p>
+                    <p className="text-[10px] text-content-muted truncate max-w-[140px]">{item.name}</p>
                   </div>
                   <div className="text-right font-mono text-[10px] text-content-muted">
-                    <span>Spr: {item.spread}p</span>
+                    <span>{item.spread}</span>
                   </div>
                 </div>
               );
@@ -244,11 +407,11 @@ export const ChartsPage: React.FC = () => {
           {/* Quick Stats Banner */}
           <div className="p-2.5 bg-surface-secondary rounded-xl border border-border-subtle text-[11px] space-y-1 font-mono text-content-muted">
             <div className="flex justify-between">
-              <span>My Overlay Trades:</span>
+              <span>MT5 Synchronized Trades:</span>
               <strong className="text-content-primary font-bold">{trades.length}</strong>
             </div>
             <div className="flex justify-between">
-              <span>Macro Events:</span>
+              <span>Macro Calendar Releases:</span>
               <strong className="text-content-primary font-bold">{macroEvents.length}</strong>
             </div>
           </div>
@@ -256,95 +419,175 @@ export const ChartsPage: React.FC = () => {
 
         {/* Right Chart Canvas Area (9 cols on desktop, full width on mobile/tablet) */}
         <div className="lg:col-span-9 space-y-4">
-          {layoutMode === 'single' && (
-            <TradingChart
-              symbol={activeSymbol}
-              initialTimeframe="H1"
-              height={580}
-              trades={trades}
-              macroEvents={macroEvents}
-            />
-          )}
+          {engineMode === 'tradingview' ? (
+            /* --- OFFICIAL TRADINGVIEW ADVANCED CHART WIDGET --- */
+            <>
+              {layoutMode === 'single' && (
+                <TradingViewAdvancedChart
+                  symbol={activeSymbol}
+                  interval={activeInterval}
+                  theme={theme}
+                  height={620}
+                  allowSymbolChange={true}
+                />
+              )}
 
-          {layoutMode === 'dual' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TradingChart
-                symbol={activeSymbol}
-                initialTimeframe="H4"
-                height={520}
-                trades={trades}
-                macroEvents={macroEvents}
-              />
-              <TradingChart
-                symbol={dualSymbol}
-                initialTimeframe="M15"
-                height={520}
-                trades={trades}
-                macroEvents={macroEvents}
-              />
-            </div>
-          )}
+              {layoutMode === 'dual' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TradingViewAdvancedChart
+                    symbol={activeSymbol}
+                    interval={activeInterval}
+                    theme={theme}
+                    height={540}
+                  />
+                  <TradingViewAdvancedChart
+                    symbol={dualSymbol}
+                    interval={activeInterval}
+                    theme={theme}
+                    height={540}
+                  />
+                </div>
+              )}
 
-          {layoutMode === 'quad' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <TradingChart symbol={activeSymbol} initialTimeframe="D1" height={360} trades={trades} />
-              <TradingChart symbol={activeSymbol} initialTimeframe="H4" height={360} trades={trades} />
-              <TradingChart symbol={activeSymbol} initialTimeframe="H1" height={360} trades={trades} />
-              <TradingChart symbol={activeSymbol} initialTimeframe="M15" height={360} trades={trades} />
-            </div>
+              {layoutMode === 'quad' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TradingViewAdvancedChart symbol={activeSymbol} interval="D" theme={theme} height={380} />
+                  <TradingViewAdvancedChart symbol={activeSymbol} interval="240" theme={theme} height={380} />
+                  <TradingViewAdvancedChart symbol={activeSymbol} interval="60" theme={theme} height={380} />
+                  <TradingViewAdvancedChart symbol={activeSymbol} interval="15" theme={theme} height={380} />
+                </div>
+              )}
+            </>
+          ) : (
+            /* --- ARCADEx MT5 OVERLAYS ENGINE --- */
+            <>
+              {layoutMode === 'single' && (
+                <TradingChart
+                  symbol={activeSymbol}
+                  initialTimeframe="H1"
+                  height={620}
+                  trades={trades}
+                  macroEvents={macroEvents}
+                />
+              )}
+
+              {layoutMode === 'dual' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TradingChart
+                    symbol={activeSymbol}
+                    initialTimeframe="H4"
+                    height={540}
+                    trades={trades}
+                    macroEvents={macroEvents}
+                  />
+                  <TradingChart
+                    symbol={dualSymbol}
+                    initialTimeframe="M15"
+                    height={540}
+                    trades={trades}
+                    macroEvents={macroEvents}
+                  />
+                </div>
+              )}
+
+              {layoutMode === 'quad' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TradingChart symbol={activeSymbol} initialTimeframe="D1" height={380} trades={trades} />
+                  <TradingChart symbol={activeSymbol} initialTimeframe="H4" height={380} trades={trades} />
+                  <TradingChart symbol={activeSymbol} initialTimeframe="H1" height={380} trades={trades} />
+                  <TradingChart symbol={activeSymbol} initialTimeframe="M15" height={380} trades={trades} />
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
 
-      {/* Symbol Search & Watchlist BottomSheet */}
+      {/* Symbol Search & Watchlist BottomSheet for Mobile / Tablet */}
       <BottomSheet
         isOpen={isSymbolPickerOpen}
         onClose={() => setIsSymbolPickerOpen(false)}
-        title="Market Watchlist"
-        subtitle="Select currency pair or metal to render on TradingView chart"
+        title="Market Directory"
+        subtitle="Select Forex pair, metal, index, or cryptocurrency to render live candlesticks"
         secondaryAction={{
           label: 'Close',
           onClick: () => setIsSymbolPickerOpen(false)
         }}
       >
         <div className="space-y-3">
+          {/* Search Input */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-content-muted absolute left-3 top-3" />
             <input
               type="text"
-              placeholder="Search symbol, category or name..."
+              placeholder="Search symbol, exchange or name (e.g. Gold, BTC, SPX)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-surface-secondary border border-border-subtle rounded-xl pl-9 pr-3 py-2 text-xs text-content-primary focus:outline-none focus:border-sky-500 font-mono"
+              className="w-full bg-surface-secondary border border-border-subtle rounded-xl pl-9 pr-3 py-2 text-xs text-content-primary focus:outline-none focus:border-accent-primary font-mono placeholder-content-muted"
             />
           </div>
 
+          {/* Category Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            {(['ALL', 'METALS', 'FOREX_MAJORS', 'FOREX_CROSSES', 'INDICES', 'CRYPTO', 'STOCKS'] as MarketCategory[]).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono shrink-0 transition ${
+                  selectedCategory === cat
+                    ? 'bg-accent-primary text-white font-bold'
+                    : 'bg-surface-secondary text-content-muted hover:text-content-primary'
+                }`}
+              >
+                {cat.replace('_', ' ')}
+              </button>
+            ))}
+          </div>
+
+          {/* List of Instruments */}
           <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
-            {filteredWatchlist.map((item) => {
-              const isSelected = activeSymbol === item.symbol;
-              return (
-                <div
-                  key={item.symbol}
-                  onClick={() => {
-                    setActiveSymbol(item.symbol);
-                    setIsSymbolPickerOpen(false);
-                  }}
-                  className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${
-                    isSelected
-                      ? 'bg-sky-500/10 border-sky-500/40 text-sky-500 font-bold'
-                      : 'bg-surface-secondary/40 border-border-subtle hover:bg-surface-secondary text-content-secondary hover:text-content-primary'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold font-mono text-xs">{item.symbol}</span>
-                    <span className="text-[10px] text-content-muted font-sans">{item.name}</span>
+            {filteredInstruments.length > 0 ? (
+              filteredInstruments.map((item) => {
+                const isSelected = activeSymbol === item.symbol;
+                return (
+                  <div
+                    key={item.symbol}
+                    onClick={() => {
+                      updateSymbol(item.symbol);
+                      setIsSymbolPickerOpen(false);
+                    }}
+                    className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${
+                      isSelected
+                        ? 'bg-accent-primary/10 border-accent-primary/40 text-accent-primary font-bold'
+                        : 'bg-surface-secondary/40 border-border-subtle hover:bg-surface-secondary text-content-secondary hover:text-content-primary'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold font-mono text-xs">{item.symbol}</span>
+                      <span className="text-[10px] text-content-muted font-sans truncate max-w-[170px]">{item.name}</span>
+                    </div>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border-subtle text-content-muted font-mono">
+                      {item.exchange}
+                    </span>
                   </div>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-border-subtle text-content-muted font-mono">
-                    {item.category}
-                  </span>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="p-8 text-center text-xs text-content-muted space-y-2">
+                <p>No catalog instrument matches "{searchQuery}".</p>
+                {searchQuery.trim().length >= 2 && (
+                  <button
+                    onClick={() => {
+                      updateSymbol(searchQuery.trim().toUpperCase());
+                      setIsSymbolPickerOpen(false);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-accent-primary text-white text-xs font-semibold"
+                  >
+                    Load Custom Ticker "{searchQuery.trim().toUpperCase()}"
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </BottomSheet>
