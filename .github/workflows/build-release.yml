@@ -177,7 +177,7 @@ jobs:
           echo "portable_hash=$actualPortableHash" >> $env:GITHUB_OUTPUT
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: "ArcadeFX MT5 Bridge ${{ github.ref_name || 'v1.0.6' }}"
           draft: ${{ inputs.draft || false }}
