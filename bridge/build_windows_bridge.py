@@ -63,6 +63,7 @@ def build():
     parser.add_argument("--require-signing", action="store_true", help="Fail build if Authenticode signature is missing or invalid")
     parser.add_argument("--cert-file", help="Path to PFX certificate file")
     parser.add_argument("--cert-pass", help="Password for PFX certificate file")
+    parser.add_argument("--cert-thumbprint", help="SHA1 thumbprint of certificate in Windows Certificate Store")
     parser.add_argument("--iscc-path", help="Custom path to Inno Setup ISCC.exe")
     args = parser.parse_args()
 
@@ -125,7 +126,7 @@ def build():
     # Step 2: Authenticode Sign Application Executable
     # ---------------------------------------------------------
     print("\n--- [Step 2/5] Signing Application Executable ---")
-    ok, ver_exe = sign_file(exe_path, args.cert_file, args.cert_pass, require_signing=require_signing)
+    ok, ver_exe = sign_file(exe_path, args.cert_file, args.cert_pass, thumbprint=args.cert_thumbprint, require_signing=require_signing)
     if not ok:
         print("[ERROR] Application executable signing or signature verification failed!")
         sys.exit(1)
@@ -159,7 +160,7 @@ def build():
     # Step 4: Authenticode Sign Windows Installer
     # ---------------------------------------------------------
     print("\n--- [Step 4/5] Signing Windows Installer ---")
-    ok, ver_setup = sign_file(setup_path, args.cert_file, args.cert_pass, require_signing=require_signing)
+    ok, ver_setup = sign_file(setup_path, args.cert_file, args.cert_pass, thumbprint=args.cert_thumbprint, require_signing=require_signing)
     if not ok:
         print("[ERROR] Windows installer signing or signature verification failed!")
         sys.exit(1)

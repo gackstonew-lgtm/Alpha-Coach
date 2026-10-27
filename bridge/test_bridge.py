@@ -179,5 +179,32 @@ class TestMT5Bridge(unittest.TestCase):
         # If terminal account changes from 12345 to 67890, bridge should reset sync timestamps
         self.assertNotEqual(bridge.last_known_account, current_acc)
 
+    def test_windows_manifest_security(self):
+        manifest_path = os.path.join(os.path.dirname(__file__), "app.manifest")
+        self.assertTrue(os.path.isfile(manifest_path))
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn('requestedExecutionLevel level="asInvoker"', content)
+        # Windows 10 and 11 supportedOS GUID
+        self.assertIn('{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}', content)
+        self.assertIn('PerMonitorV2', content)
+
+    def test_inno_setup_hardening(self):
+        iss_path = os.path.join(os.path.dirname(__file__), "installer", "arcadefx_bridge_installer.iss")
+        with open(iss_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("ArchitecturesAllowed=x64compatible", content)
+        self.assertIn("SignedUninstaller=yes", content)
+        self.assertIn("MinVersion=10.0.17763", content)
+        self.assertIn("AppMutex=ArcadeFX_MT5_Bridge_Singleton_Mutex", content)
+
+    def test_pe_version_resource_metadata(self):
+        res_path = os.path.join(os.path.dirname(__file__), "file_version_info.txt")
+        with open(res_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("'CompanyName', 'ArcadeFX'", content)
+        self.assertIn("'ProductName', 'ArcadeFX MT5 Bridge'", content)
+        self.assertIn("'FileVersion', '1.0.6.0'", content)
+
 if __name__ == "__main__":
     unittest.main()

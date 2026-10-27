@@ -31,6 +31,15 @@ SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=commandline
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+MinVersion=10.0.17763
+AppMutex=ArcadeFX_MT5_Bridge_Singleton_Mutex
+#ifdef SignUninstaller
+SignedUninstaller=yes
+#else
+SignedUninstaller=no
+#endif
 VersionInfoVersion={#MyAppVersion}.0
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} Setup
