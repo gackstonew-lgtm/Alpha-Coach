@@ -2,6 +2,18 @@
 
 All notable changes to Trader's Edge are documented in this file.
 
+## [1.1.0] - 2026-11-02
+### Added
+- **MT5 Bot Management Platform (Stages 0–8)**:
+  - MT5 Bot agent (`agent/mt5_bot_agent.py`) with local risk ceilings, HMAC command verification, replay protection, and offline queueing.
+  - Bot Management UI (`frontend/src/pages/MT5BotPage.tsx`) with fleet monitoring, real-time telemetry, configuration editor, and Telegram notifications.
+  - Admin Command Console (`frontend/src/pages/AdminPage.tsx`) with emergency global kill switch, user suspensions, and fleet diagnostics.
+  - Empirical Performance Transparency with Wilson score confidence intervals, sample size guardrails, and risk disclosures.
+  - Legal & Compliance Scaffolding with 18+ age gate, blocked jurisdictions, and draft Terms of Service / Disclaimers.
+  - Multi-tier billing and subscriptions scaffolding with Stripe and Mobile Money adapters (strictly gated behind `public_subscriptions` flag).
+  - Security architecture documentation, setup guides, and comprehensive test suites (120 backend tests, 20 bridge tests, 4 bot agent tests).
+  - Synchronized production serverless API bundles and Vercel production deployment.
+
 ## [1.0.6] - 2026-09-28
 ### Added
 - **Production Hardening & Verification**:
