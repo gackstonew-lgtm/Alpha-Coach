@@ -1,0 +1,4 @@
+# Arcade Fx MT5 Bot Agent Dependencies
+# The core agent is built with standard library modules.
+# When running next to MetaTrader 5 on Windows, MetaTrader5 package enables direct terminal access.
+MetaTrader5>=5.0.45; platform_system=="Windows"

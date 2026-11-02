@@ -21,9 +21,9 @@ export default defineConfig({
       ],
       manifest: {
         id: '/',
-        name: "Arcade Fx — Automated MT5 Trading Journal & Performance OS",
+        name: "Arcade Fx — MT5 Bot Management & Performance OS",
         short_name: "Arcade Fx",
-        description: 'Automated MT5 Trading Journal & Quantitative Performance Operating System for modern discretionary and systematic traders.',
+        description: 'Subscription-based MetaTrader 5 bot management, automated trading journal, and quantitative performance operating system.',
         theme_color: '#060709',
         background_color: '#060709',
         display: 'standalone',

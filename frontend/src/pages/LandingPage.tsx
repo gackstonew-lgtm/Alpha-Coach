@@ -1,3 +1,5 @@
+import { BOT_NAME, BOT_ASSISTANT_NAME } from '../config/appConfig';
+import { FEATURE_FLAGS } from '../config/featureFlags';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MetaHead } from '../components/common/MetaHead';
@@ -24,7 +26,10 @@ import {
   CreditCard,
   Check,
   Shield,
-  Zap
+  ShieldCheck,
+  Zap,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 import { Logo } from '../components/common/Logo';
 
@@ -105,9 +110,9 @@ export const LandingPage: React.FC = () => {
     },
     {
       icon: Bot,
-      title: 'AI Coach',
+      title: BOT_ASSISTANT_NAME,
       description: 'Get empirical feedback based on verified MT5 metrics.',
-      badge: 'Coach'
+      badge: 'Assistant'
     },
     {
       icon: Trophy,
@@ -314,6 +319,21 @@ export const LandingPage: React.FC = () => {
               <p className="text-sm sm:text-base text-muted-foreground">
                 Align platform costs directly with your active MetaTrader 5 accounts and journaling operations.
               </p>
+
+              {/* Private Beta Flag Notice */}
+              {!FEATURE_FLAGS.public_subscriptions && (
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs text-left flex items-start gap-3 mt-4">
+                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <span className="font-bold uppercase tracking-wider text-[11px] block">
+                      Private Beta Notice — Public Subscriptions Disabled
+                    </span>
+                    <span className="text-muted-foreground block leading-relaxed">
+                      Self-serve credit card billing and public subscriptions are currently paused pending final regulatory and compliance approval. Existing invited beta users may use credentials provided by the administrator.
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
@@ -379,7 +399,7 @@ export const LandingPage: React.FC = () => {
                   <ul className="space-y-2.5 pt-2 text-xs text-muted-foreground font-semibold">
                     <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span className="text-foreground font-bold">Unlimited MT5 Accounts & Terminals</span></li>
                     <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span>Real-Time Risk Guardian Alerts</span></li>
-                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span>AI Coach Execution Breakdown</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span>Bot Assistant Execution Breakdown</span></li>
                     <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span>Market Scanner Structure Detection</span></li>
                     <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span>Full Historical Export (CSV/JSON)</span></li>
                   </ul>
@@ -427,6 +447,27 @@ export const LandingPage: React.FC = () => {
                   <ArrowRight className="w-4 h-4 text-primary" />
                 </Link>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================================= */}
+        {/* VERIFIED TRACK RECORD & RISK POLICY SECTION                               */}
+        {/* ========================================================================= */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="p-6 sm:p-8 rounded-2xl bg-surface border border-border space-y-4">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+              <ShieldCheck className="w-4 h-4" />
+              <span>Verified Track Record & Empirical Transparency Policy</span>
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              In accordance with strict transparency standards, Arcade Fx never publishes hypothetical, unverified, or cherry-picked marketing track records. Any performance figures shown in product documentation derive exclusively from verified, cryptographically signed MetaTrader 5 deal histories explicitly labelled with account mode (LIVE or DEMO), verification period, maximum peak-to-trough drawdown, and closed deal count.
+            </p>
+            <div className="pt-2 border-t border-border/40 text-[11px] text-muted-foreground leading-normal flex items-start gap-2">
+              <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <span>
+                <strong>Regulatory Risk Warning:</strong> Forex and CFD trading carries substantial risk of loss and is not suitable for all investors. Never risk capital you cannot afford to lose.
+              </span>
             </div>
           </div>
         </section>

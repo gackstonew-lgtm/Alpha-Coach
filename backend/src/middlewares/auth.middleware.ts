@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthService, isTransientAuthFailureReason } from '../services/auth.service';
 import { BridgeService } from '../services/bridge.service';
+import { getDatabaseAsync } from '../db/db';
 
 export interface AuthenticatedRequest extends Request {
   requestId?: string;
@@ -52,11 +53,6 @@ export async function requireUserAuth(req: AuthenticatedRequest, res: Response, 
   if (!authResult.valid || !authResult.user) {
     const reason = authResult.failureReason || 'SUPABASE_TOKEN_INVALID';
 
-    // Transient failures (network/timeout contacting Supabase, missing backend config, or a
-    // verified-but-unsynced DB record) are NOT proof the token is invalid. Return 503 so
-    // clients treat this as "try again" rather than "log the user out" — this is what
-    // prevents a transient hiccup from becoming a re-authentication loop on flows like
-    // MT5 bridge pairing authorization.
     if (isTransientAuthFailureReason(reason)) {
       console.error(`[AUTH 503] reqId=${reqId} ${req.method} ${req.originalUrl} - Transient auth verification failure: ${reason}`);
       res.status(503).json({
@@ -88,6 +84,67 @@ export async function requireUserAuth(req: AuthenticatedRequest, res: Response, 
 
 // Alias to guarantee compatibility with canonical naming
 export const requireAuthenticatedUser = requireUserAuth;
+
+/**
+ * Enforces ADMIN role for administrative operations.
+ */
+export async function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Authentication required.' }
+    });
+    return;
+  }
+
+  const role = (req.user.role || '').toUpperCase();
+  if (role !== 'ADMIN') {
+    const reqId = req.requestId || uuidv4();
+    console.warn(`[ADMIN 403] reqId=${reqId} user=${req.user.userId} role=${req.user.role} attempted admin endpoint ${req.originalUrl}`);
+    res.status(403).json({
+      success: false,
+      error: {
+        code: 'FORBIDDEN',
+        message: 'Administrative privileges required.'
+      },
+      requestId: reqId
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Writes an immutable audit entry to the audit_logs table.
+ */
+export async function logAuditEvent(params: {
+  userId?: string;
+  action: string;
+  entityType: string;
+  entityId?: string;
+  ipAddress?: string;
+  details?: Record<string, any>;
+}): Promise<void> {
+  try {
+    const db = await getDatabaseAsync();
+    await db.run(
+      `INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, ip_address, details_json, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [
+        uuidv4(),
+        params.userId || null,
+        params.action,
+        params.entityType,
+        params.entityId || null,
+        params.ipAddress || null,
+        JSON.stringify(params.details || {})
+      ]
+    );
+  } catch (err) {
+    console.error('[AUDIT LOG ERROR]', err);
+  }
+}
 
 /**
  * Dual authentication middleware for endpoints supporting either local MT5 Bridge device tokens or Web Users.
@@ -159,4 +216,3 @@ export async function requireBridgeOrUserAuth(req: AuthenticatedRequest, res: Re
     requestId: reqId
   });
 }
-

@@ -651,5 +651,169 @@ CREATE TABLE IF NOT EXISTS broker_order_tickets (
 );
 CREATE INDEX IF NOT EXISTS idx_broker_orders_user ON broker_order_tickets(user_id, approval_state);
 CREATE INDEX IF NOT EXISTS idx_broker_orders_idempotency ON broker_order_tickets(idempotency_key);
-`;
 
+-- MT5 Bot Management Schema Additions
+CREATE TABLE IF NOT EXISTS plans (
+  id TEXT PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  price_monthly_cents INTEGER NOT NULL DEFAULT 0,
+  price_annual_cents INTEGER NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  max_instances INTEGER NOT NULL DEFAULT 1,
+  max_accounts INTEGER NOT NULL DEFAULT 1,
+  features_json TEXT NOT NULL DEFAULT '{}',
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  plan_id TEXT NOT NULL REFERENCES plans(id) ON DELETE RESTRICT,
+  status TEXT NOT NULL DEFAULT 'trialing',
+  billing_provider TEXT NOT NULL DEFAULT 'manual',
+  provider_customer_id TEXT,
+  provider_subscription_id TEXT,
+  current_period_start TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  current_period_end TEXT NOT NULL,
+  cancel_at_period_end INTEGER NOT NULL DEFAULT 0,
+  canceled_at TEXT,
+  trial_start TEXT,
+  trial_end TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+
+CREATE TABLE IF NOT EXISTS entitlements (
+  id TEXT PRIMARY KEY,
+  user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  subscription_id TEXT REFERENCES subscriptions(id) ON DELETE SET NULL,
+  max_instances INTEGER NOT NULL DEFAULT 1,
+  max_accounts INTEGER NOT NULL DEFAULT 1,
+  can_trade INTEGER NOT NULL DEFAULT 0,
+  features_json TEXT NOT NULL DEFAULT '{}',
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_entitlements_user ON entitlements(user_id);
+
+CREATE TABLE IF NOT EXISTS bot_instances (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  account_id TEXT REFERENCES trading_accounts(id) ON DELETE SET NULL,
+  instance_name TEXT NOT NULL,
+  device_token_hash TEXT,
+  mode TEXT NOT NULL DEFAULT 'DEMO',
+  status TEXT NOT NULL DEFAULT 'OFFLINE',
+  engine_version TEXT NOT NULL DEFAULT '1.0.0',
+  symbol_set TEXT NOT NULL DEFAULT '["EURUSD"]',
+  last_heartbeat_at TEXT,
+  last_error TEXT,
+  uptime_seconds INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_bot_instances_user ON bot_instances(user_id);
+
+CREATE TABLE IF NOT EXISTS device_tokens (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  instance_id TEXT REFERENCES bot_instances(id) ON DELETE CASCADE,
+  token_hash TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  is_revoked INTEGER NOT NULL DEFAULT 0,
+  rotated_at TEXT,
+  last_used_at TEXT,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_device_tokens_hash ON device_tokens(token_hash);
+
+CREATE TABLE IF NOT EXISTS bot_commands (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  instance_id TEXT NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
+  command_type TEXT NOT NULL,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  signature TEXT NOT NULL,
+  nonce TEXT NOT NULL,
+  idempotency_key TEXT UNIQUE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'QUEUED',
+  executed_at TEXT,
+  result_json TEXT,
+  error_message TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_bot_commands_instance ON bot_commands(instance_id, status);
+
+CREATE TABLE IF NOT EXISTS bot_events (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  instance_id TEXT NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  dedup_id TEXT UNIQUE,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_bot_events_instance ON bot_events(instance_id);
+
+CREATE TABLE IF NOT EXISTS bot_configs (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  instance_id TEXT NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
+  version INTEGER NOT NULL DEFAULT 1,
+  symbols_enabled TEXT NOT NULL DEFAULT '["EURUSD"]',
+  session_filters TEXT NOT NULL DEFAULT '{"london": true, "new_york": true, "asian": false}',
+  risk_percent REAL NOT NULL DEFAULT 1.0,
+  max_trades_per_day INTEGER NOT NULL DEFAULT 5,
+  notifications_json TEXT NOT NULL DEFAULT '{"telegram": false, "email": true}',
+  is_active INTEGER NOT NULL DEFAULT 1,
+  rollback_from_version INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(instance_id, version)
+);
+CREATE INDEX IF NOT EXISTS idx_bot_configs_instance ON bot_configs(instance_id);
+
+CREATE TABLE IF NOT EXISTS risk_limits_local_snapshot (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  instance_id TEXT UNIQUE NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
+  max_risk_pct_ceiling REAL NOT NULL,
+  max_lots_ceiling REAL NOT NULL,
+  max_drawdown_pct_ceiling REAL NOT NULL,
+  live_trading_allowed_locally INTEGER NOT NULL DEFAULT 0,
+  snapshot_hash TEXT NOT NULL,
+  reported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tos_acceptances (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  tos_version TEXT NOT NULL,
+  privacy_version TEXT NOT NULL,
+  risk_disclosure_version TEXT NOT NULL,
+  ip_address TEXT,
+  user_agent TEXT,
+  accepted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, tos_version)
+);
+CREATE INDEX IF NOT EXISTS idx_tos_acceptances_user ON tos_acceptances(user_id);
+
+CREATE TABLE IF NOT EXISTS user_2fa (
+  id TEXT PRIMARY KEY,
+  user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  secret_encrypted TEXT NOT NULL,
+  is_enabled INTEGER NOT NULL DEFAULT 0,
+  backup_codes_hash TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+`;

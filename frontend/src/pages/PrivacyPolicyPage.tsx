@@ -10,7 +10,7 @@ export const PrivacyPolicyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-canvas text-content-primary flex flex-col antialiased ambient-glow-bg">
       <MetaHead
-        title="Privacy Policy & Trader Data Sovereignty | Arcade Fx"
+        title="Privacy Policy & Trader Data Sovereignty [DRAFT FOR LEGAL REVIEW] | Arcade Fx"
         description="Arcade Fx privacy policy: Zero-Password architecture, local read-only MT5 integration, data encryption, and GDPR compliance."
         canonicalPath="/privacy"
       />
@@ -19,14 +19,16 @@ export const PrivacyPolicyPage: React.FC = () => {
       <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 w-full space-y-8">
         <Breadcrumbs items={[{ name: 'Legal', path: '/privacy' }, { name: 'Privacy Policy', path: '/privacy' }]} />
 
-        {/* Legal Review Draft Banner */}
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-start gap-3 text-xs leading-relaxed">
+        {/* Legal Review Draft Watermark Banner */}
+        <div className="p-5 rounded-2xl bg-amber-500/15 border-2 border-amber-500/40 text-amber-600 dark:text-amber-400 flex items-start gap-3.5 text-xs leading-relaxed shadow-sm">
           <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
-          <div>
-            <span className="font-bold uppercase tracking-wider block mb-0.5">Notice to Users & Compliance Reviewers</span>
-            <span>
-              This document represents our preliminary privacy disclosure draft and is currently pending formal legal review. The policies below define our strict Zero-Password and encryption standards.
+          <div className="space-y-1">
+            <span className="font-black uppercase tracking-wider block text-sm">
+              DRAFT FOR LEGAL COUNSEL REVIEW — NOT FINALIZED
             </span>
+            <p>
+              This document represents our preliminary privacy disclosure draft and is currently pending formal legal review. The policies below define our strict Zero-Password and encryption standards.
+            </p>
           </div>
         </div>
 
@@ -38,10 +40,10 @@ export const PrivacyPolicyPage: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-content-primary tracking-tight">
-                Privacy Policy
+                Privacy Policy & Data Sovereignty
               </h1>
               <p className="text-xs text-content-muted">
-                Last updated: September 2026 • Committed to Trader Data Privacy
+                Version 2026.1-draft • Effective Date: Pending Legal Sign-Off
               </p>
             </div>
           </div>
@@ -53,7 +55,7 @@ export const PrivacyPolicyPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="text-base sm:text-lg font-bold text-content-primary">1. Introduction & Scope</h2>
             <p>
-              [COMPANY LEGAL NAME] ("we", "us", or "Arcade Fx") values your privacy. This Privacy Policy outlines what information we collect, how it is processed, stored, and protected when you use our web platform, APIs, and local MT5 bridge integration.
+              Arcade Fx values your privacy and trader sovereignty. This Privacy Policy outlines what information is collected, how it is processed, stored, and protected when you use our web platform, APIs, and local MT5 bot agent.
             </p>
           </section>
 
@@ -65,7 +67,7 @@ export const PrivacyPolicyPage: React.FC = () => {
               <div className="space-y-1">
                 <div className="font-bold text-content-primary">We Never Collect Broker Credentials</div>
                 <p className="text-xs text-content-muted">
-                  Arcade Fx does not ask for, intercept, receive, or store your MT5 master passwords, investor passwords, or broker credentials. All communication with MetaTrader 5 occurs on your local machine using the official MetaTrader5 Python desktop library.
+                  Arcade Fx does not ask for, intercept, receive, or store your MT5 master passwords, investor passwords, or broker credentials. All communication with MetaTrader 5 occurs strictly on your local machine using official desktop libraries. The cloud management console never has the capability to log into your brokerage account.
                 </p>
               </div>
             </div>
@@ -75,87 +77,38 @@ export const PrivacyPolicyPage: React.FC = () => {
           <section className="space-y-3">
             <h2 className="text-base sm:text-lg font-bold text-content-primary">3. Information We Collect</h2>
             <p>
-              We only collect data necessary to provide analytical, journaling, and performance features:
+              We only collect data necessary to provide analytical, journaling, and bot management features:
             </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
-                <div className="flex items-center gap-2 font-bold text-content-primary">
-                  <Key className="w-4 h-4 text-brand-500" />
-                  <span>Account Information</span>
-                </div>
-                <ul className="text-xs text-content-muted list-disc pl-4 space-y-1">
-                  <li>Name and email address provided during registration</li>
-                  <li>Account preferences (timezone, preferred currency)</li>
-                  <li>Hashed and salted authentication credentials managed securely via Supabase Auth</li>
-                </ul>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle space-y-2">
-                <div className="flex items-center gap-2 font-bold text-content-primary">
-                  <Database className="w-4 h-4 text-sky-500" />
-                  <span>Trading & Journal Data</span>
-                </div>
-                <ul className="text-xs text-content-muted list-disc pl-4 space-y-1">
-                  <li>Closed deal tickets (symbol, lots, execution timestamps, prices, profit, commission, swap)</li>
-                  <li>Reconstructed position lifecycles and R-multiples</li>
-                  <li>Subjective setup tags, psychological tags, voice transcripts, and notes entered by you</li>
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          {/* Section 4 - How Data is Used */}
-          <section className="space-y-3">
-            <h2 className="text-base sm:text-lg font-bold text-content-primary">4. How We Use Your Information</h2>
-            <p>Your data is processed strictly for the following purposes:</p>
             <ul className="list-disc pl-5 space-y-1 text-content-muted text-xs">
-              <li>Computing performance analytics, equity curves, session heatmaps, and win/loss statistics.</li>
-              <li>Powering the Trader DNA and Risk Guardian decision-support tools.</li>
-              <li>Answering your inquiries in the Grounded AI Trading Coach using solely your own historical records.</li>
-              <li>Synchronizing newly closed MT5 deals via your authorized local bridge token.</li>
+              <li>Account credentials (email, hashed password, optional TOTP 2FA secret).</li>
+              <li>Reconstructed execution facts: open/close prices, timestamps, lot volume, commissions, swaps, net profit.</li>
+              <li>Bot telemetry: online state, version, masked account number, balance, equity, and open positions count.</li>
+              <li>Operational audit logs: command dispatches, configuration adjustments, and pairing session timestamps.</li>
             </ul>
-            <p className="text-xs font-semibold text-content-primary">
-              We never sell, rent, monetize, or share your proprietary trading records with third-party advertisers, proprietary trading firms, or external brokerages.
-            </p>
           </section>
 
-          {/* Section 5 - Storage & Security */}
+          {/* Section 4 - GDPR & Data Subject Rights */}
           <section className="space-y-3">
-            <h2 className="text-base sm:text-lg font-bold text-content-primary">5. Data Storage & Isolation</h2>
+            <h2 className="text-base sm:text-lg font-bold text-content-primary">4. GDPR & CCPA Data Rights (Export and Permanent Deletion)</h2>
             <p>
-              Your analytical data is hosted on enterprise-grade cloud databases with strict Row-Level Security (RLS) enforcement. Only authenticated sessions with your specific user ID are permitted to read or mutate your trading accounts and journal records.
+              You possess complete rights over your personal and financial telemetry:
             </p>
+            <ul className="list-disc pl-5 space-y-2 text-content-muted text-xs">
+              <li>
+                <strong>Right to Data Portability (Export):</strong> You can export a complete machine-readable JSON archive of all your accounts, trades, journals, risk configurations, and bot instances at any time via the Settings page.
+              </li>
+              <li>
+                <strong>Right to Erasure (Account Deletion):</strong> You may permanently delete your account and all associated database records. Deletion cascades across all tables and cannot be undone.
+              </li>
+            </ul>
           </section>
 
-          {/* Section 6 - AI Feature Privacy */}
+          {/* Section 5 - Security & Encryption */}
           <section className="space-y-3">
-            <h2 className="text-base sm:text-lg font-bold text-content-primary">6. AI Trading Coach Privacy</h2>
+            <h2 className="text-base sm:text-lg font-bold text-content-primary">5. Cryptographic Security Standards</h2>
             <p>
-              When you submit questions to the AI Trading Coach, only the relevant aggregated journal metrics necessary to answer your prompt are transmitted for natural-language processing. No personal identifying information (such as your email or account numbers) is passed to the language model.
+              All data in transit is protected using TLS 1.3 encryption. Cloud-to-agent commands are authenticated with HMAC signatures with nonce replay protection. Device pairing tokens are stored securely in OS credential stores (Windows Credential Manager) on your local machine and stored hashed on the server.
             </p>
-          </section>
-
-          {/* Section 7 - User Rights */}
-          <section className="space-y-3">
-            <h2 className="text-base sm:text-lg font-bold text-content-primary">7. Your Data Rights & Deletion</h2>
-            <p>
-              You have the right to access, export, or permanently delete your trading records and account data at any time from within the application Settings or by contacting support. Upon account deletion, all associated trade reconstructions, accounts, and journal notes are permanently removed from our primary database.
-            </p>
-          </section>
-
-          {/* Section 8 - Contact */}
-          <section className="space-y-3">
-            <h2 className="text-base sm:text-lg font-bold text-content-primary">8. Contact Us</h2>
-            <p>
-              For any privacy or data protection inquiries, please contact:
-            </p>
-            <div className="p-4 rounded-xl bg-surface-secondary border border-border-subtle text-xs space-y-1">
-              <div><strong>Data Controller:</strong> [COMPANY LEGAL NAME]</div>
-              <div><strong>Privacy Email:</strong> [CONTACT EMAIL]</div>
-              <div><strong>Registered Address:</strong> [REGISTERED ADDRESS]</div>
-              <div><strong>Jurisdiction:</strong> [GOVERNING JURISDICTION]</div>
-            </div>
           </section>
         </div>
       </main>
@@ -164,3 +117,5 @@ export const PrivacyPolicyPage: React.FC = () => {
     </div>
   );
 };
+
+export default PrivacyPolicyPage;
