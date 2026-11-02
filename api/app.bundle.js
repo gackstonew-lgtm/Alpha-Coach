@@ -18086,17 +18086,17 @@ var require_router = __commonJS({
     var toString = Object.prototype.toString;
     var proto = module2.exports = function(options) {
       var opts = options || {};
-      function router21(req, res, next) {
-        router21.handle(req, res, next);
+      function router22(req, res, next) {
+        router22.handle(req, res, next);
       }
-      setPrototypeOf(router21, proto);
-      router21.params = {};
-      router21._params = [];
-      router21.caseSensitive = opts.caseSensitive;
-      router21.mergeParams = opts.mergeParams;
-      router21.strict = opts.strict;
-      router21.stack = [];
-      return router21;
+      setPrototypeOf(router22, proto);
+      router22.params = {};
+      router22._params = [];
+      router22.caseSensitive = opts.caseSensitive;
+      router22.mergeParams = opts.mergeParams;
+      router22.strict = opts.strict;
+      router22.stack = [];
+      return router22;
     };
     proto.param = function param(name, fn) {
       if (typeof name === "function") {
@@ -18805,14 +18805,14 @@ var require_etag = __commonJS({
   "backend/node_modules/etag/index.js"(exports2, module2) {
     "use strict";
     module2.exports = etag;
-    var crypto6 = require("crypto");
+    var crypto7 = require("crypto");
     var Stats = require("fs").Stats;
     var toString = Object.prototype.toString;
     function entitytag(entity) {
       if (entity.length === 0) {
         return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
       }
-      var hash = crypto6.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
+      var hash = crypto7.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
       var len = typeof entity === "string" ? Buffer.byteLength(entity, "utf8") : entity.length;
       return '"' + len.toString(16) + "-" + hash + '"';
     }
@@ -20705,7 +20705,7 @@ var require_application = __commonJS({
   "backend/node_modules/express/lib/application.js"(exports2, module2) {
     "use strict";
     var finalhandler = require_finalhandler();
-    var Router21 = require_router();
+    var Router22 = require_router();
     var methods = require_methods();
     var middleware = require_init();
     var query = require_query();
@@ -20770,7 +20770,7 @@ var require_application = __commonJS({
     };
     app2.lazyrouter = function lazyrouter() {
       if (!this._router) {
-        this._router = new Router21({
+        this._router = new Router22({
           caseSensitive: this.enabled("case sensitive routing"),
           strict: this.enabled("strict routing")
         });
@@ -20779,17 +20779,17 @@ var require_application = __commonJS({
       }
     };
     app2.handle = function handle(req, res, callback) {
-      var router21 = this._router;
+      var router22 = this._router;
       var done = callback || finalhandler(req, res, {
         env: this.get("env"),
         onerror: logerror.bind(this)
       });
-      if (!router21) {
+      if (!router22) {
         debug("no routes defined on app");
         done();
         return;
       }
-      router21.handle(req, res, done);
+      router22.handle(req, res, done);
     };
     app2.use = function use(fn) {
       var offset = 0;
@@ -20809,15 +20809,15 @@ var require_application = __commonJS({
         throw new TypeError("app.use() requires a middleware function");
       }
       this.lazyrouter();
-      var router21 = this._router;
+      var router22 = this._router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router21.use(path3, fn2);
+          return router22.use(path3, fn2);
         }
         debug(".use app under %s", path3);
         fn2.mountpath = path3;
         fn2.parent = this;
-        router21.use(path3, function mounted_app(req, res, next) {
+        router22.use(path3, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             setPrototypeOf(req, orig.request);
@@ -21721,11 +21721,11 @@ var require_request = __commonJS({
 // backend/node_modules/cookie-signature/index.js
 var require_cookie_signature = __commonJS({
   "backend/node_modules/cookie-signature/index.js"(exports2) {
-    var crypto6 = require("crypto");
+    var crypto7 = require("crypto");
     exports2.sign = function(val, secret) {
       if ("string" !== typeof val) throw new TypeError("Cookie value must be provided as a string.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
-      return val + "." + crypto6.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
+      return val + "." + crypto7.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
     };
     exports2.unsign = function(val, secret) {
       if ("string" !== typeof val) throw new TypeError("Signed cookie string must be provided.");
@@ -21734,7 +21734,7 @@ var require_cookie_signature = __commonJS({
       return sha1(mac) == sha1(val) ? str : false;
     };
     function sha1(str) {
-      return crypto6.createHash("sha1").update(str).digest("hex");
+      return crypto7.createHash("sha1").update(str).digest("hex");
     }
   }
 });
@@ -22634,7 +22634,7 @@ var require_express = __commonJS({
     var mixin = require_merge_descriptors();
     var proto = require_application();
     var Route = require_route();
-    var Router21 = require_router();
+    var Router22 = require_router();
     var req = require_request();
     var res = require_response();
     exports2 = module2.exports = createApplication;
@@ -22657,7 +22657,7 @@ var require_express = __commonJS({
     exports2.request = req;
     exports2.response = res;
     exports2.Route = Route;
-    exports2.Router = Router21;
+    exports2.Router = Router22;
     exports2.json = bodyParser.json;
     exports2.query = require_query();
     exports2.raw = bodyParser.raw;
@@ -23694,14 +23694,14 @@ var require_buffer_equal_constant_time = __commonJS({
 var require_jwa = __commonJS({
   "backend/node_modules/jwa/index.js"(exports2, module2) {
     var Buffer3 = require_safe_buffer().Buffer;
-    var crypto6 = require("crypto");
+    var crypto7 = require("crypto");
     var formatEcdsa = require_ecdsa_sig_formatter();
     var util2 = require("util");
     var MSG_INVALID_ALGORITHM = '"%s" is not a valid algorithm.\n  Supported algorithms are:\n  "HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512" and "none".';
     var MSG_INVALID_SECRET = "secret must be a string or buffer";
     var MSG_INVALID_VERIFIER_KEY = "key must be a string or a buffer";
     var MSG_INVALID_SIGNER_KEY = "key must be a string, a buffer or an object";
-    var supportsKeyObjects = typeof crypto6.createPublicKey === "function";
+    var supportsKeyObjects = typeof crypto7.createPublicKey === "function";
     if (supportsKeyObjects) {
       MSG_INVALID_VERIFIER_KEY += " or a KeyObject";
       MSG_INVALID_SECRET += "or a KeyObject";
@@ -23791,17 +23791,17 @@ var require_jwa = __commonJS({
       return function sign(thing, secret) {
         checkIsSecretKey(secret);
         thing = normalizeInput(thing);
-        var hmac = crypto6.createHmac("sha" + bits, secret);
+        var hmac = crypto7.createHmac("sha" + bits, secret);
         var sig = (hmac.update(thing), hmac.digest("base64"));
         return fromBase64(sig);
       };
     }
     var bufferEqual;
-    var timingSafeEqual = "timingSafeEqual" in crypto6 ? function timingSafeEqual2(a, b) {
+    var timingSafeEqual = "timingSafeEqual" in crypto7 ? function timingSafeEqual2(a, b) {
       if (a.byteLength !== b.byteLength) {
         return false;
       }
-      return crypto6.timingSafeEqual(a, b);
+      return crypto7.timingSafeEqual(a, b);
     } : function timingSafeEqual2(a, b) {
       if (!bufferEqual) {
         bufferEqual = require_buffer_equal_constant_time();
@@ -23818,7 +23818,7 @@ var require_jwa = __commonJS({
       return function sign(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto6.createSign("RSA-SHA" + bits);
+        var signer = crypto7.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign(privateKey, "base64"));
         return fromBase64(sig);
       };
@@ -23828,7 +23828,7 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto6.createVerify("RSA-SHA" + bits);
+        var verifier = crypto7.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify(publicKey, signature, "base64");
       };
@@ -23837,11 +23837,11 @@ var require_jwa = __commonJS({
       return function sign(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto6.createSign("RSA-SHA" + bits);
+        var signer = crypto7.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign({
           key: privateKey,
-          padding: crypto6.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto6.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto7.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto7.constants.RSA_PSS_SALTLEN_DIGEST
         }, "base64"));
         return fromBase64(sig);
       };
@@ -23851,12 +23851,12 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto6.createVerify("RSA-SHA" + bits);
+        var verifier = crypto7.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify({
           key: publicKey,
-          padding: crypto6.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto6.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto7.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto7.constants.RSA_PSS_SALTLEN_DIGEST
         }, signature, "base64");
       };
     }
@@ -49442,7 +49442,7 @@ var require_main4 = __commonJS({
     var fs2 = require("fs");
     var path3 = require("path");
     var os = require("os");
-    var crypto6 = require("crypto");
+    var crypto7 = require("crypto");
     var packageJson = require_package();
     var version3 = packageJson.version;
     var LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
@@ -49661,7 +49661,7 @@ var require_main4 = __commonJS({
       const authTag = ciphertext.subarray(-16);
       ciphertext = ciphertext.subarray(12, -16);
       try {
-        const aesgcm = crypto6.createDecipheriv("aes-256-gcm", key, nonce);
+        const aesgcm = crypto7.createDecipheriv("aes-256-gcm", key, nonce);
         aesgcm.setAuthTag(authTag);
         return `${aesgcm.update(ciphertext)}${aesgcm.final()}`;
       } catch (error) {
@@ -51721,7 +51721,7 @@ __export(app_exports, {
   default: () => app_default
 });
 module.exports = __toCommonJS(app_exports);
-var import_express21 = __toESM(require_express2());
+var import_express22 = __toESM(require_express2());
 var import_cors = __toESM(require_lib3());
 
 // backend/node_modules/helmet/index.mjs
@@ -58340,8 +58340,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.6",
-  gitCommit: "973712fd7ec8206df66a5d5af0df6a97b88b980e",
-  buildTimestamp: "2026-11-02T10:15:55.080Z",
+  gitCommit: "7021c02fce1bc6488b94c338f6e97d3bfb995326",
+  buildTimestamp: "2026-11-02T10:21:47.461Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -73197,6 +73197,597 @@ router20.get(["/stream", "/forex/stream"], (req, res) => {
 });
 var forex_routes_default = router20;
 
+// backend/src/routes/bot.routes.ts
+var import_express21 = __toESM(require_express2());
+
+// backend/src/services/bot.service.ts
+var import_crypto7 = __toESM(require("crypto"));
+var BotService = class {
+  /**
+   * Generates a secure HMAC-SHA256 signature for cloud commands.
+   */
+  static signPayload(payload, secret) {
+    const serialized = JSON.stringify(payload, Object.keys(payload).sort());
+    return import_crypto7.default.createHmac("sha256", secret).update(serialized).digest("hex");
+  }
+  /**
+   * Verifies an HMAC-SHA256 signature with timing-safe comparison.
+   */
+  static verifySignature(payload, signature, secret) {
+    const expected = this.signPayload(payload, secret);
+    if (!signature || signature.length !== expected.length) return false;
+    return import_crypto7.default.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  }
+  /**
+   * Generates a 6-digit alphanumeric one-time pairing code (valid for 10 minutes).
+   */
+  static async generatePairingCode(userId) {
+    const db = await getDatabaseAsync();
+    const code = import_crypto7.default.randomBytes(3).toString("hex").toUpperCase();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1e3).toISOString();
+    await db.run(
+      `INSERT INTO bridge_pairing_sessions (id, session_code, device_name, status, user_id, created_at, expires_at)
+       VALUES (?, ?, 'Pending MT5 Bot Agent', 'PENDING', ?, CURRENT_TIMESTAMP, ?)`,
+      [v4_default(), code, userId, expiresAt]
+    );
+    await logAuditEvent({
+      userId,
+      action: "BOT_PAIRING_CODE_GENERATED",
+      entityType: "BOT_INSTANCE",
+      details: { pairingCode: code, expiresAt }
+    });
+    return { pairingCode: code, expiresAt };
+  }
+  /**
+   * Claims a one-time pairing code from the local agent and returns a rotating device token & HMAC secret.
+   */
+  static async claimPairingCode(params) {
+    const db = await getDatabaseAsync();
+    const code = params.pairingCode.trim().toUpperCase();
+    const session = await db.get(
+      "SELECT id, user_id, status, expires_at FROM bridge_pairing_sessions WHERE session_code = ?",
+      [code]
+    );
+    if (!session) {
+      return { success: false, error: "Pairing code not found or invalid." };
+    }
+    if (session.status !== "PENDING") {
+      return { success: false, error: "Pairing code has already been claimed or expired." };
+    }
+    if (new Date(session.expires_at).getTime() < Date.now()) {
+      return { success: false, error: "Pairing code has expired (10-minute limit)." };
+    }
+    const rawToken = "bot_" + import_crypto7.default.randomBytes(32).toString("hex");
+    const tokenHash = import_crypto7.default.createHash("sha256").update(rawToken).digest("hex");
+    const signingSecret = import_crypto7.default.randomBytes(32).toString("hex");
+    const instanceId = v4_default();
+    const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1e3).toISOString();
+    await db.run(
+      `INSERT INTO bot_instances (id, user_id, instance_name, device_token_hash, mode, status, engine_version, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 'DEMO', 'ONLINE', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [instanceId, session.user_id, params.instanceName || "MT5 Bot Terminal", tokenHash, params.engineVersion || "1.0.0"]
+    );
+    await db.run(
+      `INSERT INTO device_tokens (id, user_id, instance_id, token_hash, name, is_revoked, expires_at, created_at)
+       VALUES (?, ?, ?, ?, ?, 0, ?, CURRENT_TIMESTAMP)`,
+      [v4_default(), session.user_id, instanceId, tokenHash, params.instanceName, expiresAt]
+    );
+    await db.run(
+      `INSERT INTO bot_configs (id, user_id, instance_id, version, symbols_enabled, risk_percent, max_trades_per_day, notifications_json, is_active, created_at)
+       VALUES (?, ?, ?, 1, '["EURUSD"]', 1.0, 5, ?, 1, CURRENT_TIMESTAMP)`,
+      [v4_default(), session.user_id, instanceId, JSON.stringify({ signingSecret })]
+    );
+    await db.run(
+      "UPDATE bridge_pairing_sessions SET status = 'AUTHORIZED', device_token = ? WHERE id = ?",
+      [tokenHash, session.id]
+    );
+    await logAuditEvent({
+      userId: session.user_id,
+      action: "BOT_INSTANCE_PAIRED",
+      entityType: "BOT_INSTANCE",
+      entityId: instanceId,
+      ipAddress: params.ipAddress,
+      details: { instanceName: params.instanceName, version: params.engineVersion }
+    });
+    return {
+      success: true,
+      instanceId,
+      deviceToken: rawToken,
+      signingSecret
+    };
+  }
+  /**
+   * Verifies an incoming device token from the agent.
+   */
+  static async authenticateAgentToken(rawToken) {
+    if (!rawToken || !rawToken.startsWith("bot_")) return { authenticated: false };
+    const db = await getDatabaseAsync();
+    const tokenHash = import_crypto7.default.createHash("sha256").update(rawToken).digest("hex");
+    const row = await db.get(
+      "SELECT id, user_id, instance_id, is_revoked FROM device_tokens WHERE token_hash = ?",
+      [tokenHash]
+    );
+    if (!row || row.is_revoked === 1) {
+      return { authenticated: false };
+    }
+    await db.run("UPDATE device_tokens SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?", [row.id]);
+    const instance = await db.get(
+      "SELECT id, user_id, instance_name FROM bot_instances WHERE id = ?",
+      [row.instance_id]
+    );
+    if (!instance) return { authenticated: false };
+    const config = await db.get(
+      "SELECT notifications_json FROM bot_configs WHERE instance_id = ? AND is_active = 1 ORDER BY version DESC LIMIT 1",
+      [instance.id]
+    );
+    let signingSecret;
+    try {
+      const parsed = JSON.parse(config?.notifications_json || "{}");
+      signingSecret = parsed.signingSecret;
+    } catch {
+    }
+    return {
+      authenticated: true,
+      instance: {
+        id: instance.id,
+        user_id: instance.user_id,
+        instance_name: instance.instance_name,
+        signingSecret
+      }
+    };
+  }
+  /**
+   * Ingests and processes an incoming heartbeat from a local bot agent.
+   */
+  static async processHeartbeat(instanceId, heartbeat) {
+    const db = await getDatabaseAsync();
+    await db.run(
+      `UPDATE bot_instances SET
+         status = 'ONLINE',
+         mode = ?,
+         engine_version = ?,
+         last_heartbeat_at = CURRENT_TIMESTAMP,
+         last_error = ?,
+         uptime_seconds = ?,
+         updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [
+        heartbeat.mode || "DEMO",
+        heartbeat.engineVersion || "1.0.0",
+        heartbeat.lastError || null,
+        heartbeat.uptimeSeconds || 0,
+        instanceId
+      ]
+    );
+    if (heartbeat.localLimitsSnapshot) {
+      const snap = heartbeat.localLimitsSnapshot;
+      const snapHash = import_crypto7.default.createHash("sha256").update(JSON.stringify(snap)).digest("hex");
+      await db.run(
+        `INSERT INTO risk_limits_local_snapshot
+           (id, user_id, instance_id, max_risk_pct_ceiling, max_lots_ceiling, max_drawdown_pct_ceiling, live_trading_allowed_locally, snapshot_hash, reported_at)
+         VALUES
+           (?, (SELECT user_id FROM bot_instances WHERE id = ?), ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+         ON CONFLICT(instance_id) DO UPDATE SET
+           max_risk_pct_ceiling = excluded.max_risk_pct_ceiling,
+           max_lots_ceiling = excluded.max_lots_ceiling,
+           max_drawdown_pct_ceiling = excluded.max_drawdown_pct_ceiling,
+           live_trading_allowed_locally = excluded.live_trading_allowed_locally,
+           snapshot_hash = excluded.snapshot_hash,
+           reported_at = CURRENT_TIMESTAMP`,
+        [
+          v4_default(),
+          instanceId,
+          instanceId,
+          snap.maxRiskPctCeiling || 1,
+          snap.maxLotsCeiling || 1,
+          snap.maxDrawdownPctCeiling || 5,
+          snap.liveTradingAllowedLocally ? 1 : 0,
+          snapHash
+        ]
+      );
+    }
+  }
+  /**
+   * Validates safety boundaries for a cloud command before queuing.
+   * Hard Rule 3: The cloud can NEVER enable live trading or raise risk limits above local machine ceiling.
+   */
+  static async validateAndDispatchCommand(params) {
+    const db = await getDatabaseAsync();
+    const entitlement = await db.get(
+      "SELECT can_trade, expires_at FROM entitlements WHERE user_id = ?",
+      [params.userId]
+    );
+    if (entitlement && (new Date(entitlement.expires_at).getTime() < Date.now() || entitlement.can_trade === 0)) {
+      if (["start", "resume"].includes(params.commandType)) {
+        return {
+          success: false,
+          error: "Active subscription required to start bot or open new positions. Open positions remain managed by local stop losses."
+        };
+      }
+    }
+    const localSnapshot = await db.get("SELECT * FROM risk_limits_local_snapshot WHERE instance_id = ?", [params.instanceId]);
+    if (params.commandType === "update_config" && params.payload.riskPercent) {
+      const requestedRisk = parseFloat(params.payload.riskPercent);
+      const ceiling = localSnapshot?.max_risk_pct_ceiling ?? 1;
+      if (requestedRisk > ceiling) {
+        return {
+          success: false,
+          error: `Requested risk percent (${requestedRisk}%) exceeds local machine hard ceiling (${ceiling}%). Local limits always win.`
+        };
+      }
+    }
+    if (params.payload.mode === "LIVE" && (!localSnapshot || localSnapshot.live_trading_allowed_locally === 0)) {
+      return {
+        success: false,
+        error: "Live trading requires explicit local physical confirmation on the user machine (allow_live_trading=true in local_limits.json). Cloud cannot enable live trading."
+      };
+    }
+    const config = await db.get(
+      "SELECT notifications_json FROM bot_configs WHERE instance_id = ? AND is_active = 1 ORDER BY version DESC LIMIT 1",
+      [params.instanceId]
+    );
+    let signingSecret = "default-agent-hmac-secret";
+    try {
+      const parsed = JSON.parse(config?.notifications_json || "{}");
+      if (parsed.signingSecret) signingSecret = parsed.signingSecret;
+    } catch {
+    }
+    const commandId = v4_default();
+    const nonce = import_crypto7.default.randomBytes(16).toString("hex");
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1e3).toISOString();
+    const idempotencyKey = `cmd-${params.instanceId}-${Date.now()}-${nonce.slice(0, 8)}`;
+    const messageToSign = {
+      commandId,
+      instanceId: params.instanceId,
+      commandType: params.commandType,
+      payload: params.payload,
+      nonce,
+      expiresAt
+    };
+    const signature = this.signPayload(messageToSign, signingSecret);
+    await db.run(
+      `INSERT INTO bot_commands
+         (id, user_id, instance_id, command_type, payload_json, signature, nonce, idempotency_key, status, created_at, expires_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'QUEUED', CURRENT_TIMESTAMP, ?)`,
+      [
+        commandId,
+        params.userId,
+        params.instanceId,
+        params.commandType,
+        JSON.stringify(params.payload),
+        signature,
+        nonce,
+        idempotencyKey,
+        expiresAt
+      ]
+    );
+    await logAuditEvent({
+      userId: params.userId,
+      action: `BOT_COMMAND_${params.commandType.toUpperCase()}`,
+      entityType: "BOT_COMMAND",
+      entityId: commandId,
+      ipAddress: params.ipAddress,
+      details: { instanceId: params.instanceId, payload: params.payload }
+    });
+    return { success: true, commandId };
+  }
+  /**
+   * Retrieves pending commands for an agent and marks them DELIVERED.
+   */
+  static async getPendingCommandsForAgent(instanceId) {
+    const db = await getDatabaseAsync();
+    const commands = await db.query(
+      `SELECT * FROM bot_commands
+       WHERE instance_id = ? AND status = 'QUEUED' AND expires_at > CURRENT_TIMESTAMP
+       ORDER BY created_at ASC`,
+      [instanceId]
+    );
+    for (const cmd of commands) {
+      await db.run("UPDATE bot_commands SET status = 'DELIVERED' WHERE id = ?", [cmd.id]);
+    }
+    return commands;
+  }
+  /**
+   * Records execution result of a command from the local agent.
+   */
+  static async acknowledgeCommand(params) {
+    const db = await getDatabaseAsync();
+    await db.run(
+      `UPDATE bot_commands SET
+         status = ?,
+         executed_at = CURRENT_TIMESTAMP,
+         result_json = ?,
+         error_message = ?
+       WHERE id = ? AND instance_id = ?`,
+      [
+        params.success ? "EXECUTED" : "FAILED",
+        JSON.stringify(params.result || {}),
+        params.errorMessage || null,
+        params.commandId,
+        params.instanceId
+      ]
+    );
+  }
+};
+
+// backend/src/routes/bot.routes.ts
+var router21 = (0, import_express21.Router)();
+async function requireAgentAuth(req, res, next) {
+  const token = req.headers["x-bot-token"];
+  if (!token) {
+    res.status(401).json({ success: false, error: "Agent authentication required (x-bot-token header missing)." });
+    return;
+  }
+  const auth = await BotService.authenticateAgentToken(token);
+  if (!auth.authenticated || !auth.instance) {
+    res.status(401).json({ success: false, error: "Invalid or revoked bot agent token." });
+    return;
+  }
+  req.botInstance = auth.instance;
+  next();
+}
+router21.post("/pairing/generate-code", requireUserAuth, async (req, res) => {
+  try {
+    const result = await BotService.generatePairingCode(req.user.userId);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.get("/instances", requireUserAuth, async (req, res) => {
+  try {
+    const db = await getDatabaseAsync();
+    const instances = await db.query(
+      `SELECT b.*,
+              r.max_risk_pct_ceiling, r.max_lots_ceiling, r.max_drawdown_pct_ceiling, r.live_trading_allowed_locally,
+              (SELECT COUNT(*) FROM bot_commands c WHERE c.instance_id = b.id AND c.status = 'QUEUED') as queued_commands_count
+       FROM bot_instances b
+       LEFT JOIN risk_limits_local_snapshot r ON r.instance_id = b.id
+       WHERE b.user_id = ?
+       ORDER BY b.created_at DESC`,
+      [req.user.userId]
+    );
+    const now = Date.now();
+    const enriched = instances.map((inst) => {
+      let liveStatus = "OFFLINE";
+      if (inst.last_heartbeat_at) {
+        const lastHb = new Date(inst.last_heartbeat_at).getTime();
+        const diffSec = Math.floor((now - lastHb) / 1e3);
+        if (diffSec < 45) {
+          liveStatus = "ONLINE";
+        } else if (diffSec < 120) {
+          liveStatus = "STALE";
+        } else {
+          liveStatus = "OFFLINE";
+        }
+      }
+      return {
+        ...inst,
+        status: liveStatus
+      };
+    });
+    res.json({ success: true, instances: enriched });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.get("/instances/:id", requireUserAuth, async (req, res) => {
+  try {
+    const db = await getDatabaseAsync();
+    const instance = await db.get(
+      `SELECT b.*, r.max_risk_pct_ceiling, r.max_lots_ceiling, r.max_drawdown_pct_ceiling, r.live_trading_allowed_locally
+       FROM bot_instances b
+       LEFT JOIN risk_limits_local_snapshot r ON r.instance_id = b.id
+       WHERE b.id = ? AND b.user_id = ?`,
+      [req.params.id, req.user.userId]
+    );
+    if (!instance) {
+      res.status(404).json({ success: false, error: "Bot instance not found." });
+      return;
+    }
+    const recentEvents = await db.query(
+      "SELECT * FROM bot_events WHERE instance_id = ? ORDER BY created_at DESC LIMIT 50",
+      [req.params.id]
+    );
+    res.json({ success: true, instance, recentEvents });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.post("/instances/:id/command", requireUserAuth, async (req, res) => {
+  try {
+    const { commandType, payload } = req.body;
+    if (!commandType) {
+      res.status(400).json({ success: false, error: "commandType is required." });
+      return;
+    }
+    const result = await BotService.validateAndDispatchCommand({
+      userId: req.user.userId,
+      instanceId: req.params.id,
+      commandType,
+      payload: payload || {},
+      ipAddress: req.ip || req.socket.remoteAddress
+    });
+    if (!result.success) {
+      res.status(400).json(result);
+      return;
+    }
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.get("/instances/:id/commands", requireUserAuth, async (req, res) => {
+  try {
+    const db = await getDatabaseAsync();
+    const commands = await db.query(
+      "SELECT * FROM bot_commands WHERE instance_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 50",
+      [req.params.id, req.user.userId]
+    );
+    res.json({ success: true, commands });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.post("/instances/:id/config", requireUserAuth, async (req, res) => {
+  try {
+    const { symbolsEnabled, sessionFilters, riskPercent, maxTradesPerDay, notifications } = req.body;
+    const db = await getDatabaseAsync();
+    const snapshot = await db.get(
+      "SELECT max_risk_pct_ceiling FROM risk_limits_local_snapshot WHERE instance_id = ?",
+      [req.params.id]
+    );
+    const ceiling = snapshot?.max_risk_pct_ceiling ?? 1;
+    if (riskPercent && parseFloat(riskPercent) > ceiling) {
+      res.status(400).json({
+        success: false,
+        error: `Risk percent (${riskPercent}%) cannot exceed local machine ceiling (${ceiling}%).`
+      });
+      return;
+    }
+    const latestConfig = await db.get(
+      "SELECT version FROM bot_configs WHERE instance_id = ? ORDER BY version DESC LIMIT 1",
+      [req.params.id]
+    );
+    const nextVersion = (latestConfig?.version || 0) + 1;
+    await db.run(
+      `INSERT INTO bot_configs (id, user_id, instance_id, version, symbols_enabled, session_filters, risk_percent, max_trades_per_day, notifications_json, is_active, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`,
+      [
+        v4_default(),
+        req.user.userId,
+        req.params.id,
+        nextVersion,
+        JSON.stringify(symbolsEnabled || ["EURUSD"]),
+        JSON.stringify(sessionFilters || {}),
+        parseFloat(riskPercent) || 1,
+        parseInt(maxTradesPerDay, 10) || 5,
+        JSON.stringify(notifications || {})
+      ]
+    );
+    await BotService.validateAndDispatchCommand({
+      userId: req.user.userId,
+      instanceId: req.params.id,
+      commandType: "update_config",
+      payload: { symbolsEnabled, sessionFilters, riskPercent, maxTradesPerDay, version: nextVersion }
+    });
+    res.json({ success: true, version: nextVersion, message: "Config updated and dispatched to agent." });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.post("/instances/:id/tokens/revoke", requireUserAuth, async (req, res) => {
+  try {
+    const db = await getDatabaseAsync();
+    await db.run("UPDATE device_tokens SET is_revoked = 1 WHERE instance_id = ? AND user_id = ?", [
+      req.params.id,
+      req.user.userId
+    ]);
+    await db.run("UPDATE bot_instances SET status = 'OFFLINE' WHERE id = ? AND user_id = ?", [
+      req.params.id,
+      req.user.userId
+    ]);
+    res.json({ success: true, message: "Device token revoked. Agent disconnected." });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.post("/pairing/claim", async (req, res) => {
+  try {
+    const { pairingCode, instanceName, engineVersion } = req.body;
+    if (!pairingCode) {
+      res.status(400).json({ success: false, error: "pairingCode is required." });
+      return;
+    }
+    const result = await BotService.claimPairingCode({
+      pairingCode,
+      instanceName,
+      engineVersion,
+      ipAddress: req.ip || req.socket.remoteAddress
+    });
+    if (!result.success) {
+      res.status(400).json(result);
+      return;
+    }
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.post("/heartbeat", requireAgentAuth, async (req, res) => {
+  try {
+    const instanceId = req.botInstance.id;
+    await BotService.processHeartbeat(instanceId, req.body);
+    res.json({ success: true, timestamp: (/* @__PURE__ */ new Date()).toISOString() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.post("/commands/poll", requireAgentAuth, async (req, res) => {
+  try {
+    const instanceId = req.botInstance.id;
+    const commands = await BotService.getPendingCommandsForAgent(instanceId);
+    res.json({ success: true, commands });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.post("/commands/:commandId/ack", requireAgentAuth, async (req, res) => {
+  try {
+    const instanceId = req.botInstance.id;
+    const { commandId } = req.params;
+    const { success, result, errorMessage } = req.body;
+    await BotService.acknowledgeCommand({
+      commandId,
+      instanceId,
+      success: Boolean(success),
+      result,
+      errorMessage
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.post("/events/sync", requireAgentAuth, async (req, res) => {
+  try {
+    const instanceId = req.botInstance.id;
+    const userId = req.botInstance.user_id;
+    const { events } = req.body;
+    if (!Array.isArray(events)) {
+      res.status(400).json({ success: false, error: "events array expected." });
+      return;
+    }
+    const db = await getDatabaseAsync();
+    let inserted = 0;
+    for (const ev of events) {
+      const dedupId = ev.dedupId || `${instanceId}-${ev.eventType}-${ev.timestamp}`;
+      try {
+        await db.run(
+          `INSERT INTO bot_events (id, user_id, instance_id, event_type, payload_json, dedup_id, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+           ON CONFLICT(dedup_id) DO NOTHING`,
+          [v4_default(), userId, instanceId, ev.eventType || "event", JSON.stringify(ev.payload || {}), dedupId]
+        );
+        inserted++;
+      } catch {
+      }
+    }
+    res.json({ success: true, processed: events.length, inserted });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+router21.get("/agent/version", async (req, res) => {
+  res.json({
+    latestVersion: "1.2.0",
+    minRequiredVersion: "1.0.0",
+    releaseNotes: "Enhanced local hard risk limit guardrails, HMAC signed command replay protection, and offline event queue.",
+    downloadUrl: "https://github.com/gackstonew-lgtm/Alpha-Coach/releases"
+  });
+});
+var bot_routes_default = router21;
+
 // backend/src/services/logger.service.ts
 var LoggerService = class {
   isSentryConfigured = false;
@@ -73257,7 +73848,7 @@ var LoggerService = class {
 var logger = new LoggerService();
 
 // backend/src/app.ts
-var app = (0, import_express21.default)();
+var app = (0, import_express22.default)();
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
@@ -73285,8 +73876,8 @@ app.use((0, import_cors.default)({
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "x-bridge-token", "x-device-name"]
 }));
-app.use(import_express21.default.json({ limit: "50mb" }));
-app.use(import_express21.default.urlencoded({ extended: true, limit: "50mb" }));
+app.use(import_express22.default.json({ limit: "50mb" }));
+app.use(import_express22.default.urlencoded({ extended: true, limit: "50mb" }));
 if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
   app.use((0, import_morgan.default)("dev"));
 }
@@ -73371,11 +73962,12 @@ var routePairs = [
   ["/economic", economic_routes_default],
   ["/settings", settings_routes_default],
   ["/intelligence", intelligence_routes_default],
-  ["/forex", forex_routes_default]
+  ["/forex", forex_routes_default],
+  ["/bot", bot_routes_default]
 ];
-routePairs.forEach(([prefix, router21]) => {
-  app.use(`/api/v1${prefix}`, router21);
-  app.use(`/v1${prefix}`, router21);
+routePairs.forEach(([prefix, router22]) => {
+  app.use(`/api/v1${prefix}`, router22);
+  app.use(`/v1${prefix}`, router22);
 });
 app.use("/api", forex_routes_default);
 app.use("/", forex_routes_default);
