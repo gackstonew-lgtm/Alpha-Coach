@@ -12,14 +12,19 @@ export const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [agreedToTerms, setAgreedToTerms] = useState<boolean>(true);
+  const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
+  const [isAgeConfirmed, setIsAgeConfirmed] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAgeConfirmed) {
+      setError('You must confirm that you are at least 18 years of age.');
+      return;
+    }
     if (!agreedToTerms) {
-      setError('You must agree to all statements in terms of service.');
+      setError('You must read and agree to the draft Terms of Service and Risk Disclosures.');
       return;
     }
 
@@ -127,20 +132,46 @@ export const RegisterPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Terms of Service Checkbox */}
+            {/* Age Gate Checkbox */}
             <div className="pt-1">
-              <label className="flex items-center gap-2 select-none cursor-pointer text-xs text-muted-foreground">
+              <label className="flex items-start gap-2 select-none cursor-pointer text-xs text-muted-foreground">
                 <input
                   type="checkbox"
+                  required
+                  checked={isAgeConfirmed}
+                  onChange={e => setIsAgeConfirmed(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 rounded text-[#2F5BEA] bg-surface border border-border focus:ring-2 focus:ring-[#2F5BEA] accent-[#2F5BEA] cursor-pointer shrink-0"
+                />
+                <span className="text-[11px] sm:text-xs text-muted-foreground leading-normal">
+                  I confirm that I am at least <strong>18 years of age</strong> and not a resident of any restricted or sanctioned country.
+                </span>
+              </label>
+            </div>
+
+            {/* Terms of Service & Risk Disclaimer Checkbox */}
+            <div className="pt-1">
+              <label className="flex items-start gap-2 select-none cursor-pointer text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  required
                   checked={agreedToTerms}
                   onChange={e => setAgreedToTerms(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#2F5BEA] bg-surface border border-border focus:ring-2 focus:ring-[#2F5BEA] accent-[#2F5BEA] cursor-pointer"
+                  className="w-4 h-4 mt-0.5 rounded text-[#2F5BEA] bg-surface border border-border focus:ring-2 focus:ring-[#2F5BEA] accent-[#2F5BEA] cursor-pointer shrink-0"
                 />
-                <span className="text-[11px] sm:text-xs text-muted-foreground">
-                  I agree all statements in{' '}
-                  <Link to="/terms" className="text-[#2F5BEA] underline font-semibold transition">
-                    terms of service
+                <span className="text-[11px] sm:text-xs text-muted-foreground leading-normal">
+                  I accept the draft{' '}
+                  <Link to="/terms" target="_blank" className="text-[#2F5BEA] underline font-semibold transition">
+                    Terms of Service
                   </Link>
+                  ,{' '}
+                  <Link to="/disclaimer" target="_blank" className="text-[#2F5BEA] underline font-semibold transition">
+                    Risk Disclaimer
+                  </Link>
+                  , and{' '}
+                  <Link to="/privacy" target="_blank" className="text-[#2F5BEA] underline font-semibold transition">
+                    Privacy Policy
+                  </Link>
+                  .
                 </span>
               </label>
             </div>

@@ -18086,17 +18086,17 @@ var require_router = __commonJS({
     var toString = Object.prototype.toString;
     var proto = module2.exports = function(options) {
       var opts = options || {};
-      function router23(req, res, next) {
-        router23.handle(req, res, next);
+      function router24(req, res, next) {
+        router24.handle(req, res, next);
       }
-      setPrototypeOf(router23, proto);
-      router23.params = {};
-      router23._params = [];
-      router23.caseSensitive = opts.caseSensitive;
-      router23.mergeParams = opts.mergeParams;
-      router23.strict = opts.strict;
-      router23.stack = [];
-      return router23;
+      setPrototypeOf(router24, proto);
+      router24.params = {};
+      router24._params = [];
+      router24.caseSensitive = opts.caseSensitive;
+      router24.mergeParams = opts.mergeParams;
+      router24.strict = opts.strict;
+      router24.stack = [];
+      return router24;
     };
     proto.param = function param(name, fn) {
       if (typeof name === "function") {
@@ -20705,7 +20705,7 @@ var require_application = __commonJS({
   "backend/node_modules/express/lib/application.js"(exports2, module2) {
     "use strict";
     var finalhandler = require_finalhandler();
-    var Router23 = require_router();
+    var Router24 = require_router();
     var methods = require_methods();
     var middleware = require_init();
     var query = require_query();
@@ -20770,7 +20770,7 @@ var require_application = __commonJS({
     };
     app2.lazyrouter = function lazyrouter() {
       if (!this._router) {
-        this._router = new Router23({
+        this._router = new Router24({
           caseSensitive: this.enabled("case sensitive routing"),
           strict: this.enabled("strict routing")
         });
@@ -20779,17 +20779,17 @@ var require_application = __commonJS({
       }
     };
     app2.handle = function handle(req, res, callback) {
-      var router23 = this._router;
+      var router24 = this._router;
       var done = callback || finalhandler(req, res, {
         env: this.get("env"),
         onerror: logerror.bind(this)
       });
-      if (!router23) {
+      if (!router24) {
         debug("no routes defined on app");
         done();
         return;
       }
-      router23.handle(req, res, done);
+      router24.handle(req, res, done);
     };
     app2.use = function use(fn) {
       var offset = 0;
@@ -20809,15 +20809,15 @@ var require_application = __commonJS({
         throw new TypeError("app.use() requires a middleware function");
       }
       this.lazyrouter();
-      var router23 = this._router;
+      var router24 = this._router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router23.use(path3, fn2);
+          return router24.use(path3, fn2);
         }
         debug(".use app under %s", path3);
         fn2.mountpath = path3;
         fn2.parent = this;
-        router23.use(path3, function mounted_app(req, res, next) {
+        router24.use(path3, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             setPrototypeOf(req, orig.request);
@@ -22634,7 +22634,7 @@ var require_express = __commonJS({
     var mixin = require_merge_descriptors();
     var proto = require_application();
     var Route = require_route();
-    var Router23 = require_router();
+    var Router24 = require_router();
     var req = require_request();
     var res = require_response();
     exports2 = module2.exports = createApplication;
@@ -22657,7 +22657,7 @@ var require_express = __commonJS({
     exports2.request = req;
     exports2.response = res;
     exports2.Route = Route;
-    exports2.Router = Router23;
+    exports2.Router = Router24;
     exports2.json = bodyParser.json;
     exports2.query = require_query();
     exports2.raw = bodyParser.raw;
@@ -54304,7 +54304,7 @@ __export(app_exports, {
   default: () => app_default
 });
 module.exports = __toCommonJS(app_exports);
-var import_express23 = __toESM(require_express2());
+var import_express24 = __toESM(require_express2());
 var import_cors = __toESM(require_lib3());
 
 // backend/node_modules/helmet/index.mjs
@@ -58840,8 +58840,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.6",
-  gitCommit: "953d9a384f3c3ca072bce32fb9170d683ad00ab7",
-  buildTimestamp: "2026-11-02T10:31:19.961Z",
+  gitCommit: "6e90f9e473e14a242003b28bd74b9559e283ab84",
+  buildTimestamp: "2026-11-02T11:01:05.020Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -59629,7 +59629,7 @@ var AnalyticsService = class {
       const accs = await db.query(`SELECT balance FROM trading_accounts WHERE user_id = ?`, [userId]);
       currentBalance = accs.reduce((sum, a) => sum + toNumber(a.balance), 0);
     }
-    const closedPositions = positions.filter((p) => (p.status || "").toUpperCase() === "CLOSED");
+    const closedPositions = positions.filter((p2) => (p2.status || "").toUpperCase() === "CLOSED");
     closedPositions.sort((a, b) => {
       const dateA = toIsoDateString(a.close_time) || toIsoDateString(a.open_time);
       const dateB = toIsoDateString(b.close_time) || toIsoDateString(b.open_time);
@@ -59639,9 +59639,9 @@ var AnalyticsService = class {
       const safeTimeB = Number.isFinite(timeB) ? timeB : 0;
       return safeTimeA - safeTimeB;
     });
-    const openTrades = positions.filter((p) => (p.status || "").toUpperCase() === "OPEN").length;
+    const openTrades = positions.filter((p2) => (p2.status || "").toUpperCase() === "OPEN").length;
     const totalTrades = closedPositions.length;
-    const totalRealizedProfit = closedPositions.reduce((sum, p) => sum + toNumber(p.net_profit), 0);
+    const totalRealizedProfit = closedPositions.reduce((sum, p2) => sum + toNumber(p2.net_profit), 0);
     const startingBalance = currentBalance > 0 ? Math.max(0, currentBalance - totalRealizedProfit) : 0;
     if (totalTrades === 0) {
       return {
@@ -59658,6 +59658,14 @@ var AnalyticsService = class {
         netProfit: 0,
         totalCommissions: 0,
         totalSwaps: 0,
+        totalFees: 0,
+        costs: { commissions: 0, swaps: 0, fees: 0, totalCost: 0 },
+        winRateCi: { lower: 0, upper: 0, confidencePct: 95 },
+        sampleSizeWarning: {
+          isSmall: true,
+          threshold: 30,
+          message: "No closed trades recorded in MT5 history."
+        },
         profitFactor: 0,
         averageWin: 0,
         averageLoss: 0,
@@ -59686,6 +59694,7 @@ var AnalyticsService = class {
     let grossLoss = 0;
     let totalCommissions = 0;
     let totalSwaps = 0;
+    let totalFees = 0;
     let totalR = 0;
     let countWithR = 0;
     let largestWin = 0;
@@ -59714,8 +59723,9 @@ var AnalyticsService = class {
     const dailyMap = /* @__PURE__ */ new Map();
     closedPositions.forEach((pos, idx) => {
       const net = toNumber(pos.net_profit);
-      totalCommissions += toNumber(pos.commission_total);
-      totalSwaps += toNumber(pos.swap_total);
+      totalCommissions += Math.abs(toNumber(pos.commission_total));
+      totalSwaps += Math.abs(toNumber(pos.swap_total));
+      totalFees += Math.abs(toNumber(pos.fee_total || pos.fee || 0));
       cumulativeProfit += net;
       runningEquity += net;
       if (runningEquity > peakEquity) {
@@ -59817,6 +59827,19 @@ var AnalyticsService = class {
       winCount: d.winCount,
       lossCount: d.lossCount
     }));
+    const z = 1.96;
+    const z2 = z * z;
+    const p = winningTrades / totalTrades;
+    const denom = 1 + z2 / totalTrades;
+    const center = p + z2 / (2 * totalTrades);
+    const margin = z * Math.sqrt((p * (1 - p) + z2 / (4 * totalTrades)) / totalTrades);
+    const winRateCiLower = Math.max(0, parseFloat(((center - margin) / denom * 100).toFixed(1)));
+    const winRateCiUpper = Math.min(100, parseFloat(((center + margin) / denom * 100).toFixed(1)));
+    const isSmallSample = totalTrades < 30;
+    const totalCommsFormatted = parseFloat(totalCommissions.toFixed(2));
+    const totalSwapsFormatted = parseFloat(totalSwaps.toFixed(2));
+    const totalFeesFormatted = parseFloat(totalFees.toFixed(2));
+    const totalCostSum = parseFloat((totalCommissions + totalSwaps + totalFees).toFixed(2));
     return {
       initialBalance: startingBalance,
       totalTrades,
@@ -59829,8 +59852,25 @@ var AnalyticsService = class {
       grossProfit: parseFloat(grossProfit.toFixed(2)),
       grossLoss: parseFloat(grossLoss.toFixed(2)),
       netProfit,
-      totalCommissions: parseFloat(totalCommissions.toFixed(2)),
-      totalSwaps: parseFloat(totalSwaps.toFixed(2)),
+      totalCommissions: totalCommsFormatted,
+      totalSwaps: totalSwapsFormatted,
+      totalFees: totalFeesFormatted,
+      costs: {
+        commissions: totalCommsFormatted,
+        swaps: totalSwapsFormatted,
+        fees: totalFeesFormatted,
+        totalCost: totalCostSum
+      },
+      winRateCi: {
+        lower: winRateCiLower,
+        upper: winRateCiUpper,
+        confidencePct: 95
+      },
+      sampleSizeWarning: {
+        isSmall: isSmallSample,
+        threshold: 30,
+        message: isSmallSample ? `STATISTICAL WARNING: Sample size is small (${totalTrades} closed trade${totalTrades === 1 ? "" : "s"} < 30). Metrics lack statistical significance and confidence interval is wide [${winRateCiLower}% \u2013 ${winRateCiUpper}%].` : null
+      },
       profitFactor,
       averageWin,
       averageLoss,
@@ -74508,6 +74548,258 @@ router22.post("/webhook/mobile-money", async (req, res) => {
 });
 var billing_routes_default = router22;
 
+// backend/src/routes/compliance.routes.ts
+var import_express23 = __toESM(require_express2());
+init_esm();
+init_auth_middleware();
+init_db();
+
+// backend/src/config/compliance.config.ts
+var parseBlockedCountries = () => {
+  const envBlocked = process.env.BLOCKED_COUNTRIES;
+  if (envBlocked) {
+    return envBlocked.split(",").map((c) => c.trim().toUpperCase()).filter(Boolean);
+  }
+  return ["KP", "IR", "CU", "SY", "RU", "BY", "MM", "VE"];
+};
+var COMPLIANCE_CONFIG = {
+  minUserAge: 18,
+  blockedCountries: parseBlockedCountries(),
+  currentVersions: {
+    tos: "2026.1-draft",
+    privacy: "2026.1-draft",
+    riskDisclosure: "2026.1-draft",
+    cookiePolicy: "2026.1-draft"
+  },
+  disclaimerStatements: {
+    highRisk: "Trading foreign exchange and contracts for difference (CFDs) carries a high level of risk to your capital and may not be suitable for all investors. Leveraged products can result in losses exceeding your initial deposit.",
+    noAdvice: "Arcade Fx is a technology software platform providing analytical tools, journaling, and local MT5 bot management. Arcade Fx does not provide investment advice, trading recommendations, managed accounts, or brokerage services.",
+    propFirmResponsibility: "Subscribers are solely responsible for ensuring that automated bot execution conforms with the terms of use, drawdown rules, and copy-trading policies of their respective brokers or proprietary trading firms.",
+    localCeilingSupremacy: "The cloud management console only issues safe operational requests. Local hard limits configured directly on the user machine always override cloud requests. Enabling live execution requires explicit local confirmation on the machine running MetaTrader 5."
+  }
+};
+function isCountryBlocked(countryCode) {
+  if (!countryCode) return false;
+  return COMPLIANCE_CONFIG.blockedCountries.includes(countryCode.trim().toUpperCase());
+}
+
+// backend/src/routes/compliance.routes.ts
+var router23 = (0, import_express23.Router)();
+router23.get("/tos-status", requireUserAuth, async (req, res) => {
+  const reqId = req.requestId || v4_default();
+  const userId = req.user.userId;
+  const db = getDatabase();
+  try {
+    const latestAcceptance = await db.get(
+      `SELECT id, tos_version, privacy_version, risk_disclosure_version, accepted_at
+       FROM tos_acceptances
+       WHERE user_id = ?
+       ORDER BY accepted_at DESC LIMIT 1`,
+      [userId]
+    );
+    const hasAcceptedCurrent = latestAcceptance?.tos_version === COMPLIANCE_CONFIG.currentVersions.tos && latestAcceptance?.privacy_version === COMPLIANCE_CONFIG.currentVersions.privacy && latestAcceptance?.risk_disclosure_version === COMPLIANCE_CONFIG.currentVersions.riskDisclosure;
+    res.json({
+      success: true,
+      data: {
+        hasAcceptedCurrent: Boolean(hasAcceptedCurrent),
+        currentVersions: COMPLIANCE_CONFIG.currentVersions,
+        latestAcceptance: latestAcceptance || null,
+        minUserAge: COMPLIANCE_CONFIG.minUserAge
+      },
+      requestId: reqId
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: { code: "TOS_STATUS_ERROR", message: err.message || "Failed to check TOS acceptance." },
+      requestId: reqId
+    });
+  }
+});
+router23.post("/accept-tos", requireUserAuth, async (req, res) => {
+  const reqId = req.requestId || v4_default();
+  const userId = req.user.userId;
+  const db = getDatabase();
+  const { isAgeConfirmed, countryCode } = req.body;
+  if (isAgeConfirmed !== true) {
+    res.status(400).json({
+      success: false,
+      error: { code: "AGE_VERIFICATION_REQUIRED", message: "You must confirm that you are at least 18 years of age." },
+      requestId: reqId
+    });
+    return;
+  }
+  if (countryCode && isCountryBlocked(countryCode)) {
+    res.status(403).json({
+      success: false,
+      error: {
+        code: "JURISDICTION_RESTRICTED",
+        message: "Arcade Fx is not offered in your jurisdiction due to local regulatory restrictions."
+      },
+      requestId: reqId
+    });
+    return;
+  }
+  try {
+    const acceptanceId = v4_default();
+    const ipAddress = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "127.0.0.1";
+    const userAgent = req.headers["user-agent"] || "Unknown";
+    await db.run(
+      `INSERT INTO tos_acceptances (
+        id, user_id, tos_version, privacy_version, risk_disclosure_version, ip_address, user_agent, accepted_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(user_id, tos_version) DO UPDATE SET
+        accepted_at = CURRENT_TIMESTAMP,
+        ip_address = excluded.ip_address,
+        user_agent = excluded.user_agent`,
+      [
+        acceptanceId,
+        userId,
+        COMPLIANCE_CONFIG.currentVersions.tos,
+        COMPLIANCE_CONFIG.currentVersions.privacy,
+        COMPLIANCE_CONFIG.currentVersions.riskDisclosure,
+        ipAddress,
+        userAgent
+      ]
+    );
+    await logAuditEvent({
+      userId,
+      action: "COMPLIANCE_TOS_ACCEPTED",
+      entityType: "tos_acceptance",
+      entityId: acceptanceId,
+      ipAddress,
+      details: {
+        tosVersion: COMPLIANCE_CONFIG.currentVersions.tos,
+        privacyVersion: COMPLIANCE_CONFIG.currentVersions.privacy,
+        riskVersion: COMPLIANCE_CONFIG.currentVersions.riskDisclosure
+      }
+    });
+    res.json({
+      success: true,
+      message: "Terms of Service and Risk Disclosures successfully accepted.",
+      data: {
+        tosVersion: COMPLIANCE_CONFIG.currentVersions.tos,
+        acceptedAt: (/* @__PURE__ */ new Date()).toISOString()
+      },
+      requestId: reqId
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: { code: "TOS_ACCEPTANCE_ERROR", message: err.message || "Failed to record acceptance." },
+      requestId: reqId
+    });
+  }
+});
+router23.get("/blocked-regions", (req, res) => {
+  const reqId = req.requestId || v4_default();
+  res.json({
+    success: true,
+    data: {
+      blockedCountries: COMPLIANCE_CONFIG.blockedCountries,
+      minAge: COMPLIANCE_CONFIG.minUserAge,
+      disclaimers: COMPLIANCE_CONFIG.disclaimerStatements
+    },
+    requestId: reqId
+  });
+});
+router23.post("/check-country", (req, res) => {
+  const reqId = req.requestId || v4_default();
+  const { countryCode } = req.body;
+  const blocked = isCountryBlocked(countryCode);
+  res.json({
+    success: true,
+    data: {
+      countryCode: countryCode ? countryCode.toUpperCase() : null,
+      isBlocked: blocked,
+      message: blocked ? "Service is not offered in this country." : "Jurisdiction accepted."
+    },
+    requestId: reqId
+  });
+});
+router23.get("/export-data", requireUserAuth, async (req, res) => {
+  const reqId = req.requestId || v4_default();
+  const userId = req.user.userId;
+  const db = getDatabase();
+  try {
+    const baseExport = await SettingsService.exportUserData(userId);
+    const botInstances = await db.query(`SELECT * FROM bot_instances WHERE user_id = ?`, [userId]);
+    const botConfigs = await db.query(`SELECT * FROM bot_configs WHERE user_id = ?`, [userId]);
+    const tosRecords = await db.query(`SELECT * FROM tos_acceptances WHERE user_id = ?`, [userId]);
+    const enrichedData = {
+      ...baseExport.data,
+      botFleet: {
+        instancesCount: botInstances.length,
+        instances: botInstances,
+        configs: botConfigs
+      },
+      compliance: {
+        tosAcceptances: tosRecords
+      }
+    };
+    await logAuditEvent({
+      userId,
+      action: "COMPLIANCE_DATA_EXPORTED",
+      entityType: "data_export",
+      entityId: userId,
+      ipAddress: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+      details: { exportSize: JSON.stringify(enrichedData).length }
+    });
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Content-Disposition", `attachment; filename="${baseExport.filename}"`);
+    res.json({
+      success: true,
+      data: enrichedData,
+      requestId: reqId
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: { code: "DATA_EXPORT_FAILED", message: err.message || "Data export failed." },
+      requestId: reqId
+    });
+  }
+});
+router23.post("/delete-account", requireUserAuth, async (req, res) => {
+  const reqId = req.requestId || v4_default();
+  const userId = req.user.userId;
+  const { confirmationText } = req.body;
+  if (confirmationText !== "DELETE MY ACCOUNT PERMANENTLY") {
+    res.status(400).json({
+      success: false,
+      error: {
+        code: "CONFIRMATION_MISMATCH",
+        message: 'Must enter exact phrase "DELETE MY ACCOUNT PERMANENTLY" to confirm deletion.'
+      },
+      requestId: reqId
+    });
+    return;
+  }
+  try {
+    await logAuditEvent({
+      userId,
+      action: "COMPLIANCE_ACCOUNT_DELETED",
+      entityType: "user_account",
+      entityId: userId,
+      ipAddress: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+      details: { reason: "User requested self-deletion" }
+    });
+    await SettingsService.deleteAccount(userId);
+    res.json({
+      success: true,
+      message: "Account and associated records permanently deleted.",
+      requestId: reqId
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: { code: "ACCOUNT_DELETION_FAILED", message: err.message || "Failed to delete account." },
+      requestId: reqId
+    });
+  }
+});
+var compliance_routes_default = router23;
+
 // backend/src/app.ts
 init_db();
 
@@ -74571,7 +74863,7 @@ var LoggerService = class {
 var logger = new LoggerService();
 
 // backend/src/app.ts
-var app = (0, import_express23.default)();
+var app = (0, import_express24.default)();
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
@@ -74599,8 +74891,8 @@ app.use((0, import_cors.default)({
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "x-bridge-token", "x-device-name"]
 }));
-app.use(import_express23.default.json({ limit: "50mb" }));
-app.use(import_express23.default.urlencoded({ extended: true, limit: "50mb" }));
+app.use(import_express24.default.json({ limit: "50mb" }));
+app.use(import_express24.default.urlencoded({ extended: true, limit: "50mb" }));
 if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
   app.use((0, import_morgan.default)("dev"));
 }
@@ -74687,11 +74979,12 @@ var routePairs = [
   ["/intelligence", intelligence_routes_default],
   ["/forex", forex_routes_default],
   ["/bot", bot_routes_default],
-  ["/billing", billing_routes_default]
+  ["/billing", billing_routes_default],
+  ["/compliance", compliance_routes_default]
 ];
-routePairs.forEach(([prefix, router23]) => {
-  app.use(`/api/v1${prefix}`, router23);
-  app.use(`/v1${prefix}`, router23);
+routePairs.forEach(([prefix, router24]) => {
+  app.use(`/api/v1${prefix}`, router24);
+  app.use(`/v1${prefix}`, router24);
 });
 app.use("/api", forex_routes_default);
 app.use("/", forex_routes_default);

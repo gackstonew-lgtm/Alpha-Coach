@@ -27,6 +27,7 @@ import intelligenceRoutes from './routes/intelligence.routes';
 import forexRoutes from './routes/forex.routes';
 import botRoutes from './routes/bot.routes';
 import billingRoutes from './routes/billing.routes';
+import complianceRoutes from './routes/compliance.routes';
 
 const app = express();
 
@@ -169,7 +170,8 @@ const routePairs = [
   ['/intelligence', intelligenceRoutes],
   ['/forex', forexRoutes],
   ['/bot', botRoutes],
-  ['/billing', billingRoutes]
+  ['/billing', billingRoutes],
+  ['/compliance', complianceRoutes]
 ] as const;
 
 routePairs.forEach(([prefix, router]) => {
