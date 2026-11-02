@@ -26,6 +26,7 @@ import settingsRoutes from './routes/settings.routes';
 import intelligenceRoutes from './routes/intelligence.routes';
 import forexRoutes from './routes/forex.routes';
 import botRoutes from './routes/bot.routes';
+import billingRoutes from './routes/billing.routes';
 
 const app = express();
 
@@ -167,7 +168,8 @@ const routePairs = [
   ['/settings', settingsRoutes],
   ['/intelligence', intelligenceRoutes],
   ['/forex', forexRoutes],
-  ['/bot', botRoutes]
+  ['/bot', botRoutes],
+  ['/billing', billingRoutes]
 ] as const;
 
 routePairs.forEach(([prefix, router]) => {

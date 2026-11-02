@@ -177,4 +177,54 @@ router.post('/global-kill-switch', requireUserAuth, requireAdmin, async (req: Au
   }
 });
 
+// Admin Manual Grant/Extend Subscription
+router.post('/subscriptions/grant', requireUserAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { targetUserId, planCode, durationDays, reason } = req.body;
+    if (!targetUserId || !planCode) {
+      res.status(400).json({ error: 'targetUserId and planCode are required.' });
+      return;
+    }
+    const { SubscriptionService } = await import('../services/billing/subscription.service');
+    const result = await SubscriptionService.grantManualSubscription({
+      adminUserId: req.user!.userId,
+      targetUserId,
+      planCode,
+      durationDays: parseInt(durationDays, 10) || 30,
+      reason: reason || 'Admin manual grant',
+      ipAddress: req.ip || req.socket.remoteAddress
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin Revoke Subscription
+router.post('/subscriptions/revoke', requireUserAuth, requireAdmin, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { targetUserId, reason } = req.body;
+    if (!targetUserId) {
+      res.status(400).json({ error: 'targetUserId is required.' });
+      return;
+    }
+    const db = await getDatabaseAsync();
+    await db.run("UPDATE subscriptions SET status = 'canceled', canceled_at = CURRENT_TIMESTAMP WHERE user_id = ?", [targetUserId]);
+    await db.run("UPDATE entitlements SET can_trade = 0, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?", [targetUserId]);
+
+    await logAuditEvent({
+      userId: req.user!.userId,
+      action: 'ADMIN_SUBSCRIPTION_REVOKED',
+      entityType: 'SUBSCRIPTION',
+      entityId: targetUserId,
+      ipAddress: req.ip || req.socket.remoteAddress,
+      details: { reason: reason || 'Admin manual revocation' }
+    });
+
+    res.json({ success: true, message: 'Subscription and trade entitlements revoked.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
