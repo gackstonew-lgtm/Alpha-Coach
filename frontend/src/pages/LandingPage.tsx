@@ -1,3 +1,4 @@
+import { BOT_NAME, BOT_ASSISTANT_NAME } from '../config/appConfig';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MetaHead } from '../components/common/MetaHead';
@@ -105,9 +106,9 @@ export const LandingPage: React.FC = () => {
     },
     {
       icon: Bot,
-      title: 'AI Coach',
+      title: BOT_ASSISTANT_NAME,
       description: 'Get empirical feedback based on verified MT5 metrics.',
-      badge: 'Coach'
+      badge: 'Assistant'
     },
     {
       icon: Trophy,
@@ -379,7 +380,7 @@ export const LandingPage: React.FC = () => {
                   <ul className="space-y-2.5 pt-2 text-xs text-muted-foreground font-semibold">
                     <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span className="text-foreground font-bold">Unlimited MT5 Accounts & Terminals</span></li>
                     <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span>Real-Time Risk Guardian Alerts</span></li>
-                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span>AI Coach Execution Breakdown</span></li>
+                    <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span>Bot Assistant Execution Breakdown</span></li>
                     <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span>Market Scanner Structure Detection</span></li>
                     <li className="flex items-center gap-2"><Check className="w-3.5 h-3.5 text-success shrink-0" /><span>Full Historical Export (CSV/JSON)</span></li>
                   </ul>

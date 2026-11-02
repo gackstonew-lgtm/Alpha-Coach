@@ -15,6 +15,7 @@ import {
   Settings,
   ShieldCheck
 } from 'lucide-react';
+import { BOT_NAME } from './appConfig';
 
 export interface NavItemConfig {
   id: string;
@@ -42,7 +43,7 @@ export const PRIMARY_NAV_ITEMS: NavItemConfig[] = [
   { id: 'currency-strength', name: 'Currency Strength', to: '/currency-strength', icon: Scale },
   { id: 'sec-tracker', name: 'SEC & Politician Tracker', to: '/sec-tracker', icon: FileText },
   { id: 'performance', name: 'Performance', to: '/performance', icon: LineChart },
-  { id: 'ai-coach', name: 'AI Coach', to: '/ai-coach', icon: Bot },
+  { id: 'mt5-bot', name: BOT_NAME, to: '/bot', icon: Bot },
   { id: 'risk-guardian', name: 'Risk Guardian', to: '/risk-guardian', icon: ShieldAlert }
 ];
 

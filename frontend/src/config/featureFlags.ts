@@ -14,6 +14,11 @@ export interface FeatureFlags {
   enablePwaInstall: boolean;
   enableAnalytics: boolean;
   enableDataIntegrityPanel: boolean;
+  /**
+   * Hard Rule 4: Feature flag "public_subscriptions" defaults OFF.
+   * Billing, signup for non-admin users and marketing claims stay disabled until turned on after legal review.
+   */
+  public_subscriptions: boolean;
 }
 
 const getEnvFlag = (envKey: string, defaultValue: boolean): boolean => {
@@ -33,7 +38,8 @@ export const FEATURE_FLAGS: FeatureFlags = {
   enableRiskGuardian: getEnvFlag('VITE_FF_RISK_GUARDIAN', true),
   enablePwaInstall: getEnvFlag('VITE_FF_PWA_INSTALL', true),
   enableAnalytics: getEnvFlag('VITE_FF_ANALYTICS', true),
-  enableDataIntegrityPanel: getEnvFlag('VITE_FF_DATA_INTEGRITY', true)
+  enableDataIntegrityPanel: getEnvFlag('VITE_FF_DATA_INTEGRITY', true),
+  public_subscriptions: getEnvFlag('VITE_FF_PUBLIC_SUBSCRIPTIONS', false)
 };
 
 export const isFeatureEnabled = (flag: keyof FeatureFlags): boolean => {

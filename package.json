@@ -17,7 +17,8 @@
     "test:backend": "cd backend && npm test",
     "test:bridge": "python bridge/test_bridge.py",
     "test": "cd backend && npm test && cd .. && python bridge/test_bridge.py",
-    "start:bridge": "python bridge/bridge_cli.py"
+    "start:bridge": "python bridge/bridge_cli.py",
+    "scan:secrets": "node scripts/secret-scan.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
