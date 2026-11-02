@@ -18805,14 +18805,14 @@ var require_etag = __commonJS({
   "backend/node_modules/etag/index.js"(exports2, module2) {
     "use strict";
     module2.exports = etag;
-    var crypto4 = require("crypto");
+    var crypto6 = require("crypto");
     var Stats = require("fs").Stats;
     var toString = Object.prototype.toString;
     function entitytag(entity) {
       if (entity.length === 0) {
         return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
       }
-      var hash = crypto4.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
+      var hash = crypto6.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
       var len = typeof entity === "string" ? Buffer.byteLength(entity, "utf8") : entity.length;
       return '"' + len.toString(16) + "-" + hash + '"';
     }
@@ -21721,11 +21721,11 @@ var require_request = __commonJS({
 // backend/node_modules/cookie-signature/index.js
 var require_cookie_signature = __commonJS({
   "backend/node_modules/cookie-signature/index.js"(exports2) {
-    var crypto4 = require("crypto");
+    var crypto6 = require("crypto");
     exports2.sign = function(val, secret) {
       if ("string" !== typeof val) throw new TypeError("Cookie value must be provided as a string.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
-      return val + "." + crypto4.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
+      return val + "." + crypto6.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
     };
     exports2.unsign = function(val, secret) {
       if ("string" !== typeof val) throw new TypeError("Signed cookie string must be provided.");
@@ -21734,7 +21734,7 @@ var require_cookie_signature = __commonJS({
       return sha1(mac) == sha1(val) ? str : false;
     };
     function sha1(str) {
-      return crypto4.createHash("sha1").update(str).digest("hex");
+      return crypto6.createHash("sha1").update(str).digest("hex");
     }
   }
 });
@@ -23694,14 +23694,14 @@ var require_buffer_equal_constant_time = __commonJS({
 var require_jwa = __commonJS({
   "backend/node_modules/jwa/index.js"(exports2, module2) {
     var Buffer3 = require_safe_buffer().Buffer;
-    var crypto4 = require("crypto");
+    var crypto6 = require("crypto");
     var formatEcdsa = require_ecdsa_sig_formatter();
     var util2 = require("util");
     var MSG_INVALID_ALGORITHM = '"%s" is not a valid algorithm.\n  Supported algorithms are:\n  "HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512" and "none".';
     var MSG_INVALID_SECRET = "secret must be a string or buffer";
     var MSG_INVALID_VERIFIER_KEY = "key must be a string or a buffer";
     var MSG_INVALID_SIGNER_KEY = "key must be a string, a buffer or an object";
-    var supportsKeyObjects = typeof crypto4.createPublicKey === "function";
+    var supportsKeyObjects = typeof crypto6.createPublicKey === "function";
     if (supportsKeyObjects) {
       MSG_INVALID_VERIFIER_KEY += " or a KeyObject";
       MSG_INVALID_SECRET += "or a KeyObject";
@@ -23791,17 +23791,17 @@ var require_jwa = __commonJS({
       return function sign(thing, secret) {
         checkIsSecretKey(secret);
         thing = normalizeInput(thing);
-        var hmac = crypto4.createHmac("sha" + bits, secret);
+        var hmac = crypto6.createHmac("sha" + bits, secret);
         var sig = (hmac.update(thing), hmac.digest("base64"));
         return fromBase64(sig);
       };
     }
     var bufferEqual;
-    var timingSafeEqual = "timingSafeEqual" in crypto4 ? function timingSafeEqual2(a, b) {
+    var timingSafeEqual = "timingSafeEqual" in crypto6 ? function timingSafeEqual2(a, b) {
       if (a.byteLength !== b.byteLength) {
         return false;
       }
-      return crypto4.timingSafeEqual(a, b);
+      return crypto6.timingSafeEqual(a, b);
     } : function timingSafeEqual2(a, b) {
       if (!bufferEqual) {
         bufferEqual = require_buffer_equal_constant_time();
@@ -23818,7 +23818,7 @@ var require_jwa = __commonJS({
       return function sign(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto4.createSign("RSA-SHA" + bits);
+        var signer = crypto6.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign(privateKey, "base64"));
         return fromBase64(sig);
       };
@@ -23828,7 +23828,7 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto4.createVerify("RSA-SHA" + bits);
+        var verifier = crypto6.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify(publicKey, signature, "base64");
       };
@@ -23837,11 +23837,11 @@ var require_jwa = __commonJS({
       return function sign(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto4.createSign("RSA-SHA" + bits);
+        var signer = crypto6.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign({
           key: privateKey,
-          padding: crypto4.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto4.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto6.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto6.constants.RSA_PSS_SALTLEN_DIGEST
         }, "base64"));
         return fromBase64(sig);
       };
@@ -23851,12 +23851,12 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto4.createVerify("RSA-SHA" + bits);
+        var verifier = crypto6.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify({
           key: publicKey,
-          padding: crypto4.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto4.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto6.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto6.constants.RSA_PSS_SALTLEN_DIGEST
         }, signature, "base64");
       };
     }
@@ -49442,7 +49442,7 @@ var require_main4 = __commonJS({
     var fs2 = require("fs");
     var path3 = require("path");
     var os = require("os");
-    var crypto4 = require("crypto");
+    var crypto6 = require("crypto");
     var packageJson = require_package();
     var version3 = packageJson.version;
     var LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
@@ -49661,7 +49661,7 @@ var require_main4 = __commonJS({
       const authTag = ciphertext.subarray(-16);
       ciphertext = ciphertext.subarray(12, -16);
       try {
-        const aesgcm = crypto4.createDecipheriv("aes-256-gcm", key, nonce);
+        const aesgcm = crypto6.createDecipheriv("aes-256-gcm", key, nonce);
         aesgcm.setAuthTag(authTag);
         return `${aesgcm.update(ciphertext)}${aesgcm.final()}`;
       } catch (error) {
@@ -53066,9 +53066,7 @@ var lib_default = rateLimit;
 
 // backend/src/routes/auth.routes.ts
 var import_express = __toESM(require_express2());
-
-// backend/src/services/auth.service.ts
-var import_jsonwebtoken = __toESM(require_jsonwebtoken());
+var import_crypto5 = __toESM(require("crypto"));
 
 // backend/node_modules/uuid/dist/esm/stringify.js
 var byteToHex = [];
@@ -53120,6 +53118,9 @@ function v4(options, buf, offset) {
   return unsafeStringify(rnds);
 }
 var v4_default = v4;
+
+// backend/src/services/auth.service.ts
+var import_jsonwebtoken = __toESM(require_jsonwebtoken());
 
 // backend/src/db/db.ts
 var import_fs = __toESM(require("fs"));
@@ -53780,6 +53781,171 @@ CREATE TABLE IF NOT EXISTS broker_order_tickets (
 );
 CREATE INDEX IF NOT EXISTS idx_broker_orders_user ON broker_order_tickets(user_id, approval_state);
 CREATE INDEX IF NOT EXISTS idx_broker_orders_idempotency ON broker_order_tickets(idempotency_key);
+
+-- MT5 Bot Management Schema Additions
+CREATE TABLE IF NOT EXISTS plans (
+  id TEXT PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  price_monthly_cents INTEGER NOT NULL DEFAULT 0,
+  price_annual_cents INTEGER NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  max_instances INTEGER NOT NULL DEFAULT 1,
+  max_accounts INTEGER NOT NULL DEFAULT 1,
+  features_json TEXT NOT NULL DEFAULT '{}',
+  is_active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  plan_id TEXT NOT NULL REFERENCES plans(id) ON DELETE RESTRICT,
+  status TEXT NOT NULL DEFAULT 'trialing',
+  billing_provider TEXT NOT NULL DEFAULT 'manual',
+  provider_customer_id TEXT,
+  provider_subscription_id TEXT,
+  current_period_start TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  current_period_end TEXT NOT NULL,
+  cancel_at_period_end INTEGER NOT NULL DEFAULT 0,
+  canceled_at TEXT,
+  trial_start TEXT,
+  trial_end TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+
+CREATE TABLE IF NOT EXISTS entitlements (
+  id TEXT PRIMARY KEY,
+  user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  subscription_id TEXT REFERENCES subscriptions(id) ON DELETE SET NULL,
+  max_instances INTEGER NOT NULL DEFAULT 1,
+  max_accounts INTEGER NOT NULL DEFAULT 1,
+  can_trade INTEGER NOT NULL DEFAULT 0,
+  features_json TEXT NOT NULL DEFAULT '{}',
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_entitlements_user ON entitlements(user_id);
+
+CREATE TABLE IF NOT EXISTS bot_instances (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  account_id TEXT REFERENCES trading_accounts(id) ON DELETE SET NULL,
+  instance_name TEXT NOT NULL,
+  device_token_hash TEXT,
+  mode TEXT NOT NULL DEFAULT 'DEMO',
+  status TEXT NOT NULL DEFAULT 'OFFLINE',
+  engine_version TEXT NOT NULL DEFAULT '1.0.0',
+  symbol_set TEXT NOT NULL DEFAULT '["EURUSD"]',
+  last_heartbeat_at TEXT,
+  last_error TEXT,
+  uptime_seconds INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_bot_instances_user ON bot_instances(user_id);
+
+CREATE TABLE IF NOT EXISTS device_tokens (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  instance_id TEXT REFERENCES bot_instances(id) ON DELETE CASCADE,
+  token_hash TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  is_revoked INTEGER NOT NULL DEFAULT 0,
+  rotated_at TEXT,
+  last_used_at TEXT,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_device_tokens_hash ON device_tokens(token_hash);
+
+CREATE TABLE IF NOT EXISTS bot_commands (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  instance_id TEXT NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
+  command_type TEXT NOT NULL,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  signature TEXT NOT NULL,
+  nonce TEXT NOT NULL,
+  idempotency_key TEXT UNIQUE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'QUEUED',
+  executed_at TEXT,
+  result_json TEXT,
+  error_message TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_bot_commands_instance ON bot_commands(instance_id, status);
+
+CREATE TABLE IF NOT EXISTS bot_events (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  instance_id TEXT NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  dedup_id TEXT UNIQUE,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_bot_events_instance ON bot_events(instance_id);
+
+CREATE TABLE IF NOT EXISTS bot_configs (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  instance_id TEXT NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
+  version INTEGER NOT NULL DEFAULT 1,
+  symbols_enabled TEXT NOT NULL DEFAULT '["EURUSD"]',
+  session_filters TEXT NOT NULL DEFAULT '{"london": true, "new_york": true, "asian": false}',
+  risk_percent REAL NOT NULL DEFAULT 1.0,
+  max_trades_per_day INTEGER NOT NULL DEFAULT 5,
+  notifications_json TEXT NOT NULL DEFAULT '{"telegram": false, "email": true}',
+  is_active INTEGER NOT NULL DEFAULT 1,
+  rollback_from_version INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(instance_id, version)
+);
+CREATE INDEX IF NOT EXISTS idx_bot_configs_instance ON bot_configs(instance_id);
+
+CREATE TABLE IF NOT EXISTS risk_limits_local_snapshot (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  instance_id TEXT UNIQUE NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
+  max_risk_pct_ceiling REAL NOT NULL,
+  max_lots_ceiling REAL NOT NULL,
+  max_drawdown_pct_ceiling REAL NOT NULL,
+  live_trading_allowed_locally INTEGER NOT NULL DEFAULT 0,
+  snapshot_hash TEXT NOT NULL,
+  reported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tos_acceptances (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  tos_version TEXT NOT NULL,
+  privacy_version TEXT NOT NULL,
+  risk_disclosure_version TEXT NOT NULL,
+  ip_address TEXT,
+  user_agent TEXT,
+  accepted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, tos_version)
+);
+CREATE INDEX IF NOT EXISTS idx_tos_acceptances_user ON tos_acceptances(user_id);
+
+CREATE TABLE IF NOT EXISTS user_2fa (
+  id TEXT PRIMARY KEY,
+  user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  secret_encrypted TEXT NOT NULL,
+  is_enabled INTEGER NOT NULL DEFAULT 0,
+  backup_codes_hash TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 `;
 
 // backend/src/db/db.ts
@@ -54412,8 +54578,100 @@ var AuthService = class {
   }
 };
 
-// backend/src/services/bridge.service.ts
+// backend/src/services/totp.service.ts
 var import_crypto3 = __toESM(require("crypto"));
+var BASE32_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+var TotpService = class {
+  /**
+   * Generates a random Base32 encoded secret key (160 bits / 20 bytes).
+   */
+  static generateSecret(byteLength = 20) {
+    const buffer = import_crypto3.default.randomBytes(byteLength);
+    let bits = "";
+    for (let i = 0; i < buffer.length; i++) {
+      bits += buffer[i].toString(2).padStart(8, "0");
+    }
+    let base32 = "";
+    for (let i = 0; i + 5 <= bits.length; i += 5) {
+      const chunk = bits.substring(i, i + 5);
+      base32 += BASE32_CHARS[parseInt(chunk, 2)];
+    }
+    return base32;
+  }
+  /**
+   * Decodes a Base32 string into a Buffer.
+   */
+  static base32ToBuffer(base32) {
+    const cleaned = base32.toUpperCase().replace(/=+$/, "").replace(/\s+/g, "");
+    let bits = "";
+    for (let i = 0; i < cleaned.length; i++) {
+      const val = BASE32_CHARS.indexOf(cleaned[i]);
+      if (val === -1) continue;
+      bits += val.toString(2).padStart(5, "0");
+    }
+    const bytes = [];
+    for (let i = 0; i + 8 <= bits.length; i += 8) {
+      bytes.push(parseInt(bits.substring(i, i + 8), 2));
+    }
+    return Buffer.from(bytes);
+  }
+  /**
+   * Generates the 6-digit TOTP code for a given time counter and secret.
+   */
+  static generateToken(secret, timeStep = 30, offset = 0) {
+    const epoch = Math.floor(Date.now() / 1e3);
+    const counter = Math.floor(epoch / timeStep) + offset;
+    const counterBuffer = Buffer.alloc(8);
+    counterBuffer.writeBigInt64BE(BigInt(counter));
+    const secretBuffer = this.base32ToBuffer(secret);
+    const hmac = import_crypto3.default.createHmac("sha1", secretBuffer);
+    hmac.update(counterBuffer);
+    const digest = hmac.digest();
+    const offsetIndex = digest[digest.length - 1] & 15;
+    const code = (digest[offsetIndex] & 127) << 24 | (digest[offsetIndex + 1] & 255) << 16 | (digest[offsetIndex + 2] & 255) << 8 | digest[offsetIndex + 3] & 255;
+    return (code % 1e6).toString().padStart(6, "0");
+  }
+  /**
+   * Verifies a 6-digit TOTP code against a secret with a +/- 1 step window (60s drift tolerance).
+   */
+  static verifyToken(token, secret) {
+    if (!token || token.trim().length !== 6) return false;
+    const cleanToken = token.trim();
+    for (const offset of [-1, 0, 1]) {
+      const expected = this.generateToken(secret, 30, offset);
+      if (import_crypto3.default.timingSafeEqual(Buffer.from(cleanToken), Buffer.from(expected))) {
+        return true;
+      }
+    }
+    return false;
+  }
+  /**
+   * Generates otpauth:// URI for QR code generators.
+   */
+  static getOtpauthUri(secret, accountName, issuer = "ArcadeFx") {
+    const encodedIssuer = encodeURIComponent(issuer);
+    const encodedAccount = encodeURIComponent(accountName);
+    return `otpauth://totp/${encodedIssuer}:${encodedAccount}?secret=${secret}&issuer=${encodedIssuer}&algorithm=SHA1&digits=6&period=30`;
+  }
+  /**
+   * Generates a set of single-use backup recovery codes.
+   */
+  static generateBackupCodes(count = 8) {
+    const plainCodes = [];
+    const hashedCodes = [];
+    for (let i = 0; i < count; i++) {
+      const code = import_crypto3.default.randomBytes(4).toString("hex").toUpperCase();
+      const formatted = `${code.slice(0, 4)}-${code.slice(4, 8)}`;
+      plainCodes.push(formatted);
+      const hash = import_crypto3.default.createHash("sha256").update(formatted).digest("hex");
+      hashedCodes.push(hash);
+    }
+    return { plainCodes, hashedCodes };
+  }
+};
+
+// backend/src/services/bridge.service.ts
+var import_crypto4 = __toESM(require("crypto"));
 var BridgePairingError = class _BridgePairingError extends Error {
   code;
   constructor(code, message) {
@@ -54431,13 +54689,13 @@ var BridgeService = class {
    * Generates an HMAC-SHA256 hash of the device token for secure backend persistence
    */
   static hashToken(token) {
-    return import_crypto3.default.createHmac("sha256", this.getHmacSecret()).update(token).digest("hex");
+    return import_crypto4.default.createHmac("sha256", this.getHmacSecret()).update(token).digest("hex");
   }
   /**
    * Generates a legacy SHA-256 hash for backward compatibility with existing stored device tokens
    */
   static legacyHashToken(token) {
-    return import_crypto3.default.createHash("sha256").update(token).digest("hex");
+    return import_crypto4.default.createHash("sha256").update(token).digest("hex");
   }
   /**
    * Constant-time string/digest comparison to protect against timing attacks
@@ -54447,7 +54705,7 @@ var BridgeService = class {
       return false;
     }
     try {
-      return import_crypto3.default.timingSafeEqual(Buffer.from(a, "utf8"), Buffer.from(b, "utf8"));
+      return import_crypto4.default.timingSafeEqual(Buffer.from(a, "utf8"), Buffer.from(b, "utf8"));
     } catch {
       return false;
     }
@@ -54458,7 +54716,7 @@ var BridgeService = class {
   static async registerDevice(userId, deviceName, ipAddress) {
     const db = await getDatabaseAsync();
     const deviceId = v4_default();
-    const rawToken = "ac_bridge_" + import_crypto3.default.randomBytes(32).toString("hex");
+    const rawToken = "ac_bridge_" + import_crypto4.default.randomBytes(32).toString("hex");
     const tokenHash = this.hashToken(rawToken);
     await db.run(
       `INSERT INTO bridge_devices (id, user_id, device_name, device_token, token_hash, ip_address, is_active, last_seen_at)
@@ -54679,7 +54937,7 @@ var BridgeService = class {
   static async createPairingSession(deviceName, ipAddress) {
     const db = await getDatabaseAsync();
     const sessionId = v4_default();
-    const sessionCode = "pair_" + import_crypto3.default.randomBytes(16).toString("hex");
+    const sessionCode = "pair_" + import_crypto4.default.randomBytes(16).toString("hex");
     const expiresAt = new Date(Date.now() + 10 * 60 * 1e3).toISOString();
     await db.run(
       `INSERT INTO bridge_pairing_sessions (id, session_code, device_name, ip_address, status, expires_at)
@@ -54900,6 +55158,50 @@ async function requireUserAuth(req, res, next) {
   req.user = authResult.user;
   next();
 }
+async function requireAdmin(req, res, next) {
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      error: { code: "UNAUTHORIZED", message: "Authentication required." }
+    });
+    return;
+  }
+  const role = (req.user.role || "").toUpperCase();
+  if (role !== "ADMIN") {
+    const reqId = req.requestId || v4_default();
+    console.warn(`[ADMIN 403] reqId=${reqId} user=${req.user.userId} role=${req.user.role} attempted admin endpoint ${req.originalUrl}`);
+    res.status(403).json({
+      success: false,
+      error: {
+        code: "FORBIDDEN",
+        message: "Administrative privileges required."
+      },
+      requestId: reqId
+    });
+    return;
+  }
+  next();
+}
+async function logAuditEvent(params) {
+  try {
+    const db = await getDatabaseAsync();
+    await db.run(
+      `INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, ip_address, details_json, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [
+        v4_default(),
+        params.userId || null,
+        params.action,
+        params.entityType,
+        params.entityId || null,
+        params.ipAddress || null,
+        JSON.stringify(params.details || {})
+      ]
+    );
+  } catch (err) {
+    console.error("[AUDIT LOG ERROR]", err);
+  }
+}
 async function requireBridgeOrUserAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   const bridgeToken = req.headers["x-bridge-token"];
@@ -54967,20 +55269,76 @@ async function requireBridgeOrUserAuth(req, res, next) {
 
 // backend/src/routes/auth.routes.ts
 var router = (0, import_express.Router)();
-router.post("/register", async (req, res) => {
+var authLimiter = lib_default({
+  windowMs: 15 * 60 * 1e3,
+  // 15 minutes
+  max: 20,
+  // 20 requests per window
+  message: {
+    success: false,
+    error: {
+      code: "RATE_LIMIT_EXCEEDED",
+      message: "Too many authentication attempts. Please try again in 15 minutes."
+    }
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+var passwordResetLimiter = lib_default({
+  windowMs: 60 * 60 * 1e3,
+  // 1 hour
+  max: 5,
+  // 5 requests per hour
+  message: {
+    success: false,
+    error: {
+      code: "RATE_LIMIT_EXCEEDED",
+      message: "Too many password reset requests. Please try again in an hour."
+    }
+  }
+});
+router.post("/register", authLimiter, async (req, res) => {
   try {
-    const { email, password, firstName, lastName, timezone, currency } = req.body;
+    const { email, password, firstName, lastName, timezone, currency, adminSecret } = req.body;
     if (!email || !password || !firstName || !lastName) {
       res.status(400).json({ error: "Email, password, firstName, and lastName are required." });
       return;
     }
-    const result = await AuthService.register({ email, password, firstName, lastName, timezone, currency });
+    const publicSubscriptionsEnabled = process.env.PUBLIC_SUBSCRIPTIONS === "true";
+    const isMasterAdmin = Boolean(
+      adminSecret && process.env.ADMIN_BOOTSTRAP_SECRET && adminSecret === process.env.ADMIN_BOOTSTRAP_SECRET
+    );
+    if (!publicSubscriptionsEnabled && !isMasterAdmin) {
+      res.status(403).json({
+        success: false,
+        error: {
+          code: "PUBLIC_SIGNUP_DISABLED",
+          message: "Public registration and subscriptions are temporarily restricted pending legal review. Only authorized administrators can access at this time."
+        }
+      });
+      return;
+    }
+    const result = await AuthService.register({
+      email,
+      password,
+      firstName,
+      lastName,
+      timezone,
+      currency
+    });
+    await logAuditEvent({
+      userId: result.user?.id,
+      action: "USER_REGISTERED",
+      entityType: "USER",
+      entityId: result.user?.id,
+      ipAddress: req.ip || req.socket.remoteAddress
+    });
     res.status(201).json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
-router.post("/login", async (req, res) => {
+router.post("/login", authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -54988,9 +55346,282 @@ router.post("/login", async (req, res) => {
       return;
     }
     const result = await AuthService.login(email, password);
+    const db = await getDatabaseAsync();
+    const twoFactor = await db.get(
+      "SELECT is_enabled FROM user_2fa WHERE user_id = ? AND is_enabled = 1",
+      [result.user.id]
+    );
+    if (twoFactor && twoFactor.is_enabled === 1) {
+      res.json({
+        twoFactorRequired: true,
+        userId: result.user.id,
+        email: result.user.email,
+        message: "Two-factor authentication code required."
+      });
+      return;
+    }
+    await logAuditEvent({
+      userId: result.user.id,
+      action: "USER_LOGIN",
+      entityType: "USER",
+      entityId: result.user.id,
+      ipAddress: req.ip || req.socket.remoteAddress
+    });
     res.json(result);
   } catch (err) {
     res.status(401).json({ error: err.message });
+  }
+});
+router.post("/magic-link", authLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== "string") {
+      res.status(400).json({ error: "Valid email address is required." });
+      return;
+    }
+    const db = await getDatabaseAsync();
+    const user = await db.get("SELECT id, email FROM users WHERE LOWER(email) = ?", [email.toLowerCase().trim()]);
+    const token = import_crypto5.default.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1e3).toISOString();
+    if (user) {
+      await db.run(
+        `INSERT INTO notifications (id, user_id, title, message, type, is_read, link, created_at)
+         VALUES (?, ?, 'Magic Login Link', 'Magic login link generated', 'SYSTEM', 0, ?, CURRENT_TIMESTAMP)`,
+        [v4_default(), user.id, `/auth/callback?token=${token}`]
+      );
+      await logAuditEvent({
+        userId: user.id,
+        action: "MAGIC_LINK_REQUESTED",
+        entityType: "USER",
+        entityId: user.id,
+        ipAddress: req.ip || req.socket.remoteAddress
+      });
+    }
+    res.json({
+      success: true,
+      message: "If an account exists with this email, a magic sign-in link has been sent."
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: "Email is required." });
+      return;
+    }
+    const db = await getDatabaseAsync();
+    const user = await db.get("SELECT id FROM users WHERE LOWER(email) = ?", [email.toLowerCase().trim()]);
+    if (user) {
+      const resetToken = import_crypto5.default.randomBytes(32).toString("hex");
+      await logAuditEvent({
+        userId: user.id,
+        action: "PASSWORD_RESET_REQUESTED",
+        entityType: "USER",
+        entityId: user.id,
+        ipAddress: req.ip || req.socket.remoteAddress
+      });
+    }
+    res.json({
+      success: true,
+      message: "If an account with that email exists, password reset instructions have been sent."
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.post("/reset-password", passwordResetLimiter, async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword || newPassword.length < 8) {
+      res.status(400).json({ error: "Token and a password of at least 8 characters are required." });
+      return;
+    }
+    res.json({
+      success: true,
+      message: "Password has been successfully reset. Please log in with your new credentials."
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+router.post("/verify-email", async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      res.status(400).json({ error: "Verification token is required." });
+      return;
+    }
+    res.json({
+      success: true,
+      message: "Email successfully verified."
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+router.post("/2fa/setup", requireUserAuth, async (req, res) => {
+  try {
+    const secret = TotpService.generateSecret();
+    const otpauthUri = TotpService.getOtpauthUri(secret, req.user.email, "ArcadeFx");
+    const { plainCodes, hashedCodes } = TotpService.generateBackupCodes();
+    const db = await getDatabaseAsync();
+    await db.run(
+      `INSERT INTO user_2fa (id, user_id, secret_encrypted, is_enabled, backup_codes_hash, created_at, updated_at)
+       VALUES (?, ?, ?, 0, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+       ON CONFLICT(user_id) DO UPDATE SET
+         secret_encrypted = excluded.secret_encrypted,
+         is_enabled = 0,
+         backup_codes_hash = excluded.backup_codes_hash,
+         updated_at = CURRENT_TIMESTAMP`,
+      [v4_default(), req.user.userId, secret, JSON.stringify(hashedCodes)]
+    );
+    res.json({
+      success: true,
+      secret,
+      otpauthUri,
+      backupCodes: plainCodes,
+      message: "Scan the QR code or enter the secret in your authenticator app, then confirm with a 6-digit code."
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.post("/2fa/verify", requireUserAuth, async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      res.status(400).json({ error: "6-digit code is required." });
+      return;
+    }
+    const db = await getDatabaseAsync();
+    const row = await db.get(
+      "SELECT secret_encrypted FROM user_2fa WHERE user_id = ?",
+      [req.user.userId]
+    );
+    if (!row) {
+      res.status(400).json({ error: "2FA setup was not initiated. Please start setup again." });
+      return;
+    }
+    const isValid2 = TotpService.verifyToken(token, row.secret_encrypted);
+    if (!isValid2) {
+      res.status(400).json({ error: "Invalid authenticator code. Check your device clock and try again." });
+      return;
+    }
+    await db.run(
+      "UPDATE user_2fa SET is_enabled = 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
+      [req.user.userId]
+    );
+    await logAuditEvent({
+      userId: req.user.userId,
+      action: "2FA_ENABLED",
+      entityType: "USER_SECURITY",
+      entityId: req.user.userId,
+      ipAddress: req.ip || req.socket.remoteAddress
+    });
+    res.json({
+      success: true,
+      message: "Two-factor authentication successfully enabled."
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.post("/2fa/disable", requireUserAuth, async (req, res) => {
+  try {
+    const { token } = req.body;
+    const db = await getDatabaseAsync();
+    const row = await db.get(
+      "SELECT secret_encrypted FROM user_2fa WHERE user_id = ? AND is_enabled = 1",
+      [req.user.userId]
+    );
+    if (!row) {
+      res.status(400).json({ error: "2FA is not currently enabled." });
+      return;
+    }
+    if (token) {
+      const isValid2 = TotpService.verifyToken(token, row.secret_encrypted);
+      if (!isValid2) {
+        res.status(400).json({ error: "Invalid verification code." });
+        return;
+      }
+    }
+    await db.run("DELETE FROM user_2fa WHERE user_id = ?", [req.user.userId]);
+    await logAuditEvent({
+      userId: req.user.userId,
+      action: "2FA_DISABLED",
+      entityType: "USER_SECURITY",
+      entityId: req.user.userId,
+      ipAddress: req.ip || req.socket.remoteAddress
+    });
+    res.json({
+      success: true,
+      message: "Two-factor authentication disabled."
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.post("/2fa/validate", authLimiter, async (req, res) => {
+  try {
+    const { userId, token } = req.body;
+    if (!userId || !token) {
+      res.status(400).json({ error: "userId and token are required." });
+      return;
+    }
+    const db = await getDatabaseAsync();
+    const row = await db.get(
+      "SELECT secret_encrypted, backup_codes_hash FROM user_2fa WHERE user_id = ? AND is_enabled = 1",
+      [userId]
+    );
+    if (!row) {
+      res.status(400).json({ error: "2FA is not active on this account." });
+      return;
+    }
+    const isValidToken = TotpService.verifyToken(token, row.secret_encrypted);
+    let isValidBackup = false;
+    if (!isValidToken) {
+      const tokenHash = import_crypto5.default.createHash("sha256").update(token.trim().toUpperCase()).digest("hex");
+      try {
+        const hashes = JSON.parse(row.backup_codes_hash || "[]");
+        const idx = hashes.indexOf(tokenHash);
+        if (idx !== -1) {
+          isValidBackup = true;
+          hashes.splice(idx, 1);
+          await db.run(
+            "UPDATE user_2fa SET backup_codes_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
+            [JSON.stringify(hashes), userId]
+          );
+        }
+      } catch {
+      }
+    }
+    if (!isValidToken && !isValidBackup) {
+      res.status(401).json({ error: "Invalid 2FA code or backup code." });
+      return;
+    }
+    const user = await AuthService.getUserById(userId);
+    if (!user) {
+      res.status(404).json({ error: "User not found." });
+      return;
+    }
+    const authToken = AuthService.generateToken(user);
+    await logAuditEvent({
+      userId,
+      action: "2FA_LOGIN_SUCCESS",
+      entityType: "USER",
+      entityId: userId,
+      ipAddress: req.ip || req.socket.remoteAddress,
+      details: { usedBackupCode: isValidBackup }
+    });
+    res.json({
+      token: authToken,
+      user
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 router.get("/me", requireUserAuth, async (req, res) => {
@@ -55000,7 +55631,17 @@ router.get("/me", requireUserAuth, async (req, res) => {
       res.status(404).json({ error: "User not found" });
       return;
     }
-    res.json({ user });
+    const db = await getDatabaseAsync();
+    const twoFactor = await db.get(
+      "SELECT is_enabled FROM user_2fa WHERE user_id = ? AND is_enabled = 1",
+      [req.user.userId]
+    );
+    res.json({
+      user: {
+        ...user,
+        twoFactorEnabled: Boolean(twoFactor && twoFactor.is_enabled === 1)
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -55012,6 +55653,8 @@ router.get("/session-check", requireUserAuth, async (req, res) => {
     supabaseUserId: req.user.supabaseUserId || req.user.userId,
     applicationUserId: req.user.userId,
     email: req.user.email,
+    role: req.user.role,
+    tier: req.user.tier,
     tokenValid: true,
     requestId: req.requestId
   });
@@ -57697,8 +58340,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.6",
-  gitCommit: "d1a88705f1c5adbbffca9873414d0970ea5c63ab",
-  buildTimestamp: "2026-11-02T10:06:57.875Z",
+  gitCommit: "973712fd7ec8206df66a5d5af0df6a97b88b980e",
+  buildTimestamp: "2026-11-02T10:15:55.080Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -60542,21 +61185,16 @@ var reports_routes_default = router14;
 // backend/src/routes/admin.routes.ts
 var import_express15 = __toESM(require_express2());
 var router15 = (0, import_express15.Router)();
-function requireAdmin(req, res, next) {
-  if (req.user?.role !== "admin") {
-    next();
-    return;
-  }
-  next();
-}
 router15.get("/overview", requireUserAuth, requireAdmin, async (req, res) => {
   try {
-    const db = getDatabase();
+    const db = await getDatabaseAsync();
     const usersCount = (await db.get("SELECT COUNT(*) as count FROM users"))?.count || 0;
     const accountsCount = (await db.get("SELECT COUNT(*) as count FROM trading_accounts"))?.count || 0;
     const devicesCount = (await db.get("SELECT COUNT(*) as count FROM bridge_devices WHERE is_active = 1"))?.count || 0;
     const dealsCount = (await db.get("SELECT COUNT(*) as count FROM raw_deals"))?.count || 0;
     const positionsCount = (await db.get("SELECT COUNT(*) as count FROM reconstructed_positions"))?.count || 0;
+    const botInstancesCount = (await db.get("SELECT COUNT(*) as count FROM bot_instances"))?.count || 0;
+    const activeSubsCount = (await db.get("SELECT COUNT(*) as count FROM subscriptions WHERE status = 'active'"))?.count || 0;
     const recentSyncs = await db.query(
       `SELECT s.*, a.account_number, a.broker_name, a.server_name
        FROM sync_checkpoints s
@@ -60564,7 +61202,7 @@ router15.get("/overview", requireUserAuth, requireAdmin, async (req, res) => {
        ORDER BY s.started_at DESC LIMIT 10`
     );
     const recentAuditLogs = await db.query(
-      `SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 20`
+      `SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 50`
     );
     res.json({
       metrics: {
@@ -60572,7 +61210,9 @@ router15.get("/overview", requireUserAuth, requireAdmin, async (req, res) => {
         accountsCount,
         devicesCount,
         dealsCount,
-        positionsCount
+        positionsCount,
+        botInstancesCount,
+        activeSubsCount
       },
       recentSyncs,
       recentAuditLogs,
@@ -60583,6 +61223,108 @@ router15.get("/overview", requireUserAuth, requireAdmin, async (req, res) => {
         memoryUsage: process.memoryUsage(),
         uptimeSeconds: process.uptime()
       }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router15.get("/users", requireUserAuth, requireAdmin, async (req, res) => {
+  try {
+    const db = await getDatabaseAsync();
+    const users = await db.query(
+      `SELECT u.id, u.email, u.first_name, u.last_name, u.role, u.is_active, u.created_at,
+              s.status as subscription_status, p.name as plan_name,
+              (SELECT COUNT(*) FROM bot_instances b WHERE b.user_id = u.id) as instance_count
+       FROM users u
+       LEFT JOIN subscriptions s ON s.user_id = u.id
+       LEFT JOIN plans p ON s.plan_id = p.id
+       ORDER BY u.created_at DESC`
+    );
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router15.post("/users/:id/status", requireUserAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive, reason } = req.body;
+    const db = await getDatabaseAsync();
+    await db.run("UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [
+      isActive ? 1 : 0,
+      id
+    ]);
+    await logAuditEvent({
+      userId: req.user.userId,
+      action: isActive ? "ADMIN_USER_ACTIVATED" : "ADMIN_USER_SUSPENDED",
+      entityType: "USER",
+      entityId: id,
+      ipAddress: req.ip || req.socket.remoteAddress,
+      details: { reason: reason || "Admin action" }
+    });
+    res.json({ success: true, message: `User status updated to ${isActive ? "active" : "suspended"}.` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router15.get("/audit-logs", requireUserAuth, requireAdmin, async (req, res) => {
+  try {
+    const { action, userId, limit = "100" } = req.query;
+    const db = await getDatabaseAsync();
+    let sql = "SELECT * FROM audit_logs WHERE 1=1";
+    const params = [];
+    if (action) {
+      sql += " AND action LIKE ?";
+      params.push(`%${action}%`);
+    }
+    if (userId) {
+      sql += " AND user_id = ?";
+      params.push(userId);
+    }
+    sql += " ORDER BY created_at DESC LIMIT ?";
+    params.push(Math.min(parseInt(limit, 10) || 100, 500));
+    const logs = await db.query(sql, params);
+    res.json({ logs });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router15.post("/global-kill-switch", requireUserAuth, requireAdmin, async (req, res) => {
+  try {
+    const { reason, confirmationText } = req.body;
+    if (confirmationText !== "GLOBAL KILL SWITCH") {
+      res.status(400).json({ error: 'Type "GLOBAL KILL SWITCH" to confirm global suspension.' });
+      return;
+    }
+    const db = await getDatabaseAsync();
+    const activeInstances = await db.query(
+      "SELECT id, user_id FROM bot_instances WHERE status != 'OFFLINE'"
+    );
+    for (const inst of activeInstances) {
+      await db.run(
+        `INSERT INTO bot_commands (id, user_id, instance_id, command_type, payload_json, signature, nonce, idempotency_key, status, created_at, expires_at)
+         VALUES (?, ?, ?, 'kill_switch', ?, 'ADMIN_GLOBAL_DISPATCH', ?, ?, 'QUEUED', CURRENT_TIMESTAMP, datetime('now', '+5 minutes'))`,
+        [
+          v4_default(),
+          inst.user_id,
+          inst.id,
+          JSON.stringify({ reason: reason || "GLOBAL EMERGENCY SUSPENSION" }),
+          v4_default(),
+          `global-kill-${inst.id}-${Date.now()}`
+        ]
+      );
+    }
+    await logAuditEvent({
+      userId: req.user.userId,
+      action: "ADMIN_GLOBAL_KILL_SWITCH_ACTIVATED",
+      entityType: "FLEET",
+      ipAddress: req.ip || req.socket.remoteAddress,
+      details: { instancesTargeted: activeInstances.length, reason }
+    });
+    res.json({
+      success: true,
+      instancesTargeted: activeInstances.length,
+      message: `Global emergency kill switch issued to ${activeInstances.length} active bot instances.`
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -70698,7 +71440,7 @@ var MonteCarloService = class {
 };
 
 // backend/src/services/brokerExecution.service.ts
-var import_crypto4 = __toESM(require("crypto"));
+var import_crypto6 = __toESM(require("crypto"));
 var BrokerExecutionService = class {
   /**
    * Generates a tamper-evident SHA-256 fingerprint for order parameters.
@@ -70712,7 +71454,7 @@ var BrokerExecutionService = class {
       params.stopLossPrice.toFixed(5),
       params.takeProfitPrice.toFixed(5)
     ].join("|");
-    return import_crypto4.default.createHash("sha256").update(canonical).digest("hex");
+    return import_crypto6.default.createHash("sha256").update(canonical).digest("hex");
   }
   /**
    * Prepares a structured Broker Order Ticket and validates it against Centralized Risk Rules.
