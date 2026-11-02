@@ -58340,8 +58340,8 @@ var SyncService = class {
 // backend/src/buildInfo.ts
 var BUILD_INFO = {
   version: "1.0.6",
-  gitCommit: "7021c02fce1bc6488b94c338f6e97d3bfb995326",
-  buildTimestamp: "2026-11-02T10:21:47.461Z",
+  gitCommit: "398fa9a06720d3a04097c3af7b4890a60b3c1541",
+  buildTimestamp: "2026-11-02T10:28:35.987Z",
   environment: process.env.NODE_ENV || "production",
   sourceOrigin: "backend/src"
 };
@@ -73785,6 +73785,26 @@ router21.get("/agent/version", async (req, res) => {
     releaseNotes: "Enhanced local hard risk limit guardrails, HMAC signed command replay protection, and offline event queue.",
     downloadUrl: "https://github.com/gackstonew-lgtm/Alpha-Coach/releases"
   });
+});
+router21.post("/telegram/link-code", requireUserAuth, async (req, res) => {
+  try {
+    const cryptoMod = await import("crypto");
+    const code = "TG-" + cryptoMod.default.randomBytes(3).toString("hex").toUpperCase();
+    const db = await getDatabaseAsync();
+    await db.run(
+      `INSERT INTO notifications (id, user_id, title, message, type, is_read, link, created_at)
+       VALUES (?, ?, 'Telegram Linking Code', ?, 'SYSTEM', 0, ?, CURRENT_TIMESTAMP)`,
+      [v4_default(), req.user.userId, `Your Telegram linking code is: ${code}. Send this code to @ArcadeFxAlertsBot.`, code]
+    );
+    res.json({
+      success: true,
+      linkCode: code,
+      botUsername: "ArcadeFxAlertsBot",
+      instructions: "Start a chat with @ArcadeFxAlertsBot on Telegram and send this code to connect your account."
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 var bot_routes_default = router21;
 

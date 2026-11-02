@@ -343,4 +343,26 @@ router.get('/agent/version', async (req, res) => {
   });
 });
 
+// Generate Telegram Link Code (User sends code to bot, zero tokens pasted)
+router.post('/telegram/link-code', requireUserAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const cryptoMod = await import('crypto');
+    const code = 'TG-' + cryptoMod.default.randomBytes(3).toString('hex').toUpperCase();
+    const db = await getDatabaseAsync();
+    await db.run(
+      `INSERT INTO notifications (id, user_id, title, message, type, is_read, link, created_at)
+       VALUES (?, ?, 'Telegram Linking Code', ?, 'SYSTEM', 0, ?, CURRENT_TIMESTAMP)`,
+      [uuidv4(), req.user!.userId, `Your Telegram linking code is: ${code}. Send this code to @ArcadeFxAlertsBot.`, code]
+    );
+    res.json({
+      success: true,
+      linkCode: code,
+      botUsername: 'ArcadeFxAlertsBot',
+      instructions: 'Start a chat with @ArcadeFxAlertsBot on Telegram and send this code to connect your account.'
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
