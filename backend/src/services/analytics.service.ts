@@ -44,6 +44,23 @@ export interface PerformanceOverview {
   netProfit: number;
   totalCommissions: number;
   totalSwaps: number;
+  totalFees?: number;
+  costs?: {
+    commissions: number;
+    swaps: number;
+    fees: number;
+    totalCost: number;
+  };
+  winRateCi?: {
+    lower: number;
+    upper: number;
+    confidencePct: number;
+  };
+  sampleSizeWarning?: {
+    isSmall: boolean;
+    threshold: number;
+    message: string | null;
+  };
   profitFactor: number;
   averageWin: number;
   averageLoss: number;
@@ -189,6 +206,14 @@ export class AnalyticsService {
         netProfit: 0,
         totalCommissions: 0,
         totalSwaps: 0,
+        totalFees: 0,
+        costs: { commissions: 0, swaps: 0, fees: 0, totalCost: 0 },
+        winRateCi: { lower: 0, upper: 0, confidencePct: 95 },
+        sampleSizeWarning: {
+          isSmall: true,
+          threshold: 30,
+          message: 'No closed trades recorded in MT5 history.'
+        },
         profitFactor: 0,
         averageWin: 0,
         averageLoss: 0,
@@ -218,6 +243,7 @@ export class AnalyticsService {
     let grossLoss = 0;
     let totalCommissions = 0;
     let totalSwaps = 0;
+    let totalFees = 0;
     let totalR = 0;
     let countWithR = 0;
     let largestWin = 0;
@@ -253,8 +279,9 @@ export class AnalyticsService {
 
     closedPositions.forEach((pos, idx) => {
       const net = toNumber(pos.net_profit);
-      totalCommissions += toNumber(pos.commission_total);
-      totalSwaps += toNumber(pos.swap_total);
+      totalCommissions += Math.abs(toNumber(pos.commission_total));
+      totalSwaps += Math.abs(toNumber(pos.swap_total));
+      totalFees += Math.abs(toNumber((pos as any).fee_total || (pos as any).fee || 0));
       cumulativeProfit += net;
       runningEquity += net;
 
@@ -378,6 +405,22 @@ export class AnalyticsService {
       lossCount: d.lossCount
     }));
 
+    // Wilson 95% Confidence Interval for Win Rate (z = 1.96)
+    const z = 1.96;
+    const z2 = z * z;
+    const p = winningTrades / totalTrades;
+    const denom = 1 + z2 / totalTrades;
+    const center = p + z2 / (2 * totalTrades);
+    const margin = z * Math.sqrt((p * (1 - p) + z2 / (4 * totalTrades)) / totalTrades);
+    const winRateCiLower = Math.max(0, parseFloat((((center - margin) / denom) * 100).toFixed(1)));
+    const winRateCiUpper = Math.min(100, parseFloat((((center + margin) / denom) * 100).toFixed(1)));
+
+    const isSmallSample = totalTrades < 30;
+    const totalCommsFormatted = parseFloat(totalCommissions.toFixed(2));
+    const totalSwapsFormatted = parseFloat(totalSwaps.toFixed(2));
+    const totalFeesFormatted = parseFloat(totalFees.toFixed(2));
+    const totalCostSum = parseFloat((totalCommissions + totalSwaps + totalFees).toFixed(2));
+
     return {
       initialBalance: startingBalance,
       totalTrades,
@@ -390,8 +433,27 @@ export class AnalyticsService {
       grossProfit: parseFloat(grossProfit.toFixed(2)),
       grossLoss: parseFloat(grossLoss.toFixed(2)),
       netProfit,
-      totalCommissions: parseFloat(totalCommissions.toFixed(2)),
-      totalSwaps: parseFloat(totalSwaps.toFixed(2)),
+      totalCommissions: totalCommsFormatted,
+      totalSwaps: totalSwapsFormatted,
+      totalFees: totalFeesFormatted,
+      costs: {
+        commissions: totalCommsFormatted,
+        swaps: totalSwapsFormatted,
+        fees: totalFeesFormatted,
+        totalCost: totalCostSum
+      },
+      winRateCi: {
+        lower: winRateCiLower,
+        upper: winRateCiUpper,
+        confidencePct: 95
+      },
+      sampleSizeWarning: {
+        isSmall: isSmallSample,
+        threshold: 30,
+        message: isSmallSample
+          ? `STATISTICAL WARNING: Sample size is small (${totalTrades} closed trade${totalTrades === 1 ? '' : 's'} < 30). Metrics lack statistical significance and confidence interval is wide [${winRateCiLower}% – ${winRateCiUpper}%].`
+          : null
+      },
       profitFactor,
       averageWin,
       averageLoss,
