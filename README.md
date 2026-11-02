@@ -1,140 +1,89 @@
-# Arcade Fx - Automated MT5 Trading Journal & Trading Performance OS
+# Arcade Fx - MT5 Bot Management & Forex Intelligence OS
 
-**Arcade Fx** is a professional, secure, automated trading journaling and quantitative performance operating system designed for modern discretionary and systematic MetaTrader 5 (MT5) traders.
+**Arcade Fx** is a professional, secure MT5 bot management platform, automated trade journaling, and quantitative performance operating system designed for modern discretionary and systematic MetaTrader 5 (MT5) traders.
 
-Arcade Fx connects securely to your local MT5 desktop terminal, imports up to **3 months of historical data**, incrementally tracks new trades without duplicate ingestion, reconstructs complex position lifecycles (scale-ins, partial closes, stop loss hits, take profits, commissions, and swaps), and powers an advanced performance dashboard, Strategy Lab, Session & Symbol Intelligence, Risk Guardian, Trader DNA, Rewards Discipline Engine, and grounded AI Trading Coach.
+Arcade Fx provides cloud-to-local orchestration for the **MT5-OO1** trading bot (Python engine + PythonBridgeEA), enabling traders to monitor, configure, and safely command their local bot instances from web and mobile PWA, while maintaining rigorous zero-knowledge security and local hard risk limits.
 
 ---
 
 ## 🏗️ Architecture & Security Principles
 
 ```
-MT5 Desktop Terminal
-       ↓ (Official MetaTrader5 Python API)
-Local MT5 Journal Bridge (`bridge/alpha_coach_bridge.py`)
-       ↓ (Encrypted TLS HTTPS with Device Authentication Tokens)
-Arcade Fx Backend API (`backend/src/server.ts`)
+Local MT5 Terminal + MT5-OO1 Bot (User's Windows PC / VPS)
+       ↓ (Local execution next to terminal; Outbound HTTPS/WebSocket ONLY)
+MT5 Bot Agent (`agent/` service / NSSM)
+       ↓ (TLS 1.3, Signed Commands, Rotating Device Tokens)
+Arcade Fx Cloud Backend (`arcadefx.live` / Vercel Serverless API)
        ↓
-Relational Database (`data/alphacoach.sqlite` / PostgreSQL DDL)
+Relational Database (Supabase PostgreSQL / Persistent SQLite)
        ↓
-Position Reconstruction & Analytics Math Engine
+Arcade Fx Web & Mobile PWA (`/bot`, `/journal`, `/performance`, `/charts`)
        ↓
-Arcade Fx React PWA Dashboard (`http://localhost:5173`)
-       ↓
-AI Performance Coach, Trader DNA & Risk Guardian
+Bot Assistant (Grounded In Real MT5 Data Only)
 ```
 
-### 🔒 Zero-Password Security Model
-- **Arcade Fx NEVER asks for, receives, or stores your MT5/broker password.**
-- The Local MT5 Bridge runs locally on your machine, communicates with the locally running MT5 terminal via official MT5 API calls (`mt5.initialize()`, `mt5.history_deals_get()`, `mt5.history_orders_get()`), and transmits only read-only trading orders and deal histories.
-- All bridge synchronization is authorized via rotating Device Pairing Tokens (`x-bridge-token`).
+### 🔒 Zero-Password Security Model & Local Hard Limits
+1. **Zero Credential Transmission**: Arcade Fx NEVER asks for, stores, or transmits MT5 or broker passwords. The bot engine executes locally on the user's machine next to the MT5 terminal.
+2. **Safe Cloud Commands Only**: Cloud commands are strictly restricted to safe operations (`start`, `stop`, `pause`, `resume`, `close_all`, `kill_switch`). The cloud can NEVER enable live trading or raise risk limits above local machine ceilings.
+3. **Local Hard Ceilings Always Win**: Local risk settings on the user's machine act as an unbreachable ceiling. Live trading requires explicit local physical confirmation.
+4. **Subscription Entitlements**: Subscription status is verified on both cloud and local agent. When expired or cancelled, new trade openings are blocked while the local bot continues managing open positions with stops and take profits until closed.
+5. **Feature Flag `public_subscriptions`**: Defaults to `OFF` until regulatory and legal checks are complete.
 
 ---
 
 ## ⚡ Key Features
 
-1. **Automatic Trade Reconstruction & Lifecycle Engine**:
+1. **MT5 Bot Management (`/bot`)**:
+   - Multi-instance fleet monitoring: Status (`ONLINE`, `OFFLINE`, `STALE`), mode (`DEMO`, `LIVE`, `PROP`), uptime, version, and heartbeat telemetry.
+   - Cloud Safe Controls: Start, Stop, Pause, Resume, Close All Positions (type-to-confirm), and Emergency Kill Switch.
+   - Safe Configuration Editor: Symbol toggles, session filters, risk percent bounded by local ceilings, max trades per day.
+   - Real-Time Decision Telemetry: Active positions, daily P/L, daily loss & drawdown remaining, market regime, and "why no trade" log.
+   - Balance tier & sizing matrix from MT5-OO1.
+
+2. **Bot Assistant (Formerly AI Coach)**:
+   - Inquiries answered strictly grounded in your empirical MT5 database.
+   - No hallucinated trades or predictive financial claims.
+
+3. **Automatic Trade Reconstruction & Lifecycle Engine**:
    - Reconstructs position lifecycles from raw MT5 deals & orders (Entry Deal → Scale-In → Partial Exit → Final Exit).
-   - Accurately computes weighted average entry/exit prices, gross P/L, commissions, swaps, fees, net P/L, holding durations, and initial R-Multiples.
-   - Categorizes sessions: **London**, **New York**, **London/NY Overlap**, **Asia**, and **Off-Hours**.
-   - Determines exit reasons (**SL_HIT**, **TP_HIT**, **MANUAL**, **SO_HIT**).
+   - Computes weighted average entry/exit prices, gross P/L, commissions, swaps, fees, net P/L, holding durations, and initial R-Multiples.
+   - Categorizes sessions: London, New York, London/NY Overlap, Asia, and Off-Hours.
 
-2. **Executive Performance Dashboard**:
+4. **Executive Performance Dashboard & True Track Record**:
    - Live account balance, equity, win rate, profit factor, max drawdown, and expectancy.
-   - Interactive high-water mark Equity Curve and Daily P/L distribution.
+   - Strict separation of real execution records vs sample/demo data (sample data visibly labeled "SAMPLE DATA" and isolated).
 
-3. **Automatic Trading Journal & Subjective Review**:
-   - Every completed trade instantly becomes a structured journal entry.
-   - Clear distinction between **Objective MT5 Facts**, **Trader-Entered Subjective Data**, and **AI Inferences**.
-   - Review wizard: Setup categorization, market bias, psychological tags (FOMO, Revenge, Impatience, Disciplined), mistake taxonomy, and lessons learned.
-   - **Voice Journal**: Speak or type trade narratives with AI-suggested field extractions requiring trader confirmation before saving.
-
-4. **Interactive Trading Calendar**:
-   - Monthly grid with color-coded daily net P/L badges and trade counts.
-   - Click-to-view drawer displaying all trades for any chosen day.
-
-5. **Advanced Analytics Engine**:
-   - Win rate, loss rate, profit factor, mathematical expectancy, Sharpe/recovery factors.
-   - Peak-to-trough equity drawdown tracking, consecutive win/loss streaks, and holding time distributions.
-   - Long vs Short performance asymmetry analysis.
-
-6. **Strategy Lab & Confluence Matrix**:
-   - Tag custom setups (e.g. *Liquidity Sweep*, *MSS*, *FVG*, *Order Block*, *Breaker Block*).
-   - Track win rate, net P/L, and profit factor per strategy and confluence combination.
-
-7. **Session & Symbol Intelligence**:
-   - Session performance breakdown and 24x7 hourly trading density heatmap.
-   - Symbol rankings across XAUUSD, EURUSD, BTCUSD, NAS100, etc.
-
-8. **Trader DNA Profile**:
-   - Strictly descriptive profile of your historical trading tendencies (Primary Market, Active Session Focus, Average Duration, Long/Short ratio, Friction Points).
-
-9. **Risk Guardian**:
-   - Real-time decision-support monitor for daily loss limits, maximum trades per day, consecutive loss warnings, and max position size.
-
-10. **Rewards & Discipline Master**:
-    - Rewards journaling streaks, reviewing losing trades (+50 XP bonus), and adhering to risk limits.
-    - Does **NOT** reward overtrading or excessive risk.
-
-11. **AI Trading Coach**:
-    - Ask questions about your journal records. Grounded strictly in your empirical data.
-
-12. **Weekly & Monthly Performance Reports**:
-    - Automated executive digests and one-click structured CSV export.
-
-13. **Multi-Account MT5 Hub**:
-    - Manage multiple accounts (HFM Live, HFM Demo, IC Markets, etc.) with consolidated or account-specific views.
+5. **Multi-Account MT5 Hub & Journaling**:
+   - Full support for multi-account portfolios with consolidated or isolated account views.
+   - Automated journal generation for every MT5 deal.
 
 ---
 
 ## 🚀 Getting Started
 
-### Quick Start (Windows)
-
-1. Double-click `start_alpha_coach.bat` to launch the Backend API (`http://localhost:4000`) and React Frontend (`http://localhost:5173`).
-2. Open your browser to `http://localhost:5173`.
-3. Click **"Instant Demo Access"** to immediately explore with pre-loaded authentic 3-month MT5 multi-asset datasets, or register your user account.
-4. Double-click `start_mt5_bridge.bat` to launch the interactive MT5 Bridge CLI tool.
-
----
-
-## 🔧 Running Tests & Validation
-
-Run the full automated test suites across backend, bridge, and production bundles:
-
+### Local Development
 ```bash
-# Run backend Jest tests (Trade reconstruction, Analytics math, Sync idempotency, Settings)
+# Install dependencies
+npm install
+
+# Run secret leak preflight scan
+npm run scan:secrets
+
+# Run backend test suite
 npm run test:backend
 
-# Run Python MT5 Bridge test suite
+# Run MT5 Bridge test suite
 npm run test:bridge
 
-# Run full test suite
-npm test
-
-# Build production API bundle and frontend
-npm run build:api
+# Build frontend and API production bundle
 npm run build:frontend
+npm run build:api
 ```
 
 ---
 
-## 📚 Technical Documentation & Specifications
-- **[System Architecture & Security Model](file:///c:/Users/Gackstone_Baraka/Downloads/Alpha%20Coach/ARCHITECTURE.md)**: Details on the zero-password pairing lifecycle, MT5 deal reconstruction engine, and math formulas.
-- **[REST API Reference](file:///c:/Users/Gackstone_Baraka/Downloads/Alpha%20Coach/API.md)**: Specification for all public, dashboard, and bridge endpoints including `/health`.
-- **[Changelog](file:///c:/Users/Gackstone_Baraka/Downloads/Alpha%20Coach/CHANGELOG.md)**: Release progression and hardening history.
-
-## 📈 Live Forex Data Layer & Interactive Charting
-
-Arcade Fx includes a production-grade live Forex data layer built with TradingView Lightweight Charts:
-
-### Endpoints
-- GET /api/candles?symbol=EURUSD&tf=H1&limit=500: Retrieves time-ordered OHLCV candles formatted for Lightweight Charts with multi-timeframe backfill (M1, M5, M15, M30, H1, H4, D1, W1, MN).
-- GET /api/levels?symbol=EURUSD: Returns institutional price levels: Previous Day/Week/Month H/L/C, Today O/H/L, Classic Pivot Points (P, R1-R3, S1-S3), and fractal Swing Highs/Lows.
-- GET /api/conditions?symbol=EURUSD: Returns real-time market open/closed status, active sessions in UTC (Sydney, Tokyo, London, New York, with overlap detection), daily change and %, ATR(14) with daily range ratio, and EMA 50/200 trend classification.
-- GET /api/stream?symbol=EURUSD: Server-Sent Events (SSE) real-time stream broadcasting Bid/Ask ticks, spreads, and live candle updates.
-
-### Standalone Verification
-`ash
-node backend/scripts/test-forex-data-layer.mjs
-`
+## 📚 Technical Documentation
+- **[System Architecture](file:///docs/ARCHITECTURE.md)**: Cloud-to-agent protocol, signed commands, and safety boundaries.
+- **[Security Threat Model](file:///docs/SECURITY.md)**: Threat vector analysis, RLS policies, credential isolation.
+- **[Compliance Checklist](file:///docs/COMPLIANCE_CHECKLIST.md)**: Jurisdictional and regulatory readiness requirements.
+- **[Agent Setup Guide](file:///docs/AGENT_SETUP.md)**: Step-by-step setup for running MT5 Bot Agent on Windows VPS.

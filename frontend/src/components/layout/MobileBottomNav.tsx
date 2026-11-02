@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, TrendingUp, Bot, Newspaper, BookOpen } from 'lucide-react';
+import { BOT_NAME } from '../../config/appConfig';
 
 export interface MobileBottomNavProps {
   /** Optional callback preserved for backwards compatibility with layout props */
@@ -31,11 +32,11 @@ export const MOBILE_BOTTOM_NAV_TABS: MobileNavTabItem[] = [
     matchPaths: ['/charts', '/intelligence']
   },
   {
-    id: 'coach',
-    to: '/ai-coach',
-    label: 'Coach',
+    id: 'bot',
+    to: '/bot',
+    label: BOT_NAME,
     icon: Bot,
-    matchPaths: ['/ai-coach']
+    matchPaths: ['/bot', '/ai-coach']
   },
   {
     id: 'news',

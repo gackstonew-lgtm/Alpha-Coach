@@ -10,7 +10,9 @@ import {
   ChevronRight,
   Plus,
   Radio,
-  BarChart3
+  BarChart3,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -250,8 +252,42 @@ export const DashboardPage: React.FC = () => {
 
   const hasConnectedAccounts = accounts.length > 0;
 
+  const isDemoAccount =
+    selectedAccount?.is_demo === 1 ||
+    selectedAccount?.is_demo === true ||
+    selectedAccount?.mode === 'DEMO' ||
+    selectedAccount?.trade_mode === 'demo';
+  const totalClosedTrades = overview?.totalTrades || 0;
+  const isSmallSample = totalClosedTrades < 30;
+
   return (
     <div className="space-y-6">
+      {/* Demo / Sample Account Indicator */}
+      {isDemoAccount && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between text-amber-600 dark:text-amber-400">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Sample Data Notice — Currently viewing a simulated Demo account
+            </span>
+          </div>
+          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-500">
+            SAMPLE DATA
+          </span>
+        </div>
+      )}
+
+      {/* Small Sample Size Warning */}
+      {isSmallSample && totalClosedTrades > 0 && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5 text-amber-600 dark:text-amber-400">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="text-xs">
+            <span className="font-bold uppercase tracking-wider">Statistical Warning: </span>
+            <span>Sample size is small ({totalClosedTrades} &lt; 30 trades). Metrics lack statistical significance.</span>
+          </div>
+        </div>
+      )}
+
       {/* ========================================================================= */}
       {/* 1. TOP-LEVEL PERFORMANCE ANALYTICS (MOVED TO TOP OF DASHBOARD)            */}
       {/* ========================================================================= */}
@@ -275,18 +311,22 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 2: Win Rate */}
+          {/* Card 2: Win Rate with Wilson 95% Confidence Interval */}
           <div className="card-hover-interactive bg-surface rounded-2xl p-4 sm:p-5 border border-border shadow-xs flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                Win Rate
+                Win Rate {overview?.winRateCi ? '(95% CI)' : ''}
               </span>
               <div className="text-xl sm:text-2xl font-black mt-1 text-foreground font-mono tabular-nums">
                 {(overview?.winRate || 0).toFixed(1)}%
               </div>
             </div>
             <div className="text-[11px] text-muted-foreground mt-3 pt-2 border-t border-border-subtle flex items-center justify-between">
-              <span>{overview?.winningTrades || 0}W / {overview?.losingTrades || 0}L</span>
+              <span>
+                {overview?.winRateCi
+                  ? `[${overview.winRateCi.lower}% – ${overview.winRateCi.upper}%]`
+                  : `${overview?.winningTrades || 0}W / ${overview?.losingTrades || 0}L`}
+              </span>
               <span className="text-[10px] font-semibold text-muted-foreground">Historical Deals</span>
             </div>
           </div>
@@ -324,6 +364,15 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Mandatory Performance Risk Disclosure */}
+      <div className="p-3.5 rounded-2xl bg-surface border border-border text-[11px] text-muted-foreground flex items-start gap-2.5">
+        <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+        <div>
+          <span className="font-bold text-foreground">Risk Disclosure: </span>
+          Past performance metrics reconstructed from historical MT5 deals do not guarantee future results. Trading foreign exchange and CFDs on margin involves high risk. Arcade Fx is software for journaling and analytics, not investment advice.
+        </div>
+      </div>
 
       {/* ========================================================================= */}
       {/* 2. TWO-COLUMN MAIN COCKPIT (CHART: MY PNL TREND + WATCHLIST)               */}
@@ -639,6 +688,15 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Mandatory Performance Risk Disclosure */}
+      <div className="p-3.5 rounded-2xl bg-surface border border-border text-[11px] text-muted-foreground flex items-start gap-2.5">
+        <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+        <div>
+          <span className="font-bold text-foreground">Risk Disclosure: </span>
+          Past performance metrics reconstructed from historical MT5 deals do not guarantee future results. Trading foreign exchange and CFDs on margin involves high risk. Arcade Fx is software for journaling and analytics, not investment advice.
+        </div>
+      </div>
 
       {/* ========================================================================= */}
       {/* BOTTOM SHEET: ADD SYMBOL TO WATCHLIST                                     */}

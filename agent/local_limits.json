@@ -1,0 +1,14 @@
+{
+  "max_risk_pct_ceiling": 1.0,
+  "max_lots_ceiling": 0.5,
+  "max_drawdown_pct_ceiling": 5.0,
+  "allow_live_trading": false,
+  "allowed_symbols": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "XAUUSD"
+  ],
+  "enforce_local_confirmation_for_live": true,
+  "comment": "HARD LOCAL CEILINGS: The cloud service CANNOT raise values above these local limits or enable live trading. Local limits ALWAYS win."
+}

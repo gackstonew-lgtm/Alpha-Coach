@@ -1,3 +1,4 @@
+import { BOT_ASSISTANT_NAME } from '../config/appConfig';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -103,7 +104,7 @@ const SECTIONS: SectionMeta[] = [
   { id: 'sessions', label: 'Sessions & Markets', description: 'Session hours, favorite & excluded tickers', icon: Clock },
   { id: 'notifications', label: 'Notifications', description: 'Reports, quiet hours, streak & risk alerts', icon: Bell },
   { id: 'rewards', label: 'Rewards & Discipline', description: 'XP levels, streaks & daily trade journal goals', icon: Award },
-  { id: 'aiCoach', label: 'AI Coach', description: 'Tone preferences, context sources & history', icon: Bot },
+  { id: 'aiCoach', label: BOT_ASSISTANT_NAME, description: 'Tone preferences, context sources & history', icon: Bot },
   { id: 'bridge', label: 'Bridge & Sync', description: 'Connected MT5 terminals, status & pairing', icon: Radio },
   { id: 'security', label: 'Privacy & Security', description: '2FA TOTP, active sessions & global privacy', icon: Lock }
 ];
@@ -1767,7 +1768,7 @@ export const SettingsPage: React.FC = () => {
                 <div>
                   <h2 className="text-lg font-bold text-content-primary flex items-center gap-2">
                     <Bot className="w-5 h-5 text-brand-500" />
-                    <span>AI Trading Coach Configuration</span>
+                    <span>{BOT_ASSISTANT_NAME} Configuration</span>
                   </h2>
                   <p className="text-xs text-content-muted mt-0.5">Control the cognitive persona, accessible trading history sources, and privacy memory</p>
                 </div>
@@ -2305,7 +2306,7 @@ export const SettingsPage: React.FC = () => {
       {showClearAiModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-surface border border-border-strong rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
-            <div className="font-bold text-sm text-content-primary">Clear AI Coach History?</div>
+            <div className="font-bold text-sm text-content-primary">Clear Bot Assistant History?</div>
             <p className="text-xs text-content-muted">
               This will wipe past advice threads and active context memories. Your actual MT5 trades and journal notes will remain intact.
             </p>
@@ -2319,7 +2320,7 @@ export const SettingsPage: React.FC = () => {
               <button
                 onClick={() => {
                   setShowClearAiModal(false);
-                  alert('AI Coach chat history cleared.');
+                  alert('Bot Assistant chat history cleared.');
                 }}
                 className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-sm"
               >

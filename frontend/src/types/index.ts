@@ -24,6 +24,9 @@ export interface TradingAccount {
   free_margin: number;
   margin_level: number;
   account_type: 'hedging' | 'netting';
+  mode?: 'DEMO' | 'LIVE' | 'PROP';
+  trade_mode?: string;
+  is_demo?: boolean | number;
   is_active: number;
   last_synced_at?: string;
   total_positions?: number;
@@ -126,6 +129,23 @@ export interface PerformanceOverview {
   netProfit: number;
   totalCommissions: number;
   totalSwaps: number;
+  totalFees?: number;
+  costs?: {
+    commissions: number;
+    swaps: number;
+    fees: number;
+    totalCost: number;
+  };
+  winRateCi?: {
+    lower: number;
+    upper: number;
+    confidencePct: number;
+  };
+  sampleSizeWarning?: {
+    isSmall: boolean;
+    threshold: number;
+    message: string | null;
+  };
   profitFactor: number;
   averageWin: number;
   averageLoss: number;

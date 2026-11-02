@@ -24,7 +24,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { JournalPage } from './pages/JournalPage';
 import { PerformancePage } from './pages/PerformancePage';
 import { RiskGuardianPage } from './pages/RiskGuardianPage';
-import { AICoachPage } from './pages/AICoachPage';
+import { MT5BotPage } from './pages/MT5BotPage';
 import { GamificationPage } from './pages/GamificationPage';
 import { BridgeAccountsPage } from './pages/BridgeAccountsPage';
 import { AdminPage } from './pages/AdminPage';
@@ -119,7 +119,8 @@ export const App: React.FC = () => {
           <Route path="/performance" element={<PerformancePage />} />
           <Route path="/strategy-lab" element={<Navigate to="/dashboard" replace />} />
           <Route path="/risk-guardian" element={<RiskGuardianPage />} />
-          <Route path="/ai-coach" element={<AICoachPage />} />
+          <Route path="/bot" element={<MT5BotPage />} />
+          <Route path="/ai-coach" element={<Navigate to="/bot?tab=assistant" replace />} />
           <Route path="/rewards" element={<GamificationPage />} />
           <Route path="/gamification" element={<Navigate to="/rewards" replace />} />
           <Route path="/bridge" element={<BridgeAccountsPage />} />

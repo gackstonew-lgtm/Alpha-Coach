@@ -14,11 +14,14 @@ import {
   Zap,
   BarChart3,
   Layers,
-  Activity
+  Activity,
+  AlertTriangle,
+  DollarSign,
+  Info
 } from 'lucide-react';
 
 export const PerformancePage: React.FC = () => {
-  const { selectedAccountId } = useAccounts();
+  const { selectedAccountId, selectedAccount } = useAccounts();
   const [overview, setOverview] = useState<PerformanceOverview | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -38,22 +41,57 @@ export const PerformancePage: React.FC = () => {
     }
   };
 
+  const isDemoAccount =
+    selectedAccount?.is_demo === 1 ||
+    selectedAccount?.is_demo === true ||
+    selectedAccount?.mode === 'DEMO' ||
+    selectedAccount?.trade_mode === 'demo';
+
+  const totalTrades = overview?.totalTrades || 0;
+  const isSmallSample = totalTrades < 30;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div>
-        <div className="flex items-center space-x-2">
-          <span className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
-            <ChartIcon className="w-5 h-5" />
-          </span>
-          <h1 className="text-2xl font-bold tracking-tight text-content-primary">
-            Trading Performance & Edge Metrics
-          </h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center space-x-2">
+            <span className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+              <ChartIcon className="w-5 h-5" />
+            </span>
+            <h1 className="text-2xl font-bold tracking-tight text-content-primary">
+              Trading Performance & Edge Metrics
+            </h1>
+          </div>
+          <p className="text-xs text-content-secondary mt-1">
+            Empirical MT5 deal reconstruction, statistical confidence intervals, cost breakdown & mathematical expectancy
+          </p>
         </div>
-        <p className="text-xs text-content-secondary mt-1">
-          Deep quantitative performance metrics, mathematical expectancy, long/short asymmetries & risk ratios
-        </p>
+
+        {/* Demo / Sample Data Label if applicable */}
+        {isDemoAccount && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-500 text-xs font-black uppercase tracking-wider">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>SAMPLE DATA — DEMO ACCOUNT</span>
+          </div>
+        )}
       </div>
+
+      {/* Small Sample Size Warning Banner (Rule 6.1) */}
+      {isSmallSample && totalTrades > 0 && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3 text-amber-600 dark:text-amber-400">
+          <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div className="text-xs space-y-1">
+            <div className="font-bold uppercase tracking-wider text-[11px]">
+              Statistical Significance Warning (N = {totalTrades} &lt; 30 trades)
+            </div>
+            <p className="text-content-secondary dark:text-amber-300/80 leading-relaxed">
+              {overview?.sampleSizeWarning?.message ||
+                `Sample size is small (${totalTrades} closed trade${totalTrades === 1 ? '' : 's'}). Performance metrics, win rate, and profit factor have wide error margins and should not be used to extrapolate future profitability.`}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Core Quantitative Metrics Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -65,16 +103,20 @@ export const PerformancePage: React.FC = () => {
           }`}>
             {(overview?.netProfit || 0) >= 0 ? '+' : ''}${overview?.netProfit?.toFixed(2) || '0.00'}
           </div>
-          <div className="text-[10px] text-content-muted mt-1 font-mono">Comm: ${overview?.totalCommissions?.toFixed(2) || '0.00'}</div>
+          <div className="text-[10px] text-content-muted mt-1 font-mono">Gross: ${overview?.grossProfit?.toFixed(0) || 0}</div>
         </div>
 
-        {/* Win Rate */}
+        {/* Win Rate with 95% Wilson Confidence Interval */}
         <div className="framer-card p-4">
-          <div className="text-[10px] font-semibold text-content-muted uppercase tracking-wider">Win Rate</div>
+          <div className="text-[10px] font-semibold text-content-muted uppercase tracking-wider">Win Rate (95% CI)</div>
           <div className="text-xl font-extrabold font-mono text-content-primary mt-1">
             {overview?.winRate || 0}%
           </div>
-          <div className="text-[10px] text-content-muted mt-1 font-mono">{overview?.winningTrades || 0}W / {overview?.losingTrades || 0}L</div>
+          <div className="text-[10px] text-content-muted mt-1 font-mono">
+            {overview?.winRateCi
+              ? `[${overview.winRateCi.lower}% – ${overview.winRateCi.upper}%]`
+              : `${overview?.winningTrades || 0}W / ${overview?.losingTrades || 0}L`}
+          </div>
         </div>
 
         {/* Profit Factor */}
@@ -83,7 +125,9 @@ export const PerformancePage: React.FC = () => {
           <div className="text-xl font-extrabold font-mono text-brand-primary mt-1">
             {overview?.profitFactor || 0}
           </div>
-          <div className="text-[10px] text-content-muted mt-1 font-mono">Gross: ${overview?.grossProfit?.toFixed(0) || 0}</div>
+          <div className="text-[10px] text-content-muted mt-1 font-mono">
+            Loss: ${overview?.grossLoss?.toFixed(0) || 0}
+          </div>
         </div>
 
         {/* Expectancy */}
@@ -99,7 +143,7 @@ export const PerformancePage: React.FC = () => {
         <div className="framer-card p-4">
           <div className="text-[10px] font-semibold text-content-muted uppercase tracking-wider">Average R</div>
           <div className="text-xl font-extrabold font-mono text-sky-400 mt-1">
-            {overview?.averageR ? `${overview.averageR}R` : '1.42R'}
+            {overview?.averageR ? `${overview.averageR}R` : 'N/A'}
           </div>
           <div className="text-[10px] text-content-muted mt-1">Reward to Risk</div>
         </div>
@@ -111,6 +155,35 @@ export const PerformancePage: React.FC = () => {
             ${overview?.maxDrawdownAmount?.toFixed(0) || 0}
           </div>
           <div className="text-[10px] text-content-muted mt-1 font-mono">{overview?.maxDrawdownPct || 0}% Peak-to-Trough</div>
+        </div>
+      </div>
+
+      {/* Cost Paid Breakdown (Spread, Commission, Swap, Total Fees) */}
+      <div className="framer-card p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-xs uppercase tracking-wider text-content-primary flex items-center space-x-2">
+            <DollarSign className="w-4 h-4 text-brand-primary" />
+            <span>Friction & Costs Paid Breakdown (MT5 Deal Ledger)</span>
+          </h3>
+          <span className="text-[10px] font-mono text-content-muted">Reconstructed Broker Deductions</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+          <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle flex justify-between">
+            <span className="text-content-secondary font-sans">Commissions:</span>
+            <span className="font-bold text-content-primary">${overview?.costs?.commissions?.toFixed(2) || overview?.totalCommissions?.toFixed(2) || '0.00'}</span>
+          </div>
+          <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle flex justify-between">
+            <span className="text-content-secondary font-sans">Financing Swaps:</span>
+            <span className="font-bold text-content-primary">${overview?.costs?.swaps?.toFixed(2) || overview?.totalSwaps?.toFixed(2) || '0.00'}</span>
+          </div>
+          <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle flex justify-between">
+            <span className="text-content-secondary font-sans">Broker Fees:</span>
+            <span className="font-bold text-content-primary">${overview?.costs?.fees?.toFixed(2) || '0.00'}</span>
+          </div>
+          <div className="p-3 rounded-xl bg-surface-secondary border border-border-subtle flex justify-between">
+            <span className="text-content-secondary font-sans font-bold">Total Friction:</span>
+            <span className="font-black text-rose-500">${overview?.costs?.totalCost?.toFixed(2) || ((overview?.totalCommissions || 0) + (overview?.totalSwaps || 0)).toFixed(2)}</span>
+          </div>
         </div>
       </div>
 
@@ -189,6 +262,15 @@ export const PerformancePage: React.FC = () => {
               <span className="text-brand-primary font-bold">{overview?.recoveryFactor || 'N/A'}</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Mandatory Performance Risk Disclosure Footer Banner */}
+      <div className="p-4 rounded-2xl bg-surface-secondary border border-border-subtle text-[11px] text-content-muted leading-relaxed flex items-start gap-3">
+        <Info className="w-4 h-4 text-brand-primary shrink-0 mt-0.5" />
+        <div>
+          <span className="font-bold text-content-primary">Empirical Performance & Risk Disclosure: </span>
+          All quantitative metrics, expectancy calculations, and drawdown statistics displayed above are reconstructed exclusively from executed MetaTrader 5 deals recorded in your account ledger. Past trading results are not indicative of future performance. Trading foreign exchange, CFDs, and financial derivatives carries substantial risk of capital loss. Arcade Fx does not provide investment or financial advice.
         </div>
       </div>
     </div>
